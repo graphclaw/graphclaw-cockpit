@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html data-page="admin-panel" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   Admin Panel — Page-specific styles
+   ============================================================ */
+html, body { height: 100%; overflow: hidden; }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* Sidebar */
+.sidebar { width: 240px; flex-shrink: 0; background: var(--bg-sidebar); border-right: 1px solid var(--border-default); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.sidebar-logo { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-4); border-bottom: 1px solid var(--border-default); height: 56px; flex-shrink: 0; }
+.logo-mark { width: 28px; height: 28px; background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white; font-weight: var(--weight-bold); font-size: 13px; flex-shrink: 0; }
+.logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; line-height: 1.2; }
+.logo-sub { font-size: 10px; color: var(--text-tertiary); font-weight: 400; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.nav-section { font-size: 10px; font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-tertiary); padding: var(--space-3) var(--space-4) var(--space-1); }
+.nav-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); margin: 1px var(--space-2); border-radius: var(--radius-md); cursor: pointer; text-decoration: none; color: var(--text-secondary); font-size: var(--text-body-sm); font-weight: var(--weight-medium); transition: background var(--duration-fast), color var(--duration-fast); }
+.nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background: rgba(56,189,248,0.12); }
+.nav-item .ni { display: flex; align-items: center; flex-shrink: 0; width: 18px; height: 18px; }
+.nav-badge { margin-left: auto; background: var(--state-blocked); color: white; font-size: 10px; font-weight: var(--weight-bold); padding: 1px 5px; border-radius: var(--radius-full); min-width: 18px; text-align: center; }
+.nav-badge.green { background: var(--state-progress); }
+.nav-badge.amber { background: var(--state-delayed); }
+.sidebar-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-4); }
+.sidebar-footer { padding: var(--space-2); border-top: 1px solid var(--border-default); }
+.user-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border-radius: var(--radius-md); cursor: pointer; transition: background var(--duration-fast); }
+.user-row:hover { background: var(--bg-inset); }
+.avatar { width: 28px; height: 28px; border-radius: var(--radius-full); background: linear-gradient(135deg, #7C3AED, #0EA5E9); display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: var(--weight-semibold); flex-shrink: 0; }
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.user-role { font-size: 10px; color: var(--text-tertiary); }
+
+/* Main layout */
+.main-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
+.topbar { height: 56px; background: var(--bg-surface); border-bottom: 1px solid var(--border-default); display: flex; align-items: center; padding: 0 var(--space-5); gap: var(--space-4); flex-shrink: 0; }
+.breadcrumb { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text-primary); }
+.breadcrumb .sep { color: var(--text-tertiary); margin: 0 2px; }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-medium); }
+.topbar-search { flex: 1; max-width: 360px; margin: 0 auto; position: relative; }
+.topbar-search input { width: 100%; height: 32px; background: var(--bg-inset); border: 1.5px solid var(--border-default); border-radius: var(--radius-md); padding: 0 var(--space-3) 0 32px; font-size: var(--text-body-sm); font-family: var(--font-sans); color: var(--text-primary); outline: none; transition: all var(--duration-normal); }
+.topbar-search input::placeholder { color: var(--text-tertiary); }
+.topbar-search input:focus { border-color: var(--brand-primary); background: var(--bg-surface); box-shadow: var(--shadow-focus); }
+.topbar-search .s-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.icon-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); border: none; background: transparent; cursor: pointer; color: var(--icon-secondary); transition: background var(--duration-fast), color var(--duration-fast); }
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.notif-badge::after { content: ''; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; background: var(--state-blocked); border-radius: 50%; border: 1.5px solid var(--bg-surface); }
+.notif-badge { position: relative; }
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 var(--space-1); }
+.topbar-avatar { width: 28px; height: 28px; border-radius: var(--radius-full); background: linear-gradient(135deg, #7C3AED, #0EA5E9); display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: var(--weight-semibold); cursor: pointer; }
+.page-scroll { flex: 1; overflow-y: auto; }
+.page-inner { padding: var(--space-5) var(--space-6); }
+.pg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-5); }
+.pg-title { font-size: var(--text-heading); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.02em; }
+.pg-subtitle { font-size: var(--text-body-sm); color: var(--text-secondary); margin-top: 2px; }
+.pg-actions { display: flex; align-items: center; gap: var(--space-2); }
+
+/* Admin banner */
+.admin-banner {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: linear-gradient(90deg, rgba(124,58,237,0.08), rgba(14,165,233,0.05));
+  border: 1px solid rgba(124,58,237,0.2);
+  border-radius: var(--radius-lg); margin-bottom: var(--space-5);
+}
+.admin-banner-icon { width: 36px; height: 36px; border-radius: var(--radius-md); background: rgba(124,58,237,0.12); display: flex; align-items: center; justify-content: center; color: #7C3AED; flex-shrink: 0; }
+.admin-banner-text { flex: 1; }
+.admin-banner-title { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.admin-banner-sub { font-size: var(--text-caption); color: var(--text-secondary); }
+
+/* KPI */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+.kpi-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-4) var(--space-5); box-shadow: var(--shadow-1); display: flex; flex-direction: column; gap: var(--space-2); transition: box-shadow var(--duration-normal), transform var(--duration-normal); }
+.kpi-card:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.kpi-header { display: flex; align-items: center; justify-content: space-between; }
+.kpi-label { font-size: var(--text-body-sm); color: var(--text-secondary); font-weight: var(--weight-medium); }
+.kpi-icon { width: 32px; height: 32px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; }
+.kpi-icon.blue { background: var(--state-active-light); color: var(--state-active); }
+.kpi-icon.green { background: var(--state-progress-light); color: var(--state-progress); }
+.kpi-icon.amber { background: var(--state-delayed-light); color: var(--state-delayed); }
+.kpi-icon.red { background: var(--state-blocked-light); color: var(--state-blocked); }
+.kpi-value { font-size: 28px; font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.03em; line-height: 1; }
+.kpi-footer { font-size: var(--text-caption); color: var(--text-tertiary); }
+
+/* Tabs */
+.tab-bar { display: flex; align-items: center; border-bottom: 1px solid var(--border-default); margin-bottom: var(--space-5); }
+.tab-item { padding: var(--space-2) var(--space-4); font-size: var(--text-body-sm); font-weight: var(--weight-medium); color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color var(--duration-fast), border-color var(--duration-fast); display: flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
+.tab-item:hover { color: var(--text-primary); }
+.tab-item.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); font-weight: var(--weight-semibold); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Members table */
+.members-toolbar { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.member-search { position: relative; flex: 1; max-width: 280px; }
+.member-search input { width: 100%; height: 34px; padding: 0 var(--space-3) 0 34px; border: 1.5px solid var(--border-default); border-radius: var(--radius-md); background: var(--bg-surface); font-size: var(--text-body-sm); font-family: var(--font-sans); color: var(--text-primary); outline: none; }
+.member-search input:focus { border-color: var(--brand-primary); }
+.member-search .si { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+
+.members-table { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-1); }
+.mt-head { display: grid; grid-template-columns: 200px 1fr 100px 120px 100px 80px 120px; gap: var(--space-3); align-items: center; padding: var(--space-2) var(--space-4); background: var(--bg-surface-alt); border-bottom: 1px solid var(--border-default); font-size: 11px; font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+.mt-row { display: grid; grid-template-columns: 200px 1fr 100px 120px 100px 80px 120px; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); transition: background var(--duration-fast); }
+.mt-row:last-child { border-bottom: none; }
+.mt-row:hover { background: var(--bg-surface-alt); }
+
+.member-cell { display: flex; align-items: center; gap: var(--space-2); }
+.member-avatar { width: 32px; height: 32px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: var(--weight-semibold); flex-shrink: 0; }
+.member-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.member-email { font-size: var(--text-caption); color: var(--text-tertiary); }
+
+/* Role badges */
+.role-owner { display: inline-flex; font-size: 10px; font-weight: var(--weight-bold); padding: 2px 7px; border-radius: var(--radius-full); background: rgba(124,58,237,0.1); color: #7C3AED; border: 1px solid rgba(124,58,237,0.2); text-transform: uppercase; letter-spacing: 0.04em; }
+.role-admin { display: inline-flex; font-size: 10px; font-weight: var(--weight-bold); padding: 2px 7px; border-radius: var(--radius-full); background: var(--state-active-light); color: var(--state-active); border: 1px solid rgba(59,130,246,0.2); text-transform: uppercase; letter-spacing: 0.04em; }
+.role-member { display: inline-flex; font-size: 10px; font-weight: var(--weight-bold); padding: 2px 7px; border-radius: var(--radius-full); background: var(--bg-inset); color: var(--text-secondary); border: 1px solid var(--border-default); text-transform: uppercase; letter-spacing: 0.04em; }
+.role-guest { display: inline-flex; font-size: 10px; font-weight: var(--weight-bold); padding: 2px 7px; border-radius: var(--radius-full); background: var(--state-snoozed); color: var(--text-tertiary); border: 1px solid var(--border-default); text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* Status badges */
+.status-active { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: var(--weight-medium); color: var(--state-progress); }
+.status-active::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--state-progress); }
+.status-pending { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: var(--weight-medium); color: var(--state-delayed); }
+.status-pending::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--state-delayed); }
+.status-suspended { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: var(--weight-medium); color: var(--state-blocked); }
+.status-suspended::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--state-blocked); }
+
+/* Row actions */
+.row-actions { display: flex; align-items: center; gap: var(--space-1); }
+.ra-btn { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: transparent; cursor: pointer; color: var(--icon-secondary); transition: all var(--duration-fast); }
+.ra-btn:hover { background: var(--bg-inset); color: var(--text-primary); border-color: var(--border-strong); }
+.ra-btn.danger:hover { background: var(--state-blocked-light); color: var(--state-blocked); border-color: var(--state-blocked); }
+
+/* Feature gates */
+.feature-gates-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.gate-section { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-4); box-shadow: var(--shadow-1); }
+.gate-section-title { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: var(--space-3); display: flex; align-items: center; gap: var(--space-2); }
+.gate-row { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); }
+.gate-row:last-child { border-bottom: none; }
+.gate-label { font-size: var(--text-body-sm); font-weight: var(--weight-medium); color: var(--text-primary); }
+.gate-desc { font-size: var(--text-caption); color: var(--text-tertiary); margin-top: 2px; line-height: 1.4; }
+.gate-meta { font-size: var(--text-caption); color: var(--text-tertiary); margin-top: 3px; }
+.gate-meta strong { color: var(--text-secondary); }
+
+/* Toggle */
+.toggle { width: 36px; height: 20px; background: var(--neutral-200); border-radius: 10px; cursor: pointer; position: relative; transition: background var(--duration-fast); flex-shrink: 0; border: none; }
+.toggle.on { background: var(--brand-primary); }
+.toggle::after { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: white; top: 3px; left: 3px; transition: transform var(--duration-fast); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+.toggle.on::after { transform: translateX(16px); }
+
+/* Audit log */
+.audit-toolbar { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.audit-table { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-1); }
+.at-head { display: grid; grid-template-columns: 130px 160px 1fr 140px 100px 80px; gap: var(--space-3); align-items: center; padding: var(--space-2) var(--space-4); background: var(--bg-surface-alt); border-bottom: 1px solid var(--border-default); font-size: 11px; font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+.at-row { display: grid; grid-template-columns: 130px 160px 1fr 140px 100px 80px; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); transition: background var(--duration-fast); }
+.at-row:last-child { border-bottom: none; }
+.at-row:hover { background: var(--bg-surface-alt); }
+
+/* Severity badges */
+.sev-info { font-size: 10px; font-weight: var(--weight-bold); padding: 2px 7px; border-radius: var(--radius-full); background: var(--state-active-light); color: var(--state-active); text-transform: uppercase; }
+.sev-warn { font-size: 10px; font-weight: var(--weight-bold); padding: 2px 7px; border-radius: var(--radius-full); background: var(--state-delayed-light); color: var(--state-delayed); text-transform: uppercase; }
+.sev-critical { font-size: 10px; font-weight: var(--weight-bold); padding: 2px 7px; border-radius: var(--radius-full); background: var(--state-blocked-light); color: var(--state-blocked); text-transform: uppercase; }
+
+/* System health */
+.health-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+.health-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-4); box-shadow: var(--shadow-1); }
+.health-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+.health-card-title { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.health-status-pill { font-size: 10px; font-weight: var(--weight-bold); padding: 2px 8px; border-radius: var(--radius-full); text-transform: uppercase; }
+.health-status-pill.healthy { background: var(--state-progress-light); color: var(--state-progress); }
+.health-status-pill.warn { background: var(--state-delayed-light); color: var(--state-delayed); }
+.health-status-pill.error { background: var(--state-blocked-light); color: var(--state-blocked); }
+
+.metric-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
+.metric-label { font-size: var(--text-caption); color: var(--text-tertiary); }
+.metric-val { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+.mini-bar-wrap { height: 6px; background: var(--bg-inset); border-radius: 3px; overflow: hidden; margin-top: var(--space-2); }
+.mini-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+.mini-bar.green { background: var(--state-progress); }
+.mini-bar.amber { background: var(--state-delayed); }
+.mini-bar.red { background: var(--state-blocked); }
+.mini-bar.blue { background: var(--brand-primary); }
+
+/* Invite modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--bg-surface); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-4); width: 480px; max-width: 95vw;
+  display: flex; flex-direction: column;
+  transform: scale(0.96); transition: transform 0.2s;
+}
+.modal-overlay.open .modal { transform: scale(1); }
+.modal-header { padding: var(--space-5) var(--space-5) var(--space-4); border-bottom: 1px solid var(--border-default); display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: var(--text-title); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.modal-body { padding: var(--space-5); }
+.modal-footer { padding: var(--space-4) var(--space-5); border-top: 1px solid var(--border-default); display: flex; gap: var(--space-2); justify-content: flex-end; }
+.form-row { margin-bottom: var(--space-4); }
+.form-label { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: var(--space-1); display: block; }
+.form-input { width: 100%; height: 36px; padding: 0 var(--space-3); border: 1.5px solid var(--border-default); border-radius: var(--radius-md); background: var(--bg-surface); font-size: var(--text-body-sm); font-family: var(--font-sans); color: var(--text-primary); outline: none; transition: border-color var(--duration-fast); box-sizing: border-box; }
+.form-input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.form-select { width: 100%; height: 36px; padding: 0 var(--space-3); border: 1.5px solid var(--border-default); border-radius: var(--radius-md); background: var(--bg-surface); font-size: var(--text-body-sm); font-family: var(--font-sans); color: var(--text-primary); outline: none; cursor: pointer; }
+
+/* Role picker in modal */
+.role-options { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); margin-top: var(--space-1); }
+.role-option { padding: var(--space-3); border: 1.5px solid var(--border-default); border-radius: var(--radius-md); cursor: pointer; transition: all var(--duration-fast); }
+.role-option:hover { border-color: var(--border-strong); }
+.role-option.selected { border-color: var(--brand-primary); background: var(--brand-primary-light); }
+.role-option-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.role-option-desc { font-size: var(--text-caption); color: var(--text-tertiary); margin-top: 2px; }
+
+/* Filter chip */
+.filter-chip { display: flex; align-items: center; gap: var(--space-1); height: 32px; padding: 0 var(--space-3); background: var(--bg-surface); border: 1.5px solid var(--border-default); border-radius: var(--radius-md); cursor: pointer; font-size: var(--text-body-sm); font-family: var(--font-sans); color: var(--text-secondary); transition: all var(--duration-fast); white-space: nowrap; }
+.filter-chip:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.filter-chip.active { background: var(--brand-primary-light); border-color: var(--brand-primary); color: var(--brand-primary); }
+
+@media (max-width: 1200px) {
+  .mt-head, .mt-row { grid-template-columns: 200px 1fr 100px 80px 120px; }
+  .mt-head > :nth-child(5), .mt-row > :nth-child(5) { display: none; }
+  .feature-gates-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 1024px) {
+  .sidebar { display: none; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .health-grid { grid-template-columns: 1fr 1fr; }
+  .at-head, .at-row { grid-template-columns: 130px 1fr 140px 80px; }
+  .at-head > :nth-child(4), .at-row > :nth-child(4),
+  .at-head > :nth-child(5), .at-row > :nth-child(5) { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      
+      <div>
+        <div class="logo-text">GraphClaw</div>
+        <div class="logo-sub">Cockpit</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Workspace</div>
+      <a href="../index.html" class="nav-item">
+        <span class="ni"><i data-lucide="layout-dashboard" width="16" height="16" aria-label="Dashboard"></i></span>
+        Dashboard
+      </a>
+      <a href="my-tasks.html" class="nav-item">
+        <span class="ni"><i data-lucide="check-square" width="16" height="16" aria-label="My Tasks"></i></span>
+        My Tasks
+        <span class="nav-badge">5</span>
+      </a>
+      <a href="goal-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="target" width="16" height="16" aria-label="Goals"></i></span>
+        Goals
+      </a>
+      <a href="project-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="folder-kanban" width="16" height="16" aria-label="Projects"></i></span>
+        Projects
+      </a>
+      <a href="timeline-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="calendar-range" width="16" height="16" aria-label="Timeline"></i></span>
+        Timeline
+      </a>
+      <a href="resource-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="users" width="16" height="16" aria-label="People"></i></span>
+        People
+      </a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Intelligence</div>
+      <a href="agent-monitor.html" class="nav-item">
+        <span class="ni"><i data-lucide="cpu" width="16" height="16" aria-label="Agent Monitor"></i></span>
+        Agent Monitor
+        <span class="nav-badge green">7</span>
+      </a>
+      <a href="chat-sidebar.html" class="nav-item">
+        <span class="ni"><i data-lucide="message-circle" width="16" height="16" aria-label="Chat"></i></span>
+        Chat
+      </a>
+      <a href="skill-marketplace.html" class="nav-item">
+        <span class="ni"><i data-lucide="puzzle" width="16" height="16" aria-label="Skills"></i></span>
+        Skills
+        <span class="nav-badge amber">2</span>
+      </a>
+      <a href="mcp-registry.html" class="nav-item">
+        <span class="ni"><i data-lucide="plug" width="16" height="16" aria-label="MCP Registry"></i></span>
+        MCP Registry
+      </a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Admin</div>
+      <a href="admin-panel.html" class="nav-item active">
+        <span class="ni"><i data-lucide="shield" width="16" height="16" aria-label="Admin"></i></span>
+        Admin Panel
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings-channels.html" class="nav-item" style="margin: 0 0 var(--space-1);">
+        <span class="ni"><i data-lucide="settings" width="16" height="16" aria-label="Settings"></i></span>
+        Settings
+      </a>
+      <div class="user-row">
+        <div class="avatar">AR</div>
+        <div class="user-info">
+          <div class="user-name">Arjun Reyes</div>
+          <div class="user-role">Product Lead · Owner</div>
+        </div>
+        <i data-lucide="chevron-up-down" width="14" height="14" style="color: var(--icon-tertiary);" aria-label="User menu"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN LAYOUT -->
+  <div class="main-layout">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="breadcrumb">
+        <a href="#">Home</a>
+        <span class="sep">/</span>
+        <span class="current">Admin Panel</span>
+      </div>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14" aria-label="Search"></i></span>
+        <input type="text" placeholder="Search members, audit events…" aria-label="Search admin">
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notif-badge" aria-label="Notifications">
+          <i data-lucide="bell" width="16" height="16" aria-label="Bell"></i>
+        </button>
+        <div class="divider-v"></div>
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+          <i data-lucide="moon" width="16" height="16" aria-label="Dark mode"></i>
+        </button>
+        <div class="topbar-avatar">AR</div>
+      </div>
+    </div>
+
+    <!-- Page scroll -->
+    <div class="page-scroll">
+      <div class="page-inner">
+
+        <!-- Admin banner -->
+        <div class="admin-banner">
+          <div class="admin-banner-icon">
+            <i data-lucide="shield" width="18" height="18" aria-label="Shield"></i>
+          </div>
+          <div class="admin-banner-text">
+            <div class="admin-banner-title">Acme Corp — Organization Admin</div>
+            <div class="admin-banner-sub">You have OWNER access. Changes here affect all members of this organization.</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" aria-label="Organization settings">
+            <i data-lucide="settings-2" width="13" height="13" aria-label="Settings"></i>
+            Org Settings
+          </button>
+        </div>
+
+        <!-- Page header -->
+        <div class="pg-header">
+          <div>
+            <div class="pg-title">Admin Panel</div>
+            <div class="pg-subtitle">Manage members, feature policies, LLM configuration, and audit logs</div>
+          </div>
+          <div class="pg-actions">
+            <button class="btn btn-primary btn-sm" onclick="openInviteModal()" aria-label="Invite member">
+              <i data-lucide="user-plus" width="14" height="14" aria-label="User plus"></i>
+              Invite Member
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Row -->
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Total Members</span>
+              <div class="kpi-icon blue"><i data-lucide="users" width="16" height="16" aria-label="Users"></i></div>
+            </div>
+            <div class="kpi-value">18</div>
+            <div class="kpi-footer">1 owner · 3 admins · 13 members · 1 guest</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Active This Week</span>
+              <div class="kpi-icon green"><i data-lucide="activity" width="16" height="16" aria-label="Activity"></i></div>
+            </div>
+            <div class="kpi-value">14</div>
+            <div class="kpi-footer">77.8% weekly active</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Pending Invites</span>
+              <div class="kpi-icon amber"><i data-lucide="mail" width="16" height="16" aria-label="Mail"></i></div>
+            </div>
+            <div class="kpi-value">3</div>
+            <div class="kpi-footer">Sent more than 48h ago: 1</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Suspended</span>
+              <div class="kpi-icon red"><i data-lucide="user-x" width="16" height="16" aria-label="Suspended"></i></div>
+            </div>
+            <div class="kpi-value">1</div>
+            <div class="kpi-footer">Pending review</div>
+          </div>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+          <div class="tab-item active" data-tab="members">Members</div>
+          <div class="tab-item" data-tab="features">Feature Gating</div>
+          <div class="tab-item" data-tab="audit">Audit Log</div>
+          <div class="tab-item" data-tab="health">System Health</div>
+        </div>
+
+        <!-- === TAB: MEMBERS === -->
+        <div class="tab-panel active" id="tab-members">
+          <div class="members-toolbar">
+            <div class="member-search">
+              <span class="si"><i data-lucide="search" width="14" height="14" aria-label="Search"></i></span>
+              <input type="text" placeholder="Search members…" aria-label="Search members">
+            </div>
+            <div class="filter-chip active">All</div>
+            <div class="filter-chip">Active</div>
+            <div class="filter-chip">Pending</div>
+            <div class="filter-chip">Suspended</div>
+            <div style="margin-left:auto;">
+              <button class="btn btn-ghost btn-sm" aria-label="Export members">
+                <i data-lucide="download" width="13" height="13" aria-label="Download"></i> Export
+              </button>
+            </div>
+          </div>
+
+          <div class="members-table">
+            <div class="mt-head">
+              <div>Member</div>
+              <div>Email</div>
+              <div>Role</div>
+              <div>Status</div>
+              <div>Tasks</div>
+              <div>Last Active</div>
+              <div>Actions</div>
+            </div>
+
+            <!-- Owner — Arjun (you) -->
+            <div class="mt-row" style="background:rgba(14,165,233,0.03);">
+              <div class="member-cell">
+                <div class="member-avatar" style="background:linear-gradient(135deg,#7C3AED,#0EA5E9);">AR</div>
+                <div>
+                  <div class="member-name">Arjun Reyes <span style="font-size:10px;background:rgba(14,165,233,0.1);color:var(--brand-primary);padding:1px 6px;border-radius:var(--radius-full);font-weight:700;margin-left:4px;">YOU</span></div>
+                  <div class="member-email">arjun.reyes@acmecorp.io</div>
+                </div>
+              </div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">arjun.reyes@acmecorp.io</div>
+              <div><span class="role-owner">Owner</span></div>
+              <div><span class="status-active">Active</span></div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">47</div>
+              <div style="font-size:var(--text-caption);color:var(--text-tertiary);">Just now</div>
+              <div class="row-actions">
+                <button class="ra-btn" title="View activity" aria-label="View activity"><i data-lucide="bar-chart-2" width="13" height="13" aria-label="Chart"></i></button>
+              </div>
+            </div>
+
+            <!-- Admin 1 -->
+            <div class="mt-row">
+              <div class="member-cell">
+                <div class="member-avatar" style="background:linear-gradient(135deg,#0EA5E9,#10B981);">SC</div>
+                <div>
+                  <div class="member-name">Sofia Chen</div>
+                  <div class="member-email">sofia.chen@acmecorp.io</div>
+                </div>
+              </div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">sofia.chen@acmecorp.io</div>
+              <div><span class="role-admin">Admin</span></div>
+              <div><span class="status-active">Active</span></div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">31</div>
+              <div style="font-size:var(--text-caption);color:var(--text-tertiary);">2 hrs ago</div>
+              <div class="row-actions">
+                <button class="ra-btn" title="Change role" aria-label="Change role"><i data-lucide="shield" width="13" height="13" aria-label="Shield"></i></button>
+                <button class="ra-btn" title="View activity" aria-label="View activity"><i data-lucide="bar-chart-2" width="13" height="13" aria-label="Chart"></i></button>
+                <button class="ra-btn danger" title="Suspend" aria-label="Suspend"><i data-lucide="user-x" width="13" height="13" aria-label="Suspend"></i></button>
+              </div>
+            </div>
+
+            <!-- Member 1 -->
+            <div class="mt-row">
+              <div class="member-cell">
+                <div class="member-avatar" style="background:linear-gradient(135deg,#F59E0B,#EF4444);">MK</div>
+                <div>
+                  <div class="member-name">Marcus Kim</div>
+                  <div class="member-email">m.kim@acmecorp.io</div>
+                </div>
+              </div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">m.kim@acmecorp.io</div>
+              <div><span class="role-member">Member</span></div>
+              <div><span class="status-active">Active</span></div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">18</div>
+              <div style="font-size:var(--text-caption);color:var(--text-tertiary);">1 day ago</div>
+              <div class="row-actions">
+                <button class="ra-btn" title="Change role" aria-label="Change role"><i data-lucide="shield" width="13" height="13" aria-label="Shield"></i></button>
+                <button class="ra-btn" title="View activity" aria-label="View activity"><i data-lucide="bar-chart-2" width="13" height="13" aria-label="Chart"></i></button>
+                <button class="ra-btn danger" title="Suspend" aria-label="Suspend"><i data-lucide="user-x" width="13" height="13" aria-label="Suspend"></i></button>
+              </div>
+            </div>
+
+            <!-- Pending invite -->
+            <div class="mt-row" style="opacity:0.85;">
+              <div class="member-cell">
+                <div class="member-avatar" style="background:var(--bg-inset);border:2px dashed var(--border-default);">
+                  <i data-lucide="mail" width="14" height="14" style="color:var(--text-tertiary);" aria-label="Mail"></i>
+                </div>
+                <div>
+                  <div class="member-name" style="color:var(--text-secondary);">priya.shah@acmecorp.io</div>
+                  <div class="member-email">Invitation sent 3 days ago</div>
+                </div>
+              </div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">priya.shah@acmecorp.io</div>
+              <div><span class="role-member">Member</span></div>
+              <div><span class="status-pending">Pending</span></div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-tertiary);">—</div>
+              <div style="font-size:var(--text-caption);color:var(--text-tertiary);">Never</div>
+              <div class="row-actions">
+                <button class="ra-btn" title="Resend invite" aria-label="Resend invite"><i data-lucide="send" width="13" height="13" aria-label="Send"></i></button>
+                <button class="ra-btn danger" title="Revoke invite" aria-label="Revoke"><i data-lucide="x" width="13" height="13" aria-label="X"></i></button>
+              </div>
+            </div>
+
+            <!-- Suspended -->
+            <div class="mt-row" style="opacity:0.7;background:rgba(239,68,68,0.02);">
+              <div class="member-cell">
+                <div class="member-avatar" style="background:#FEF2F2;border:2px solid var(--state-blocked);">
+                  <span style="color:var(--state-blocked);font-size:11px;font-weight:700;">DL</span>
+                </div>
+                <div>
+                  <div class="member-name" style="color:var(--text-secondary);">Dan Liu</div>
+                  <div class="member-email">dan.liu@acmecorp.io</div>
+                </div>
+              </div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">dan.liu@acmecorp.io</div>
+              <div><span class="role-member">Member</span></div>
+              <div><span class="status-suspended">Suspended</span></div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">9</div>
+              <div style="font-size:var(--text-caption);color:var(--text-tertiary);">2 weeks ago</div>
+              <div class="row-actions">
+                <button class="ra-btn" title="Reactivate" aria-label="Reactivate" style="color:var(--state-progress);"><i data-lucide="user-check" width="13" height="13" aria-label="Reactivate"></i></button>
+                <button class="ra-btn danger" title="Remove from org" aria-label="Remove"><i data-lucide="trash-2" width="13" height="13" aria-label="Trash"></i></button>
+              </div>
+            </div>
+
+            <!-- Guest -->
+            <div class="mt-row">
+              <div class="member-cell">
+                <div class="member-avatar" style="background:linear-gradient(135deg,#A855F7,#EC4899);">JT</div>
+                <div>
+                  <div class="member-name">Jamie Torres</div>
+                  <div class="member-email">jamie@contractor.dev</div>
+                </div>
+              </div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">jamie@contractor.dev</div>
+              <div><span class="role-guest">Guest</span></div>
+              <div><span class="status-active">Active</span></div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">3</div>
+              <div style="font-size:var(--text-caption);color:var(--text-tertiary);">5 hrs ago</div>
+              <div class="row-actions">
+                <button class="ra-btn" title="Change role" aria-label="Change role"><i data-lucide="shield" width="13" height="13" aria-label="Shield"></i></button>
+                <button class="ra-btn" title="View activity" aria-label="View activity"><i data-lucide="bar-chart-2" width="13" height="13" aria-label="Chart"></i></button>
+                <button class="ra-btn danger" title="Remove" aria-label="Remove"><i data-lucide="trash-2" width="13" height="13" aria-label="Trash"></i></button>
+              </div>
+            </div>
+
+          </div><!-- /members-table -->
+          <div style="text-align:center;padding:var(--space-4);font-size:var(--text-body-sm);color:var(--text-tertiary);">
+            Showing 6 of 18 members — <a href="#" style="color:var(--text-link);text-decoration:none;" onclick="return false;">Show all</a>
+          </div>
+        </div><!-- /tab-members -->
+
+        <!-- === TAB: FEATURE GATING === -->
+        <div class="tab-panel" id="tab-features">
+          <div style="font-size:var(--text-body-sm);color:var(--text-secondary);margin-bottom:var(--space-5);">Features not in the allowlist are <strong>hidden</strong> from the user interface. Existing configurations are preserved when a feature is disabled.</div>
+
+          <div class="feature-gates-grid">
+
+            <div class="gate-section">
+              <div class="gate-section-title">
+                <i data-lucide="plug" width="16" height="16" style="color:var(--icon-secondary);" aria-label="Plug"></i>
+                Integrations
+              </div>
+              <div class="gate-row">
+                <div>
+                  <div class="gate-label">MCP Connectors</div>
+                  <div class="gate-desc">Allow users to register and use MCP server connections</div>
+                  <div class="gate-meta"><strong>9</strong> servers registered by 4 users</div>
+                </div>
+                <button class="toggle on" aria-label="Toggle MCP Connectors" onclick="this.classList.toggle('on')"></button>
+              </div>
+              <div class="gate-row">
+                <div>
+                  <div class="gate-label">A2A Integrations</div>
+                  <div class="gate-desc">External agent-to-agent protocol connections</div>
+                  <div class="gate-meta"><strong>2</strong> active A2A endpoints</div>
+                </div>
+                <button class="toggle on" aria-label="Toggle A2A" onclick="this.classList.toggle('on')"></button>
+              </div>
+              <div class="gate-row">
+                <div>
+                  <div class="gate-label">External API Access</div>
+                  <div class="gate-desc">Allow REST API access from external clients</div>
+                  <div class="gate-meta"><strong>3</strong> API tokens active</div>
+                </div>
+                <button class="toggle on" aria-label="Toggle API Access" onclick="this.classList.toggle('on')"></button>
+              </div>
+            </div>
+
+            <div class="gate-section">
+              <div class="gate-section-title">
+                <i data-lucide="puzzle" width="16" height="16" style="color:var(--icon-secondary);" aria-label="Puzzle"></i>
+                Skills &amp; Marketplace
+              </div>
+              <div class="gate-row">
+                <div>
+                  <div class="gate-label">Marketplace Access</div>
+                  <div class="gate-desc">Enable remote skill marketplace browsing and installs</div>
+                  <div class="gate-meta"><strong>14</strong> skills installed org-wide</div>
+                </div>
+                <button class="toggle on" aria-label="Toggle Marketplace" onclick="this.classList.toggle('on')"></button>
+              </div>
+              <div class="gate-row">
+                <div>
+                  <div class="gate-label">Marketplace Sources</div>
+                  <div class="gate-desc">Restrict to specific approved skill sources</div>
+                  <div class="gate-meta"><strong>All sources</strong> allowed</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" aria-label="Configure sources">Configure</button>
+              </div>
+              <div class="gate-row">
+                <div>
+                  <div class="gate-label">Canvas Editor</div>
+                  <div class="gate-desc">Visual agent and skill workflow designer</div>
+                  <div class="gate-meta">Used by <strong>5</strong> members</div>
+                </div>
+                <button class="toggle on" aria-label="Toggle Canvas" onclick="this.classList.toggle('on')"></button>
+              </div>
+            </div>
+
+            <div class="gate-section">
+              <div class="gate-section-title">
+                <i data-lucide="mail" width="16" height="16" style="color:var(--icon-secondary);" aria-label="Mail"></i>
+                Channels
+              </div>
+              <div class="gate-row">
+                <div>
+                  <div class="gate-label">Web Channel</div>
+                  <div class="gate-desc">In-app chat interface (always enabled)</div>
+                  <div class="gate-meta">All <strong>18</strong> members</div>
+                </div>
+                <button class="toggle on" disabled style="opacity:0.5;cursor:not-allowed;" aria-label="Web always on"></button>
+              </div>
+              <div class="gate-row">
+                <div>
+                  <div class="gate-label">Email Channel</div>
+                  <div class="gate-desc">Inbound/outbound email integration</div>
+                  <div class="gate-meta">Configured by <strong>12</strong> members</div>
+                </div>
+                <button class="toggle on" aria-label="Toggle Email" onclick="this.classList.toggle('on')"></button>
+              </div>
+              <div class="gate-row">
+                <div>
+                  <div class="gate-label">Slack Integration</div>
+                  <div class="gate-desc">Slack channel as a task communication channel</div>
+                  <div class="gate-meta">Configured by <strong>8</strong> members</div>
+                </div>
+                <button class="toggle on" aria-label="Toggle Slack" onclick="this.classList.toggle('on')"></button>
+              </div>
+            </div>
+
+            <div class="gate-section">
+              <div class="gate-section-title">
+                <i data-lucide="cpu" width="16" height="16" style="color:var(--icon-secondary);" aria-label="LLM"></i>
+                LLM &amp; Keys
+              </div>
+              <div class="gate-row">
+                <div>
+                  <div class="gate-label">Org LLM Config</div>
+                  <div class="gate-desc">Organization-level LLM provider and model defaults</div>
+                  <div class="gate-meta">Default: <strong>claude-sonnet-4-5</strong></div>
+                </div>
+                <button class="btn btn-ghost btn-sm" aria-label="Configure LLM">Configure</button>
+              </div>
+              <div class="gate-row">
+                <div>
+                  <div class="gate-label">User BYOK</div>
+                  <div class="gate-desc">Allow members to bring their own LLM API keys</div>
+                  <div class="gate-meta"><strong>4</strong> members using personal keys</div>
+                </div>
+                <button class="toggle on" aria-label="Toggle BYOK" onclick="this.classList.toggle('on')"></button>
+              </div>
+              <div class="gate-row">
+                <div>
+                  <div class="gate-label">Model Allowlist</div>
+                  <div class="gate-desc">Restrict which LLM models members can select</div>
+                  <div class="gate-meta"><strong>All models</strong> permitted</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" aria-label="Configure allowlist">Configure</button>
+              </div>
+            </div>
+
+          </div><!-- /feature-gates-grid -->
+        </div><!-- /tab-features -->
+
+        <!-- === TAB: AUDIT LOG === -->
+        <div class="tab-panel" id="tab-audit">
+          <div class="audit-toolbar">
+            <div class="filter-chip active">All Events</div>
+            <div class="filter-chip">Auth</div>
+            <div class="filter-chip">Members</div>
+            <div class="filter-chip">Config</div>
+            <div class="filter-chip">API</div>
+            <div style="margin-left:auto;display:flex;gap:var(--space-2);">
+              <button class="btn btn-ghost btn-sm" aria-label="Export audit log">
+                <i data-lucide="download" width="13" height="13" aria-label="Download"></i> Export CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="audit-table">
+            <div class="at-head">
+              <div>Timestamp</div>
+              <div>User</div>
+              <div>Action</div>
+              <div>Resource</div>
+              <div>IP Address</div>
+              <div>Severity</div>
+            </div>
+
+            <div class="at-row">
+              <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);">10 Apr 14:32:11</div>
+              <div>
+                <div style="font-size:var(--text-body-sm);font-weight:var(--weight-medium);color:var(--text-primary);">Arjun Reyes</div>
+                <div style="font-size:10px;color:var(--text-tertiary);">arjun.reyes@…</div>
+              </div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">Feature gate updated — <strong>BYOK enabled</strong></div>
+              <div style="font-size:var(--text-caption);font-family:var(--font-mono);color:var(--text-tertiary);">org:acme/features</div>
+              <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);">203.0.113.42</div>
+              <div><span class="sev-info">INFO</span></div>
+            </div>
+
+            <div class="at-row">
+              <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);">10 Apr 14:18:55</div>
+              <div>
+                <div style="font-size:var(--text-body-sm);font-weight:var(--weight-medium);color:var(--text-primary);">Sofia Chen</div>
+                <div style="font-size:10px;color:var(--text-tertiary);">sofia.chen@…</div>
+              </div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">Member invited — <strong>priya.shah@acmecorp.io</strong></div>
+              <div style="font-size:var(--text-caption);font-family:var(--font-mono);color:var(--text-tertiary);">org:acme/members</div>
+              <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);">198.51.100.7</div>
+              <div><span class="sev-info">INFO</span></div>
+            </div>
+
+            <div class="at-row" style="background:rgba(245,158,11,0.03);">
+              <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);">10 Apr 11:44:02</div>
+              <div>
+                <div style="font-size:var(--text-body-sm);font-weight:var(--weight-medium);color:var(--text-primary);">Arjun Reyes</div>
+                <div style="font-size:10px;color:var(--text-tertiary);">arjun.reyes@…</div>
+              </div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">Member suspended — <strong>dan.liu@acmecorp.io</strong></div>
+              <div style="font-size:var(--text-caption);font-family:var(--font-mono);color:var(--text-tertiary);">org:acme/members/dan-liu</div>
+              <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);">203.0.113.42</div>
+              <div><span class="sev-warn">WARN</span></div>
+            </div>
+
+            <div class="at-row">
+              <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);">10 Apr 09:15:33</div>
+              <div>
+                <div style="font-size:var(--text-body-sm);font-weight:var(--weight-medium);color:var(--text-primary);">Marcus Kim</div>
+                <div style="font-size:10px;color:var(--text-tertiary);">m.kim@…</div>
+              </div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">LLM API key rotated</div>
+              <div style="font-size:var(--text-caption);font-family:var(--font-mono);color:var(--text-tertiary);">user:m-kim/secrets</div>
+              <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);">192.0.2.88</div>
+              <div><span class="sev-info">INFO</span></div>
+            </div>
+
+            <div class="at-row" style="background:rgba(239,68,68,0.03);">
+              <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);">09 Apr 22:07:18</div>
+              <div>
+                <div style="font-size:var(--text-body-sm);font-weight:var(--weight-medium);color:var(--state-blocked);">Unknown</div>
+                <div style="font-size:10px;color:var(--text-tertiary);">Unauthenticated</div>
+              </div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">Login failed — 5 attempts from same IP</div>
+              <div style="font-size:var(--text-caption);font-family:var(--font-mono);color:var(--text-tertiary);">auth/login</div>
+              <div style="font-size:11px;font-family:var(--font-mono);color:var(--state-blocked);">185.220.101.4</div>
+              <div><span class="sev-critical">CRITICAL</span></div>
+            </div>
+
+            <div class="at-row">
+              <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);">09 Apr 17:30:45</div>
+              <div>
+                <div style="font-size:var(--text-body-sm);font-weight:var(--weight-medium);color:var(--text-primary);">Sofia Chen</div>
+                <div style="font-size:10px;color:var(--text-tertiary);">sofia.chen@…</div>
+              </div>
+              <div style="font-size:var(--text-body-sm);color:var(--text-secondary);">MCP server registered — <strong>GitHub</strong></div>
+              <div style="font-size:var(--text-caption);font-family:var(--font-mono);color:var(--text-tertiary);">mcp/servers</div>
+              <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);">198.51.100.7</div>
+              <div><span class="sev-info">INFO</span></div>
+            </div>
+
+          </div><!-- /audit-table -->
+          <div style="text-align:center;padding:var(--space-4);font-size:var(--text-body-sm);color:var(--text-tertiary);">
+            Showing most recent 6 events — <a href="#" style="color:var(--text-link);text-decoration:none;" onclick="return false;">View all 482 events</a>
+          </div>
+        </div><!-- /tab-audit -->
+
+        <!-- === TAB: SYSTEM HEALTH === -->
+        <div class="tab-panel" id="tab-health">
+          <div style="font-size:var(--text-body-sm);color:var(--text-secondary);margin-bottom:var(--space-4);">Live system metrics — refreshed every 30 seconds. <a href="#" style="color:var(--text-link);" onclick="return false;">View full observability dashboard</a></div>
+
+          <div class="health-grid">
+
+            <!-- Database -->
+            <div class="health-card">
+              <div class="health-card-header">
+                <div class="health-card-title">
+                  <i data-lucide="database" width="14" height="14" style="color:var(--icon-secondary);vertical-align:middle;margin-right:4px;" aria-label="Database"></i>
+                  PostgreSQL + AGE
+                </div>
+                <span class="health-status-pill healthy">Healthy</span>
+              </div>
+              <div class="metric-row"><span class="metric-label">Connections</span><span class="metric-val">42/200</span></div>
+              <div class="mini-bar-wrap"><div class="mini-bar green" style="width:21%"></div></div>
+              <div class="metric-row" style="margin-top:var(--space-2);"><span class="metric-label">Query p99</span><span class="metric-val">8ms</span></div>
+              <div class="metric-row"><span class="metric-label">Replication lag</span><span class="metric-val" style="color:var(--state-progress);">0ms</span></div>
+              <div class="metric-row"><span class="metric-label">Disk used</span><span class="metric-val">47GB / 500GB</span></div>
+              <div class="mini-bar-wrap"><div class="mini-bar blue" style="width:9.4%"></div></div>
+            </div>
+
+            <!-- Redis -->
+            <div class="health-card">
+              <div class="health-card-header">
+                <div class="health-card-title">
+                  <i data-lucide="zap" width="14" height="14" style="color:var(--icon-secondary);vertical-align:middle;margin-right:4px;" aria-label="Redis"></i>
+                  Redis Cache
+                </div>
+                <span class="health-status-pill healthy">Healthy</span>
+              </div>
+              <div class="metric-row"><span class="metric-label">Memory</span><span class="metric-val">1.2GB / 4GB</span></div>
+              <div class="mini-bar-wrap"><div class="mini-bar green" style="width:30%"></div></div>
+              <div class="metric-row" style="margin-top:var(--space-2);"><span class="metric-label">Hit rate</span><span class="metric-val" style="color:var(--state-progress);">94.7%</span></div>
+              <div class="metric-row"><span class="metric-label">Keys stored</span><span class="metric-val">82,441</span></div>
+              <div class="metric-row"><span class="metric-label">Evictions/day</span><span class="metric-val" style="color:var(--state-progress);">0</span></div>
+            </div>
+
+            <!-- API Server -->
+            <div class="health-card">
+              <div class="health-card-header">
+                <div class="health-card-title">
+                  <i data-lucide="server" width="14" height="14" style="color:var(--icon-secondary);vertical-align:middle;margin-right:4px;" aria-label="API"></i>
+                  API Server
+                </div>
+                <span class="health-status-pill healthy">Healthy</span>
+              </div>
+              <div class="metric-row"><span class="metric-label">Req/min</span><span class="metric-val">847</span></div>
+              <div class="metric-row"><span class="metric-label">P95 latency</span><span class="metric-val">43ms</span></div>
+              <div class="metric-row"><span class="metric-label">Error rate</span><span class="metric-val" style="color:var(--state-progress);">0.12%</span></div>
+              <div class="metric-row"><span class="metric-label">Instances</span><span class="metric-val">3 / 3 healthy</span></div>
+              <div class="mini-bar-wrap"><div class="mini-bar green" style="width:100%"></div></div>
+            </div>
+
+            <!-- Agent Runtime -->
+            <div class="health-card">
+              <div class="health-card-header">
+                <div class="health-card-title">
+                  <i data-lucide="cpu" width="14" height="14" style="color:var(--icon-secondary);vertical-align:middle;margin-right:4px;" aria-label="Agent"></i>
+                  Agent Runtime
+                </div>
+                <span class="health-status-pill warn">Degraded</span>
+              </div>
+              <div class="metric-row"><span class="metric-label">Active workers</span><span class="metric-val" style="color:var(--state-delayed);">6 / 8</span></div>
+              <div class="mini-bar-wrap"><div class="mini-bar amber" style="width:75%"></div></div>
+              <div class="metric-row" style="margin-top:var(--space-2);"><span class="metric-label">Queue depth</span><span class="metric-val" style="color:var(--state-delayed);">142</span></div>
+              <div class="metric-row"><span class="metric-label">Avg task time</span><span class="metric-val">12.4s</span></div>
+              <div style="font-size:var(--text-caption);color:var(--state-delayed);margin-top:var(--space-2);">2 workers missed heartbeat — auto-restarting</div>
+            </div>
+
+            <!-- Storage -->
+            <div class="health-card">
+              <div class="health-card-header">
+                <div class="health-card-title">
+                  <i data-lucide="hard-drive" width="14" height="14" style="color:var(--icon-secondary);vertical-align:middle;margin-right:4px;" aria-label="Storage"></i>
+                  MinIO / Storage
+                </div>
+                <span class="health-status-pill healthy">Healthy</span>
+              </div>
+              <div class="metric-row"><span class="metric-label">Total stored</span><span class="metric-val">124GB</span></div>
+              <div class="metric-row"><span class="metric-label">Objects</span><span class="metric-val">1.2M</span></div>
+              <div class="metric-row"><span class="metric-label">Upload success</span><span class="metric-val" style="color:var(--state-progress);">100%</span></div>
+              <div class="metric-row"><span class="metric-label">Buckets</span><span class="metric-val">4</span></div>
+            </div>
+
+            <!-- Backups -->
+            <div class="health-card">
+              <div class="health-card-header">
+                <div class="health-card-title">
+                  <i data-lucide="archive" width="14" height="14" style="color:var(--icon-secondary);vertical-align:middle;margin-right:4px;" aria-label="Backup"></i>
+                  Backups
+                </div>
+                <span class="health-status-pill healthy">OK</span>
+              </div>
+              <div class="metric-row"><span class="metric-label">Last backup</span><span class="metric-val" style="color:var(--state-progress);">1 hr ago</span></div>
+              <div class="metric-row"><span class="metric-label">Backup size</span><span class="metric-val">53.4GB</span></div>
+              <div class="metric-row"><span class="metric-label">Retention</span><span class="metric-val">30 days</span></div>
+              <div class="metric-row"><span class="metric-label">Next scheduled</span><span class="metric-val">in 23 hrs</span></div>
+            </div>
+
+          </div><!-- /health-grid -->
+        </div><!-- /tab-health -->
+
+      </div><!-- /page-inner -->
+    </div><!-- /page-scroll -->
+  </div><!-- /main-layout -->
+
+</div><!-- /app-shell -->
+
+<!-- Invite modal -->
+<div class="modal-overlay" id="inviteModal" onclick="if(event.target===this)closeInviteModal()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="inviteTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="inviteTitle">Invite Team Member</div>
+      <button class="icon-btn" onclick="closeInviteModal()" aria-label="Close modal">
+        <i data-lucide="x" width="16" height="16" aria-label="Close"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label class="form-label" for="inviteEmail">Email address</label>
+        <input class="form-input" id="inviteEmail" type="email" placeholder="colleague@example.com" aria-label="Email to invite">
+      </div>
+      <div class="form-row" style="margin-bottom:0;">
+        <label class="form-label">Role</label>
+        <div class="role-options">
+          <div class="role-option">
+            <div class="role-option-name">Admin</div>
+            <div class="role-option-desc">Full access, manage members &amp; features</div>
+          </div>
+          <div class="role-option selected">
+            <div class="role-option-name">Member</div>
+            <div class="role-option-desc">Create and manage tasks, use all features</div>
+          </div>
+          <div class="role-option">
+            <div class="role-option-name">Guest</div>
+            <div class="role-option-desc">Read-only view, limited to scoped tasks</div>
+          </div>
+          <div class="role-option" style="display:flex;align-items:center;justify-content:center;border-style:dashed;color:var(--text-tertiary);font-size:var(--text-caption);">
+            + Learn about roles
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeInviteModal()" aria-label="Cancel">Cancel</button>
+      <button class="btn btn-primary" aria-label="Send invitation">
+        <i data-lucide="send" width="14" height="14" aria-label="Send"></i>
+        Send Invitation
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+lucide.createIcons();
+
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+themeToggle.addEventListener('click', () => {
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  themeToggle.querySelector('i').setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+  lucide.createIcons();
+});
+
+// Tabs
+document.querySelectorAll('.tab-item').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + target)?.classList.add('active');
+  });
+});
+
+// Filter chips
+document.querySelectorAll('.members-toolbar .filter-chip').forEach(c => {
+  c.addEventListener('click', () => {
+    c.closest('.members-toolbar').querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+  });
+});
+document.querySelectorAll('.audit-toolbar .filter-chip').forEach(c => {
+  c.addEventListener('click', () => {
+    c.closest('.audit-toolbar').querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+  });
+});
+
+// Role option selection in modal
+document.querySelectorAll('.role-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.role-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+  });
+});
+
+// Invite modal
+function openInviteModal() {
+  document.getElementById('inviteModal').classList.add('open');
+}
+function closeInviteModal() {
+  document.getElementById('inviteModal').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInviteModal(); });
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

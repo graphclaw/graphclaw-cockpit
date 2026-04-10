@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html data-page="settings-triggers" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Triggers — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   Settings: Trigger Rules — Page-specific styles
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: var(--font-sans); }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* ─── Sidebar ───────────────────────────────────────────── */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  height: 56px; flex-shrink: 0;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: var(--weight-bold); font-size: 13px; flex-shrink: 0;
+}
+.logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.nav-section {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  padding: var(--space-3) var(--space-4) var(--space-1);
+}
+.nav-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  margin: 1px var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer; text-decoration: none;
+  color: var(--text-secondary);
+  font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background: rgba(56,189,248,0.12); }
+.nav-item .ni { display: flex; align-items: center; flex-shrink: 0; width: 18px; height: 18px; }
+.sidebar-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-4); }
+.sidebar-footer { padding: var(--space-2); border-top: 1px solid var(--border-default); }
+.user-row {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2); border-radius: var(--radius-md); cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.user-row:hover { background: var(--bg-inset); }
+.avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold); flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.user-role { font-size: 10px; color: var(--text-tertiary); }
+
+/* ─── Main Layout ───────────────────────────────────────── */
+.main-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
+.topbar {
+  height: 56px; background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center;
+  padding: 0 var(--space-5); gap: var(--space-4); flex-shrink: 0;
+}
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; transition: color var(--duration-fast); }
+.breadcrumb a:hover { color: var(--text-primary); }
+.breadcrumb .sep { color: var(--text-tertiary); }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-medium); }
+.topbar-search { flex: 1; max-width: 340px; margin: 0 auto; position: relative; }
+.topbar-search input {
+  width: 100%; height: 32px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 0 var(--space-3) 0 32px;
+  font-size: var(--text-body-sm); font-family: var(--font-sans);
+  color: var(--text-primary); outline: none; transition: all var(--duration-normal);
+}
+.topbar-search input::placeholder { color: var(--text-tertiary); }
+.topbar-search input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.topbar-search .s-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.icon-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); border: none; background: transparent;
+  cursor: pointer; color: var(--icon-secondary);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 var(--space-1); }
+.topbar-avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold); cursor: pointer;
+}
+
+/* ─── Settings layout ───────────────────────────────────── */
+.settings-body { display: flex; flex: 1; overflow: hidden; }
+.settings-nav {
+  width: 200px; flex-shrink: 0;
+  background: var(--bg-surface); border-right: 1px solid var(--border-default);
+  overflow-y: auto; padding: var(--space-4) var(--space-2);
+}
+.sn-title {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-tertiary); padding: 0 var(--space-2) var(--space-2); display: block;
+}
+.sn-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 7px var(--space-2); border-radius: var(--radius-md);
+  cursor: pointer; text-decoration: none;
+  color: var(--text-secondary); font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast); margin-bottom: 1px;
+}
+.sn-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.sn-item.active { background: var(--brand-primary-light); color: var(--brand-primary); font-weight: var(--weight-semibold); }
+[data-theme="dark"] .sn-item.active { background: rgba(56,189,248,0.12); }
+.sn-divider { height: 1px; background: var(--border-default); margin: var(--space-3) var(--space-2); }
+.sn-item.danger { color: var(--text-error); }
+.sn-item.danger:hover { background: var(--state-blocked-light); }
+
+.settings-content { flex: 1; overflow-y: auto; min-width: 0; }
+.settings-inner { max-width: 900px; padding: var(--space-6) var(--space-8); padding-bottom: 80px; }
+.settings-header { margin-bottom: var(--space-5); display: flex; align-items: flex-end; justify-content: space-between; }
+.settings-header-left { }
+.settings-title { font-size: var(--text-heading); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.02em; }
+.settings-subtitle { font-size: var(--text-body-sm); color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
+
+/* ─── Buttons ───────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 36px; padding: 0 var(--space-4);
+  background: var(--brand-primary); color: white;
+  border: none; border-radius: var(--radius-md);
+  font-family: var(--font-sans); font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  cursor: pointer; transition: all var(--duration-fast);
+  box-shadow: 0 1px 3px rgba(14,165,233,.3);
+}
+.btn-primary:hover { background: var(--brand-primary-hover); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(14,165,233,.35); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 36px; padding: 0 var(--space-4);
+  background: var(--bg-surface); color: var(--text-primary);
+  border: 1.5px solid var(--border-default); border-radius: var(--radius-md);
+  font-family: var(--font-sans); font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  cursor: pointer; transition: all var(--duration-fast);
+}
+.btn-secondary:hover { background: var(--bg-inset); border-color: var(--border-strong); }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 28px; padding: 0 var(--space-3);
+  background: transparent; color: var(--text-secondary);
+  border: none; border-radius: var(--radius-md);
+  font-family: var(--font-sans); font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  cursor: pointer; transition: all var(--duration-fast);
+}
+.btn-ghost:hover { background: var(--bg-inset); color: var(--text-primary); }
+.btn-danger {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 28px; padding: 0 var(--space-3);
+  background: transparent; color: var(--text-error);
+  border: 1px solid rgba(239,68,68,.3); border-radius: var(--radius-md);
+  font-family: var(--font-sans); font-size: var(--text-caption); font-weight: var(--weight-medium);
+  cursor: pointer; transition: all var(--duration-fast);
+}
+.btn-danger:hover { background: var(--state-blocked-light); }
+
+/* ─── Triggers table ────────────────────────────────────── */
+.triggers-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
+  margin-bottom: var(--space-4);
+}
+.triggers-table {
+  width: 100%; border-collapse: collapse;
+}
+.triggers-table thead { background: var(--bg-surface-alt); }
+.triggers-table th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left; font-size: 11px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+.triggers-table th:first-child { padding-left: var(--space-5); }
+.triggers-table th:last-child { padding-right: var(--space-5); text-align: right; }
+.triggers-table tbody tr {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background var(--duration-fast);
+  cursor: pointer;
+}
+.triggers-table tbody tr:last-child { border-bottom: none; }
+.triggers-table tbody tr:hover { background: var(--bg-surface-alt); }
+.triggers-table tbody tr.row-expanded { background: rgba(14,165,233,.04); border-bottom: none; }
+[data-theme="dark"] .triggers-table tbody tr.row-expanded { background: rgba(14,165,233,.06); }
+.triggers-table td {
+  padding: var(--space-3) var(--space-4); font-size: var(--text-body-sm);
+  color: var(--text-primary); vertical-align: middle;
+}
+.triggers-table td:first-child { padding-left: var(--space-5); }
+.triggers-table td:last-child { padding-right: var(--space-5); text-align: right; }
+
+/* trigger name cell */
+.t-name { font-weight: var(--weight-semibold); color: var(--text-primary); }
+
+/* type chip */
+.type-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: var(--radius-sm);
+  font-size: 11px; font-weight: var(--weight-semibold); white-space: nowrap;
+}
+.type-time    { background: #EEF2FF; color: #6366F1; }
+.type-event   { background: var(--state-progress-light); color: var(--state-progress); }
+.type-inbound { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .type-time    { background: rgba(99,102,241,.15); color: #A5B4FC; }
+[data-theme="dark"] .type-event   { background: rgba(16,185,129,.12); color: #6EE7B7; }
+[data-theme="dark"] .type-inbound { background: rgba(14,165,233,.12); color: #38BDF8; }
+
+/* condition cell */
+.t-condition { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); }
+
+/* actions cell */
+.t-actions { font-size: var(--text-caption); color: var(--text-secondary); max-width: 160px; }
+
+/* status toggle */
+.status-wrap { display: flex; align-items: center; gap: var(--space-2); min-width: 80px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.status-dot.active { background: var(--state-progress); }
+.status-dot.paused { background: var(--neutral-400); }
+.status-text { font-size: var(--text-caption); font-weight: var(--weight-medium); }
+
+/* last run */
+.t-lastrun { font-size: var(--text-caption); color: var(--text-tertiary); font-family: var(--font-mono); }
+
+/* row actions */
+.row-actions { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+
+/* Toggle switch (compact) */
+.toggle-switch {
+  position: relative; width: 36px; height: 20px; flex-shrink: 0; cursor: pointer;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: var(--neutral-300); border-radius: 10px;
+  transition: background var(--duration-normal);
+}
+.toggle-switch input:checked + .toggle-track { background: var(--brand-primary); }
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 14px; height: 14px; background: white; border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  transition: left var(--duration-normal);
+}
+.toggle-switch input:checked ~ .toggle-thumb { left: 19px; }
+
+/* ─── Expanded edit panel ───────────────────────────────── */
+.edit-panel-row td {
+  padding: 0 !important;
+  border-bottom: 1px solid var(--border-default);
+}
+.edit-panel {
+  padding: var(--space-5) var(--space-5) var(--space-5) var(--space-6);
+  background: var(--bg-surface-alt);
+  border-top: 2px solid var(--brand-primary);
+}
+[data-theme="dark"] .edit-panel { background: var(--bg-inset); }
+.edit-panel-title {
+  font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  color: var(--text-primary); margin-bottom: var(--space-4);
+  display: flex; align-items: center; gap: var(--space-2);
+}
+.edit-panel-title .edit-badge {
+  font-size: 10px; font-weight: var(--weight-semibold); padding: 2px 6px;
+  background: var(--brand-primary-light); color: var(--brand-primary);
+  border-radius: var(--radius-sm); border: 1px solid rgba(14,165,233,.2);
+}
+.edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4) var(--space-6); align-items: flex-start; }
+.edit-field { display: flex; flex-direction: column; gap: var(--space-1); }
+.edit-field.full { grid-column: span 2; }
+.edit-label {
+  font-size: 11px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-secondary);
+}
+.edit-select, .edit-input {
+  height: 34px; padding: 0 var(--space-3);
+  background: var(--bg-surface); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-sans);
+  font-size: var(--text-body-sm); color: var(--text-primary); outline: none;
+  transition: all var(--duration-normal); appearance: none; -webkit-appearance: none;
+}
+.edit-select:focus, .edit-input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: ''; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 4px solid transparent; border-right: 4px solid transparent;
+  border-top: 5px solid var(--text-tertiary); pointer-events: none;
+}
+
+/* Condition builder */
+.condition-builder { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.cond-select {
+  height: 34px; padding: 0 28px 0 var(--space-3);
+  background: var(--bg-surface); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-mono);
+  font-size: var(--text-body-sm); color: var(--text-primary); outline: none;
+  transition: all var(--duration-normal); appearance: none; -webkit-appearance: none;
+  cursor: pointer;
+}
+.cond-select:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.cond-wrap { position: relative; }
+.cond-wrap::after {
+  content: ''; position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 4px solid transparent; border-right: 4px solid transparent;
+  border-top: 5px solid var(--text-tertiary); pointer-events: none;
+}
+.cond-input {
+  width: 72px; height: 34px; text-align: center;
+  background: var(--bg-surface); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-mono);
+  font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  color: var(--brand-primary); outline: none; transition: all var(--duration-normal);
+}
+.cond-input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.cond-sep { font-size: var(--text-caption); color: var(--text-tertiary); padding: 0 2px; }
+
+/* Actions list */
+.actions-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.action-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 6px var(--space-3);
+  background: var(--bg-surface); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); min-height: 34px;
+}
+.action-item-icon { color: var(--brand-primary); display: flex; flex-shrink: 0; }
+.action-item-label { font-size: var(--text-body-sm); color: var(--text-primary); flex: 1; }
+.action-remove {
+  width: 20px; height: 20px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--text-tertiary); transition: all var(--duration-fast); flex-shrink: 0;
+}
+.action-remove:hover { background: var(--state-blocked-light); color: var(--state-blocked); }
+.add-action-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px var(--space-3); height: 34px;
+  border: 1.5px dashed var(--border-strong); border-radius: var(--radius-md);
+  background: transparent; cursor: pointer; color: var(--text-tertiary);
+  font-size: var(--text-body-sm); font-family: var(--font-sans);
+  transition: all var(--duration-fast);
+}
+.add-action-btn:hover { border-color: var(--brand-primary); color: var(--brand-primary); background: var(--brand-primary-light); }
+
+/* Panel footer */
+.edit-footer {
+  margin-top: var(--space-5); padding-top: var(--space-4);
+  border-top: 1px solid var(--border-default);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.edit-footer-left { display: flex; align-items: center; gap: var(--space-3); }
+.edit-footer-right { display: flex; align-items: center; gap: var(--space-2); }
+
+/* toggle switch with label (for enabled state in panel) */
+.toggle-row-inline {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-body-sm); color: var(--text-secondary);
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ═══ Sidebar ════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      
+      <span class="logo-text">GraphClaw</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="layout-dashboard" width="16" height="16"></i></span>Dashboard
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="check-square" width="16" height="16"></i></span>My Tasks
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="target" width="16" height="16"></i></span>Goals
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="folder" width="16" height="16"></i></span>Projects
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="gantt-chart" width="16" height="16"></i></span>Timeline
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="users" width="16" height="16"></i></span>People
+      </a>
+      <div class="sidebar-divider"></div>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="cpu" width="16" height="16"></i></span>Agent Monitor
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="message-square" width="16" height="16"></i></span>Chat
+      </a>
+      <a href="#" class="nav-item active">
+        <span class="ni"><i data-lucide="settings" width="16" height="16"></i></span>Settings
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar">AK</div>
+        <div class="user-info">
+          <div class="user-name">Alex Kim</div>
+          <div class="user-role">Product Lead</div>
+        </div>
+        <i data-lucide="chevron-up-down" width="14" height="14" style="color:var(--text-tertiary);flex-shrink:0"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ Main ═══════════════════════════════════════════ -->
+  <div class="main-layout">
+
+    <!-- ─ Topbar ─────────────────────────────────────────── -->
+    <header class="topbar">
+      <nav class="breadcrumb">
+        <a href="#">Settings</a>
+        <span class="sep">/</span>
+        <span class="current">Triggers</span>
+      </nav>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14"></i></span>
+        <input type="text" placeholder="Search settings…" aria-label="Search settings">
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+          <i data-lucide="moon" width="16" height="16" id="themeIcon"></i>
+        </button>
+        <div class="divider-v"></div>
+        <div class="topbar-avatar" aria-label="User menu">AK</div>
+      </div>
+    </header>
+
+    <!-- ─ Settings body ────────────────────────────────────── -->
+    <div class="settings-body">
+
+      <!-- ─ Inner nav ─────────────────────────────────────── -->
+      <nav class="settings-nav">
+        <span class="sn-title">Settings</span>
+        <a href="#" class="sn-item"><i data-lucide="sliders" width="14" height="14"></i>General</a>
+        <a href="#" class="sn-item"><i data-lucide="radio" width="14" height="14"></i>Channels</a>
+        <a href="#" class="sn-item"><i data-lucide="brain" width="14" height="14"></i>LLM Providers</a>
+        <a href="#" class="sn-item"><i data-lucide="bar-chart-2" width="14" height="14"></i>Scoring</a>
+        <a href="#" class="sn-item"><i data-lucide="bell" width="14" height="14"></i>Briefing</a>
+        <a href="#" class="sn-item active"><i data-lucide="zap" width="14" height="14"></i>Triggers</a>
+        <a href="#" class="sn-item"><i data-lucide="share-2" width="14" height="14"></i>Agent-to-Agent</a>
+        <div class="sn-divider"></div>
+        <a href="#" class="sn-item danger"><i data-lucide="triangle-alert" width="14" height="14"></i>Danger Zone</a>
+      </nav>
+
+      <!-- ─ Scrollable content ────────────────────────────── -->
+      <main class="settings-content">
+        <div class="settings-inner">
+
+          <!-- Header row -->
+          <div class="settings-header">
+            <div class="settings-header-left">
+              <h1 class="settings-title">Trigger Rules</h1>
+              <p class="settings-subtitle">Automate actions when conditions are met — time schedules, graph events, or inbound messages.</p>
+            </div>
+            <button class="btn-primary" onclick="alert('Open new trigger wizard')">
+              <i data-lucide="plus" width="14" height="14"></i>
+              Add Trigger
+            </button>
+          </div>
+
+          <!-- Count + filter row -->
+          <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);">
+            <span style="font-size:var(--text-body-sm);color:var(--text-secondary);">
+              <strong style="color:var(--text-primary);">5</strong> triggers configured
+            </span>
+            <div style="height:16px;width:1px;background:var(--border-default)"></div>
+            <span style="font-size:var(--text-caption);background:var(--state-progress-light);color:var(--state-progress);padding:2px 8px;border-radius:9999px;font-weight:600;">4 active</span>
+            <span style="font-size:var(--text-caption);background:var(--bg-inset);color:var(--text-tertiary);padding:2px 8px;border-radius:9999px;font-weight:600;">1 paused</span>
+          </div>
+
+          <!-- ── Triggers table ─────────────────────────── -->
+          <div class="triggers-card">
+            <table class="triggers-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Condition</th>
+                  <th>Actions</th>
+                  <th>Status</th>
+                  <th>Last Run</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Row 1 -->
+                <tr onclick="toggleRow(this)">
+                  <td><span class="t-name">Morning Briefing</span></td>
+                  <td><span class="type-chip type-time"><i data-lucide="clock" width="10" height="10"></i>Time</span></td>
+                  <td><span class="t-condition">Daily 08:00</span></td>
+                  <td><span class="t-actions">Send briefing</span></td>
+                  <td>
+                    <div class="status-wrap">
+                      <label class="toggle-switch" aria-label="Enable trigger" onclick="event.stopPropagation()">
+                        <input type="checkbox" checked>
+                        <span class="toggle-track"></span>
+                        <span class="toggle-thumb"></span>
+                      </label>
+                    </div>
+                  </td>
+                  <td><span class="t-lastrun">08:00 today</span></td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="btn-ghost" onclick="event.stopPropagation();expandRow('high-prio')">
+                        <i data-lucide="pencil" width="13" height="13"></i>
+                      </button>
+                      <button class="icon-btn" onclick="event.stopPropagation()" aria-label="More options" style="width:28px;height:28px">
+                        <i data-lucide="more-horizontal" width="14" height="14"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 2 — expanded -->
+                <tr class="row-expanded" id="row-high-prio" onclick="event.stopPropagation()">
+                  <td><span class="t-name" style="color:var(--brand-primary)">High Priority Alert</span></td>
+                  <td><span class="type-chip type-event"><i data-lucide="activity" width="10" height="10"></i>Event</span></td>
+                  <td><span class="t-condition">Score &gt; 90</span></td>
+                  <td><span class="t-actions">Notify + assign agent</span></td>
+                  <td>
+                    <div class="status-wrap">
+                      <label class="toggle-switch" aria-label="Enable trigger" onclick="event.stopPropagation()">
+                        <input type="checkbox" checked>
+                        <span class="toggle-track"></span>
+                        <span class="toggle-thumb"></span>
+                      </label>
+                    </div>
+                  </td>
+                  <td><span class="t-lastrun">2h ago</span></td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="btn-ghost" style="background:var(--brand-primary-light);color:var(--brand-primary)" onclick="event.stopPropagation()">
+                        <i data-lucide="chevron-up" width="13" height="13"></i>
+                      </button>
+                      <button class="icon-btn" onclick="event.stopPropagation()" aria-label="More options" style="width:28px;height:28px">
+                        <i data-lucide="more-horizontal" width="14" height="14"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Expanded edit panel (spanning all columns) -->
+                <tr class="edit-panel-row">
+                  <td colspan="7">
+                    <div class="edit-panel">
+                      <div class="edit-panel-title">
+                        <i data-lucide="pencil" width="14" height="14" style="color:var(--brand-primary)"></i>
+                        Editing: High Priority Alert
+                        <span class="edit-badge">Event trigger</span>
+                      </div>
+
+                      <div class="edit-grid">
+                        <!-- Trigger type -->
+                        <div class="edit-field">
+                          <label class="edit-label">Trigger Type</label>
+                          <div class="select-wrap">
+                            <select class="edit-select">
+                              <option value="time">Time</option>
+                              <option value="event" selected>Event</option>
+                              <option value="inbound">Inbound</option>
+                              <option value="on-demand">On-demand</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <!-- Enabled toggle -->
+                        <div class="edit-field" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:var(--space-3)">
+                          <span class="edit-label" style="text-transform:none;letter-spacing:0;font-size:var(--text-body-sm);color:var(--text-secondary);">Enabled</span>
+                          <label class="toggle-switch" aria-label="Trigger enabled">
+                            <input type="checkbox" checked>
+                            <span class="toggle-track"></span>
+                            <span class="toggle-thumb"></span>
+                          </label>
+                        </div>
+
+                        <!-- Condition builder -->
+                        <div class="edit-field full">
+                          <label class="edit-label">Condition</label>
+                          <div class="condition-builder">
+                            <div class="cond-wrap">
+                              <select class="cond-select" style="min-width:160px">
+                                <option value="score" selected>Priority Score</option>
+                                <option value="state">Task State</option>
+                                <option value="age">Task Age (hrs)</option>
+                                <option value="assignee">Assignee</option>
+                                <option value="blocked">Blocked Duration</option>
+                              </select>
+                            </div>
+                            <div class="cond-wrap">
+                              <select class="cond-select">
+                                <option value="gt" selected>greater than</option>
+                                <option value="lt">less than</option>
+                                <option value="eq">equals</option>
+                                <option value="gte">at least</option>
+                                <option value="changes">changes to</option>
+                              </select>
+                            </div>
+                            <input type="number" class="cond-input" value="90" min="0" max="100">
+                            <span class="cond-sep">pts</span>
+                          </div>
+                        </div>
+
+                        <!-- Actions list -->
+                        <div class="edit-field full">
+                          <label class="edit-label">Actions</label>
+                          <div class="actions-list">
+                            <div class="action-item">
+                              <span class="action-item-icon"><i data-lucide="bell" width="14" height="14"></i></span>
+                              <span class="action-item-label">Notify assignee</span>
+                              <button class="action-remove" aria-label="Remove action">
+                                <i data-lucide="x" width="12" height="12"></i>
+                              </button>
+                            </div>
+                            <div class="action-item">
+                              <span class="action-item-icon"><i data-lucide="cpu" width="14" height="14"></i></span>
+                              <span class="action-item-label">Assign Research Agent</span>
+                              <button class="action-remove" aria-label="Remove action">
+                                <i data-lucide="x" width="12" height="12"></i>
+                              </button>
+                            </div>
+                            <button class="add-action-btn">
+                              <i data-lucide="plus" width="13" height="13"></i>
+                              Add action
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Panel footer -->
+                      <div class="edit-footer">
+                        <div class="edit-footer-left">
+                          <button class="btn-danger">
+                            <i data-lucide="trash-2" width="12" height="12"></i>
+                            Delete trigger
+                          </button>
+                        </div>
+                        <div class="edit-footer-right">
+                          <button class="btn-secondary" style="height:32px;font-size:var(--text-caption)">
+                            <i data-lucide="play" width="12" height="12"></i>
+                            Test (fire now)
+                          </button>
+                          <button class="btn-ghost" style="height:32px;font-size:var(--text-body-sm)">Cancel</button>
+                          <button class="btn-primary" style="height:32px">
+                            <i data-lucide="save" width="13" height="13"></i>
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 3 -->
+                <tr onclick="toggleRow(this)">
+                  <td><span class="t-name">Stale Task Reminder</span></td>
+                  <td><span class="type-chip type-time"><i data-lucide="clock" width="10" height="10"></i>Time</span></td>
+                  <td><span class="t-condition">Weekly Mon</span></td>
+                  <td><span class="t-actions">Snooze review</span></td>
+                  <td>
+                    <div class="status-wrap">
+                      <label class="toggle-switch" aria-label="Enable trigger" onclick="event.stopPropagation()">
+                        <input type="checkbox" checked>
+                        <span class="toggle-track"></span>
+                        <span class="toggle-thumb"></span>
+                      </label>
+                    </div>
+                  </td>
+                  <td><span class="t-lastrun">Mon 09:00</span></td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="btn-ghost" onclick="event.stopPropagation()"><i data-lucide="pencil" width="13" height="13"></i></button>
+                      <button class="icon-btn" onclick="event.stopPropagation()" aria-label="More options" style="width:28px;height:28px"><i data-lucide="more-horizontal" width="14" height="14"></i></button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 4 -->
+                <tr onclick="toggleRow(this)">
+                  <td><span class="t-name">Email Triage</span></td>
+                  <td><span class="type-chip type-inbound"><i data-lucide="mail" width="10" height="10"></i>Inbound</span></td>
+                  <td><span class="t-condition">New email received</span></td>
+                  <td><span class="t-actions">Create task draft</span></td>
+                  <td>
+                    <div class="status-wrap">
+                      <label class="toggle-switch" aria-label="Enable trigger" onclick="event.stopPropagation()">
+                        <input type="checkbox" checked>
+                        <span class="toggle-track"></span>
+                        <span class="toggle-thumb"></span>
+                      </label>
+                    </div>
+                  </td>
+                  <td><span class="t-lastrun">3 min ago</span></td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="btn-ghost" onclick="event.stopPropagation()"><i data-lucide="pencil" width="13" height="13"></i></button>
+                      <button class="icon-btn" onclick="event.stopPropagation()" aria-label="More options" style="width:28px;height:28px"><i data-lucide="more-horizontal" width="14" height="14"></i></button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 5 — Paused -->
+                <tr onclick="toggleRow(this)" style="opacity:.75">
+                  <td><span class="t-name">Blocked Escalation</span></td>
+                  <td><span class="type-chip type-event"><i data-lucide="activity" width="10" height="10"></i>Event</span></td>
+                  <td><span class="t-condition">Blocked &gt; 24h</span></td>
+                  <td><span class="t-actions">Escalate to manager</span></td>
+                  <td>
+                    <div class="status-wrap">
+                      <label class="toggle-switch" aria-label="Enable trigger" onclick="event.stopPropagation()">
+                        <input type="checkbox">
+                        <span class="toggle-track"></span>
+                        <span class="toggle-thumb"></span>
+                      </label>
+                    </div>
+                  </td>
+                  <td><span class="t-lastrun">Yesterday</span></td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="btn-ghost" onclick="event.stopPropagation()"><i data-lucide="pencil" width="13" height="13"></i></button>
+                      <button class="icon-btn" onclick="event.stopPropagation()" aria-label="More options" style="width:28px;height:28px"><i data-lucide="more-horizontal" width="14" height="14"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty state hint -->
+          <div style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-2);border-radius:var(--radius-md);background:var(--bg-inset);">
+            <i data-lucide="info" width="14" height="14" style="color:var(--text-tertiary);flex-shrink:0"></i>
+            <span style="font-size:var(--text-caption);color:var(--text-tertiary);">
+              Triggers fire asynchronously and are rate-limited to 1 per 30 seconds per rule. Test safely with <strong style="color:var(--text-secondary)">Fire now</strong>.
+            </span>
+          </div>
+
+        </div><!-- /settings-inner -->
+      </main>
+    </div><!-- /settings-body -->
+  </div><!-- /main-layout -->
+</div><!-- /app-shell -->
+
+<script>
+  // ── Dark / light toggle ──────────────────────────────────
+  const themeToggle = document.getElementById('themeToggle');
+  const themeIcon   = document.getElementById('themeIcon');
+  const html        = document.documentElement;
+
+  themeToggle.addEventListener('click', () => {
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    themeIcon.setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+    lucide.createIcons();
+  });
+
+  lucide.createIcons();
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html data-page="goal-view" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Goals — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ---- App Shell ---- */
+html, body { height: 100%; overflow: hidden; }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* ---- Sidebar ---- */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  height: 56px;
+}
+.sidebar-logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: var(--weight-bold); font-size: 13px;
+  flex-shrink: 0;
+}
+.sidebar-logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; }
+.sidebar-logo-sub { font-size: var(--text-micro); color: var(--text-tertiary); font-weight: var(--weight-regular); }
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.nav-section-label {
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  padding: var(--space-3) var(--space-4) var(--space-1);
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  margin: 1px var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast);
+  position: relative;
+}
+.nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background: rgba(56,189,248,0.12); }
+.nav-item .nav-icon { display: flex; align-items: center; flex-shrink: 0; width: 18px; height: 18px; }
+.nav-item .nav-count {
+  margin-left: auto;
+  background: var(--state-blocked);
+  color: white;
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  min-width: 18px;
+  text-align: center;
+}
+.sidebar-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-4); }
+.sidebar-footer { padding: var(--space-2) var(--space-2) var(--space-3); border-top: 1px solid var(--border-default); }
+.user-row {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.user-row:hover { background: var(--bg-inset); }
+.avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold);
+  flex-shrink: 0;
+}
+.avatar-sm { width: 22px; height: 22px; font-size: 9px; }
+.avatar-md { width: 32px; height: 32px; font-size: 13px; }
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.user-role { font-size: var(--text-micro); color: var(--text-tertiary); }
+
+/* ---- Topbar ---- */
+.topbar {
+  height: 56px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center;
+  padding: 0 var(--space-5);
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+.breadcrumb { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-body-sm); color: var(--text-tertiary); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text-primary); }
+.breadcrumb .sep { color: var(--text-tertiary); }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-medium); }
+.topbar-search {
+  flex: 1; max-width: 360px; margin: 0 auto;
+  position: relative;
+}
+.topbar-search input {
+  width: 100%;
+  height: 32px;
+  background: var(--bg-inset);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-3) 0 32px;
+  font-size: var(--text-body-sm);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  outline: none;
+  transition: all var(--duration-normal);
+}
+.topbar-search input::placeholder { color: var(--text-tertiary); }
+.topbar-search input:focus { border-color: var(--brand-primary); background: var(--bg-surface); box-shadow: var(--shadow-focus); }
+.topbar-search .s-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.icon-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md);
+  border: none; background: transparent; cursor: pointer;
+  color: var(--icon-secondary);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.notif-badge { position: relative; }
+.notif-badge::after {
+  content: '';
+  position: absolute; top: 5px; right: 5px;
+  width: 7px; height: 7px;
+  background: var(--state-blocked);
+  border-radius: 50%;
+  border: 1.5px solid var(--bg-surface);
+}
+
+/* ---- Main Layout ---- */
+.main-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
+.main-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ---- Toolbar / Filter Bar ---- */
+.filter-bar {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+.filter-chip {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  height: 28px;
+  padding: 0 var(--space-3);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--text-body-sm);
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  font-family: var(--font-sans);
+}
+.filter-chip:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
+.filter-chip.active { border-color: var(--brand-primary); background: var(--brand-primary-light); color: var(--brand-primary); font-weight: var(--weight-medium); }
+
+/* ---- Three-column layout ---- */
+.goal-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 320px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.goal-tree-panel {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  overflow-y: auto;
+  padding: var(--space-3) 0;
+}
+.goal-detail-panel {
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+.goal-tasks-panel {
+  background: var(--bg-surface-alt);
+  border-left: 1px solid var(--border-default);
+  overflow-y: auto;
+}
+
+/* ---- Goal Tree ---- */
+.tree-section-label {
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  padding: var(--space-2) var(--space-4) var(--space-1);
+}
+.tree-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  margin: 1px var(--space-2);
+  transition: background var(--duration-fast);
+  font-size: var(--text-body-sm);
+  color: var(--text-secondary);
+}
+.tree-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.tree-item.selected { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .tree-item.selected { background: rgba(56,189,248,0.12); }
+.tree-item .chevron { display: flex; align-items: center; color: var(--icon-tertiary); transition: transform var(--duration-fast); flex-shrink: 0; }
+.tree-item.open .chevron { transform: rotate(90deg); }
+.tree-item .goal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.tree-item-label { flex: 1; font-weight: var(--weight-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tree-item-pct { font-size: var(--text-micro); color: var(--text-tertiary); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+.tree-children { padding-left: var(--space-5); }
+.tree-task {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 5px var(--space-3);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  margin: 1px var(--space-2);
+  transition: background var(--duration-fast);
+  font-size: var(--text-body-sm);
+  color: var(--text-tertiary);
+}
+.tree-task:hover { background: var(--bg-inset); color: var(--text-primary); }
+.tree-task .task-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong); flex-shrink: 0; }
+.tree-task-name { flex: 1; font-size: var(--text-caption); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---- Goal Detail ---- */
+.goal-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-1);
+  margin-bottom: var(--space-5);
+}
+.goal-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); }
+.goal-title { font-size: var(--text-display); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.02em; line-height: var(--leading-tight); }
+.goal-meta-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-5); }
+.status-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+}
+.badge-active { background: var(--state-active-light); color: var(--state-active); }
+.badge-progress { background: var(--state-progress-light); color: var(--state-progress); }
+.badge-blocked { background: var(--state-blocked-light); color: var(--state-blocked); }
+.badge-delayed { background: var(--state-delayed-light); color: var(--state-delayed); }
+.badge-review { background: var(--state-review-light); color: var(--state-review); }
+.badge-complete { background: var(--state-complete-light); color: var(--state-complete); }
+.meta-sep { color: var(--border-strong); }
+.meta-item { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-body-sm); color: var(--text-secondary); }
+.meta-item strong { color: var(--text-primary); font-weight: var(--weight-medium); }
+
+.progress-section { margin-bottom: var(--space-5); }
+.progress-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); font-size: var(--text-body-sm); }
+.progress-label { font-weight: var(--weight-medium); color: var(--text-primary); }
+.progress-pct { font-size: var(--text-title); font-weight: var(--weight-bold); color: var(--state-progress); }
+.progress-bar-track {
+  height: 10px;
+  background: var(--bg-inset);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--state-progress), #34D399);
+  transition: width var(--duration-slow);
+}
+
+.goal-description {
+  font-size: var(--text-body);
+  color: var(--text-secondary);
+  line-height: var(--leading-loose);
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  background: var(--bg-inset);
+  border-radius: var(--radius-lg);
+  border-left: 3px solid var(--brand-primary);
+}
+
+.goal-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.stat-box {
+  background: var(--bg-surface-alt);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  text-align: center;
+}
+.stat-value { font-size: var(--text-heading); font-weight: var(--weight-bold); color: var(--text-primary); }
+.stat-label { font-size: var(--text-caption); color: var(--text-tertiary); margin-top: 2px; }
+
+/* Key result items */
+.kr-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.kr-item {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+.kr-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
+.kr-title { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.kr-progress { font-size: var(--text-body-sm); font-weight: var(--weight-bold); }
+.kr-track { height: 6px; background: var(--bg-inset); border-radius: var(--radius-full); overflow: hidden; }
+.kr-fill { height: 100%; border-radius: var(--radius-full); }
+
+/* ---- Tasks Panel ---- */
+.tasks-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+  position: sticky; top: 0;
+  background: var(--bg-surface-alt);
+  z-index: 1;
+}
+.tasks-panel-title { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.tasks-panel-count {
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  font-size: var(--text-micro);
+  font-weight: var(--weight-bold);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+}
+.task-row {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.task-row:hover { background: var(--bg-inset); }
+.task-row:last-child { border-bottom: none; }
+.task-row-left { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: 3px; }
+.task-name { font-size: var(--text-body-sm); font-weight: var(--weight-medium); color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-meta { display: flex; align-items: center; gap: var(--space-2); }
+.task-project { font-size: var(--text-caption); color: var(--text-tertiary); }
+.task-due { font-size: var(--text-caption); color: var(--text-tertiary); }
+.task-due.overdue { color: var(--state-blocked); font-weight: var(--weight-medium); }
+.task-row-right { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+
+/* Trust badges */
+.trust-badge {
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.03em;
+}
+.trust-auto { background: #DCFCE7; color: #16A34A; }
+.trust-gated { background: #FEF3C7; color: #D97706; }
+.trust-blocked { background: #FEE2E2; color: #DC2626; }
+[data-theme="dark"] .trust-auto { background: rgba(22,163,74,0.15); color: #4ADE80; }
+[data-theme="dark"] .trust-gated { background: rgba(217,119,6,0.15); color: #FCD34D; }
+[data-theme="dark"] .trust-blocked { background: rgba(220,38,38,0.15); color: #FCA5A5; }
+
+.priority-score {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-bold);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+.priority-high { color: var(--state-blocked); }
+.priority-med { color: var(--state-delayed); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">G</div>
+      <div>
+        <div class="sidebar-logo-text">GraphClaw</div>
+        <div class="sidebar-logo-sub">Cockpit</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+      <a href="#" class="nav-item">
+        <span class="nav-icon"><i data-lucide="layout-dashboard" width="16" height="16"></i></span>
+        Dashboard
+      </a>
+      <a href="my-tasks.html" class="nav-item">
+        <span class="nav-icon"><i data-lucide="check-square" width="16" height="16"></i></span>
+        My Tasks
+        <span class="nav-count">3</span>
+      </a>
+      <a href="goal-view.html" class="nav-item active">
+        <span class="nav-icon"><i data-lucide="target" width="16" height="16"></i></span>
+        Goals
+      </a>
+      <a href="project-view.html" class="nav-item">
+        <span class="nav-icon"><i data-lucide="kanban-square" width="16" height="16"></i></span>
+        Projects
+      </a>
+      <a href="timeline-view.html" class="nav-item">
+        <span class="nav-icon"><i data-lucide="gantt-chart" width="16" height="16"></i></span>
+        Timeline
+      </a>
+      <a href="resource-view.html" class="nav-item">
+        <span class="nav-icon"><i data-lucide="users" width="16" height="16"></i></span>
+        People
+      </a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section-label">Intelligence</div>
+      <a href="agent-monitor.html" class="nav-item">
+        <span class="nav-icon"><i data-lucide="cpu" width="16" height="16"></i></span>
+        Agent Monitor
+      </a>
+      <a href="chat-sidebar.html" class="nav-item">
+        <span class="nav-icon"><i data-lucide="message-square" width="16" height="16"></i></span>
+        Chat
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="nav-item">
+        <span class="nav-icon"><i data-lucide="settings" width="16" height="16"></i></span>
+        Settings
+      </a>
+      <div class="user-row">
+        <div class="avatar">AS</div>
+        <div class="user-info">
+          <div class="user-name">Abhishek S.</div>
+          <div class="user-role">Admin · Product Ops</div>
+        </div>
+        <div style="color: var(--icon-tertiary); display:flex;"><i data-lucide="chevrons-up-down" width="14" height="14"></i></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN LAYOUT -->
+  <div class="main-layout">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <nav class="breadcrumb">
+        <a href="#">Workspace</a>
+        <span class="sep"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+        <span class="current">Goals</span>
+      </nav>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14"></i></span>
+        <input type="text" placeholder="Search goals, tasks, people…" />
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notif-badge" aria-label="Notifications"><i data-lucide="bell" width="18" height="18"></i></button>
+        <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode"><i data-lucide="moon" width="18" height="18"></i></button>
+        <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #0EA5E9, #7C3AED);">AS</div>
+      </div>
+    </header>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <button class="btn btn-primary btn-sm">
+        <i data-lucide="plus" width="14" height="14"></i>
+        New Goal
+      </button>
+      <div style="width:1px; height:20px; background:var(--border-default); margin: 0 var(--space-1);"></div>
+      <button class="filter-chip active">
+        <i data-lucide="layers" width="12" height="12"></i>
+        All Goals
+      </button>
+      <button class="filter-chip">
+        <i data-lucide="circle-dot" width="12" height="12"></i>
+        In Progress
+      </button>
+      <button class="filter-chip">
+        <i data-lucide="alert-circle" width="12" height="12"></i>
+        At Risk
+      </button>
+      <select class="input" style="width:auto; height:28px; font-size:var(--text-body-sm); padding:0 var(--space-6) 0 var(--space-3);">
+        <option>All Owners</option>
+        <option>Abhishek S.</option>
+        <option>Sarah Chen</option>
+      </select>
+      <select class="input" style="width:auto; height:28px; font-size:var(--text-body-sm); padding:0 var(--space-6) 0 var(--space-3);">
+        <option>Q2 2026</option>
+        <option>Q3 2026</option>
+        <option>All Periods</option>
+      </select>
+      <div style="margin-left: auto; display:flex; align-items:center; gap:var(--space-2);">
+        <span style="font-size:var(--text-body-sm); color:var(--text-tertiary);">3 goals · 11 tasks</span>
+        <button class="icon-btn"><i data-lucide="sliders-horizontal" width="16" height="16"></i></button>
+      </div>
+    </div>
+
+    <!-- THREE-COLUMN GOAL CONTENT -->
+    <div class="main-content">
+      <div class="goal-layout">
+
+        <!-- LEFT: Goal Tree -->
+        <div class="goal-tree-panel">
+          <div class="tree-section-label">Q2 2026 · 3 Goals</div>
+
+          <!-- Goal 1: active (selected) -->
+          <div class="tree-item selected open" onclick="selectGoal(1)">
+            <span class="chevron"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+            <span class="goal-dot" style="background: var(--state-progress);"></span>
+            <span class="tree-item-label">Migrate to Kubernetes</span>
+            <span class="tree-item-pct">68%</span>
+          </div>
+          <div class="tree-children">
+            <div class="tree-task">
+              <span class="task-dot" style="background:var(--state-progress);"></span>
+              <span class="tree-task-name">Cluster provisioning in GKE</span>
+            </div>
+            <div class="tree-task">
+              <span class="task-dot" style="background:var(--state-active);"></span>
+              <span class="tree-task-name">Migrate API Gateway service</span>
+            </div>
+            <div class="tree-task">
+              <span class="task-dot" style="background:var(--state-blocked);"></span>
+              <span class="tree-task-name">Set up Istio service mesh</span>
+            </div>
+            <div class="tree-task">
+              <span class="task-dot" style="background:var(--state-complete);"></span>
+              <span class="tree-task-name">Write runbook documentation</span>
+            </div>
+          </div>
+
+          <!-- Goal 2 -->
+          <div class="tree-item" onclick="selectGoal(2)">
+            <span class="chevron"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+            <span class="goal-dot" style="background: var(--state-delayed);"></span>
+            <span class="tree-item-label">Launch Beta Program</span>
+            <span class="tree-item-pct">41%</span>
+          </div>
+
+          <!-- Goal 3 -->
+          <div class="tree-item" onclick="selectGoal(3)">
+            <span class="chevron"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+            <span class="goal-dot" style="background: var(--state-active);"></span>
+            <span class="tree-item-label">Reduce MTTR to &lt;5min</span>
+            <span class="tree-item-pct">22%</span>
+          </div>
+
+          <div class="sidebar-divider" style="margin-top:var(--space-3);"></div>
+          <div class="tree-section-label">Q3 2026 · Upcoming</div>
+
+          <div class="tree-item" style="opacity:0.5;">
+            <span class="chevron"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+            <span class="goal-dot" style="background: var(--border-strong);"></span>
+            <span class="tree-item-label">SOC 2 Type II Certification</span>
+            <span class="tree-item-pct">—</span>
+          </div>
+          <div class="tree-item" style="opacity:0.5;">
+            <span class="chevron"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+            <span class="goal-dot" style="background: var(--border-strong);"></span>
+            <span class="tree-item-label">Mobile app public release</span>
+            <span class="tree-item-pct">—</span>
+          </div>
+        </div>
+
+        <!-- CENTER: Goal Detail -->
+        <div class="goal-detail-panel">
+          <div class="goal-card">
+            <div class="goal-card-header">
+              <div>
+                <div style="font-size:var(--text-caption); color:var(--text-tertiary); font-weight:var(--weight-semibold); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:var(--space-2);">Infrastructure · Q2 2026</div>
+                <div class="goal-title">Migrate to Kubernetes</div>
+              </div>
+              <div style="display:flex; gap:var(--space-2); flex-shrink:0;">
+                <button class="btn btn-secondary btn-sm"><i data-lucide="edit-2" width="14" height="14"></i> Edit</button>
+                <button class="icon-btn"><i data-lucide="more-horizontal" width="16" height="16"></i></button>
+              </div>
+            </div>
+
+            <div class="goal-meta-row">
+              <span class="status-badge badge-progress">
+                <i data-lucide="activity" width="11" height="11"></i>
+                In Progress
+              </span>
+              <span class="meta-sep">·</span>
+              <span class="meta-item"><i data-lucide="user" width="13" height="13"></i> Owner: <strong>Sarah Chen</strong></span>
+              <span class="meta-sep">·</span>
+              <span class="meta-item"><i data-lucide="calendar" width="13" height="13"></i> Due: <strong>Jun 30, 2026</strong></span>
+              <span class="meta-sep">·</span>
+              <span class="meta-item"><i data-lucide="flag" width="13" height="13"></i> Priority: <strong>P1</strong></span>
+            </div>
+
+            <div class="progress-section">
+              <div class="progress-label-row">
+                <span class="progress-label">Overall Progress</span>
+                <span class="progress-pct">68%</span>
+              </div>
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill" style="width:68%;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-top:var(--space-1); font-size:var(--text-caption); color:var(--text-tertiary);">
+                <span>Started Apr 1</span>
+                <span>4 tasks complete · 7 remaining</span>
+              </div>
+            </div>
+
+            <div class="goal-description">
+              Move all production workloads from bare-metal VMs to a managed Kubernetes cluster (GKE Autopilot). Target: zero unplanned downtime during migration, P99 latency &lt;200ms post-cutover, all services containerised and tracked in Argo CD.
+            </div>
+
+            <div class="goal-stats-grid">
+              <div class="stat-box">
+                <div class="stat-value">11</div>
+                <div class="stat-label">Total Tasks</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value" style="color:var(--state-progress);">4</div>
+                <div class="stat-label">Complete</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value" style="color:var(--state-blocked);">1</div>
+                <div class="stat-label">Blocked</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value">57d</div>
+                <div class="stat-label">Remaining</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Key Results -->
+          <div style="margin-bottom:var(--space-3); display:flex; align-items:center; justify-content:space-between;">
+            <h3 style="font-size:var(--text-title); font-weight:var(--weight-semibold); color:var(--text-primary);">Key Results</h3>
+            <button class="btn btn-ghost btn-sm"><i data-lucide="plus" width="13" height="13"></i> Add KR</button>
+          </div>
+          <div class="kr-list">
+            <div class="kr-item">
+              <div class="kr-header">
+                <span class="kr-title">All 6 core services running on GKE Autopilot</span>
+                <span class="kr-progress" style="color:var(--state-progress);">4/6</span>
+              </div>
+              <div class="kr-track"><div class="kr-fill" style="width:66.7%; background:var(--state-progress);"></div></div>
+            </div>
+            <div class="kr-item">
+              <div class="kr-header">
+                <span class="kr-title">P99 API latency ≤ 150ms post-migration</span>
+                <span class="kr-progress" style="color:var(--state-delayed);">Not measured</span>
+              </div>
+              <div class="kr-track"><div class="kr-fill" style="width:0%; background:var(--state-delayed);"></div></div>
+            </div>
+            <div class="kr-item">
+              <div class="kr-header">
+                <span class="kr-title">Zero unplanned downtime events during cutover</span>
+                <span class="kr-progress" style="color:var(--state-progress);">On track</span>
+              </div>
+              <div class="kr-track"><div class="kr-fill" style="width:100%; background:var(--state-progress);"></div></div>
+            </div>
+            <div class="kr-item">
+              <div class="kr-header">
+                <span class="kr-title">Argo CD GitOps pipeline for all deployments</span>
+                <span class="kr-progress" style="color:var(--state-active);">50%</span>
+              </div>
+              <div class="kr-track"><div class="kr-fill" style="width:50%; background:var(--state-active);"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Child Tasks -->
+        <div class="goal-tasks-panel">
+          <div class="tasks-panel-header">
+            <span class="tasks-panel-title">Tasks in this Goal</span>
+            <span class="tasks-panel-count">11</span>
+          </div>
+
+          <!-- Task rows -->
+          <div class="task-row" onclick="window.location='task-detail.html'">
+            <div style="display:flex; align-items:center; flex-shrink:0; width:18px; color:var(--icon-tertiary);">
+              <i data-lucide="grip-vertical" width="14" height="14"></i>
+            </div>
+            <div class="task-row-left">
+              <div class="task-name">Provision GKE Autopilot cluster in us-central1</div>
+              <div class="task-meta">
+                <span class="task-project">Infrastructure</span>
+                <span class="task-due">Apr 14</span>
+              </div>
+            </div>
+            <div class="task-row-right">
+              <div class="avatar avatar-sm" title="Sarah Chen" style="background: linear-gradient(135deg,#0EA5E9,#0369A1)">SC</div>
+              <span class="trust-badge trust-auto">AUTO</span>
+              <span class="status-badge badge-complete" style="font-size:10px; padding:2px 5px;">Done</span>
+            </div>
+          </div>
+
+          <div class="task-row" onclick="window.location='task-detail.html'">
+            <div style="display:flex; align-items:center; flex-shrink:0; width:18px; color:var(--icon-tertiary);">
+              <i data-lucide="grip-vertical" width="14" height="14"></i>
+            </div>
+            <div class="task-row-left">
+              <div class="task-name">Migrate API Gateway service to containers</div>
+              <div class="task-meta">
+                <span class="task-project">Infrastructure</span>
+                <span class="task-due">Apr 22</span>
+              </div>
+            </div>
+            <div class="task-row-right">
+              <div class="avatar avatar-sm" title="Marcus Webb" style="background:linear-gradient(135deg,#7C3AED,#4F46E5)">MW</div>
+              <span class="trust-badge trust-gated">GATED</span>
+              <span class="status-badge badge-progress" style="font-size:10px; padding:2px 5px;">In Progress</span>
+            </div>
+          </div>
+
+          <div class="task-row" onclick="window.location='task-detail.html'">
+            <div style="display:flex; align-items:center; flex-shrink:0; width:18px; color:var(--icon-tertiary);">
+              <i data-lucide="grip-vertical" width="14" height="14"></i>
+            </div>
+            <div class="task-row-left">
+              <div class="task-name">Set up Istio service mesh with mTLS</div>
+              <div class="task-meta">
+                <span class="task-project">Infrastructure</span>
+                <span class="task-due task-due overdue">Apr 10 · Overdue</span>
+              </div>
+            </div>
+            <div class="task-row-right">
+              <div class="avatar avatar-sm" title="Sarah Chen" style="background:linear-gradient(135deg,#0EA5E9,#0369A1)">SC</div>
+              <span class="trust-badge trust-blocked">BLOCKED</span>
+              <span class="status-badge badge-blocked" style="font-size:10px; padding:2px 5px;">Blocked</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div style="display:flex; align-items:center; flex-shrink:0; width:18px; color:var(--icon-tertiary);">
+              <i data-lucide="grip-vertical" width="14" height="14"></i>
+            </div>
+            <div class="task-row-left">
+              <div class="task-name">Configure Argo CD for GitOps deployments</div>
+              <div class="task-meta">
+                <span class="task-project">Infrastructure</span>
+                <span class="task-due">May 1</span>
+              </div>
+            </div>
+            <div class="task-row-right">
+              <div class="avatar avatar-sm" title="Lena Torres" style="background:linear-gradient(135deg,#F59E0B,#D97706)">LT</div>
+              <span class="trust-badge trust-auto">AUTO</span>
+              <span class="status-badge badge-active" style="font-size:10px; padding:2px 5px;">Active</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div style="display:flex; align-items:center; flex-shrink:0; width:18px; color:var(--icon-tertiary);">
+              <i data-lucide="grip-vertical" width="14" height="14"></i>
+            </div>
+            <div class="task-row-left">
+              <div class="task-name">Load test new cluster under 10k RPS</div>
+              <div class="task-meta">
+                <span class="task-project">Infrastructure</span>
+                <span class="task-due">May 12</span>
+              </div>
+            </div>
+            <div class="task-row-right">
+              <div class="avatar avatar-sm" title="Marcus Webb" style="background:linear-gradient(135deg,#7C3AED,#4F46E5)">MW</div>
+              <span class="trust-badge trust-gated">GATED</span>
+              <span class="status-badge badge-delayed" style="font-size:10px; padding:2px 5px;">Delayed</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div style="display:flex; align-items:center; flex-shrink:0; width:18px; color:var(--icon-tertiary);">
+              <i data-lucide="grip-vertical" width="14" height="14"></i>
+            </div>
+            <div class="task-row-left">
+              <div class="task-name">Migrate Data Pipeline (Spark jobs)</div>
+              <div class="task-meta">
+                <span class="task-project">Data Platform</span>
+                <span class="task-due">May 19</span>
+              </div>
+            </div>
+            <div class="task-row-right">
+              <div class="avatar avatar-sm" title="Rohan Mehta" style="background:linear-gradient(135deg,#10B981,#059669)">RM</div>
+              <span class="trust-badge trust-auto">AUTO</span>
+              <span class="status-badge badge-active" style="font-size:10px; padding:2px 5px;">Active</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div style="display:flex; align-items:center; flex-shrink:0; width:18px; color:var(--icon-tertiary);">
+              <i data-lucide="grip-vertical" width="14" height="14"></i>
+            </div>
+            <div class="task-row-left">
+              <div class="task-name">Write runbook for on-call rotation</div>
+              <div class="task-meta">
+                <span class="task-project">Infrastructure</span>
+                <span class="task-due">Mar 28</span>
+              </div>
+            </div>
+            <div class="task-row-right">
+              <div class="avatar avatar-sm" title="Lena Torres" style="background:linear-gradient(135deg,#F59E0B,#D97706)">LT</div>
+              <span class="trust-badge trust-auto">AUTO</span>
+              <span class="status-badge badge-complete" style="font-size:10px; padding:2px 5px;">Done</span>
+            </div>
+          </div>
+
+          <div style="padding:var(--space-4); border-top:1px solid var(--border-default); margin-top:var(--space-2);">
+            <button class="btn btn-ghost btn-sm" style="width:100%; justify-content:center; color:var(--text-tertiary);">
+              <i data-lucide="plus" width="13" height="13"></i>
+              Add task to this goal
+            </button>
+          </div>
+        </div>
+
+      </div><!-- end .goal-layout -->
+    </div><!-- end .main-content -->
+  </div><!-- end .main-layout -->
+</div><!-- end .app-shell -->
+
+<script>
+  lucide.createIcons();
+
+  document.getElementById('theme-toggle').addEventListener('click', function() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    const icon = this.querySelector('i');
+    icon.setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+    lucide.createIcons();
+  });
+
+  function selectGoal(id) {
+    document.querySelectorAll('.tree-item').forEach(el => {
+      el.classList.remove('selected', 'open');
+    });
+    const items = document.querySelectorAll('.tree-item');
+    if (items[id-1]) {
+      items[id-1].classList.add('selected', 'open');
+    }
+  }
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

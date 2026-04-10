@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html data-page="my-tasks" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Tasks — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+html, body { height: 100%; overflow: hidden; }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* Sidebar */
+.sidebar { width:240px; flex-shrink:0; background:var(--bg-sidebar); border-right:1px solid var(--border-default); display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+.sidebar-logo { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-4); border-bottom:1px solid var(--border-default); height:56px; }
+.sidebar-logo-mark { width:28px; height:28px; background:linear-gradient(135deg,var(--brand-primary) 0%,#7C3AED 100%); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; color:white; font-weight:var(--weight-bold); font-size:13px; flex-shrink:0; }
+.sidebar-logo-text { font-size:var(--text-body); font-weight:var(--weight-bold); color:var(--text-primary); letter-spacing:-0.01em; }
+.sidebar-logo-sub { font-size:var(--text-micro); color:var(--text-tertiary); }
+.sidebar-nav { flex:1; overflow-y:auto; padding:var(--space-2) 0; }
+.nav-section-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-tertiary); padding:var(--space-3) var(--space-4) var(--space-1); }
+.nav-item { display:flex; align-items:center; gap:var(--space-3); padding:var(--space-2) var(--space-3); margin:1px var(--space-2); border-radius:var(--radius-md); cursor:pointer; text-decoration:none; color:var(--text-secondary); font-size:var(--text-body-sm); font-weight:500; transition:background 100ms,color 100ms; }
+.nav-item:hover { background:var(--bg-inset); color:var(--text-primary); }
+.nav-item.active { background:var(--brand-primary-light); color:var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background:rgba(56,189,248,0.12); }
+.nav-icon { display:flex; align-items:center; flex-shrink:0; width:18px; height:18px; }
+.nav-count { margin-left:auto; background:var(--state-blocked); color:white; font-size:10px; font-weight:700; padding:1px 5px; border-radius:9999px; min-width:18px; text-align:center; }
+.sidebar-divider { height:1px; background:var(--border-default); margin:var(--space-2) var(--space-4); }
+.sidebar-footer { padding:var(--space-2) var(--space-2) var(--space-3); border-top:1px solid var(--border-default); }
+.user-row { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2); border-radius:var(--radius-md); cursor:pointer; transition:background 100ms; }
+.user-row:hover { background:var(--bg-inset); }
+.avatar { width:28px; height:28px; border-radius:9999px; background:linear-gradient(135deg,#7C3AED,#0EA5E9); display:flex; align-items:center; justify-content:center; color:white; font-size:11px; font-weight:600; flex-shrink:0; }
+.avatar-sm { width:22px; height:22px; font-size:9px; }
+.avatar-md { width:32px; height:32px; font-size:13px; }
+
+/* Main layout */
+.main-layout { display:flex; flex-direction:column; flex:1; min-width:0; overflow:hidden; }
+.topbar { height:56px; background:var(--bg-surface); border-bottom:1px solid var(--border-default); display:flex; align-items:center; padding:0 var(--space-5); gap:var(--space-4); flex-shrink:0; }
+.breadcrumb { display:flex; align-items:center; gap:var(--space-1); font-size:var(--text-body-sm); color:var(--text-tertiary); }
+.breadcrumb a { color:var(--text-tertiary); text-decoration:none; }
+.breadcrumb .current { color:var(--text-primary); font-weight:500; }
+.topbar-search { flex:1; max-width:360px; margin:0 auto; position:relative; }
+.topbar-search input { width:100%; height:32px; background:var(--bg-inset); border:1.5px solid var(--border-default); border-radius:var(--radius-md); padding:0 var(--space-3) 0 32px; font-size:var(--text-body-sm); font-family:var(--font-sans); color:var(--text-primary); outline:none; transition:all 150ms; }
+.topbar-search input::placeholder { color:var(--text-tertiary); }
+.topbar-search input:focus { border-color:var(--brand-primary); background:var(--bg-surface); box-shadow:var(--shadow-focus); }
+.topbar-search .s-icon { position:absolute; left:8px; top:50%; transform:translateY(-50%); color:var(--icon-tertiary); display:flex; }
+.topbar-actions { display:flex; align-items:center; gap:var(--space-1); margin-left:auto; }
+.icon-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:var(--radius-md); border:none; background:transparent; cursor:pointer; color:var(--icon-secondary); transition:background 100ms,color 100ms; }
+.icon-btn:hover { background:var(--bg-inset); color:var(--text-primary); }
+.notif-badge { position:relative; }
+.notif-badge::after { content:''; position:absolute; top:5px; right:5px; width:7px; height:7px; background:var(--state-blocked); border-radius:50%; border:1.5px solid var(--bg-surface); }
+.main-content { flex:1; overflow-y:auto; }
+
+/* Page header */
+.page-header { display:flex; align-items:center; justify-content:space-between; padding:var(--space-5) var(--space-6) var(--space-4); border-bottom:1px solid var(--border-default); }
+.page-title-block {}
+.page-title { font-size:var(--text-heading); font-weight:var(--weight-bold); color:var(--text-primary); letter-spacing:-0.02em; }
+.page-subtitle { font-size:var(--text-body-sm); color:var(--text-tertiary); margin-top:var(--space-1); }
+
+/* Score tooltip */
+.score-explain {
+  display:inline-flex;
+  align-items:center;
+  gap:var(--space-1);
+  font-size:var(--text-caption);
+  color:var(--text-tertiary);
+  cursor:help;
+  position:relative;
+}
+.score-explain:hover .tooltip-box { display:block; }
+.tooltip-box {
+  display:none;
+  position:absolute;
+  bottom:calc(100% + 8px);
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--text-primary);
+  color:var(--text-inverse);
+  font-size:var(--text-caption);
+  padding:var(--space-2) var(--space-3);
+  border-radius:var(--radius-md);
+  white-space:nowrap;
+  box-shadow:var(--shadow-2);
+  z-index:100;
+  pointer-events:none;
+}
+.tooltip-box::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:var(--text-primary); }
+
+/* Filter row */
+.filter-row { display:flex; align-items:center; gap:var(--space-2); padding:0 var(--space-6) var(--space-4); }
+.filter-chip { display:inline-flex; align-items:center; gap:var(--space-1); height:28px; padding:0 var(--space-3); border:1.5px solid var(--border-default); border-radius:var(--radius-md); font-size:var(--text-body-sm); color:var(--text-secondary); background:var(--bg-surface); cursor:pointer; transition:all 100ms; font-family:var(--font-sans); }
+.filter-chip:hover { border-color:var(--brand-primary); color:var(--brand-primary); }
+.filter-chip.active { border-color:var(--brand-primary); background:var(--brand-primary-light); color:var(--brand-primary); font-weight:500; }
+.filter-sep { width:1px; height:20px; background:var(--border-default); }
+
+/* Task sections */
+.task-section { border-bottom:1px solid var(--border-default); }
+.section-header-row {
+  display:flex;
+  align-items:center;
+  gap:var(--space-3);
+  padding:var(--space-3) var(--space-6);
+  background:var(--bg-surface-alt);
+  cursor:pointer;
+  user-select:none;
+  transition:background 100ms;
+  position:sticky; top:0; z-index:2;
+}
+.section-header-row:hover { background:var(--bg-inset); }
+.section-label { font-size:var(--text-body-sm); font-weight:600; color:var(--text-secondary); }
+.section-count { background:var(--bg-inset); color:var(--text-tertiary); font-size:var(--text-caption); font-weight:600; padding:1px 7px; border-radius:9999px; }
+.section-total-score { margin-left:auto; font-size:var(--text-caption); color:var(--text-tertiary); }
+
+/* Task table row */
+.task-list { display:flex; flex-direction:column; }
+.t-row {
+  display:grid;
+  grid-template-columns: 52px 1fr 120px 90px 100px 90px;
+  align-items:center;
+  gap:var(--space-3);
+  padding:0 var(--space-6);
+  height:44px;
+  border-bottom:1px solid var(--border-subtle);
+  cursor:pointer;
+  transition:background 100ms;
+  position:relative;
+}
+.t-row:hover { background:var(--bg-inset); }
+.t-row:hover .t-actions { opacity:1; }
+.t-row:last-child { border-bottom:none; }
+
+/* Priority score */
+.t-score {
+  font-size:var(--text-title);
+  font-weight:var(--weight-bold);
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+  line-height:1;
+}
+.score-critical { color:var(--state-blocked); }
+.score-high { color:#E05A22; }
+.score-med { color:var(--state-delayed); }
+.score-normal { color:var(--text-tertiary); }
+
+/* Task name cell */
+.t-name { display:flex; align-items:center; gap:var(--space-2); min-width:0; }
+.t-check { width:16px; height:16px; border:1.5px solid var(--border-strong); border-radius:4px; flex-shrink:0; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 100ms; }
+.t-check:hover { border-color:var(--brand-primary); background:var(--brand-primary-light); }
+.t-title { font-size:var(--text-body-sm); font-weight:500; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.t-blocked { color:var(--state-blocked); }
+
+/* Project tag */
+.t-project { font-size:var(--text-caption); font-weight:500; padding:2px 8px; border-radius:var(--radius-sm); white-space:nowrap; }
+.proj-api { background:#EFF6FF; color:#1D4ED8; }
+.proj-infra { background:#F0FDF4; color:#15803D; }
+.proj-data { background:#FFF7ED; color:#C2410C; }
+.proj-security { background:#FDF4FF; color:#7E22CE; }
+.proj-mobile { background:#ECFDF5; color:#047857; }
+[data-theme="dark"] .proj-api { background:rgba(29,78,216,0.15); color:#93C5FD; }
+[data-theme="dark"] .proj-infra { background:rgba(21,128,61,0.15); color:#86EFAC; }
+[data-theme="dark"] .proj-data { background:rgba(194,65,12,0.15); color:#FDBA74; }
+[data-theme="dark"] .proj-security { background:rgba(126,34,206,0.15); color:#D8B4FE; }
+[data-theme="dark"] .proj-mobile { background:rgba(4,120,87,0.15); color:#6EE7B7; }
+
+/* Status badge */
+.t-status { font-size:var(--text-caption); font-weight:600; padding:2px 7px; border-radius:var(--radius-sm); white-space:nowrap; }
+.s-active { background:var(--state-active-light); color:var(--state-active); }
+.s-progress { background:var(--state-progress-light); color:var(--state-progress); }
+.s-blocked { background:var(--state-blocked-light); color:var(--state-blocked); }
+.s-delayed { background:var(--state-delayed-light); color:var(--state-delayed); }
+.s-review { background:var(--state-review-light); color:var(--state-review); }
+
+/* Due date */
+.t-due { font-size:var(--text-caption); color:var(--text-tertiary); white-space:nowrap; }
+.t-due.overdue { color:var(--state-blocked); font-weight:500; }
+.t-due.today { color:var(--state-delayed); font-weight:500; }
+
+/* Actions on hover */
+.t-actions {
+  display:flex; align-items:center; gap:3px;
+  position:absolute; right:var(--space-6); top:50%; transform:translateY(-50%);
+  opacity:0;
+  background:var(--bg-surface); border:1px solid var(--border-default);
+  border-radius:var(--radius-md); padding:2px;
+  box-shadow:var(--shadow-1);
+  transition:opacity 100ms;
+}
+.action-btn {
+  width:26px; height:26px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:4px;
+  border:none; background:transparent;
+  cursor:pointer;
+  color:var(--icon-tertiary);
+  font-size:11px;
+  font-family:var(--font-sans);
+  transition:background 100ms,color 100ms;
+}
+.action-btn:hover { background:var(--bg-inset); color:var(--text-primary); }
+
+/* Collapsed section */
+.section-collapsed .task-list { display:none; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">G</div>
+      <div>
+        <div class="sidebar-logo-text">GraphClaw</div>
+        <div class="sidebar-logo-sub">Cockpit</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="layout-dashboard" width="16" height="16"></i></span>Dashboard</a>
+      <a href="my-tasks.html" class="nav-item active"><span class="nav-icon"><i data-lucide="check-square" width="16" height="16"></i></span>My Tasks<span class="nav-count">3</span></a>
+      <a href="goal-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="target" width="16" height="16"></i></span>Goals</a>
+      <a href="project-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="kanban-square" width="16" height="16"></i></span>Projects</a>
+      <a href="timeline-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="gantt-chart" width="16" height="16"></i></span>Timeline</a>
+      <a href="resource-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="users" width="16" height="16"></i></span>People</a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section-label">Intelligence</div>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="cpu" width="16" height="16"></i></span>Agent Monitor</a>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="message-square" width="16" height="16"></i></span>Chat</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="settings" width="16" height="16"></i></span>Settings</a>
+      <div class="user-row">
+        <div class="avatar">AS</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:var(--text-body-sm);font-weight:600;color:var(--text-primary);">Abhishek S.</div>
+          <div style="font-size:var(--text-micro);color:var(--text-tertiary);">Admin · Product Ops</div>
+        </div>
+        <div style="color:var(--icon-tertiary);display:flex;"><i data-lucide="chevrons-up-down" width="14" height="14"></i></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN LAYOUT -->
+  <div class="main-layout">
+    <header class="topbar">
+      <nav class="breadcrumb">
+        <a href="#">Workspace</a>
+        <span style="color:var(--text-tertiary);display:flex;"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+        <span class="current">My Tasks</span>
+      </nav>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14"></i></span>
+        <input type="text" placeholder="Filter my tasks…" />
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notif-badge"><i data-lucide="bell" width="18" height="18"></i></button>
+        <button class="icon-btn" id="theme-toggle"><i data-lucide="moon" width="18" height="18"></i></button>
+        <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#0EA5E9,#7C3AED);">AS</div>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <!-- PAGE HEADER -->
+      <div class="page-header">
+        <div class="page-title-block">
+          <div style="display:flex; align-items:center; gap:var(--space-3);">
+            <div class="page-title">My Tasks</div>
+            <div class="score-explain">
+              <i data-lucide="info" width="14" height="14"></i>
+              Score = urgency × impact × dep. weight
+              <div class="tooltip-box">Priority Score = (Urgency × 0.35) + (Impact × 0.30) + (Dependencies × 0.20) + (Context × 0.15) — normalized 0–100</div>
+            </div>
+          </div>
+          <div class="page-subtitle">12 tasks assigned to you · 3 overdue · Score-sorted, highest priority first</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:var(--space-2);">
+          <button class="btn btn-secondary btn-sm"><i data-lucide="sliders-horizontal" width="14" height="14"></i> Sort</button>
+          <button class="btn btn-secondary btn-sm"><i data-lucide="filter" width="14" height="14"></i> Filter</button>
+          <button class="btn btn-primary btn-sm"><i data-lucide="plus" width="14" height="14"></i> New Task</button>
+        </div>
+      </div>
+
+      <!-- FILTER CHIPS -->
+      <div class="filter-row">
+        <button class="filter-chip active">All (12)</button>
+        <button class="filter-chip">Overdue (3)</button>
+        <button class="filter-chip">Blocked (1)</button>
+        <div class="filter-sep"></div>
+        <button class="filter-chip"><i data-lucide="arrow-up-down" width="12" height="12"></i> By Score</button>
+        <button class="filter-chip"><i data-lucide="calendar" width="12" height="12"></i> By Due Date</button>
+        <button class="filter-chip"><i data-lucide="folder" width="12" height="12"></i> By Project</button>
+      </div>
+
+      <!-- COLUMN HEADERS -->
+      <div style="display:grid; grid-template-columns:52px 1fr 120px 90px 100px 90px; gap:var(--space-3); padding:0 var(--space-6) var(--space-2); border-bottom:2px solid var(--border-default);">
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); text-align:right;">Score</div>
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary);">Task</div>
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary);">Project</div>
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary);">Status</div>
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary);">Due</div>
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary);"></div>
+      </div>
+
+      <!-- TODAY SECTION -->
+      <div class="task-section" id="section-today">
+        <div class="section-header-row" onclick="toggleSection('today')">
+          <span style="color:var(--icon-tertiary); display:flex;"><i data-lucide="chevron-down" width="16" height="16" id="chevron-today"></i></span>
+          <span class="section-label">Today</span>
+          <span class="section-count">4</span>
+          <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:var(--state-blocked); font-weight:700; background:var(--state-blocked-light); padding:2px 7px; border-radius:9999px; margin-left:var(--space-2);">3 OVERDUE</span>
+          <span class="section-total-score">Avg score: 89.1</span>
+        </div>
+        <div class="task-list">
+          <div class="t-row" onclick="window.location='task-detail.html'">
+            <div class="t-score score-critical" title="Critical priority: score 96">96</div>
+            <div class="t-name">
+              <div class="t-check"></div>
+              <span class="t-title t-blocked"><i data-lucide="alert-circle" width="12" height="12" style="display:inline;vertical-align:middle;margin-right:4px;"></i>Pentest remediation — SQL injection in /api/search endpoint</span>
+            </div>
+            <span class="t-project proj-security">Security Audit</span>
+            <span class="t-status s-blocked">Blocked</span>
+            <span class="t-due overdue">Apr 5 · 5d late</span>
+            <div class="t-actions">
+              <button class="action-btn" title="Mark done"><i data-lucide="check" width="13" height="13"></i></button>
+              <button class="action-btn" title="Snooze"><i data-lucide="clock" width="13" height="13"></i></button>
+              <button class="action-btn" title="Reassign"><i data-lucide="user-plus" width="13" height="13"></i></button>
+            </div>
+          </div>
+
+          <div class="t-row" onclick="window.location='task-detail.html'">
+            <div class="t-score score-critical" title="Critical: score 94">94</div>
+            <div class="t-name">
+              <div class="t-check"></div>
+              <span class="t-title">Migrate API Gateway service to Kubernetes containers</span>
+            </div>
+            <span class="t-project proj-api">API Gateway v3</span>
+            <span class="t-status s-progress">In Progress</span>
+            <span class="t-due today">Apr 10 · Today</span>
+            <div class="t-actions">
+              <button class="action-btn" title="Mark done"><i data-lucide="check" width="13" height="13"></i></button>
+              <button class="action-btn" title="Snooze"><i data-lucide="clock" width="13" height="13"></i></button>
+              <button class="action-btn" title="Reassign"><i data-lucide="user-plus" width="13" height="13"></i></button>
+            </div>
+          </div>
+
+          <div class="t-row">
+            <div class="t-score score-high" title="High: score 88">88</div>
+            <div class="t-name">
+              <div class="t-check"></div>
+              <span class="t-title">GDPR data retention audit — review log retention policies</span>
+            </div>
+            <span class="t-project proj-security">Security Audit</span>
+            <span class="t-status s-review">In Review</span>
+            <span class="t-due overdue">Apr 8 · 2d late</span>
+            <div class="t-actions">
+              <button class="action-btn" title="Mark done"><i data-lucide="check" width="13" height="13"></i></button>
+              <button class="action-btn" title="Snooze"><i data-lucide="clock" width="13" height="13"></i></button>
+              <button class="action-btn" title="Reassign"><i data-lucide="user-plus" width="13" height="13"></i></button>
+            </div>
+          </div>
+
+          <div class="t-row">
+            <div class="t-score score-med" title="Medium: score 78">78</div>
+            <div class="t-name">
+              <div class="t-check"></div>
+              <span class="t-title">Implement Spark job checkpointing for pipeline crash recovery</span>
+            </div>
+            <span class="t-project proj-data">Data Pipeline</span>
+            <span class="t-status s-progress">In Progress</span>
+            <span class="t-due overdue">Apr 9 · 1d late</span>
+            <div class="t-actions">
+              <button class="action-btn" title="Mark done"><i data-lucide="check" width="13" height="13"></i></button>
+              <button class="action-btn" title="Snooze"><i data-lucide="clock" width="13" height="13"></i></button>
+              <button class="action-btn" title="Reassign"><i data-lucide="user-plus" width="13" height="13"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THIS WEEK SECTION -->
+      <div class="task-section" id="section-week">
+        <div class="section-header-row" onclick="toggleSection('week')">
+          <span style="color:var(--icon-tertiary);display:flex;"><i data-lucide="chevron-down" width="16" height="16" id="chevron-week"></i></span>
+          <span class="section-label">This Week</span>
+          <span class="section-count">5</span>
+          <span class="section-total-score">Avg score: 71.4</span>
+        </div>
+        <div class="task-list">
+          <div class="t-row">
+            <div class="t-score score-high">83</div>
+            <div class="t-name">
+              <div class="t-check"></div>
+              <span class="t-title">PR review: Add distributed tracing via OpenTelemetry instrumentation</span>
+            </div>
+            <span class="t-project proj-api">API Gateway v3</span>
+            <span class="t-status s-review">Review</span>
+            <span class="t-due">Apr 12</span>
+            <div class="t-actions">
+              <button class="action-btn"><i data-lucide="check" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="clock" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="user-plus" width="13" height="13"></i></button>
+            </div>
+          </div>
+
+          <div class="t-row">
+            <div class="t-score score-med">77</div>
+            <div class="t-name">
+              <div class="t-check"></div>
+              <span class="t-title">Build real-time event stream for mobile push notification delivery</span>
+            </div>
+            <span class="t-project proj-mobile">Mobile App</span>
+            <span class="t-status s-progress">In Progress</span>
+            <span class="t-due">Apr 14</span>
+            <div class="t-actions">
+              <button class="action-btn"><i data-lucide="check" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="clock" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="user-plus" width="13" height="13"></i></button>
+            </div>
+          </div>
+
+          <div class="t-row">
+            <div class="t-score score-med">73</div>
+            <div class="t-name">
+              <div class="t-check"></div>
+              <span class="t-title">Set up Argo CD GitOps pipeline for Infrastructure services</span>
+            </div>
+            <span class="t-project proj-infra">Infrastructure</span>
+            <span class="t-status s-active">Active</span>
+            <span class="t-due">Apr 15</span>
+            <div class="t-actions">
+              <button class="action-btn"><i data-lucide="check" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="clock" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="user-plus" width="13" height="13"></i></button>
+            </div>
+          </div>
+
+          <div class="t-row">
+            <div class="t-score score-med">67</div>
+            <div class="t-name">
+              <div class="t-check"></div>
+              <span class="t-title">Write integration tests for payment webhook handler</span>
+            </div>
+            <span class="t-project proj-api">API Gateway v3</span>
+            <span class="t-status s-active">Active</span>
+            <span class="t-due">Apr 16</span>
+            <div class="t-actions">
+              <button class="action-btn"><i data-lucide="check" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="clock" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="user-plus" width="13" height="13"></i></button>
+            </div>
+          </div>
+
+          <div class="t-row">
+            <div class="t-score score-normal">51</div>
+            <div class="t-name">
+              <div class="t-check"></div>
+              <span class="t-title">Update Terraform modules for GCS bucket lifecycle policies</span>
+            </div>
+            <span class="t-project proj-infra">Infrastructure</span>
+            <span class="t-status s-active">Active</span>
+            <span class="t-due">Apr 17</span>
+            <div class="t-actions">
+              <button class="action-btn"><i data-lucide="check" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="clock" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="user-plus" width="13" height="13"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LATER SECTION (collapsed by default) -->
+      <div class="task-section section-collapsed" id="section-later">
+        <div class="section-header-row" onclick="toggleSection('later')">
+          <span style="color:var(--icon-tertiary);display:flex;"><i data-lucide="chevron-right" width="16" height="16" id="chevron-later"></i></span>
+          <span class="section-label">Later</span>
+          <span class="section-count">3</span>
+          <span class="section-total-score">Avg score: 43.7</span>
+        </div>
+        <div class="task-list">
+          <div class="t-row">
+            <div class="t-score score-normal">52</div>
+            <div class="t-name">
+              <div class="t-check"></div>
+              <span class="t-title">Prototype GraphQL federation layer for microservices</span>
+            </div>
+            <span class="t-project proj-api">API Gateway v3</span>
+            <span class="t-status s-active">Active</span>
+            <span class="t-due">May 2</span>
+            <div class="t-actions">
+              <button class="action-btn"><i data-lucide="check" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="clock" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="user-plus" width="13" height="13"></i></button>
+            </div>
+          </div>
+          <div class="t-row">
+            <div class="t-score score-normal">44</div>
+            <div class="t-name">
+              <div class="t-check"></div>
+              <span class="t-title">Add WCAG AA contrast check to CI pipeline for frontend</span>
+            </div>
+            <span class="t-project proj-infra">Infrastructure</span>
+            <span class="t-status s-active">Active</span>
+            <span class="t-due">May 8</span>
+            <div class="t-actions">
+              <button class="action-btn"><i data-lucide="check" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="clock" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="user-plus" width="13" height="13"></i></button>
+            </div>
+          </div>
+          <div class="t-row">
+            <div class="t-score score-normal">35</div>
+            <div class="t-name">
+              <div class="t-check"></div>
+              <span class="t-title">Write API changelog for v2.8.0 release notes</span>
+            </div>
+            <span class="t-project proj-api">API Gateway v3</span>
+            <span class="t-status s-active">Active</span>
+            <span class="t-due">May 15</span>
+            <div class="t-actions">
+              <button class="action-btn"><i data-lucide="check" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="clock" width="13" height="13"></i></button>
+              <button class="action-btn"><i data-lucide="user-plus" width="13" height="13"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- .main-content -->
+  </div><!-- .main-layout -->
+</div><!-- .app-shell -->
+
+<script>
+  lucide.createIcons();
+
+  document.getElementById('theme-toggle').addEventListener('click', function() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    this.querySelector('i').setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+    lucide.createIcons();
+  });
+
+  function toggleSection(id) {
+    const section = document.getElementById('section-' + id);
+    const chevron = document.getElementById('chevron-' + id);
+    const isCollapsed = section.classList.toggle('section-collapsed');
+    chevron.setAttribute('data-lucide', isCollapsed ? 'chevron-right' : 'chevron-down');
+    lucide.createIcons();
+  }
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

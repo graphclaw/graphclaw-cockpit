@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html data-page="mcp-registry" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Registry — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   MCP Registry — Page-specific styles
+   ============================================================ */
+html, body { height: 100%; overflow: hidden; }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* Sidebar (shared pattern) */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  height: 56px; flex-shrink: 0;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: var(--weight-bold); font-size: 13px; flex-shrink: 0;
+}
+.logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; line-height: 1.2; }
+.logo-sub { font-size: 10px; color: var(--text-tertiary); font-weight: 400; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.nav-section { font-size: 10px; font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-tertiary); padding: var(--space-3) var(--space-4) var(--space-1); }
+.nav-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); margin: 1px var(--space-2); border-radius: var(--radius-md); cursor: pointer; text-decoration: none; color: var(--text-secondary); font-size: var(--text-body-sm); font-weight: var(--weight-medium); transition: background var(--duration-fast), color var(--duration-fast); }
+.nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background: rgba(56,189,248,0.12); }
+.nav-item .ni { display: flex; align-items: center; flex-shrink: 0; width: 18px; height: 18px; }
+.nav-badge { margin-left: auto; background: var(--state-blocked); color: white; font-size: 10px; font-weight: var(--weight-bold); padding: 1px 5px; border-radius: var(--radius-full); min-width: 18px; text-align: center; }
+.nav-badge.green { background: var(--state-progress); }
+.nav-badge.amber { background: var(--state-delayed); }
+.sidebar-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-4); }
+.sidebar-footer { padding: var(--space-2); border-top: 1px solid var(--border-default); }
+.user-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border-radius: var(--radius-md); cursor: pointer; transition: background var(--duration-fast); }
+.user-row:hover { background: var(--bg-inset); }
+.avatar { width: 28px; height: 28px; border-radius: var(--radius-full); background: linear-gradient(135deg, #7C3AED, #0EA5E9); display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: var(--weight-semibold); flex-shrink: 0; }
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.user-role { font-size: 10px; color: var(--text-tertiary); }
+
+/* Main */
+.main-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
+.topbar { height: 56px; background: var(--bg-surface); border-bottom: 1px solid var(--border-default); display: flex; align-items: center; padding: 0 var(--space-5); gap: var(--space-4); flex-shrink: 0; }
+.breadcrumb { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text-primary); }
+.breadcrumb .sep { color: var(--text-tertiary); margin: 0 2px; }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-medium); }
+.topbar-search { flex: 1; max-width: 360px; margin: 0 auto; position: relative; }
+.topbar-search input { width: 100%; height: 32px; background: var(--bg-inset); border: 1.5px solid var(--border-default); border-radius: var(--radius-md); padding: 0 var(--space-3) 0 32px; font-size: var(--text-body-sm); font-family: var(--font-sans); color: var(--text-primary); outline: none; transition: all var(--duration-normal); }
+.topbar-search input::placeholder { color: var(--text-tertiary); }
+.topbar-search input:focus { border-color: var(--brand-primary); background: var(--bg-surface); box-shadow: var(--shadow-focus); }
+.topbar-search .s-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.icon-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); border: none; background: transparent; cursor: pointer; color: var(--icon-secondary); transition: background var(--duration-fast), color var(--duration-fast); }
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.notif-badge { position: relative; }
+.notif-badge::after { content: ''; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; background: var(--state-blocked); border-radius: 50%; border: 1.5px solid var(--bg-surface); }
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 var(--space-1); }
+.topbar-avatar { width: 28px; height: 28px; border-radius: var(--radius-full); background: linear-gradient(135deg, #7C3AED, #0EA5E9); display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: var(--weight-semibold); cursor: pointer; }
+.page-scroll { flex: 1; overflow-y: auto; }
+.page-inner { padding: var(--space-5) var(--space-6); }
+.pg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-5); }
+.pg-title { font-size: var(--text-heading); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.02em; }
+.pg-subtitle { font-size: var(--text-body-sm); color: var(--text-secondary); margin-top: 2px; }
+.pg-actions { display: flex; align-items: center; gap: var(--space-2); }
+
+/* KPI */
+.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+.kpi-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-4) var(--space-4); box-shadow: var(--shadow-1); display: flex; flex-direction: column; gap: var(--space-2); transition: box-shadow var(--duration-normal), transform var(--duration-normal); }
+.kpi-card:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.kpi-header { display: flex; align-items: center; justify-content: space-between; }
+.kpi-label { font-size: var(--text-body-sm); color: var(--text-secondary); font-weight: var(--weight-medium); }
+.kpi-icon { width: 30px; height: 30px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; }
+.kpi-icon.blue { background: var(--state-active-light); color: var(--state-active); }
+.kpi-icon.green { background: var(--state-progress-light); color: var(--state-progress); }
+.kpi-icon.amber { background: var(--state-delayed-light); color: var(--state-delayed); }
+.kpi-icon.red { background: var(--state-blocked-light); color: var(--state-blocked); }
+.kpi-icon.purple { background: var(--state-review-light); color: var(--state-review); }
+.kpi-value { font-size: 26px; font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.03em; line-height: 1; }
+.kpi-footer { font-size: var(--text-caption); color: var(--text-tertiary); }
+
+/* Tab bar */
+.tab-bar { display: flex; align-items: center; border-bottom: 1px solid var(--border-default); margin-bottom: var(--space-5); }
+.tab-item { padding: var(--space-2) var(--space-4); font-size: var(--text-body-sm); font-weight: var(--weight-medium); color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color var(--duration-fast), border-color var(--duration-fast); display: flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
+.tab-item:hover { color: var(--text-primary); }
+.tab-item.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); font-weight: var(--weight-semibold); }
+.tab-count { background: var(--bg-inset); color: var(--text-secondary); font-size: 10px; font-weight: var(--weight-bold); padding: 1px 6px; border-radius: var(--radius-full); }
+.tab-item.active .tab-count { background: var(--brand-primary-light); color: var(--brand-primary); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Trust tier badges */
+.trust-auto { display: inline-flex; align-items: center; gap: 4px; background: var(--state-progress-light); color: var(--state-progress); font-size: 11px; font-weight: var(--weight-bold); padding: 2px 8px; border-radius: var(--radius-full); }
+.trust-gated { display: inline-flex; align-items: center; gap: 4px; background: var(--state-delayed-light); color: var(--state-delayed); font-size: 11px; font-weight: var(--weight-bold); padding: 2px 8px; border-radius: var(--radius-full); }
+.trust-blocked { display: inline-flex; align-items: center; gap: 4px; background: var(--state-blocked-light); color: var(--state-blocked); font-size: 11px; font-weight: var(--weight-bold); padding: 2px 8px; border-radius: var(--radius-full); }
+
+/* Transport badge */
+.transport-badge { display: inline-flex; font-size: 10px; font-weight: var(--weight-bold); padding: 2px 7px; border-radius: var(--radius-sm); background: var(--bg-inset); color: var(--text-secondary); border: 1px solid var(--border-default); font-family: var(--font-mono); }
+
+/* Server list */
+.server-list { display: flex; flex-direction: column; gap: 0; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-1); margin-bottom: var(--space-5); }
+.server-list-header { display: grid; grid-template-columns: 40px 2fr 90px 100px 1fr 80px 100px 36px 100px; gap: var(--space-3); align-items: center; padding: var(--space-2) var(--space-4); background: var(--bg-surface-alt); border-bottom: 1px solid var(--border-default); font-size: 11px; font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); }
+.server-row { display: grid; grid-template-columns: 40px 2fr 90px 100px 1fr 80px 100px 36px 100px; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); transition: background var(--duration-fast); cursor: pointer; }
+.server-row:last-child { border-bottom: none; }
+.server-row:hover { background: var(--bg-surface-alt); }
+
+/* Server icon */
+.server-icon { width: 36px; height: 36px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+
+/* Status dot */
+.status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.status-dot.online { background: var(--state-progress); box-shadow: 0 0 0 2px rgba(16,185,129,0.25); }
+.status-dot.offline { background: var(--state-complete); }
+.status-dot.error { background: var(--state-blocked); box-shadow: 0 0 0 2px rgba(239,68,68,0.25); }
+
+/* Toggle */
+.toggle { width: 34px; height: 19px; background: var(--neutral-200); border-radius: 10px; cursor: pointer; position: relative; transition: background var(--duration-fast); flex-shrink: 0; border: none; }
+.toggle.on { background: var(--brand-primary); }
+.toggle::after { content: ''; position: absolute; width: 13px; height: 13px; border-radius: 50%; background: white; top: 3px; left: 3px; transition: transform var(--duration-fast); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+.toggle.on::after { transform: translateX(15px); }
+
+/* Row actions */
+.row-actions { display: flex; align-items: center; gap: var(--space-1); }
+.ra-btn { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: transparent; cursor: pointer; color: var(--icon-secondary); transition: all var(--duration-fast); }
+.ra-btn:hover { background: var(--bg-inset); color: var(--text-primary); border-color: var(--border-strong); }
+.ra-btn.danger:hover { background: var(--state-blocked-light); color: var(--state-blocked); border-color: var(--state-blocked); }
+
+/* Adapter gallery */
+.adapter-section { margin-bottom: var(--space-6); }
+.adapter-section-title { font-size: var(--text-title); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: var(--space-4); }
+.adapter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+.adapter-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); box-shadow: var(--shadow-1); transition: box-shadow var(--duration-fast), transform var(--duration-fast); cursor: pointer; }
+.adapter-card:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.adapter-card.active { border-color: var(--state-progress); }
+.ac-icon { width: 40px; height: 40px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.ac-name { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.ac-trust { font-size: 10px; color: var(--text-tertiary); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.ac-connect-btn { margin-top: auto; height: 30px; border-radius: var(--radius-md); font-size: var(--text-body-sm); font-weight: var(--weight-semibold); cursor: pointer; border: none; font-family: var(--font-sans); transition: all var(--duration-fast); display: flex; align-items: center; justify-content: center; gap: var(--space-1); }
+.ac-connect-btn.connect { background: var(--brand-primary); color: white; }
+.ac-connect-btn.connect:hover { background: var(--brand-primary-hover); }
+.ac-connect-btn.connected { background: var(--bg-inset); color: var(--text-secondary); border: 1px solid var(--border-default); cursor: default; }
+
+/* Server registration form */
+.reg-form { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-6); box-shadow: var(--shadow-1); max-width: 640px; }
+.form-row { margin-bottom: var(--space-4); }
+.form-label { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: var(--space-1); display: block; }
+.form-hint { font-size: var(--text-caption); color: var(--text-tertiary); margin-top: 4px; }
+.form-input { width: 100%; height: 36px; padding: 0 var(--space-3); border: 1.5px solid var(--border-default); border-radius: var(--radius-md); background: var(--bg-surface); font-size: var(--text-body-sm); font-family: var(--font-sans); color: var(--text-primary); outline: none; transition: border-color var(--duration-fast); box-sizing: border-box; }
+.form-input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.form-select { width: 100%; height: 36px; padding: 0 var(--space-3); border: 1.5px solid var(--border-default); border-radius: var(--radius-md); background: var(--bg-surface); font-size: var(--text-body-sm); font-family: var(--font-sans); color: var(--text-primary); outline: none; cursor: pointer; }
+.form-select:focus { border-color: var(--brand-primary); }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.trust-radio-group { display: flex; gap: var(--space-3); margin-top: var(--space-1); }
+.trust-radio { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; padding: var(--space-2) var(--space-3); border: 1.5px solid var(--border-default); border-radius: var(--radius-md); transition: all var(--duration-fast); }
+.trust-radio input { display: none; }
+.trust-radio:hover { border-color: var(--border-strong); }
+.trust-radio.selected-auto { border-color: var(--state-progress); background: var(--state-progress-light); }
+.trust-radio.selected-gated { border-color: var(--state-delayed); background: var(--state-delayed-light); }
+.trust-radio.selected-blocked { border-color: var(--state-blocked); background: var(--state-blocked-light); }
+.trust-dot { width: 10px; height: 10px; border-radius: 50%; }
+.trust-dot.auto { background: var(--state-progress); }
+.trust-dot.gated { background: var(--state-delayed); }
+.trust-dot.blocked { background: var(--state-blocked); }
+.form-actions { display: flex; gap: var(--space-2); margin-top: var(--space-5); }
+
+/* Scope tags */
+.scope-tag { display: inline-flex; font-size: 10px; font-weight: var(--weight-semibold); padding: 2px 6px; border-radius: var(--radius-sm); background: var(--state-active-light); color: var(--state-active); border: 1px solid rgba(59,130,246,0.2); margin-right: 3px; font-family: var(--font-mono); }
+
+/* Tools panel */
+.tools-count { font-size: var(--text-caption); color: var(--text-tertiary); white-space: nowrap; }
+.tools-count strong { color: var(--text-primary); }
+
+/* Search registry */
+.registry-search-bar { display: flex; gap: var(--space-3); margin-bottom: var(--space-5); }
+.registry-search-bar .ri { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+.reg-search-wrap { position: relative; flex: 1; max-width: 400px; }
+.reg-search-wrap input { width: 100%; height: 38px; padding: 0 var(--space-3) 0 36px; border: 1.5px solid var(--border-default); border-radius: var(--radius-md); background: var(--bg-surface); font-size: var(--text-body-sm); font-family: var(--font-sans); color: var(--text-primary); outline: none; transition: border-color var(--duration-fast); }
+.reg-search-wrap input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+
+/* Registry result list */
+.registry-results { display: flex; flex-direction: column; gap: var(--space-3); }
+.registry-result { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-4); display: flex; align-items: center; gap: var(--space-4); box-shadow: var(--shadow-1); transition: box-shadow var(--duration-fast); }
+.registry-result:hover { box-shadow: var(--shadow-2); }
+.rr-icon { width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--bg-inset); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.rr-info { flex: 1; }
+.rr-name { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.rr-meta { font-size: var(--text-caption); color: var(--text-tertiary); display: flex; align-items: center; gap: var(--space-3); margin-top: 3px; }
+.rr-scopes { display: flex; gap: 3px; flex-wrap: wrap; margin-top: var(--space-2); }
+.rr-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+
+@media (max-width: 1200px) {
+  .adapter-grid { grid-template-columns: repeat(3, 1fr); }
+  .server-list-header, .server-row { grid-template-columns: 40px 2fr 90px 1fr 100px 36px 100px; }
+  .server-list-header > :nth-child(5), .server-row > :nth-child(5) { display: none; }
+}
+@media (max-width: 1024px) {
+  .sidebar { display: none; }
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+  .adapter-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      
+      <div>
+        <div class="logo-text">GraphClaw</div>
+        <div class="logo-sub">Cockpit</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Workspace</div>
+      <a href="../index.html" class="nav-item">
+        <span class="ni"><i data-lucide="layout-dashboard" width="16" height="16" aria-label="Dashboard"></i></span>
+        Dashboard
+      </a>
+      <a href="my-tasks.html" class="nav-item">
+        <span class="ni"><i data-lucide="check-square" width="16" height="16" aria-label="My Tasks"></i></span>
+        My Tasks
+        <span class="nav-badge">5</span>
+      </a>
+      <a href="goal-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="target" width="16" height="16" aria-label="Goals"></i></span>
+        Goals
+      </a>
+      <a href="project-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="folder-kanban" width="16" height="16" aria-label="Projects"></i></span>
+        Projects
+      </a>
+      <a href="timeline-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="calendar-range" width="16" height="16" aria-label="Timeline"></i></span>
+        Timeline
+      </a>
+      <a href="resource-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="users" width="16" height="16" aria-label="People"></i></span>
+        People
+      </a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Intelligence</div>
+      <a href="agent-monitor.html" class="nav-item">
+        <span class="ni"><i data-lucide="cpu" width="16" height="16" aria-label="Agent Monitor"></i></span>
+        Agent Monitor
+        <span class="nav-badge green">7</span>
+      </a>
+      <a href="chat-sidebar.html" class="nav-item">
+        <span class="ni"><i data-lucide="message-circle" width="16" height="16" aria-label="Chat"></i></span>
+        Chat
+      </a>
+      <a href="skill-marketplace.html" class="nav-item">
+        <span class="ni"><i data-lucide="puzzle" width="16" height="16" aria-label="Skills"></i></span>
+        Skills
+        <span class="nav-badge amber">2</span>
+      </a>
+      <a href="mcp-registry.html" class="nav-item active">
+        <span class="ni"><i data-lucide="plug" width="16" height="16" aria-label="MCP Registry"></i></span>
+        MCP Registry
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings-channels.html" class="nav-item" style="margin: 0 0 var(--space-1);">
+        <span class="ni"><i data-lucide="settings" width="16" height="16" aria-label="Settings"></i></span>
+        Settings
+      </a>
+      <div class="user-row">
+        <div class="avatar">AR</div>
+        <div class="user-info">
+          <div class="user-name">Arjun Reyes</div>
+          <div class="user-role">Product Lead</div>
+        </div>
+        <i data-lucide="chevron-up-down" width="14" height="14" style="color: var(--icon-tertiary);" aria-label="User menu"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN LAYOUT -->
+  <div class="main-layout">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="breadcrumb">
+        <a href="#">Home</a>
+        <span class="sep">/</span>
+        <span class="current">MCP Registry</span>
+      </div>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14" aria-label="Search"></i></span>
+        <input type="text" placeholder="Search MCP servers, capabilities…" aria-label="Search MCP">
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notif-badge" aria-label="Notifications">
+          <i data-lucide="bell" width="16" height="16" aria-label="Bell"></i>
+        </button>
+        <div class="divider-v"></div>
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+          <i data-lucide="moon" width="16" height="16" aria-label="Dark mode"></i>
+        </button>
+        <div class="topbar-avatar">AR</div>
+      </div>
+    </div>
+
+    <!-- Page scroll -->
+    <div class="page-scroll">
+      <div class="page-inner">
+
+        <!-- Page header -->
+        <div class="pg-header">
+          <div>
+            <div class="pg-title">MCP Registry</div>
+            <div class="pg-subtitle">Model Context Protocol servers — tools your agents can call to act in the world</div>
+          </div>
+          <div class="pg-actions">
+            <button class="btn btn-ghost btn-sm">
+              <i data-lucide="refresh-cw" width="14" height="14" aria-label="Refresh"></i>
+              Test All
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="switchTab('custom')">
+              <i data-lucide="plus" width="14" height="14" aria-label="Add"></i>
+              Register Server
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Row -->
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Servers</span>
+              <div class="kpi-icon blue"><i data-lucide="server" width="15" height="15" aria-label="Servers"></i></div>
+            </div>
+            <div class="kpi-value">9</div>
+            <div class="kpi-footer">7 enabled · 2 disabled</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Tools Available</span>
+              <div class="kpi-icon green"><i data-lucide="wrench" width="15" height="15" aria-label="Tools"></i></div>
+            </div>
+            <div class="kpi-value">43</div>
+            <div class="kpi-footer">Across 9 servers</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">AUTO Trust</span>
+              <div class="kpi-icon green"><i data-lucide="check-circle" width="15" height="15" aria-label="Auto"></i></div>
+            </div>
+            <div class="kpi-value">5</div>
+            <div class="kpi-footer">Read-only, no approval needed</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">GATED</span>
+              <div class="kpi-icon amber"><i data-lucide="shield" width="15" height="15" aria-label="Gated"></i></div>
+            </div>
+            <div class="kpi-value">3</div>
+            <div class="kpi-footer">Require human approval</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Calls Today</span>
+              <div class="kpi-icon purple"><i data-lucide="activity" width="15" height="15" aria-label="Calls"></i></div>
+            </div>
+            <div class="kpi-value">1,247</div>
+            <div class="kpi-footer">↑ 8% vs yesterday</div>
+          </div>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+          <div class="tab-item active" data-tab="servers">
+            Registered Servers
+            <span class="tab-count">9</span>
+          </div>
+          <div class="tab-item" data-tab="templates">
+            Templates
+            <span class="tab-count">7</span>
+          </div>
+          <div class="tab-item" data-tab="search">
+            Search Official Registry
+          </div>
+          <div class="tab-item" data-tab="custom">
+            Register Custom
+          </div>
+        </div>
+
+        <!-- === TAB: SERVERS === -->
+        <div class="tab-panel active" id="tab-servers">
+
+          <div class="server-list">
+            <div class="server-list-header">
+              <div></div>
+              <div>Server</div>
+              <div>Transport</div>
+              <div>Trust Tier</div>
+              <div>Scopes</div>
+              <div>Tools</div>
+              <div>Last Used</div>
+              <div></div>
+              <div>Actions</div>
+            </div>
+
+            <!-- Google Calendar -->
+            <div class="server-row" onclick="openToolsPanel('Google Calendar', 6)">
+              <div class="server-icon" style="background:#E8F5E9;">📅</div>
+              <div>
+                <div style="font-size:var(--text-body-sm);font-weight:var(--weight-semibold);color:var(--text-primary);display:flex;align-items:center;gap:var(--space-2);">
+                  Google Calendar
+                  <span class="status-dot online"></span>
+                </div>
+                <div style="font-size:var(--text-caption);color:var(--text-tertiary);font-family:var(--font-mono);">sse://calendar.googleapis.com/mcp</div>
+              </div>
+              <div><span class="transport-badge">SSE</span></div>
+              <div><span class="trust-auto">● AUTO</span></div>
+              <div>
+                <span class="scope-tag">calendar:read</span>
+                <span class="scope-tag">calendar:write</span>
+              </div>
+              <div class="tools-count"><strong>6</strong> tools</div>
+              <div style="font-size:var(--text-caption);color:var(--text-tertiary);white-space:nowrap;">3 min ago</div>
+              <div><button class="toggle on" aria-label="Toggle Google Calendar" onclick="event.stopPropagation();this.classList.toggle('on')"></button></div>
+              <div class="row-actions" onclick="event.stopPropagation()">
+                <button class="ra-btn" title="Edit" aria-label="Edit"><i data-lucide="pencil" width="13" height="13" aria-label="Edit"></i></button>
+                <button class="ra-btn" title="Test connection" aria-label="Test"><i data-lucide="zap" width="13" height="13" aria-label="Test"></i></button>
+                <button class="ra-btn danger" title="Delete" aria-label="Delete"><i data-lucide="trash-2" width="13" height="13" aria-label="Trash"></i></button>
+              </div>
+            </div>
+
+            <!-- GitHub -->
+            <div class="server-row" onclick="openToolsPanel('GitHub', 8)">
+              <div class="server-icon" style="background:#F6F8FA;">🐙</div>
+              <div>
+                <div style="font-size:var(--text-body-sm);font-weight:var(--weight-semibold);color:var(--text-primary);display:flex;align-items:center;gap:var(--space-2);">
+                  GitHub
+                  <span class="status-dot online"></span>
+                </div>
+                <div style="font-size:var(--text-caption);color:var(--text-tertiary);font-family:var(--font-mono);">https://api.github.com/mcp/v1</div>
+              </div>
+              <div><span class="transport-badge">HTTP</span></div>
+              <div><span class="trust-gated">⬡ GATED</span></div>
+              <div>
+                <span class="scope-tag">repo:read</span>
+                <span class="scope-tag">issues:write</span>
+                <span class="scope-tag">pr:read</span>
+              </div>
+              <div class="tools-count"><strong>8</strong> tools</div>
+              <div style="font-size:var(--text-caption);color:var(--text-tertiary);white-space:nowrap;">12 min ago</div>
+              <div><button class="toggle on" aria-label="Toggle GitHub" onclick="event.stopPropagation();this.classList.toggle('on')"></button></div>
+              <div class="row-actions" onclick="event.stopPropagation()">
+                <button class="ra-btn" title="Edit" aria-label="Edit"><i data-lucide="pencil" width="13" height="13" aria-label="Edit"></i></button>
+                <button class="ra-btn" title="Test" aria-label="Test"><i data-lucide="zap" width="13" height="13" aria-label="Test"></i></button>
+                <button class="ra-btn danger" title="Delete" aria-label="Delete"><i data-lucide="trash-2" width="13" height="13" aria-label="Trash"></i></button>
+              </div>
+            </div>
+
+            <!-- Slack -->
+            <div class="server-row" onclick="openToolsPanel('Slack', 5)">
+              <div class="server-icon" style="background:#FFF4F0;">💬</div>
+              <div>
+                <div style="font-size:var(--text-body-sm);font-weight:var(--weight-semibold);color:var(--text-primary);display:flex;align-items:center;gap:var(--space-2);">
+                  Slack
+                  <span class="status-dot online"></span>
+                </div>
+                <div style="font-size:var(--text-caption);color:var(--text-tertiary);font-family:var(--font-mono);">https://slack.com/api/mcp</div>
+              </div>
+              <div><span class="transport-badge">HTTP</span></div>
+              <div><span class="trust-gated">⬡ GATED</span></div>
+              <div>
+                <span class="scope-tag">channels:read</span>
+                <span class="scope-tag">messages:write</span>
+              </div>
+              <div class="tools-count"><strong>5</strong> tools</div>
+              <div style="font-size:var(--text-caption);color:var(--text-tertiary);white-space:nowrap;">1 hr ago</div>
+              <div><button class="toggle on" aria-label="Toggle Slack" onclick="event.stopPropagation();this.classList.toggle('on')"></button></div>
+              <div class="row-actions" onclick="event.stopPropagation()">
+                <button class="ra-btn" title="Edit" aria-label="Edit"><i data-lucide="pencil" width="13" height="13" aria-label="Edit"></i></button>
+                <button class="ra-btn" title="Test" aria-label="Test"><i data-lucide="zap" width="13" height="13" aria-label="Test"></i></button>
+                <button class="ra-btn danger" title="Delete" aria-label="Delete"><i data-lucide="trash-2" width="13" height="13" aria-label="Trash"></i></button>
+              </div>
+            </div>
+
+            <!-- Notion -->
+            <div class="server-row" onclick="openToolsPanel('Notion', 4)">
+              <div class="server-icon" style="background:#F8F8F7;">📝</div>
+              <div>
+                <div style="font-size:var(--text-body-sm);font-weight:var(--weight-semibold);color:var(--text-primary);display:flex;align-items:center;gap:var(--space-2);">
+                  Notion
+                  <span class="status-dot online"></span>
+                </div>
+                <div style="font-size:var(--text-caption);color:var(--text-tertiary);font-family:var(--font-mono);">https://api.notion.com/v1/mcp</div>
+              </div>
+              <div><span class="transport-badge">HTTP</span></div>
+              <div><span class="trust-auto">● AUTO</span></div>
+              <div>
+                <span class="scope-tag">pages:read</span>
+                <span class="scope-tag">databases:read</span>
+              </div>
+              <div class="tools-count"><strong>4</strong> tools</div>
+              <div style="font-size:var(--text-caption);color:var(--text-tertiary);white-space:nowrap;">4 hrs ago</div>
+              <div><button class="toggle on" aria-label="Toggle Notion" onclick="event.stopPropagation();this.classList.toggle('on')"></button></div>
+              <div class="row-actions" onclick="event.stopPropagation()">
+                <button class="ra-btn" title="Edit" aria-label="Edit"><i data-lucide="pencil" width="13" height="13" aria-label="Edit"></i></button>
+                <button class="ra-btn" title="Test" aria-label="Test"><i data-lucide="zap" width="13" height="13" aria-label="Test"></i></button>
+                <button class="ra-btn danger" title="Delete" aria-label="Delete"><i data-lucide="trash-2" width="13" height="13" aria-label="Trash"></i></button>
+              </div>
+            </div>
+
+            <!-- Linear -->
+            <div class="server-row" onclick="openToolsPanel('Linear', 6)">
+              <div class="server-icon" style="background:#F0F0FF;">⚡</div>
+              <div>
+                <div style="font-size:var(--text-body-sm);font-weight:var(--weight-semibold);color:var(--text-primary);display:flex;align-items:center;gap:var(--space-2);">
+                  Linear
+                  <span class="status-dot online"></span>
+                </div>
+                <div style="font-size:var(--text-caption);color:var(--text-tertiary);font-family:var(--font-mono);">https://api.linear.app/mcp</div>
+              </div>
+              <div><span class="transport-badge">HTTP</span></div>
+              <div><span class="trust-auto">● AUTO</span></div>
+              <div>
+                <span class="scope-tag">issues:read</span>
+                <span class="scope-tag">projects:read</span>
+              </div>
+              <div class="tools-count"><strong>6</strong> tools</div>
+              <div style="font-size:var(--text-caption);color:var(--text-tertiary);white-space:nowrap;">Yesterday</div>
+              <div><button class="toggle on" aria-label="Toggle Linear" onclick="event.stopPropagation();this.classList.toggle('on')"></button></div>
+              <div class="row-actions" onclick="event.stopPropagation()">
+                <button class="ra-btn" title="Edit" aria-label="Edit"><i data-lucide="pencil" width="13" height="13" aria-label="Edit"></i></button>
+                <button class="ra-btn" title="Test" aria-label="Test"><i data-lucide="zap" width="13" height="13" aria-label="Test"></i></button>
+                <button class="ra-btn danger" title="Delete" aria-label="Delete"><i data-lucide="trash-2" width="13" height="13" aria-label="Trash"></i></button>
+              </div>
+            </div>
+
+            <!-- Custom MCP — error -->
+            <div class="server-row" onclick="openToolsPanel('internal-db-reader', 3)">
+              <div class="server-icon" style="background:#FEF2F2;">🗄️</div>
+              <div>
+                <div style="font-size:var(--text-body-sm);font-weight:var(--weight-semibold);color:var(--text-primary);display:flex;align-items:center;gap:var(--space-2);">
+                  internal-db-reader
+                  <span class="status-dot error"></span>
+                  <span style="font-size:10px;background:var(--state-blocked-light);color:var(--state-blocked);padding:1px 6px;border-radius:var(--radius-full);font-weight:700;">CONN ERROR</span>
+                </div>
+                <div style="font-size:var(--text-caption);color:var(--text-tertiary);font-family:var(--font-mono);">stdio://./bin/db-mcp-server</div>
+              </div>
+              <div><span class="transport-badge">STDIO</span></div>
+              <div><span class="trust-blocked">✕ BLOCKED</span></div>
+              <div><span class="scope-tag">db:read</span></div>
+              <div class="tools-count"><strong>3</strong> tools</div>
+              <div style="font-size:var(--text-caption);color:var(--state-blocked);white-space:nowrap;">Never</div>
+              <div><button class="toggle" aria-label="Toggle internal-db-reader" onclick="event.stopPropagation();this.classList.toggle('on')"></button></div>
+              <div class="row-actions" onclick="event.stopPropagation()">
+                <button class="ra-btn" title="Edit" aria-label="Edit"><i data-lucide="pencil" width="13" height="13" aria-label="Edit"></i></button>
+                <button class="ra-btn" title="Re-test connection" aria-label="Retest" style="background:var(--state-blocked-light);color:var(--state-blocked);"><i data-lucide="zap" width="13" height="13" aria-label="Test"></i></button>
+                <button class="ra-btn danger" title="Delete" aria-label="Delete"><i data-lucide="trash-2" width="13" height="13" aria-label="Trash"></i></button>
+              </div>
+            </div>
+
+          </div><!-- /server-list -->
+        </div><!-- /tab-servers -->
+
+        <!-- === TAB: TEMPLATES === -->
+        <div class="tab-panel" id="tab-templates">
+          <div class="adapter-section">
+            <div class="adapter-section-title">Pre-built Adapter Templates</div>
+            <p style="font-size:var(--text-body-sm);color:var(--text-secondary);margin-bottom:var(--space-4);">Connect popular services instantly. GraphClaw pre-configures transport, endpoints, and default trust tiers.</p>
+            <div class="adapter-grid">
+
+              <div class="adapter-card active">
+                <div class="ac-icon" style="background:#E8F5E9;">📅</div>
+                <div>
+                  <div class="ac-name">Google Calendar</div>
+                  <div class="ac-trust">
+                    <span class="trust-auto" style="font-size:9px;padding:1px 5px;">AUTO</span> read
+                    <span>&nbsp;·&nbsp;</span>
+                    <span class="trust-gated" style="font-size:9px;padding:1px 5px;">GATED</span> write
+                  </div>
+                </div>
+                <div class="ac-connect-btn connected" aria-label="Connected">
+                  <i data-lucide="check" width="13" height="13" aria-label="Check"></i> Connected
+                </div>
+              </div>
+
+              <div class="adapter-card active">
+                <div class="ac-icon" style="background:#F6F8FA;">🐙</div>
+                <div>
+                  <div class="ac-name">GitHub</div>
+                  <div class="ac-trust">
+                    <span class="trust-auto" style="font-size:9px;padding:1px 5px;">AUTO</span> read
+                    <span>&nbsp;·&nbsp;</span>
+                    <span class="trust-gated" style="font-size:9px;padding:1px 5px;">GATED</span> write
+                  </div>
+                </div>
+                <div class="ac-connect-btn connected" aria-label="Connected">
+                  <i data-lucide="check" width="13" height="13" aria-label="Check"></i> Connected
+                </div>
+              </div>
+
+              <div class="adapter-card active">
+                <div class="ac-icon" style="background:#FFF4F0;">💬</div>
+                <div>
+                  <div class="ac-name">Slack</div>
+                  <div class="ac-trust">
+                    <span class="trust-auto" style="font-size:9px;padding:1px 5px;">AUTO</span> read
+                    <span>&nbsp;·&nbsp;</span>
+                    <span class="trust-gated" style="font-size:9px;padding:1px 5px;">GATED</span> write
+                  </div>
+                </div>
+                <div class="ac-connect-btn connected" aria-label="Connected">
+                  <i data-lucide="check" width="13" height="13" aria-label="Check"></i> Connected
+                </div>
+              </div>
+
+              <div class="adapter-card">
+                <div class="ac-icon" style="background:#EFF6FF;">🗂️</div>
+                <div>
+                  <div class="ac-name">Jira</div>
+                  <div class="ac-trust">
+                    <span class="trust-auto" style="font-size:9px;padding:1px 5px;">AUTO</span> read
+                    <span>&nbsp;·&nbsp;</span>
+                    <span class="trust-gated" style="font-size:9px;padding:1px 5px;">GATED</span> write
+                  </div>
+                </div>
+                <div class="ac-connect-btn connect" aria-label="Connect Jira">
+                  <i data-lucide="plus" width="13" height="13" aria-label="Connect"></i> Connect
+                </div>
+              </div>
+
+              <div class="adapter-card active">
+                <div class="ac-icon" style="background:#F8F8F7;">📝</div>
+                <div>
+                  <div class="ac-name">Notion</div>
+                  <div class="ac-trust">
+                    <span class="trust-auto" style="font-size:9px;padding:1px 5px;">AUTO</span> read
+                    <span>&nbsp;·&nbsp;</span>
+                    <span class="trust-gated" style="font-size:9px;padding:1px 5px;">GATED</span> write
+                  </div>
+                </div>
+                <div class="ac-connect-btn connected" aria-label="Connected">
+                  <i data-lucide="check" width="13" height="13" aria-label="Check"></i> Connected
+                </div>
+              </div>
+
+              <div class="adapter-card active">
+                <div class="ac-icon" style="background:#F0F0FF;">⚡</div>
+                <div>
+                  <div class="ac-name">Linear</div>
+                  <div class="ac-trust">
+                    <span class="trust-auto" style="font-size:9px;padding:1px 5px;">AUTO</span> read
+                    <span>&nbsp;·&nbsp;</span>
+                    <span class="trust-gated" style="font-size:9px;padding:1px 5px;">GATED</span> write
+                  </div>
+                </div>
+                <div class="ac-connect-btn connected" aria-label="Connected">
+                  <i data-lucide="check" width="13" height="13" aria-label="Check"></i> Connected
+                </div>
+              </div>
+
+              <div class="adapter-card">
+                <div class="ac-icon" style="background:#ECFDF5;">📁</div>
+                <div>
+                  <div class="ac-name">Google Drive</div>
+                  <div class="ac-trust">
+                    <span class="trust-auto" style="font-size:9px;padding:1px 5px;">AUTO</span> read
+                    <span>&nbsp;·&nbsp;</span>
+                    <span class="trust-gated" style="font-size:9px;padding:1px 5px;">GATED</span> write
+                  </div>
+                </div>
+                <div class="ac-connect-btn connect" aria-label="Connect Google Drive">
+                  <i data-lucide="plus" width="13" height="13" aria-label="Connect"></i> Connect
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div><!-- /tab-templates -->
+
+        <!-- === TAB: SEARCH REGISTRY === -->
+        <div class="tab-panel" id="tab-search">
+          <div class="registry-search-bar">
+            <div class="reg-search-wrap">
+              <span class="ri"><i data-lucide="search" width="14" height="14" aria-label="Search"></i></span>
+              <input type="text" placeholder="Search registry.modelcontextprotocol.io…" value="database" aria-label="Search MCP registry">
+            </div>
+            <button class="btn btn-primary btn-sm">Search</button>
+          </div>
+          <div style="font-size:var(--text-body-sm);color:var(--text-tertiary);margin-bottom:var(--space-4);">Showing 4 results for "database"</div>
+          <div class="registry-results">
+
+            <div class="registry-result">
+              <div class="rr-icon">🗄️</div>
+              <div class="rr-info">
+                <div class="rr-name">postgres-mcp</div>
+                <div class="rr-meta">
+                  <span>HTTP · MCP v1.2</span>
+                  <span>by modelcontextprotocol</span>
+                  <span>⭐ 4.7</span>
+                </div>
+                <div class="rr-scopes">
+                  <span class="scope-tag">sql:read</span>
+                  <span class="scope-tag">sql:write</span>
+                  <span class="scope-tag">schema:read</span>
+                </div>
+              </div>
+              <div class="rr-actions">
+                <button class="btn btn-ghost btn-sm" aria-label="Preview">
+                  <i data-lucide="eye" width="13" height="13" aria-label="Eye"></i> Preview
+                </button>
+                <button class="btn btn-primary btn-sm" aria-label="Register">
+                  <i data-lucide="plus" width="13" height="13" aria-label="Plus"></i> Register
+                </button>
+              </div>
+            </div>
+
+            <div class="registry-result">
+              <div class="rr-icon">🔵</div>
+              <div class="rr-info">
+                <div class="rr-name">mysql-mcp</div>
+                <div class="rr-meta">
+                  <span>HTTP · MCP v1.1</span>
+                  <span>by community</span>
+                  <span>⭐ 4.2</span>
+                </div>
+                <div class="rr-scopes">
+                  <span class="scope-tag">sql:read</span>
+                  <span class="scope-tag">sql:write</span>
+                </div>
+              </div>
+              <div class="rr-actions">
+                <button class="btn btn-ghost btn-sm" aria-label="Preview">
+                  <i data-lucide="eye" width="13" height="13" aria-label="Eye"></i> Preview
+                </button>
+                <button class="btn btn-primary btn-sm" aria-label="Register">
+                  <i data-lucide="plus" width="13" height="13" aria-label="Plus"></i> Register
+                </button>
+              </div>
+            </div>
+
+            <div class="registry-result">
+              <div class="rr-icon">🟢</div>
+              <div class="rr-info">
+                <div class="rr-name">mongodb-mcp</div>
+                <div class="rr-meta">
+                  <span>STDIO · MCP v1.0</span>
+                  <span>by mongodb</span>
+                  <span>⭐ 3.9</span>
+                </div>
+                <div class="rr-scopes">
+                  <span class="scope-tag">db:read</span>
+                  <span class="scope-tag">collections:list</span>
+                </div>
+              </div>
+              <div class="rr-actions">
+                <button class="btn btn-ghost btn-sm" aria-label="Preview">
+                  <i data-lucide="eye" width="13" height="13" aria-label="Eye"></i> Preview
+                </button>
+                <button class="btn btn-primary btn-sm" aria-label="Register">
+                  <i data-lucide="plus" width="13" height="13" aria-label="Plus"></i> Register
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div><!-- /tab-search -->
+
+        <!-- === TAB: REGISTER CUSTOM === -->
+        <div class="tab-panel" id="tab-custom">
+          <div class="reg-form">
+            <div style="font-size:var(--text-title);font-weight:var(--weight-semibold);color:var(--text-primary);margin-bottom:var(--space-5);">Register Custom MCP Server</div>
+
+            <div class="form-row-2">
+              <div class="form-row" style="margin-bottom:0;">
+                <label class="form-label" for="serverName">Server Name</label>
+                <input class="form-input" id="serverName" type="text" placeholder="e.g. my-api-server" value="">
+              </div>
+              <div class="form-row" style="margin-bottom:0;">
+                <label class="form-label" for="transport">Transport</label>
+                <select class="form-select" id="transport">
+                  <option selected>HTTP</option>
+                  <option>SSE</option>
+                  <option>STDIO</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-top:var(--space-4);">
+              <label class="form-label" for="endpointUrl">Endpoint URL</label>
+              <input class="form-input" id="endpointUrl" type="url" placeholder="https://your-server.example.com/mcp">
+              <div class="form-hint">Required for HTTP and SSE transports</div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-row" style="margin-bottom:0;">
+                <label class="form-label" for="authType">Auth Type</label>
+                <select class="form-select" id="authType">
+                  <option>None</option>
+                  <option selected>API Key</option>
+                  <option>OAuth Token</option>
+                </select>
+              </div>
+              <div class="form-row" style="margin-bottom:0;">
+                <label class="form-label" for="credential">Credential</label>
+                <input class="form-input" id="credential" type="password" placeholder="API key or token">
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-top:var(--space-4);">
+              <label class="form-label">Initial Trust Tier</label>
+              <div class="trust-radio-group">
+                <label class="trust-radio">
+                  <input type="radio" name="trust" value="auto">
+                  <span class="trust-dot auto"></span>
+                  AUTO — agents call freely
+                </label>
+                <label class="trust-radio selected-gated">
+                  <input type="radio" name="trust" value="gated" checked>
+                  <span class="trust-dot gated"></span>
+                  GATED — approve each call
+                </label>
+                <label class="trust-radio">
+                  <input type="radio" name="trust" value="blocked">
+                  <span class="trust-dot blocked"></span>
+                  BLOCKED — no calls allowed
+                </label>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <label class="form-label" for="scopeDesc">Scope Description</label>
+              <textarea class="form-input" id="scopeDesc" style="height:72px;padding-top:var(--space-2);resize:vertical;" placeholder="What capabilities does this server provide? (e.g. Read internal CRM records, update deal status)"></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-primary" aria-label="Register and test">
+                <i data-lucide="zap" width="14" height="14" aria-label="Zap"></i>
+                Register &amp; Test Connection
+              </button>
+              <button class="btn btn-ghost" aria-label="Cancel">Cancel</button>
+            </div>
+          </div>
+        </div><!-- /tab-custom -->
+
+      </div><!-- /page-inner -->
+    </div><!-- /page-scroll -->
+  </div><!-- /main-layout -->
+
+</div><!-- /app-shell -->
+
+<!-- Tools panel (slide-over) -->
+<div id="toolsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:99;" onclick="closeToolsPanel()"></div>
+<div id="toolsPanel" style="position:fixed;right:0;top:0;bottom:0;width:400px;background:var(--bg-surface);border-left:1px solid var(--border-default);box-shadow:var(--shadow-4);z-index:100;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.25s ease;">
+  <div style="height:56px;padding:0 var(--space-5);display:flex;align-items:center;gap:var(--space-3);border-bottom:1px solid var(--border-default);flex-shrink:0;">
+    <button class="icon-btn" onclick="closeToolsPanel()" aria-label="Close panel">
+      <i data-lucide="x" width="16" height="16" aria-label="Close"></i>
+    </button>
+    <div style="font-size:var(--text-body);font-weight:var(--weight-semibold);color:var(--text-primary);flex:1;" id="toolsPanelTitle">Tools</div>
+    <div style="font-size:var(--text-caption);color:var(--text-tertiary);" id="toolsPanelCount"></div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:var(--space-4);" id="toolsPanelBody">
+    <!-- populated by JS -->
+  </div>
+</div>
+
+<script>
+lucide.createIcons();
+
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+themeToggle.addEventListener('click', () => {
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  themeToggle.querySelector('i').setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+  lucide.createIcons();
+});
+
+// Tabs
+document.querySelectorAll('.tab-item').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    if (target) switchTab(target);
+  });
+});
+function switchTab(target) {
+  document.querySelectorAll('.tab-item').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === target);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('tab-' + target);
+  if (panel) panel.classList.add('active');
+}
+
+// Tools panel
+const sampleTools = {
+  'Google Calendar': ['list_events','create_event','update_event','delete_event','check_free_busy','get_event_details'],
+  'GitHub': ['list_repos','list_issues','create_issue','add_comment','list_prs','get_file','create_branch','merge_pr'],
+  'Slack': ['list_channels','read_messages','post_message','list_users','get_user_info'],
+  'Notion': ['list_pages','get_page','search_database','create_page'],
+  'Linear': ['list_issues','get_issue','update_issue','list_projects','create_issue','list_cycles'],
+  'internal-db-reader': ['query_select','list_tables','describe_table'],
+};
+function openToolsPanel(server, count) {
+  const panel = document.getElementById('toolsPanel');
+  const overlay = document.getElementById('toolsOverlay');
+  document.getElementById('toolsPanelTitle').textContent = server + ' — Tools';
+  document.getElementById('toolsPanelCount').textContent = count + ' tools';
+  const tools = sampleTools[server] || [];
+  document.getElementById('toolsPanelBody').innerHTML = tools.map(t => `
+    <div style="padding:var(--space-3);border:1px solid var(--border-default);border-radius:var(--radius-md);margin-bottom:var(--space-2);background:var(--bg-surface);">
+      <div style="font-size:var(--text-body-sm);font-weight:var(--weight-semibold);color:var(--text-primary);font-family:var(--font-mono);">${t}</div>
+      <div style="font-size:var(--text-caption);color:var(--text-tertiary);margin-top:3px;">Tool call available to agents with ${server} scope</div>
+    </div>
+  `).join('');
+  panel.style.transform = 'translateX(0)';
+  overlay.style.display = 'block';
+}
+function closeToolsPanel() {
+  document.getElementById('toolsPanel').style.transform = 'translateX(100%)';
+  document.getElementById('toolsOverlay').style.display = 'none';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeToolsPanel(); });
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

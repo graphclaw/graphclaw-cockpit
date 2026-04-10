@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html data-page="chat-fullpage" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   Chat Full Page — Page-specific styles
+   ============================================================ */
+html, body { height: 100%; overflow: hidden; }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* --- Sidebar --- */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden;
+}
+.sidebar-logo { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-4); border-bottom: 1px solid var(--border-default); height: 56px; flex-shrink: 0; }
+.logo-mark { width: 28px; height: 28px; background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white; font-weight: var(--weight-bold); font-size: 13px; flex-shrink: 0; }
+.logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; line-height: 1.2; }
+.logo-sub { font-size: 10px; color: var(--text-tertiary); font-weight: 400; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.nav-section { font-size: 10px; font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-tertiary); padding: var(--space-3) var(--space-4) var(--space-1); }
+.nav-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); margin: 1px var(--space-2); border-radius: var(--radius-md); cursor: pointer; text-decoration: none; color: var(--text-secondary); font-size: var(--text-body-sm); font-weight: var(--weight-medium); transition: background var(--duration-fast), color var(--duration-fast); }
+.nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background: rgba(56,189,248,0.12); }
+.nav-item .ni { display: flex; align-items: center; flex-shrink: 0; width: 18px; height: 18px; }
+.nav-badge { margin-left: auto; background: var(--state-blocked); color: white; font-size: 10px; font-weight: var(--weight-bold); padding: 1px 5px; border-radius: var(--radius-full); min-width: 18px; text-align: center; }
+.nav-badge.green { background: var(--state-progress); }
+.sidebar-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-4); }
+.sidebar-footer { padding: var(--space-2); border-top: 1px solid var(--border-default); }
+.user-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border-radius: var(--radius-md); cursor: pointer; transition: background var(--duration-fast); }
+.user-row:hover { background: var(--bg-inset); }
+.avatar { width: 28px; height: 28px; border-radius: var(--radius-full); background: linear-gradient(135deg, #7C3AED, #0EA5E9); display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: var(--weight-semibold); flex-shrink: 0; }
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.user-role { font-size: 10px; color: var(--text-tertiary); }
+
+/* --- Main layout --- */
+.main-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
+
+/* --- Topbar --- */
+.topbar { height: 56px; background: var(--bg-surface); border-bottom: 1px solid var(--border-default); display: flex; align-items: center; padding: 0 var(--space-5); gap: var(--space-4); flex-shrink: 0; }
+.breadcrumb { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text-primary); }
+.breadcrumb .sep { color: var(--text-tertiary); margin: 0 2px; }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-medium); }
+.topbar-search { flex: 1; max-width: 360px; margin: 0 auto; position: relative; }
+.topbar-search input { width: 100%; height: 32px; background: var(--bg-inset); border: 1.5px solid var(--border-default); border-radius: var(--radius-md); padding: 0 var(--space-3) 0 32px; font-size: var(--text-body-sm); font-family: var(--font-sans); color: var(--text-primary); outline: none; transition: all var(--duration-normal); }
+.topbar-search input::placeholder { color: var(--text-tertiary); }
+.topbar-search input:focus { border-color: var(--brand-primary); background: var(--bg-surface); box-shadow: var(--shadow-focus); }
+.topbar-search .s-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.icon-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); border: none; background: transparent; cursor: pointer; color: var(--icon-secondary); transition: background var(--duration-fast), color var(--duration-fast); }
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.notif-badge { position: relative; }
+.notif-badge::after { content: ''; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; background: var(--state-blocked); border-radius: 50%; border: 1.5px solid var(--bg-surface); }
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 var(--space-1); }
+.topbar-avatar { width: 28px; height: 28px; border-radius: var(--radius-full); background: linear-gradient(135deg, #7C3AED, #0EA5E9); display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: var(--weight-semibold); cursor: pointer; }
+
+/* ============================================================
+   3-COLUMN CHAT LAYOUT
+   ============================================================ */
+.chat-fullpage-layout {
+  flex: 1; display: flex; overflow: hidden; min-height: 0;
+}
+
+/* ---- Left: Conversation History ---- */
+.conv-history {
+  width: 220px; flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.conv-history-header {
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+.new-chat-btn {
+  width: 100%; height: 32px;
+  display: flex; align-items: center; justify-content: center; gap: var(--space-2);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); background: var(--bg-surface);
+  font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  color: var(--text-secondary); cursor: pointer;
+  transition: all var(--duration-fast);
+  font-family: var(--font-sans);
+}
+.new-chat-btn:hover { border-color: var(--brand-primary); color: var(--brand-primary); background: var(--brand-primary-light); }
+
+.conv-list { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.conv-group-label {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); padding: var(--space-3) var(--space-3) var(--space-1);
+}
+.conv-item {
+  padding: var(--space-2) var(--space-3);
+  margin: 1px var(--space-1);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.conv-item:hover { background: var(--bg-inset); }
+.conv-item.active { background: var(--brand-primary-light); }
+[data-theme="dark"] .conv-item.active { background: rgba(56,189,248,0.12); }
+.conv-title { font-size: var(--text-body-sm); font-weight: var(--weight-medium); color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-item.active .conv-title { color: var(--brand-primary); }
+.conv-meta { font-size: 11px; color: var(--text-tertiary); display: flex; align-items: center; justify-content: space-between; margin-top: 2px; }
+.conv-preview { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+/* ---- Center: Main Chat ---- */
+.chat-main {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  background: var(--bg-page);
+  overflow: hidden;
+}
+
+/* Chat topbar */
+.chat-topbar {
+  height: 52px; flex-shrink: 0;
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: 0 var(--space-5);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface);
+}
+.chat-agent-avatar {
+  width: 30px; height: 30px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--brand-primary), #7C3AED);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 12px; font-weight: var(--weight-bold); flex-shrink: 0;
+}
+.chat-topbar-info { flex: 1; }
+.chat-topbar-title { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.chat-topbar-sub { font-size: 11px; color: var(--text-tertiary); display: flex; align-items: center; gap: 4px; }
+.online-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--state-progress); }
+.chat-topbar-actions { display: flex; align-items: center; gap: 2px; }
+
+/* Context chips row */
+.ctx-row {
+  padding: var(--space-2) var(--space-5);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface-alt);
+  display: flex; align-items: center; gap: var(--space-2);
+  flex-shrink: 0; flex-wrap: wrap;
+}
+.ctx-label { font-size: 11px; color: var(--text-tertiary); font-weight: var(--weight-medium); }
+.ctx-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 22px; padding: 0 var(--space-2);
+  background: var(--bg-inset); color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm); font-size: 11px; font-weight: var(--weight-medium);
+  cursor: pointer; transition: all var(--duration-fast);
+}
+.ctx-chip.brand { background: var(--brand-primary-light); color: var(--brand-primary); border-color: transparent; }
+.ctx-chip:hover { border-color: var(--brand-primary); }
+[data-theme="dark"] .ctx-chip.brand { background: rgba(56,189,248,0.12); }
+
+/* Thread */
+.chat-thread {
+  flex: 1; overflow-y: auto; padding: var(--space-5) var(--space-6);
+  display: flex; flex-direction: column; gap: var(--space-5);
+}
+
+/* Date divider */
+.date-divider {
+  display: flex; align-items: center; gap: var(--space-3);
+  font-size: var(--text-caption); color: var(--text-tertiary); margin: 0;
+}
+.date-divider::before, .date-divider::after { content: ''; flex: 1; height: 1px; background: var(--border-default); }
+
+/* Message rows */
+.msg-row { display: flex; gap: var(--space-3); align-items: flex-start; max-width: 720px; }
+.msg-row.user { flex-direction: row-reverse; margin-left: auto; }
+
+.msg-avatar {
+  width: 30px; height: 30px; border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: var(--weight-semibold); flex-shrink: 0; margin-top: 4px;
+}
+.msg-avatar.agent { background: linear-gradient(135deg, var(--brand-primary), #7C3AED); color: white; }
+.msg-avatar.user { background: linear-gradient(135deg, #7C3AED, #0EA5E9); color: white; }
+
+.msg-body { flex: 1; min-width: 0; }
+.msg-name { font-size: 11px; font-weight: var(--weight-semibold); color: var(--text-tertiary); margin-bottom: var(--space-1); }
+.msg-row.user .msg-name { text-align: right; }
+
+.msg-bubble {
+  padding: var(--space-3) var(--space-4);
+  border-radius: 12px; font-size: var(--text-body-sm); line-height: 1.6;
+  position: relative;
+}
+.msg-bubble.agent {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-top-left-radius: 4px; color: var(--text-primary);
+  box-shadow: var(--shadow-1);
+}
+.msg-bubble.user {
+  background: var(--brand-primary); color: white;
+  border-top-right-radius: 4px;
+}
+[data-theme="dark"] .msg-bubble.user { background: #0284C7; }
+
+/* Timestamp (hover) */
+.msg-ts {
+  font-size: 10px; color: var(--text-tertiary);
+  margin-top: 4px; opacity: 0; transition: opacity var(--duration-fast);
+}
+.msg-row.user .msg-ts { text-align: right; }
+.msg-row:hover .msg-ts { opacity: 1; }
+
+/* Hover actions bar */
+.msg-actions {
+  display: flex; align-items: center; gap: 2px;
+  position: absolute; top: -32px; left: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 3px 5px; box-shadow: var(--shadow-2);
+  opacity: 0; transition: opacity var(--duration-fast);
+  pointer-events: none; z-index: 2;
+}
+.msg-bubble:hover .msg-actions { opacity: 1; pointer-events: auto; }
+.msg-act-btn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: none; background: transparent; cursor: pointer; color: var(--icon-secondary); }
+.msg-act-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+
+/* Markdown elements */
+.md-list { margin: var(--space-2) 0; padding-left: var(--space-5); }
+.md-list li { margin-bottom: 5px; color: var(--text-primary); line-height: 1.55; }
+.md-strong { font-weight: var(--weight-semibold); }
+.md-code { font-family: var(--font-mono); font-size: 11px; background: var(--bg-inset); padding: 1px 5px; border-radius: 3px; color: var(--text-secondary); }
+.md-h3 { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: var(--space-2); margin-top: var(--space-2); }
+.md-p { margin-bottom: var(--space-2); }
+.md-ol { margin: var(--space-2) 0; padding-left: var(--space-5); }
+.md-ol li { margin-bottom: 6px; line-height: 1.55; }
+.md-ol li strong { color: var(--text-primary); }
+
+/* Code block */
+.code-block {
+  margin-top: var(--space-3);
+  background: #0F172A; color: #E2E8F0;
+  border-radius: var(--radius-md); overflow: hidden;
+}
+[data-theme="dark"] .code-block { background: #020617; border: 1px solid var(--border-strong); }
+.code-block-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.code-block-lang { font-size: 10px; color: #94A3B8; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.code-copy-btn { font-size: 10px; color: #94A3B8; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; font-family: var(--font-sans); padding: 2px 5px; border-radius: 3px; }
+.code-copy-btn:hover { background: rgba(255,255,255,0.08); color: #E2E8F0; }
+.code-block pre { padding: var(--space-3); font-family: var(--font-mono); font-size: 12px; line-height: 1.6; overflow-x: auto; margin: 0; }
+.code-kw { color: #7DD3FC; } /* keyword */
+.code-str { color: #86EFAC; } /* string */
+.code-num { color: #FCA5A5; } /* number */
+.code-comment { color: #64748B; font-style: italic; }
+.code-fn { color: #FCD34D; } /* function */
+
+/* Tool use  */
+.tool-use {
+  margin-top: var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); overflow: hidden; font-size: var(--text-caption);
+}
+.tool-use summary {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-inset); cursor: pointer;
+  color: var(--text-secondary); font-weight: var(--weight-medium);
+  list-style: none; transition: background var(--duration-fast);
+}
+.tool-use summary:hover { background: var(--border-subtle); }
+.tool-use summary::marker { display: none; }
+.tool-chevron { margin-left: auto; transition: transform var(--duration-fast); display: flex; }
+.tool-use[open] .tool-chevron { transform: rotate(90deg); }
+.tool-use-body { padding: var(--space-2) var(--space-3); font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); line-height: 1.5; background: var(--bg-surface); overflow-x: auto; }
+
+/* Thinking indicator */
+.thinking-bubble {
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: 12px; border-top-left-radius: 4px;
+  padding: var(--space-3) var(--space-4);
+  display: flex; align-items: center; gap: var(--space-2);
+  box-shadow: var(--shadow-1);
+}
+.thinking-dots { display: flex; gap: 4px; align-items: center; }
+.thinking-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-tertiary);
+  animation: dot-bounce 1.4s ease-in-out infinite both;
+}
+.thinking-dot:nth-child(2) { animation-delay: 0.16s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.32s; }
+@keyframes dot-bounce { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+
+/* Summary card */
+.action-card {
+  margin-top: var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+  font-size: var(--text-body-sm);
+}
+.action-card-header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+.action-card-icon { width: 28px; height: 28px; border-radius: var(--radius-md); background: var(--state-progress-light); color: var(--state-progress); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.action-card-title { font-weight: var(--weight-semibold); color: var(--text-primary); }
+.action-card-rows { display: flex; flex-direction: column; gap: var(--space-2); }
+.action-row { display: flex; align-items: center; gap: var(--space-3); color: var(--text-secondary); font-size: var(--text-caption); }
+.action-row strong { color: var(--text-primary); font-weight: var(--weight-medium); min-width: 100px; }
+
+/* Input area */
+.chat-input-section {
+  padding: var(--space-4) var(--space-6) var(--space-5);
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-surface); flex-shrink: 0;
+}
+.chat-input-wrap {
+  max-width: 720px; margin: 0 auto;
+}
+.chat-input-box {
+  display: flex; align-items: flex-end; gap: var(--space-2);
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: 12px; padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  transition: border-color var(--duration-normal), box-shadow var(--duration-normal);
+}
+.chat-input-box:focus-within { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.chat-input {
+  flex: 1; border: none; background: transparent; outline: none;
+  font-size: var(--text-body); font-family: var(--font-sans);
+  color: var(--text-primary); resize: none; min-height: 24px; max-height: 160px;
+  line-height: 1.5; padding: 2px 0;
+}
+.chat-input::placeholder { color: var(--text-tertiary); }
+.input-btns { display: flex; align-items: center; gap: var(--space-1); flex-shrink: 0; }
+.input-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); border: none; background: transparent; cursor: pointer; color: var(--icon-secondary); transition: background var(--duration-fast), color var(--duration-fast); }
+.input-btn:hover { background: var(--border-default); color: var(--text-primary); }
+.send-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); border: none; background: var(--brand-primary); color: white; cursor: pointer; transition: background var(--duration-fast), transform var(--duration-fast); }
+.send-btn:hover { background: var(--brand-primary-hover); transform: scale(1.05); }
+.input-hint { max-width: 720px; margin: var(--space-2) auto 0; display: flex; gap: var(--space-4); font-size: 11px; color: var(--text-tertiary); }
+.input-hint kbd { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 3px; padding: 1px 5px; font-family: var(--font-mono); font-size: 10px; }
+
+/* ---- Right: Context Panel ---- */
+.context-panel {
+  width: 280px; flex-shrink: 0;
+  background: var(--bg-surface-alt);
+  border-left: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.ctx-panel-header {
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+.ctx-panel-title { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.ctx-panel-sub { font-size: var(--text-caption); color: var(--text-tertiary); margin-top: 2px; }
+.ctx-panel-body { flex: 1; overflow-y: auto; padding: var(--space-3); }
+
+/* Related task card */
+.related-task {
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: var(--space-3);
+  margin-bottom: var(--space-2);
+  box-shadow: var(--shadow-1);
+  cursor: pointer; transition: all var(--duration-fast);
+}
+.related-task:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.rt-header { display: flex; align-items: flex-start; gap: var(--space-2); margin-bottom: var(--space-2); }
+.rt-icon { width: 24px; height: 24px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rt-title { font-size: var(--text-body-sm); font-weight: var(--weight-medium); color: var(--text-primary); flex: 1; line-height: 1.4; }
+.rt-badge {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  padding: 2px 6px; border-radius: var(--radius-full);
+  white-space: nowrap; flex-shrink: 0;
+}
+.rt-meta { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-caption); color: var(--text-tertiary); flex-wrap: wrap; }
+
+/* Status badge variants */
+.badge-delayed { background: var(--state-delayed-light); color: var(--state-delayed); }
+.badge-blocked { background: var(--state-blocked-light); color: var(--state-blocked); }
+.badge-progress { background: var(--state-progress-light); color: var(--state-progress); }
+.badge-active { background: var(--state-active-light); color: var(--state-active); }
+.badge-complete { background: var(--state-complete-light); color: var(--state-complete); border: 1px solid var(--border-default); }
+
+/* Insight card */
+.insight-card {
+  background: var(--brand-primary-light);
+  border: 1px solid rgba(14,165,233,0.2);
+  border-radius: var(--radius-md); padding: var(--space-3);
+  margin-bottom: var(--space-2); font-size: var(--text-caption);
+}
+[data-theme="dark"] .insight-card { background: rgba(56,189,248,0.08); border-color: rgba(56,189,248,0.2); }
+.insight-header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-1); }
+.insight-icon { color: var(--brand-primary); display: flex; }
+.insight-title { font-weight: var(--weight-semibold); color: var(--text-primary); font-size: var(--text-body-sm); }
+.insight-text { color: var(--text-secondary); line-height: 1.5; }
+
+.ctx-section-label { font-size: 10px; font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); padding: var(--space-2) 0 var(--space-2); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      
+      <div>
+        <div class="logo-text">GraphClaw</div>
+        <div class="logo-sub">Cockpit</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Workspace</div>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="layout-dashboard" width="16" height="16" aria-label="Dashboard"></i></span>
+        Dashboard
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="check-square" width="16" height="16" aria-label="My Tasks"></i></span>
+        My Tasks
+        <span class="nav-badge">5</span>
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="target" width="16" height="16" aria-label="Goals"></i></span>
+        Goals
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="folder-kanban" width="16" height="16" aria-label="Projects"></i></span>
+        Projects
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="calendar-range" width="16" height="16" aria-label="Timeline"></i></span>
+        Timeline
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="users" width="16" height="16" aria-label="People"></i></span>
+        People
+      </a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Intelligence</div>
+      <a href="agent-monitor.html" class="nav-item">
+        <span class="ni"><i data-lucide="cpu" width="16" height="16" aria-label="Agent Monitor"></i></span>
+        Agent Monitor
+        <span class="nav-badge green">7</span>
+      </a>
+      <a href="chat-sidebar.html" class="nav-item active">
+        <span class="ni"><i data-lucide="message-circle" width="16" height="16" aria-label="Chat"></i></span>
+        Chat
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="puzzle" width="16" height="16" aria-label="Skills"></i></span>
+        Skills
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="plug" width="16" height="16" aria-label="MCP Registry"></i></span>
+        MCP Registry
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="nav-item" style="margin: 0 0 var(--space-1);">
+        <span class="ni"><i data-lucide="settings" width="16" height="16" aria-label="Settings"></i></span>
+        Settings
+      </a>
+      <div class="user-row">
+        <div class="avatar">AR</div>
+        <div class="user-info">
+          <div class="user-name">Arjun Reyes</div>
+          <div class="user-role">Product Lead</div>
+        </div>
+        <i data-lucide="chevron-up-down" width="14" height="14" style="color: var(--icon-tertiary);" aria-label="User menu"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN LAYOUT ============ -->
+  <div class="main-layout">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="breadcrumb">
+        <a href="#">Home</a>
+        <span class="sep">/</span>
+        <span class="current">Chat</span>
+      </div>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14" aria-label="Search"></i></span>
+        <input type="text" placeholder="Search conversations…" aria-label="Search conversations">
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notif-badge" aria-label="Notifications">
+          <i data-lucide="bell" width="16" height="16" aria-label="Bell"></i>
+        </button>
+        <div class="divider-v"></div>
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+          <i data-lucide="moon" width="16" height="16" aria-label="Dark mode"></i>
+        </button>
+        <div class="topbar-avatar">AR</div>
+      </div>
+    </div>
+
+    <!-- 3-column chat layout -->
+    <div class="chat-fullpage-layout">
+
+      <!-- ---- LEFT: Conversation History ---- -->
+      <div class="conv-history">
+        <div class="conv-history-header">
+          <button class="new-chat-btn" aria-label="Start new conversation">
+            <i data-lucide="plus" width="14" height="14" aria-label="New"></i>
+            New Chat
+          </button>
+        </div>
+        <div class="conv-list">
+
+          <div class="conv-group-label">Today</div>
+
+          <div class="conv-item active">
+            <div class="conv-title">Data Pipeline delays investigation</div>
+            <div class="conv-meta">
+              <span>Now</span>
+              <i data-lucide="cpu" width="10" height="10" style="color: var(--state-progress);" aria-label="Agent"></i>
+            </div>
+            <div class="conv-preview">Identified 3 root causes. Corrective action in progress.</div>
+          </div>
+
+          <div class="conv-item">
+            <div class="conv-title">API Gateway blockers</div>
+            <div class="conv-meta"><span>2h ago</span></div>
+            <div class="conv-preview">Reassigned #TK-4801 to Jin Watanabe — urgent</div>
+          </div>
+
+          <div class="conv-item">
+            <div class="conv-title">Q3 budget variance summary</div>
+            <div class="conv-meta"><span>4h ago</span></div>
+            <div class="conv-preview">−$214K vs. forecast. Key drivers identified.</div>
+          </div>
+
+          <div class="conv-group-label">Yesterday</div>
+
+          <div class="conv-item">
+            <div class="conv-title">Sprint planning for Platform team</div>
+            <div class="conv-meta"><span>Apr 9</span></div>
+            <div class="conv-preview">Created 7 tasks. Assigned to 4 team members.</div>
+          </div>
+
+          <div class="conv-item">
+            <div class="conv-title">Review Kubernetes migration plan</div>
+            <div class="conv-meta"><span>Apr 9</span></div>
+            <div class="conv-preview">Flagged 2 security concerns for team review.</div>
+          </div>
+
+          <div class="conv-item">
+            <div class="conv-title">Headcount forecast reconciliation</div>
+            <div class="conv-meta"><span>Apr 9</span></div>
+            <div class="conv-preview">Updated model with Apr actuals. Variance +2.1%.</div>
+          </div>
+
+          <div class="conv-group-label">This Week</div>
+
+          <div class="conv-item">
+            <div class="conv-title">Competitive analysis briefing</div>
+            <div class="conv-meta"><span>Apr 8</span></div>
+            <div class="conv-preview">7 insights from Notion, Linear, Asana pricing pages.</div>
+          </div>
+
+          <div class="conv-item">
+            <div class="conv-title">Canary routing unblock strategy</div>
+            <div class="conv-meta"><span>Apr 8</span></div>
+            <div class="conv-preview">HAProxy config reassigned. ETA 3–4 hours.</div>
+          </div>
+
+          <div class="conv-item">
+            <div class="conv-title">Infrastructure cost audit</div>
+            <div class="conv-meta"><span>Apr 7</span></div>
+            <div class="conv-preview">Identified 3 idle EC2 clusters costing $1,240/mo.</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ---- CENTER: Main Chat ---- -->
+      <div class="chat-main">
+
+        <!-- Chat topbar -->
+        <div class="chat-topbar">
+          <div class="chat-agent-avatar">GC</div>
+          <div class="chat-topbar-info">
+            <div class="chat-topbar-title">Data Pipeline delays investigation</div>
+            <div class="chat-topbar-sub">
+              <div class="online-dot"></div>
+              GraphClaw Agent · Claude Sonnet · Started 12 min ago
+            </div>
+          </div>
+          <div class="chat-topbar-actions">
+            <button class="icon-btn" title="Share" aria-label="Share"><i data-lucide="share-2" width="15" height="15" aria-label="Share"></i></button>
+            <button class="icon-btn" title="Export" aria-label="Export"><i data-lucide="download" width="15" height="15" aria-label="Export"></i></button>
+            <button class="icon-btn" title="Collapse to sidebar" onclick="window.location.href='chat-sidebar.html'" aria-label="Collapse"><i data-lucide="panel-right-close" width="15" height="15" aria-label="Collapse"></i></button>
+          </div>
+        </div>
+
+        <!-- Context chips -->
+        <div class="ctx-row">
+          <span class="ctx-label">Context:</span>
+          <span class="ctx-chip brand">
+            <i data-lucide="database" width="11" height="11" aria-label="Pipeline"></i>
+            Data Pipeline Agent
+          </span>
+          <span class="ctx-chip">
+            <i data-lucide="folder-kanban" width="11" height="11" aria-label="Project"></i>
+            Infrastructure Project
+          </span>
+          <span class="ctx-chip">
+            <i data-lucide="calendar-range" width="11" height="11" aria-label="Date range"></i>
+            Last 7 days
+          </span>
+        </div>
+
+        <!-- Message Thread -->
+        <div class="chat-thread" id="chatThread" role="log" aria-label="Conversation">
+
+          <div class="date-divider">Today, Apr 10, 2026 · 14:20</div>
+
+          <!-- User message 1 -->
+          <div class="msg-row user">
+            <div class="msg-avatar user">AR</div>
+            <div class="msg-body">
+              <div class="msg-name">Arjun Reyes</div>
+              <div class="msg-bubble user">
+                All my Data Pipeline tasks are showing as Delayed. Can you investigate why and give me a root cause analysis?
+              </div>
+              <div class="msg-ts">14:20:18</div>
+            </div>
+          </div>
+
+          <!-- Agent message 1 -->
+          <div class="msg-row">
+            <div class="msg-avatar agent">GC</div>
+            <div class="msg-body">
+              <div class="msg-name">GraphClaw Agent</div>
+              <div class="msg-bubble agent">
+                <div class="msg-actions">
+                  <button class="msg-act-btn" title="Copy" aria-label="Copy"><i data-lucide="copy" width="12" height="12" aria-label="Copy"></i></button>
+                  <button class="msg-act-btn" title="Thumbs up" aria-label="Thumbs up"><i data-lucide="thumbs-up" width="12" height="12" aria-label="Good"></i></button>
+                  <button class="msg-act-btn" title="Thumbs down" aria-label="Thumbs down"><i data-lucide="thumbs-down" width="12" height="12" aria-label="Bad"></i></button>
+                </div>
+                I'm pulling the task graph and agent logs now. Give me a moment.
+                <details class="tool-use">
+                  <summary>
+                    <i data-lucide="wrench" width="12" height="12" aria-label="Tool"></i>
+                    <span style="font-weight:600; margin-left:3px;">search_tasks(project="Infrastructure", status="delayed", limit=20)</span>
+                    <span class="tool-chevron"><i data-lucide="chevron-right" width="12" height="12" aria-label="Expand"></i></span>
+                  </summary>
+                  <div class="tool-use-body">{ "count": 9,
+  "tasks": [
+    {"id": "TK-4780", "name": "Nightly ETL sync — Snowflake", "delayed_by": "3d"},
+    {"id": "TK-4782", "name": "Batch aggregation job — dbt run", "delayed_by": "2d"},
+    {"id": "TK-4785", "name": "Stage → Prod data promotion", "delayed_by": "3d"},
+    ...6 more
+  ]
+}</div>
+                </details>
+                <details class="tool-use" style="margin-top: var(--space-2);">
+                  <summary>
+                    <i data-lucide="wrench" width="12" height="12" aria-label="Tool"></i>
+                    <span style="font-weight:600; margin-left:3px;">get_agent_logs(agent="data-pipeline-agent", since="7d")</span>
+                    <span class="tool-chevron"><i data-lucide="chevron-right" width="12" height="12" aria-label="Expand"></i></span>
+                  </summary>
+                  <div class="tool-use-body">{ "errors": 14, "warnings": 31,
+  "top_error": "ConnectionError: Snowflake connector timeout",
+  "first_failure": "2026-04-07T02:14:33Z",
+  "pattern": "Failures cluster between 02:00–04:00 UTC"
+}</div>
+                </details>
+              </div>
+              <div class="msg-ts">14:20:41</div>
+            </div>
+          </div>
+
+          <!-- Agent message 2 — analysis -->
+          <div class="msg-row">
+            <div class="msg-avatar agent">GC</div>
+            <div class="msg-body">
+              <div class="msg-name">GraphClaw Agent</div>
+              <div class="msg-bubble agent">
+                <div class="msg-actions">
+                  <button class="msg-act-btn" title="Copy" aria-label="Copy"><i data-lucide="copy" width="12" height="12" aria-label="Copy"></i></button>
+                  <button class="msg-act-btn" title="Thumbs up" aria-label="Thumbs up"><i data-lucide="thumbs-up" width="12" height="12" aria-label="Good"></i></button>
+                  <button class="msg-act-btn" title="Thumbs down" aria-label="Thumbs down"><i data-lucide="thumbs-down" width="12" height="12" aria-label="Bad"></i></button>
+                </div>
+                <div class="md-h3">Root Cause Analysis — Data Pipeline Delays</div>
+                I found <span class="md-strong">3 compounding root causes</span> across 9 delayed tasks:
+
+                <ol class="md-ol">
+                  <li>
+                    <strong>Snowflake connectivity failures (primary cause)</strong><br>
+                    The <span class="md-code">data-pipeline-agent</span> has been timing out when connecting to Snowflake <span class="md-code">us-east-1</span> between 02:00–04:00 UTC since Apr 7. 14 errors in 3 days. This blocks the nightly ETL sync which is an upstream dependency for 6 downstream tasks.
+                  </li>
+                  <li>
+                    <strong>Connection pool exhaustion (contributing cause)</strong><br>
+                    When retries are attempted, the pool fills up (max 8 connections). This starves any concurrent jobs — causing the batch aggregation and dbt runs to queue indefinitely.
+                  </li>
+                  <li>
+                    <strong>Missing circuit breaker (systemic gap)</strong><br>
+                    There's no circuit breaker on the Snowflake connector. Failed jobs don't mark themselves as <span class="md-code">BLOCKED</span> in the graph — they stay <span class="md-code">DELAYED</span>, hiding the real cause from task owners.
+                  </li>
+                </ol>
+
+                <details class="tool-use">
+                  <summary>
+                    <i data-lucide="wrench" width="12" height="12" aria-label="Tool"></i>
+                    <span style="font-weight:600; margin-left:3px;">analyze_dependencies(task_ids=["TK-4780","TK-4782","TK-4785"])</span>
+                    <span class="tool-chevron"><i data-lucide="chevron-right" width="12" height="12" aria-label="Expand"></i></span>
+                  </summary>
+                  <div class="tool-use-body">{ "root_dependency": "TK-4780",
+  "blocked_downstream": 6,
+  "impact_score": 0.87,
+  "critical_path_blocked": true
+}</div>
+                </details>
+              </div>
+              <div class="msg-ts">14:21:09</div>
+            </div>
+          </div>
+
+          <!-- Agent message 3 — recommendations -->
+          <div class="msg-row">
+            <div class="msg-avatar agent">GC</div>
+            <div class="msg-body">
+              <div class="msg-name">GraphClaw Agent</div>
+              <div class="msg-bubble agent">
+                <div class="msg-actions">
+                  <button class="msg-act-btn" title="Copy" aria-label="Copy"><i data-lucide="copy" width="12" height="12" aria-label="Copy"></i></button>
+                  <button class="msg-act-btn" title="Thumbs up" aria-label="Thumbs up"><i data-lucide="thumbs-up" width="12" height="12" aria-label="Good"></i></button>
+                  <button class="msg-act-btn" title="Thumbs down" aria-label="Thumbs down"><i data-lucide="thumbs-down" width="12" height="12" aria-label="Bad"></i></button>
+                </div>
+                <div class="md-h3">Recommended Actions</div>
+                <ol class="md-ol">
+                  <li><strong>Option 1 — Immediate restart:</strong> Restart the Data Pipeline Agent with a fresh Snowflake session pool. High risk — if connectivity is an AWS networking issue, it may fail again within the same window.</li>
+                  <li><strong>Option 2 — Reschedule + circuit breaker:</strong> Shift the nightly ETL window to 06:00 UTC (outside the failure window), add a circuit breaker that flips task status to BLOCKED after 3 failures. Lower risk, resolves the systemic gap too.</li>
+                  <li><strong>Option 3 — Escalate to infrastructure:</strong> File an incident with the Platform team to investigate Snowflake network route health from us-east-1. Option for if this is an external provider issue.</li>
+                </ol>
+                I recommend <span class="md-strong">Option 2</span> — it unblocks the pipeline while fixing the root cause and improves observability.
+              </div>
+              <div class="msg-ts">14:21:33</div>
+            </div>
+          </div>
+
+          <!-- User message 2 -->
+          <div class="msg-row user">
+            <div class="msg-avatar user">AR</div>
+            <div class="msg-body">
+              <div class="msg-name">Arjun Reyes</div>
+              <div class="msg-bubble user">
+                Go ahead with option 2. Reschedule to 06:00 UTC and enable the circuit breaker.
+              </div>
+              <div class="msg-ts">14:22:05</div>
+            </div>
+          </div>
+
+          <!-- Agent message 4 — confirmation + code -->
+          <div class="msg-row">
+            <div class="msg-avatar agent">GC</div>
+            <div class="msg-body">
+              <div class="msg-name">GraphClaw Agent</div>
+              <div class="msg-bubble agent">
+                <div class="msg-actions">
+                  <button class="msg-act-btn" title="Copy" aria-label="Copy"><i data-lucide="copy" width="12" height="12" aria-label="Copy"></i></button>
+                  <button class="msg-act-btn" title="Thumbs up" aria-label="Thumbs up"><i data-lucide="thumbs-up" width="12" height="12" aria-label="Good"></i></button>
+                  <button class="msg-act-btn" title="Thumbs down" aria-label="Thumbs down"><i data-lucide="thumbs-down" width="12" height="12" aria-label="Bad"></i></button>
+                </div>
+                Applying Option 2 now. Here's what I'm changing in the trigger config:
+                <div class="code-block">
+                  <div class="code-block-header">
+                    <span class="code-block-lang">YAML — trigger config diff</span>
+                    <button class="code-copy-btn" aria-label="Copy code">
+                      <i data-lucide="copy" width="10" height="10" aria-label="Copy"></i>
+                      Copy
+                    </button>
+                  </div>
+                  <pre><span class="code-comment"># Before</span>
+<span class="code-kw">schedule</span>: <span class="code-str">"0 2 * * *"</span>   <span class="code-comment"># 02:00 UTC</span>
+<span class="code-kw">circuit_breaker</span>: <span class="code-fn">disabled</span>
+
+<span class="code-comment"># After</span>
+<span class="code-kw">schedule</span>: <span class="code-str">"0 6 * * *"</span>   <span class="code-comment"># 06:00 UTC</span>
+<span class="code-kw">circuit_breaker</span>:
+  <span class="code-kw">enabled</span>: <span class="code-fn">true</span>
+  <span class="code-kw">failure_threshold</span>: <span class="code-num">3</span>
+  <span class="code-kw">status_on_trip</span>: <span class="code-str">"BLOCKED"</span>
+  <span class="code-kw">reset_after</span>: <span class="code-str">"30m"</span></pre>
+                </div>
+                <div class="action-card">
+                  <div class="action-card-header">
+                    <div class="action-card-icon">
+                      <i data-lucide="check-circle-2" width="14" height="14" aria-label="Done"></i>
+                    </div>
+                    <div class="action-card-title">Changes applied successfully</div>
+                  </div>
+                  <div class="action-card-rows">
+                    <div class="action-row">
+                      <strong>ETL schedule</strong>
+                      02:00 UTC → <strong style="color: var(--state-progress);">06:00 UTC</strong>
+                    </div>
+                    <div class="action-row">
+                      <strong>Circuit breaker</strong>
+                      Disabled → <strong style="color: var(--state-progress);">Enabled (3 failures)</strong>
+                    </div>
+                    <div class="action-row">
+                      <strong>Tasks re-queued</strong>
+                      9 DELAYED tasks → <strong>Awaiting next run</strong>
+                    </div>
+                    <div class="action-row">
+                      <strong>Next ETL window</strong>
+                      Tonight at <strong>06:00 UTC</strong>
+                    </div>
+                  </div>
+                </div>
+                The 9 delayed tasks will auto-run at 06:00 UTC tonight. I'll send you a Slack notification with results.
+              </div>
+              <div class="msg-ts">14:22:54</div>
+            </div>
+          </div>
+
+          <!-- Thinking indicator -->
+          <div class="msg-row" id="thinkingRow">
+            <div class="msg-avatar agent">GC</div>
+            <div class="msg-body">
+              <div class="msg-name">GraphClaw Agent</div>
+              <div class="thinking-bubble">
+                <div class="thinking-dots">
+                  <div class="thinking-dot"></div>
+                  <div class="thinking-dot"></div>
+                  <div class="thinking-dot"></div>
+                </div>
+                <span style="font-size: var(--text-caption); color: var(--text-tertiary); margin-left: var(--space-2);">Thinking…</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /chat-thread -->
+
+        <!-- Input -->
+        <div class="chat-input-section">
+          <div class="chat-input-wrap">
+            <div class="chat-input-box">
+              <textarea
+                class="chat-input"
+                id="chatInput"
+                placeholder="Ask about your tasks, request actions, or analyze your graph…"
+                rows="1"
+                aria-label="Type a message"
+              ></textarea>
+              <div class="input-btns">
+                <button class="input-btn" title="Attach file" aria-label="Attach file">
+                  <i data-lucide="paperclip" width="15" height="15" aria-label="Attach"></i>
+                </button>
+                <button class="input-btn" title="Use a command" aria-label="Commands">
+                  <i data-lucide="slash-square" width="15" height="15" aria-label="Commands"></i>
+                </button>
+                <button class="send-btn" id="sendBtn" aria-label="Send">
+                  <i data-lucide="send" width="14" height="14" aria-label="Send"></i>
+                </button>
+              </div>
+            </div>
+            <div class="input-hint">
+              <span><kbd>/</kbd> commands</span>
+              <span><kbd>@</kbd> mention task or person</span>
+              <span><kbd>⏎ Enter</kbd> to send, <kbd>Shift+⏎</kbd> for newline</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /chat-main -->
+
+      <!-- ---- RIGHT: Context Panel ---- -->
+      <div class="context-panel">
+        <div class="ctx-panel-header">
+          <div class="ctx-panel-title">Related Tasks</div>
+          <div class="ctx-panel-sub">Mentioned in conversation</div>
+        </div>
+        <div class="ctx-panel-body">
+
+          <div class="insight-card">
+            <div class="insight-header">
+              <span class="insight-icon"><i data-lucide="lightbulb" width="14" height="14" aria-label="Insight"></i></span>
+              <span class="insight-title">Root cause identified</span>
+            </div>
+            <div class="insight-text">9 tasks delayed by Snowflake connector failures. Circuit breaker applied. Next run: tonight 06:00 UTC.</div>
+          </div>
+
+          <div class="ctx-section-label">Blocked tasks (9)</div>
+
+          <div class="related-task">
+            <div class="rt-header">
+              <div class="rt-icon badge-delayed">
+                <i data-lucide="database" width="13" height="13" aria-label="DB"></i>
+              </div>
+              <div class="rt-title">Nightly ETL sync — Snowflake to Postgres</div>
+              <span class="rt-badge badge-delayed">Delayed 3d</span>
+            </div>
+            <div class="rt-meta">
+              <span>#TK-4780</span>
+              <span>Data Pipeline Agent</span>
+            </div>
+          </div>
+
+          <div class="related-task">
+            <div class="rt-header">
+              <div class="rt-icon badge-delayed">
+                <i data-lucide="arrow-right-left" width="13" height="13" aria-label="Transform"></i>
+              </div>
+              <div class="rt-title">Batch aggregation job — dbt run (prod)</div>
+              <span class="rt-badge badge-delayed">Delayed 2d</span>
+            </div>
+            <div class="rt-meta">
+              <span>#TK-4782</span>
+              <span>Depends on #TK-4780</span>
+            </div>
+          </div>
+
+          <div class="related-task">
+            <div class="rt-header">
+              <div class="rt-icon badge-blocked">
+                <i data-lucide="upload" width="13" height="13" aria-label="Upload"></i>
+              </div>
+              <div class="rt-title">Stage → Prod data promotion</div>
+              <span class="rt-badge badge-blocked">Blocked</span>
+            </div>
+            <div class="rt-meta">
+              <span>#TK-4785</span>
+              <span>Priya Sharma</span>
+            </div>
+          </div>
+
+          <div class="related-task">
+            <div class="rt-header">
+              <div class="rt-icon badge-delayed">
+                <i data-lucide="bar-chart-2" width="13" height="13" aria-label="Report"></i>
+              </div>
+              <div class="rt-title">Weekly metrics report — BI dashboard refresh</div>
+              <span class="rt-badge badge-delayed">Delayed 3d</span>
+            </div>
+            <div class="rt-meta">
+              <span>#TK-4791</span>
+              <span>Jin Watanabe</span>
+            </div>
+          </div>
+
+          <div class="related-task">
+            <div class="rt-header">
+              <div class="rt-icon badge-delayed">
+                <i data-lucide="filter" width="13" height="13" aria-label="Filter"></i>
+              </div>
+              <div class="rt-title">Customer cohort analysis — Apr actuals</div>
+              <span class="rt-badge badge-delayed">Delayed 1d</span>
+            </div>
+            <div class="rt-meta">
+              <span>#TK-4793</span>
+              <span>Marcus Webb</span>
+            </div>
+          </div>
+
+          <div class="ctx-section-label">Changes made</div>
+
+          <div class="related-task" style="border-left: 3px solid var(--state-progress);">
+            <div class="rt-header">
+              <div class="rt-icon badge-progress">
+                <i data-lucide="settings-2" width="13" height="13" aria-label="Config"></i>
+              </div>
+              <div class="rt-title">Trigger config update — ETL reschedule 06:00 UTC</div>
+              <span class="rt-badge badge-progress">Applied</span>
+            </div>
+            <div class="rt-meta">
+              <span>Config change</span>
+              <span>Just now</span>
+            </div>
+          </div>
+
+          <div class="related-task" style="border-left: 3px solid var(--state-progress);">
+            <div class="rt-header">
+              <div class="rt-icon badge-progress">
+                <i data-lucide="shield-check" width="13" height="13" aria-label="Circuit breaker"></i>
+              </div>
+              <div class="rt-title">Circuit breaker enabled on Snowflake connector</div>
+              <span class="rt-badge badge-progress">Applied</span>
+            </div>
+            <div class="rt-meta">
+              <span>Config change</span>
+              <span>Just now</span>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /context-panel -->
+
+    </div><!-- /chat-fullpage-layout -->
+  </div><!-- /main-layout -->
+</div><!-- /app-shell -->
+
+<script>
+  lucide.createIcons();
+
+  // Theme toggle
+  const themeToggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+  function updateToggleIcon() {
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    themeToggle.innerHTML = isDark
+      ? '<i data-lucide="sun" width="16" height="16" aria-label="Light mode"></i>'
+      : '<i data-lucide="moon" width="16" height="16" aria-label="Dark mode"></i>';
+    lucide.createIcons();
+  }
+  themeToggle.addEventListener('click', () => {
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    updateToggleIcon();
+  });
+
+  // Auto-resize textarea
+  const chatInput = document.getElementById('chatInput');
+  chatInput.addEventListener('input', () => {
+    chatInput.style.height = 'auto';
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
+  });
+
+  // Enter to send, Shift+Enter for newline
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      // In a real app would send the message
+      chatInput.value = '';
+      chatInput.style.height = 'auto';
+    }
+  });
+
+  // Scroll to bottom
+  const thread = document.getElementById('chatThread');
+  thread.scrollTop = thread.scrollHeight;
+
+  // Hide thinking indicator after 3s (demo behavior)
+  setTimeout(() => {
+    const thinkingRow = document.getElementById('thinkingRow');
+    if (thinkingRow) thinkingRow.style.display = 'none';
+  }, 3000);
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

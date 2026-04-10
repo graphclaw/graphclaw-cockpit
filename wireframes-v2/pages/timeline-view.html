@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html data-page="timeline-view" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timeline — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+html, body { height:100%; overflow:hidden; }
+.app-shell { display:flex; height:100vh; overflow:hidden; background:var(--bg-page); }
+
+/* Sidebar */
+.sidebar { width:240px; flex-shrink:0; background:var(--bg-sidebar); border-right:1px solid var(--border-default); display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+.sidebar-logo { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-4); border-bottom:1px solid var(--border-default); height:56px; }
+.sidebar-logo-mark { width:28px; height:28px; background:linear-gradient(135deg,var(--brand-primary) 0%,#7C3AED 100%); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:13px; flex-shrink:0; }
+.sidebar-logo-text { font-size:var(--text-body); font-weight:700; color:var(--text-primary); letter-spacing:-0.01em; }
+.sidebar-logo-sub { font-size:var(--text-micro); color:var(--text-tertiary); }
+.sidebar-nav { flex:1; overflow-y:auto; padding:var(--space-2) 0; }
+.nav-section-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-tertiary); padding:var(--space-3) var(--space-4) var(--space-1); }
+.nav-item { display:flex; align-items:center; gap:var(--space-3); padding:var(--space-2) var(--space-3); margin:1px var(--space-2); border-radius:var(--radius-md); cursor:pointer; text-decoration:none; color:var(--text-secondary); font-size:var(--text-body-sm); font-weight:500; transition:background 100ms,color 100ms; }
+.nav-item:hover { background:var(--bg-inset); color:var(--text-primary); }
+.nav-item.active { background:var(--brand-primary-light); color:var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background:rgba(56,189,248,0.12); }
+.nav-icon { display:flex; align-items:center; flex-shrink:0; width:18px; height:18px; }
+.nav-count { margin-left:auto; background:var(--state-blocked); color:white; font-size:10px; font-weight:700; padding:1px 5px; border-radius:9999px; min-width:18px; text-align:center; }
+.sidebar-divider { height:1px; background:var(--border-default); margin:var(--space-2) var(--space-4); }
+.sidebar-footer { padding:var(--space-2) var(--space-2) var(--space-3); border-top:1px solid var(--border-default); }
+.user-row { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2); border-radius:var(--radius-md); cursor:pointer; transition:background 100ms; }
+.user-row:hover { background:var(--bg-inset); }
+.avatar { width:28px; height:28px; border-radius:9999px; background:linear-gradient(135deg,#7C3AED,#0EA5E9); display:flex; align-items:center; justify-content:center; color:white; font-size:11px; font-weight:600; flex-shrink:0; }
+.avatar-sm { width:22px; height:22px; font-size:9px; }
+
+.main-layout { display:flex; flex-direction:column; flex:1; min-width:0; overflow:hidden; }
+.topbar { height:56px; background:var(--bg-surface); border-bottom:1px solid var(--border-default); display:flex; align-items:center; padding:0 var(--space-5); gap:var(--space-4); flex-shrink:0; }
+.breadcrumb { display:flex; align-items:center; gap:var(--space-1); font-size:var(--text-body-sm); color:var(--text-tertiary); }
+.breadcrumb a { color:var(--text-tertiary); text-decoration:none; }
+.breadcrumb .current { color:var(--text-primary); font-weight:500; }
+.topbar-search { flex:1; max-width:360px; margin:0 auto; position:relative; }
+.topbar-search input { width:100%; height:32px; background:var(--bg-inset); border:1.5px solid var(--border-default); border-radius:var(--radius-md); padding:0 var(--space-3) 0 32px; font-size:var(--text-body-sm); font-family:var(--font-sans); color:var(--text-primary); outline:none; }
+.topbar-search input::placeholder { color:var(--text-tertiary); }
+.topbar-search .s-icon { position:absolute; left:8px; top:50%; transform:translateY(-50%); color:var(--icon-tertiary); display:flex; }
+.topbar-actions { display:flex; align-items:center; gap:var(--space-1); margin-left:auto; }
+.icon-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:var(--radius-md); border:none; background:transparent; cursor:pointer; color:var(--icon-secondary); transition:background 100ms,color 100ms; }
+.icon-btn:hover { background:var(--bg-inset); color:var(--text-primary); }
+.notif-badge { position:relative; }
+.notif-badge::after { content:''; position:absolute; top:5px; right:5px; width:7px; height:7px; background:var(--state-blocked); border-radius:50%; border:1.5px solid var(--bg-surface); }
+
+/* Timeline toolbar */
+.tl-toolbar { display:flex; align-items:center; gap:var(--space-3); padding:var(--space-3) var(--space-5); border-bottom:1px solid var(--border-default); background:var(--bg-surface); flex-shrink:0; }
+.zoom-group { display:flex; border:1.5px solid var(--border-default); border-radius:var(--radius-md); overflow:hidden; }
+.zoom-btn { height:28px; padding:0 var(--space-3); font-size:var(--text-body-sm); font-weight:500; color:var(--text-secondary); background:var(--bg-surface); border:none; cursor:pointer; font-family:var(--font-sans); transition:background 100ms,color 100ms; border-right:1px solid var(--border-default); }
+.zoom-btn:last-child { border-right:none; }
+.zoom-btn.active { background:var(--brand-primary-light); color:var(--brand-primary); font-weight:600; }
+.filter-chip { display:inline-flex; align-items:center; gap:var(--space-1); height:28px; padding:0 var(--space-3); border:1.5px solid var(--border-default); border-radius:var(--radius-md); font-size:var(--text-body-sm); color:var(--text-secondary); background:var(--bg-surface); cursor:pointer; font-family:var(--font-sans); transition:all 100ms; }
+.filter-chip:hover { border-color:var(--brand-primary); color:var(--brand-primary); }
+.filter-chip.active { border-color:var(--brand-primary); background:var(--brand-primary-light); color:var(--brand-primary); font-weight:500; }
+
+/* Timeline content area */
+.main-content { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+.tl-container { display:flex; flex:1; min-height:0; overflow:hidden; }
+
+/* Left panel: task names */
+.tl-left { width:240px; flex-shrink:0; border-right:1px solid var(--border-default); overflow-y:auto; background:var(--bg-surface); display:flex; flex-direction:column; }
+.tl-left-header { height:68px; border-bottom:1px solid var(--border-default); display:flex; align-items:flex-end; padding:0 var(--space-4) var(--space-3); background:var(--bg-surface-alt); flex-shrink:0; }
+.tl-left-header-text { font-size:var(--text-caption); font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.06em; }
+
+.tl-row { display:flex; align-items:center; gap:var(--space-2); height:52px; padding:0 var(--space-4); border-bottom:1px solid var(--border-subtle); cursor:pointer; transition:background 100ms; }
+.tl-row:hover { background:var(--bg-inset); }
+.tl-row-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.tl-row-info { flex:1; min-width:0; }
+.tl-row-name { font-size:var(--text-body-sm); font-weight:500; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tl-row-proj { font-size:var(--text-caption); color:var(--text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tl-section-label { height:30px; display:flex; align-items:center; padding:0 var(--space-4); background:var(--bg-surface-alt); border-bottom:1px solid var(--border-default); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-tertiary); flex-shrink:0; }
+
+/* Right panel: Gantt bars */
+.tl-right { flex:1; overflow:auto; position:relative; }
+.tl-header-strip { position:sticky; top:0; background:var(--bg-surface-alt); border-bottom:1px solid var(--border-default); height:68px; z-index:5; display:flex; flex-direction:column; }
+.month-row { display:flex; height:30px; border-bottom:1px solid var(--border-default); }
+.month-cell { border-right:1px solid var(--border-default); display:flex; align-items:center; padding:0 var(--space-3); font-size:var(--text-caption); font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em; flex-shrink:0; }
+.day-row { display:flex; height:38px; }
+.day-cell { border-right:1px solid var(--border-subtle); display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0; }
+.day-name { font-size:10px; color:var(--text-tertiary); }
+.day-num { font-size:var(--text-caption); font-weight:600; color:var(--text-secondary); }
+.day-cell.today { background:rgba(14,165,233,0.08); }
+.day-cell.today .day-num { color:var(--brand-primary); font-weight:700; }
+.day-cell.today .day-name { color:var(--brand-primary); }
+.day-cell.weekend { background:var(--bg-inset); }
+.day-cell.weekend .day-num { color:var(--text-tertiary); }
+
+/* Gantt rows */
+.gantt-rows { position:relative; }
+.gantt-row { height:52px; border-bottom:1px solid var(--border-subtle); position:relative; display:flex; align-items:center; }
+.gantt-row:hover { background:rgba(14,165,233,0.03); }
+.gantt-section-spacer { height:30px; border-bottom:1px solid var(--border-default); background:var(--bg-surface-alt); }
+.gantt-grid-line { position:absolute; top:0; bottom:0; width:1px; background:var(--border-subtle); pointer-events:none; }
+.gantt-today-line { position:absolute; top:0; bottom:0; width:2px; background:var(--brand-primary); z-index:3; pointer-events:none; }
+.gantt-today-line::before { content:'TODAY'; position:absolute; top:4px; left:4px; font-size:9px; font-weight:700; color:var(--brand-primary); letter-spacing:0.05em; }
+
+/* Task bars */
+.task-bar {
+  position:absolute;
+  height:28px;
+  border-radius:var(--radius-md);
+  display:flex;
+  align-items:center;
+  padding:0 var(--space-2);
+  font-size:var(--text-caption);
+  font-weight:600;
+  color:white;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  cursor:pointer;
+  transition:filter 100ms,transform 100ms;
+  top:50%;
+  transform:translateY(-50%);
+  box-shadow:0 1px 3px rgba(0,0,0,0.15);
+}
+.task-bar:hover { filter:brightness(1.08); transform:translateY(calc(-50% - 1px)); box-shadow:0 3px 8px rgba(0,0,0,0.2); }
+.bar-progress { background:linear-gradient(90deg,#059669,#10B981); }
+.bar-active { background:linear-gradient(90deg,#1D4ED8,#3B82F6); }
+.bar-blocked { background:linear-gradient(90deg,#DC2626,#EF4444); }
+.bar-delayed { background:linear-gradient(90deg,#B45309,#F59E0B); }
+.bar-review { background:linear-gradient(90deg,#6D28D9,#A855F7); }
+.bar-complete { background:linear-gradient(90deg,#374151,#6B7280); opacity:0.6; }
+
+/* Milestone diamond */
+.milestone {
+  position:absolute;
+  width:14px; height:14px;
+  background:var(--state-blocked);
+  transform:translateY(-50%) rotate(45deg);
+  top:50%;
+  cursor:pointer;
+  z-index:4;
+  box-shadow:0 1px 4px rgba(0,0,0,0.3);
+  transition:transform 100ms;
+}
+.milestone:hover { transform:translateY(-50%) rotate(45deg) scale(1.3); }
+.milestone.milestone-done { background:var(--state-complete); }
+
+/* Progress fill within bar */
+.task-bar-progress { position:absolute; top:0; bottom:0; left:0; background:rgba(0,0,0,0.15); border-radius:var(--radius-md); pointer-events:none; }
+
+/* Dependency arrows SVG */
+.dep-arrows { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:2; overflow:visible; }
+
+/* Tooltip */
+.bar-tooltip {
+  display:none;
+  position:absolute;
+  bottom:calc(100% + 8px);
+  left:50%;
+  transform:translateX(-40%);
+  background:var(--bg-surface-raised);
+  border:1px solid var(--border-default);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-3);
+  padding:var(--space-3);
+  z-index:20;
+  min-width:220px;
+  color:var(--text-primary);
+  white-space:normal;
+}
+.task-bar:hover .bar-tooltip { display:block; }
+.bar-tooltip::after { content:''; position:absolute; top:100%; left:40%; border:6px solid transparent; border-top-color:var(--border-default); }
+.tt-name { font-size:var(--text-body-sm); font-weight:700; margin-bottom:var(--space-2); }
+.tt-row { display:flex; justify-content:space-between; font-size:var(--text-caption); color:var(--text-secondary); margin-bottom:2px; }
+.tt-val { color:var(--text-primary); font-weight:500; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">G</div>
+      <div>
+        <div class="sidebar-logo-text">GraphClaw</div>
+        <div class="sidebar-logo-sub">Cockpit</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="layout-dashboard" width="16" height="16"></i></span>Dashboard</a>
+      <a href="my-tasks.html" class="nav-item"><span class="nav-icon"><i data-lucide="check-square" width="16" height="16"></i></span>My Tasks<span class="nav-count">3</span></a>
+      <a href="goal-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="target" width="16" height="16"></i></span>Goals</a>
+      <a href="project-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="kanban-square" width="16" height="16"></i></span>Projects</a>
+      <a href="timeline-view.html" class="nav-item active"><span class="nav-icon"><i data-lucide="gantt-chart" width="16" height="16"></i></span>Timeline</a>
+      <a href="resource-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="users" width="16" height="16"></i></span>People</a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section-label">Intelligence</div>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="cpu" width="16" height="16"></i></span>Agent Monitor</a>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="message-square" width="16" height="16"></i></span>Chat</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="settings" width="16" height="16"></i></span>Settings</a>
+      <div class="user-row">
+        <div class="avatar">AS</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:var(--text-body-sm);font-weight:600;color:var(--text-primary);">Abhishek S.</div>
+          <div style="font-size:var(--text-micro);color:var(--text-tertiary);">Admin · Product Ops</div>
+        </div>
+        <div style="color:var(--icon-tertiary);display:flex;"><i data-lucide="chevrons-up-down" width="14" height="14"></i></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-layout">
+    <header class="topbar">
+      <nav class="breadcrumb">
+        <a href="#">Workspace</a>
+        <span style="color:var(--text-tertiary);display:flex;"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+        <span class="current">Timeline</span>
+      </nav>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14"></i></span>
+        <input type="text" placeholder="Search tasks on timeline…" />
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notif-badge"><i data-lucide="bell" width="18" height="18"></i></button>
+        <button class="icon-btn" id="theme-toggle"><i data-lucide="moon" width="18" height="18"></i></button>
+        <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#0EA5E9,#7C3AED);">AS</div>
+      </div>
+    </header>
+
+    <!-- TIMELINE TOOLBAR -->
+    <div class="tl-toolbar">
+      <div class="zoom-group">
+        <button class="zoom-btn">Week</button>
+        <button class="zoom-btn active">Month</button>
+        <button class="zoom-btn">Quarter</button>
+      </div>
+      <button class="btn btn-secondary btn-sm"><i data-lucide="chevron-left" width="14" height="14"></i> Back</button>
+      <span style="font-size:var(--text-body-sm); font-weight:600; color:var(--text-primary); min-width:180px; text-align:center;">Apr 1 – May 2, 2026</span>
+      <button class="btn btn-secondary btn-sm">Forward <i data-lucide="chevron-right" width="14" height="14"></i></button>
+      <div style="width:1px;height:20px;background:var(--border-default);"></div>
+      <button class="filter-chip active"><i data-lucide="layers" width="12" height="12"></i>All Projects</button>
+      <button class="filter-chip"><i data-lucide="zap" width="12" height="12"></i>Critical Path</button>
+      <button class="filter-chip"><i data-lucide="git-merge" width="12" height="12"></i>Dependencies</button>
+      <div style="margin-left:auto; display:flex; gap:var(--space-2);">
+        <button class="btn btn-primary btn-sm"><i data-lucide="plus" width="14" height="14"></i> Add Task</button>
+        <button class="icon-btn"><i data-lucide="maximize-2" width="16" height="16"></i></button>
+      </div>
+    </div>
+
+    <!-- TIMELINE AREA -->
+    <div class="main-content">
+      <div class="tl-container">
+
+        <!-- LEFT: Task labels -->
+        <div class="tl-left">
+          <div class="tl-left-header">
+            <span class="tl-left-header-text">Task / Milestone</span>
+          </div>
+          <!-- Infrastructure section -->
+          <div class="tl-section-label">
+            <span style="width:10px;height:10px;border-radius:50%;background:#0EA5E9;display:inline-block;margin-right:6px;"></span>
+            API Gateway v3
+          </div>
+          <div class="tl-row">
+            <div class="tl-row-dot" style="background:#3B82F6;"></div>
+            <div class="tl-row-info">
+              <div class="tl-row-name">Distributed tracing (OTel)</div>
+              <div class="tl-row-proj">API Gateway · Review</div>
+            </div>
+            <div class="avatar-sm avatar" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);">MW</div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-row-dot" style="background:#EF4444;"></div>
+            <div class="tl-row-info">
+              <div class="tl-row-name">Migrate Gateway to K8s</div>
+              <div class="tl-row-proj">API Gateway · Blocked</div>
+            </div>
+            <div class="avatar-sm avatar" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);">MW</div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-row-dot" style="background:#10B981;"></div>
+            <div class="tl-row-info">
+              <div class="tl-row-name">Rate limiting strategy</div>
+              <div class="tl-row-proj">API Gateway · In Progress</div>
+            </div>
+            <div class="avatar-sm avatar" style="background:linear-gradient(135deg,#0EA5E9,#0369A1);">SC</div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-row-dot" style="background:#A855F7;"></div>
+            <div class="tl-row-info">
+              <div class="tl-row-name">GraphQL federation POC</div>
+              <div class="tl-row-proj">API Gateway · Review</div>
+            </div>
+            <div class="avatar-sm avatar" style="background:linear-gradient(135deg,#0EA5E9,#0369A1);">SC</div>
+          </div>
+
+          <div class="tl-section-label">
+            <span style="width:10px;height:10px;border-radius:50%;background:#F59E0B;display:inline-block;margin-right:6px;"></span>
+            Data Pipeline
+          </div>
+          <div class="tl-row">
+            <div class="tl-row-dot" style="background:#10B981;"></div>
+            <div class="tl-row-info">
+              <div class="tl-row-name">Spark job checkpointing</div>
+              <div class="tl-row-proj">Data Pipeline · In Progress</div>
+            </div>
+            <div class="avatar-sm avatar" style="background:linear-gradient(135deg,#10B981,#059669);">RM</div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-row-dot" style="background:#F59E0B;"></div>
+            <div class="tl-row-info">
+              <div class="tl-row-name">GDPR data retention audit</div>
+              <div class="tl-row-proj">Data Pipeline · Delayed</div>
+            </div>
+            <div class="avatar-sm avatar" style="background:linear-gradient(135deg,#10B981,#059669);">RM</div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-row-dot" style="background:#9CA3AF;"></div>
+            <div class="tl-row-info">
+              <div class="tl-row-name">Datadog APM setup</div>
+              <div class="tl-row-proj">Data Pipeline · Complete</div>
+            </div>
+            <div class="avatar-sm avatar" style="background:linear-gradient(135deg,#10B981,#059669);">RM</div>
+          </div>
+
+          <div class="tl-section-label">
+            <span style="width:10px;height:10px;border-radius:50%;background:#EF4444;display:inline-block;margin-right:6px;"></span>
+            Security Audit
+          </div>
+          <div class="tl-row">
+            <div class="tl-row-dot" style="background:#EF4444;"></div>
+            <div class="tl-row-info">
+              <div class="tl-row-name">SQL injection remediation</div>
+              <div class="tl-row-proj">Security Audit · Blocked</div>
+            </div>
+            <div class="avatar-sm avatar" style="background:linear-gradient(135deg,#EF4444,#DC2626);">JK</div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-row-dot" style="background:#9CA3AF;"></div>
+            <div class="tl-row-info">
+              <div class="tl-row-name">Threat model review</div>
+              <div class="tl-row-proj">Security Audit · Complete</div>
+            </div>
+            <div class="avatar-sm avatar" style="background:linear-gradient(135deg,#EF4444,#DC2626);">JK</div>
+          </div>
+
+          <div class="tl-section-label">
+            <span style="width:10px;height:10px;border-radius:50%;background:#10B981;display:inline-block;margin-right:6px;"></span>
+            Infrastructure
+          </div>
+          <div class="tl-row">
+            <div class="tl-row-dot" style="background:#9CA3AF;"></div>
+            <div class="tl-row-info">
+              <div class="tl-row-name">Provision GKE cluster</div>
+              <div class="tl-row-proj">Infrastructure · Complete</div>
+            </div>
+            <div class="avatar-sm avatar" style="background:linear-gradient(135deg,#0EA5E9,#0369A1);">SC</div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-row-dot" style="background:#3B82F6;"></div>
+            <div class="tl-row-info">
+              <div class="tl-row-name">Argo CD GitOps pipeline</div>
+              <div class="tl-row-proj">Infrastructure · Active</div>
+            </div>
+            <div class="avatar-sm avatar" style="background:linear-gradient(135deg,#F59E0B,#D97706);">LT</div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Gantt bars -->
+        <div class="tl-right" id="gantt-right">
+          <!-- Day width = 28px; 32 days shown -->
+          <div id="gantt-inner" style="width:896px; min-width:100%; position:relative;">
+            <!-- HEADER -->
+            <div class="tl-header-strip">
+              <div class="month-row">
+                <div class="month-cell" style="width:364px;">APRIL 2026</div>
+                <div class="month-cell" style="width:532px;">MAY 2026</div>
+              </div>
+              <div class="day-row" id="day-row">
+                <!-- Days generated by JS -->
+              </div>
+            </div>
+
+            <!-- GANTT ROWS with SVG dependency arrows -->
+            <div class="gantt-rows" id="gantt-rows">
+              <!-- Today line at col 9 (Apr 10) = offset (9*28)=252px from start -->
+              <div class="gantt-today-line" style="left:252px; height:100%;"></div>
+
+              <!-- Section spacer: API Gateway v3 -->
+              <div class="gantt-section-spacer"></div>
+
+              <!-- Row 1: OTel PR - Apr 2 to Apr 12, active -->
+              <div class="gantt-row" style="height:52px;">
+                <div class="task-bar bar-review" style="left:28px; width:280px;" title="Distributed tracing OTel">
+                  PR #418 — OpenTelemetry instrumentation
+                  <div class="bar-tooltip">
+                    <div class="tt-name">Distributed tracing (OpenTelemetry)</div>
+                    <div class="tt-row"><span>Status</span><span class="tt-val" style="color:#A855F7;">In Review</span></div>
+                    <div class="tt-row"><span>Start</span><span class="tt-val">Apr 2</span></div>
+                    <div class="tt-row"><span>End</span><span class="tt-val">Apr 12</span></div>
+                    <div class="tt-row"><span>Assignee</span><span class="tt-val">Marcus Webb</span></div>
+                    <div class="tt-row"><span>Progress</span><span class="tt-val">85%</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 2: Migrate Gateway - Apr 5 to Apr 25, blocked -->
+              <div class="gantt-row" style="height:52px;">
+                <div class="task-bar bar-blocked" style="left:112px; width:560px;" title="Migrate API Gateway">
+                  Migrate API Gateway to K8s containers
+                  <div class="bar-tooltip">
+                    <div class="tt-name">Migrate API Gateway to K8s</div>
+                    <div class="tt-row"><span>Status</span><span class="tt-val" style="color:#EF4444;">Blocked</span></div>
+                    <div class="tt-row"><span>Start</span><span class="tt-val">Apr 5</span></div>
+                    <div class="tt-row"><span>End</span><span class="tt-val">Apr 25</span></div>
+                    <div class="tt-row"><span>Blocked by</span><span class="tt-val">Istio mesh setup</span></div>
+                    <div class="tt-row"><span>Assignee</span><span class="tt-val">Marcus Webb</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 3: Rate limiting - Apr 8 to May 2, active -->
+              <div class="gantt-row" style="height:52px;">
+                <div class="task-bar bar-progress" style="left:196px; width:672px;">
+                  Design rate-limiting strategy
+                  <div class="bar-tooltip">
+                    <div class="tt-name">Design rate-limiting strategy</div>
+                    <div class="tt-row"><span>Status</span><span class="tt-val" style="color:#10B981;">In Progress</span></div>
+                    <div class="tt-row"><span>Start</span><span class="tt-val">Apr 8</span></div>
+                    <div class="tt-row"><span>End</span><span class="tt-val">May 2</span></div>
+                    <div class="tt-row"><span>Assignee</span><span class="tt-val">Sarah Chen</span></div>
+                    <div class="tt-row"><span>Progress</span><span class="tt-val">45%</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 4: GraphQL POC - Apr 15 to May 1, review -->
+              <div class="gantt-row" style="height:52px;">
+                <div class="task-bar bar-review" style="left:392px; width:448px;">
+                  GraphQL federation POC
+                  <div class="bar-tooltip">
+                    <div class="tt-name">GraphQL Federation POC</div>
+                    <div class="tt-row"><span>Status</span><span class="tt-val" style="color:#A855F7;">In Review</span></div>
+                    <div class="tt-row"><span>Start</span><span class="tt-val">Apr 15</span></div>
+                    <div class="tt-row"><span>End</span><span class="tt-val">May 1</span></div>
+                    <div class="tt-row"><span>Assignee</span><span class="tt-val">Sarah Chen</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section spacer: Data Pipeline -->
+              <div class="gantt-section-spacer"></div>
+
+              <!-- Row 5: Spark - Apr 1 to Apr 22, progress -->
+              <div class="gantt-row" style="height:52px;">
+                <div class="task-bar bar-progress" style="left:0; width:616px;">
+                  Spark job checkpointing
+                  <div class="bar-tooltip">
+                    <div class="tt-name">Spark job checkpointing</div>
+                    <div class="tt-row"><span>Status</span><span class="tt-val" style="color:#10B981;">In Progress</span></div>
+                    <div class="tt-row"><span>Start</span><span class="tt-val">Apr 1</span></div>
+                    <div class="tt-row"><span>End</span><span class="tt-val">Apr 22</span></div>
+                    <div class="tt-row"><span>Assignee</span><span class="tt-val">Rohan Mehta</span></div>
+                    <div class="tt-row"><span>Progress</span><span class="tt-val">60%</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 6: GDPR Audit - Apr 3 to Apr 20, delayed -->
+              <div class="gantt-row" style="height:52px;">
+                <div class="task-bar bar-delayed" style="left:56px; width:476px;">
+                  GDPR data retention audit
+                  <div class="bar-tooltip">
+                    <div class="tt-name">GDPR data retention audit</div>
+                    <div class="tt-row"><span>Status</span><span class="tt-val" style="color:#F59E0B;">Delayed</span></div>
+                    <div class="tt-row"><span>Original end</span><span class="tt-val">Apr 15</span></div>
+                    <div class="tt-row"><span>Revised end</span><span class="tt-val">Apr 20</span></div>
+                    <div class="tt-row"><span>Reason</span><span class="tt-val">Legal review delayed 5d</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 7: Datadog - Mar 20 to Apr 3, complete -->
+              <div class="gantt-row" style="height:52px;">
+                <div class="task-bar bar-complete" style="left:0; width:84px;">
+                  Datadog APM setup ✓
+                  <div class="bar-tooltip">
+                    <div class="tt-name">Datadog APM Setup</div>
+                    <div class="tt-row"><span>Status</span><span class="tt-val" style="color:#9CA3AF;">Complete</span></div>
+                    <div class="tt-row"><span>Completed</span><span class="tt-val">Apr 3, 2026</span></div>
+                    <div class="tt-row"><span>Assignee</span><span class="tt-val">Rohan Mehta</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section spacer: Security Audit -->
+              <div class="gantt-section-spacer"></div>
+
+              <!-- Row 8: SQL Injection - Apr 1 to Apr 5+, blocked -->
+              <div class="gantt-row" style="height:52px;">
+                <div class="task-bar bar-blocked" style="left:0; width:308px;">
+                  SQL injection remediation
+                  <div class="bar-tooltip">
+                    <div class="tt-name">SQL Injection remediation</div>
+                    <div class="tt-row"><span>Status</span><span class="tt-val" style="color:#EF4444;">Blocked</span></div>
+                    <div class="tt-row"><span>Due</span><span class="tt-val" style="color:#EF4444;">Apr 5 — OVERDUE</span></div>
+                    <div class="tt-row"><span>Blocked by</span><span class="tt-val">Awaiting security sign-off</span></div>
+                    <div class="tt-row"><span>Assignee</span><span class="tt-val">James Kim</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 9: Threat model - Mar 15 to Apr 1, complete -->
+              <div class="gantt-row" style="height:52px;">
+                <div class="task-bar bar-complete" style="left:0; width:28px;">✓
+                  <div class="bar-tooltip">
+                    <div class="tt-name">Threat model review</div>
+                    <div class="tt-row"><span>Status</span><span class="tt-val" style="color:#9CA3AF;">Complete</span></div>
+                    <div class="tt-row"><span>Completed</span><span class="tt-val">Apr 1, 2026</span></div>
+                  </div>
+                </div>
+                <!-- Milestone: SOC2 Pre-audit -->
+                <div class="milestone" style="left:28px;" title="SOC 2 Pre-Audit milestone"></div>
+              </div>
+
+              <!-- Section spacer: Infrastructure -->
+              <div class="gantt-section-spacer"></div>
+
+              <!-- Row 10: GKE cluster - Mar 25 to Apr 7, complete -->
+              <div class="gantt-row" style="height:52px;">
+                <div class="task-bar bar-complete" style="left:0; width:196px;">
+                  Provision GKE Autopilot cluster ✓
+                  <div class="bar-tooltip">
+                    <div class="tt-name">Provision GKE Autopilot cluster</div>
+                    <div class="tt-row"><span>Status</span><span class="tt-val" style="color:#9CA3AF;">Complete</span></div>
+                    <div class="tt-row"><span>Completed</span><span class="tt-val">Apr 7, 2026</span></div>
+                    <div class="tt-row"><span>Assignee</span><span class="tt-val">Sarah Chen</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 11: Argo CD - Apr 7 to May 5, active -->
+              <div class="gantt-row" style="height:52px;">
+                <div class="task-bar bar-active" style="left:168px; width:756px;">
+                  Argo CD GitOps pipeline configuration
+                  <div class="bar-tooltip">
+                    <div class="tt-name">Argo CD GitOps pipeline</div>
+                    <div class="tt-row"><span>Status</span><span class="tt-val" style="color:#3B82F6;">Active</span></div>
+                    <div class="tt-row"><span>Start</span><span class="tt-val">Apr 7</span></div>
+                    <div class="tt-row"><span>End</span><span class="tt-val">May 5</span></div>
+                    <div class="tt-row"><span>Depends on</span><span class="tt-val">GKE cluster (done)</span></div>
+                    <div class="tt-row"><span>Assignee</span><span class="tt-val">Lena Torres</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SVG dependency arrows -->
+              <svg class="dep-arrows" style="position:absolute;top:0;left:0;width:896px;pointer-events:none;">
+                <defs>
+                  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#94A3B8"/>
+                  </marker>
+                  <marker id="arrow-blocked" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#EF4444"/>
+                  </marker>
+                </defs>
+                <!-- GKE → Argo CD dependency -->
+                <path d="M 196 412 C 220 412 220 438 196 438" stroke="#94A3B8" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+                <!-- OTel → Gateway (blocks) -->
+                <path d="M 308 82 L 308 134" stroke="#EF4444" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow-blocked)"/>
+              </svg>
+
+            </div><!-- .gantt-rows -->
+          </div><!-- #gantt-inner -->
+        </div><!-- .tl-right -->
+      </div><!-- .tl-container -->
+    </div>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+
+  document.getElementById('theme-toggle').addEventListener('click', function() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    this.querySelector('i').setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+    lucide.createIcons();
+  });
+
+  // Generate day headers
+  const DAY_W = 28;
+  const dayRow = document.getElementById('day-row');
+  const startDate = new Date(2026, 3, 1); // Apr 1
+  const days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  const months = [31, 28, 31, 30]; // simplified for display
+  for (let i = 0; i < 32; i++) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    const isToday = d.getDate() === 10 && d.getMonth() === 3;
+    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    const cell = document.createElement('div');
+    cell.className = 'day-cell' + (isToday ? ' today' : '') + (isWeekend ? ' weekend' : '');
+    cell.style.width = DAY_W + 'px';
+    cell.innerHTML = `<span class="day-name">${days[d.getDay()]}</span><span class="day-num">${d.getDate()}</span>`;
+    dayRow.appendChild(cell);
+
+    // Grid lines
+    const gl = document.createElement('div');
+    gl.className = 'gantt-grid-line';
+    gl.style.left = (i * DAY_W) + 'px';
+    document.getElementById('gantt-rows').appendChild(gl);
+  }
+
+  // Zoom buttons
+  document.querySelectorAll('.zoom-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.zoom-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

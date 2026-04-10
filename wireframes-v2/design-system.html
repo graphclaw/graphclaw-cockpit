@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html data-page="design-system" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GraphClaw Design System</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<link rel="stylesheet" href="assets/layout.css">
+<link rel="stylesheet" href="assets/utilities.css">
+<style>
+  /* Design System page-specific styles */
+  .ds-root { display: flex; min-height: 100vh; }
+
+  /* Left nav */
+  .ds-nav {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-default);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: var(--space-4) 0;
+  }
+
+  .ds-nav-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-4) var(--space-4);
+    border-bottom: 1px solid var(--border-default);
+    margin-bottom: var(--space-3);
+  }
+
+  .ds-nav-mark {
+    width: 28px; height: 28px;
+    background: var(--brand-primary);
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-body);
+    flex-shrink: 0;
+  }
+
+  .ds-nav-title { font-size: var(--text-body-sm); font-weight: var(--weight-bold); color: var(--text-primary); }
+  .ds-nav-sub   { font-size: var(--text-micro);   color: var(--text-tertiary); }
+
+  .ds-nav a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1-5) var(--space-4);
+    font-size: var(--text-body-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    margin: 1px var(--space-2);
+    transition: background var(--duration-fast), color var(--duration-fast);
+  }
+
+  .ds-nav a:hover { background: var(--bg-inset); color: var(--text-primary); }
+  .ds-nav a.active { background: var(--brand-primary-light); color: var(--brand-primary); font-weight: var(--weight-semibold); }
+  [data-theme="dark"] .ds-nav a.active { background: rgba(56, 189, 248, 0.12); }
+
+  .ds-nav-group {
+    padding: var(--space-3) var(--space-4) var(--space-1);
+    font-size: var(--text-micro);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+    color: var(--text-tertiary);
+  }
+
+  /* Main content */
+  .ds-main {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+  }
+
+  /* Hero */
+  .ds-hero {
+    background: linear-gradient(135deg, #0B1120 0%, #0F2942 50%, #0B1120 100%);
+    padding: var(--space-16) var(--space-8);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-8);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ds-hero::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+    top: -200px; right: -100px;
+    pointer-events: none;
+  }
+
+  .ds-hero-content { position: relative; z-index: 1; }
+
+  .ds-hero-eyebrow {
+    font-size: var(--text-caption);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+    color: #38BDF8;
+    margin-bottom: var(--space-3);
+  }
+
+  .ds-hero-title {
+    font-size: 2.5rem;
+    font-weight: var(--weight-bold);
+    color: #F1F5F9;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-bottom: var(--space-4);
+  }
+
+  .ds-hero-title span { color: #38BDF8; }
+
+  .ds-hero-desc {
+    font-size: var(--text-title);
+    color: #94A3B8;
+    max-width: 480px;
+    line-height: var(--leading-loose);
+  }
+
+  .ds-hero-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+  }
+
+  .ds-hero-stat { text-align: center; }
+  .ds-hero-stat-value { font-size: var(--text-heading); font-weight: var(--weight-bold); color: #38BDF8; }
+  .ds-hero-stat-label { font-size: var(--text-caption); color: #64748B; margin-top: 2px; }
+
+  .ds-hero-divider { width: 1px; height: 40px; background: #1E293B; }
+
+  /* Theme toggle */
+  .theme-toggle {
+    position: fixed;
+    top: var(--space-4);
+    right: var(--space-4);
+    z-index: var(--z-toast);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-full);
+    padding: var(--space-2) var(--space-3);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    box-shadow: var(--shadow-2);
+    font-size: var(--text-body-sm);
+    font-weight: var(--weight-medium);
+    color: var(--text-secondary);
+    transition: all var(--duration-normal);
+    border: none;
+    font-family: var(--font-sans);
+  }
+
+  .theme-toggle:hover { box-shadow: var(--shadow-3); color: var(--text-primary); }
+
+  /* Sections */
+  .ds-section {
+    padding: var(--space-10) var(--space-8);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .ds-section-title {
+    font-size: var(--text-heading);
+    font-weight: var(--weight-bold);
+    color: var(--text-primary);
+    letter-spacing: var(--tracking-tight);
+    margin-bottom: var(--space-2);
+  }
+
+  .ds-section-desc {
+    font-size: var(--text-body);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-6);
+    line-height: var(--leading-loose);
+  }
+
+  .ds-subsection {
+    margin-top: var(--space-8);
+  }
+
+  .ds-subsection-title {
+    font-size: var(--text-title);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  /* Swatch grid */
+  .swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-3); }
+
+  .swatch {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border-default);
+  }
+
+  .swatch-color { height: 56px; }
+  .swatch-info { padding: var(--space-2) var(--space-3); background: var(--bg-surface); }
+  .swatch-name { font-size: var(--text-caption); font-weight: var(--weight-semibold); color: var(--text-primary); }
+  .swatch-value { font-size: var(--text-micro); color: var(--text-tertiary); font-family: var(--font-mono); margin-top: 2px; }
+
+  /* Type scale showcase */
+  .type-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .type-meta { min-width: 140px; flex-shrink: 0; }
+  .type-label { font-size: var(--text-micro); color: var(--text-tertiary); font-family: var(--font-mono); }
+
+  /* Spacing showcase */
+  .space-row { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-2) 0; }
+  .space-block { background: var(--brand-primary); opacity: 0.25; border-radius: 2px; }
+  .space-label { font-size: var(--text-caption); color: var(--text-tertiary); font-family: var(--font-mono); min-width: 80px; }
+  .space-px    { font-size: var(--text-caption); color: var(--text-secondary); }
+
+  /* Shadow showcase */
+  .shadow-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-6); }
+  .shadow-demo { background: var(--bg-surface); border-radius: var(--radius-lg); padding: var(--space-5); text-align: center; }
+  .shadow-demo-label { font-size: var(--text-body-sm); font-weight: var(--weight-medium); color: var(--text-secondary); margin-top: var(--space-2); }
+  .shadow-demo-desc  { font-size: var(--text-caption); color: var(--text-tertiary); margin-top: var(--space-1); }
+
+  /* Button matrix */
+  .btn-matrix {
+    overflow-x: auto;
+  }
+
+  .btn-matrix table { border-collapse: collapse; width: 100%; }
+  .btn-matrix th { padding: var(--space-2) var(--space-4); text-align: left; font-size: var(--text-caption); text-transform: uppercase; letter-spacing: var(--tracking-caps); color: var(--text-tertiary); font-weight: var(--weight-semibold); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+  .btn-matrix td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+  .btn-matrix tr:last-child td { border-bottom: none; }
+  .btn-matrix .row-label { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-secondary); white-space: nowrap; }
+
+  /* Badge grid */
+  .badge-showcase { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+
+  /* Demo containers */
+  .demo-box {
+    background: var(--bg-surface-alt);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+  }
+
+  .demo-box-dark {
+    background: #0B1120;
+    border: 1px solid #1E293B;
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+  }
+
+  .component-label {
+    font-size: var(--text-caption);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+    color: var(--text-tertiary);
+    font-weight: var(--weight-semibold);
+    margin-bottom: var(--space-3);
+  }
+
+  /* Radius showcase */
+  .radius-grid { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-end; }
+  .radius-demo { background: var(--brand-primary); opacity: 0.2; width: 64px; height: 64px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: var(--space-1); }
+  .radius-demo-label { font-size: var(--text-micro); color: var(--text-tertiary); text-align: center; margin-top: var(--space-1); }
+  .radius-item { display: flex; flex-direction: column; align-items: center; }
+
+  /* Sidebar demo */
+  .sidebar-demo-wrap {
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    max-width: 280px;
+  }
+
+  /* Toast showcase */
+  .toast-stack { display: flex; flex-direction: column; gap: var(--space-2); max-width: 400px; }
+
+  /* KPI demo row */
+  .kpi-demo-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+
+  @media (max-width: 768px) {
+    .ds-nav { display: none; }
+    .ds-hero { padding: var(--space-10) var(--space-5); }
+    .ds-hero-title { font-size: 1.75rem; }
+    .kpi-demo-row { grid-template-columns: repeat(2, 1fr); }
+    .ds-section { padding: var(--space-6) var(--space-4); }
+    .btn-matrix { overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+  <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <span id="theme-label">Dark mode</span>
+</button>
+
+<div class="ds-root">
+  <!-- Left nav -->
+  <nav class="ds-nav" aria-label="Design system navigation">
+    <div class="ds-nav-brand">
+      <div class="ds-nav-mark">G</div>
+      <div>
+        <div class="ds-nav-title">GraphClaw</div>
+        <div class="ds-nav-sub">Design System v2</div>
+      </div>
+    </div>
+    <div class="ds-nav-group">Foundation</div>
+    <a href="#colors">Colors</a>
+    <a href="#typography">Typography</a>
+    <a href="#spacing">Spacing</a>
+    <a href="#shadows">Shadows</a>
+    <a href="#radius">Border Radius</a>
+    <div class="ds-nav-group">Components</div>
+    <a href="#buttons">Buttons</a>
+    <a href="#inputs">Inputs</a>
+    <a href="#badges">Badges &amp; Tags</a>
+    <a href="#cards">Cards</a>
+    <a href="#tables">Tables</a>
+    <div class="ds-nav-group">Patterns</div>
+    <a href="#navigation">Navigation</a>
+    <a href="#feedback">Feedback</a>
+    <a href="#overlays">Overlays</a>
+    <a href="#kpis">KPI Cards</a>
+  </nav>
+
+  <!-- Main content -->
+  <main class="ds-main" id="ds-main">
+
+    <!-- Hero -->
+    <section class="ds-hero">
+      <div class="ds-hero-content">
+        <div class="ds-hero-eyebrow">GraphClaw Cockpit</div>
+        <h1 class="ds-hero-title">Design <span>System</span></h1>
+        <p class="ds-hero-desc">The complete visual language for the GraphClaw task graph management interface. Tokens, components, and interaction patterns.</p>
+        <div class="ds-hero-meta">
+          <div class="ds-hero-stat">
+            <div class="ds-hero-stat-value">4</div>
+            <div class="ds-hero-stat-label">CSS Files</div>
+          </div>
+          <div class="ds-hero-divider"></div>
+          <div class="ds-hero-stat">
+            <div class="ds-hero-stat-value">40+</div>
+            <div class="ds-hero-stat-label">Components</div>
+          </div>
+          <div class="ds-hero-divider"></div>
+          <div class="ds-hero-stat">
+            <div class="ds-hero-stat-value">7</div>
+            <div class="ds-hero-stat-label">State Colors</div>
+          </div>
+          <div class="ds-hero-divider"></div>
+          <div class="ds-hero-stat">
+            <div class="ds-hero-stat-value">2</div>
+            <div class="ds-hero-stat-label">Themes</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLORS -->
+    <section class="ds-section" id="colors">
+      <h2 class="ds-section-title">Colors</h2>
+      <p class="ds-section-desc">All colors are CSS custom properties. Dark mode is applied via <code>data-theme="dark"</code> on the root element.</p>
+
+      <div class="ds-subsection">
+        <h3 class="ds-subsection-title">Brand</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-color" style="background:#0EA5E9"></div><div class="swatch-info"><div class="swatch-name">brand-primary</div><div class="swatch-value">#0EA5E9</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#0284C7"></div><div class="swatch-info"><div class="swatch-name">brand-hover</div><div class="swatch-value">#0284C7</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#E0F2FE"></div><div class="swatch-info"><div class="swatch-name">brand-light</div><div class="swatch-value">#E0F2FE</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#0369A1"></div><div class="swatch-info"><div class="swatch-name">brand-dark</div><div class="swatch-value">#0369A1</div></div></div>
+        </div>
+      </div>
+
+      <div class="ds-subsection">
+        <h3 class="ds-subsection-title">Semantic State Colors</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-color" style="background:#3B82F6"></div><div class="swatch-info"><div class="swatch-name">Active</div><div class="swatch-value">#3B82F6 · Blue</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#10B981"></div><div class="swatch-info"><div class="swatch-name">In Progress</div><div class="swatch-value">#10B981 · Green</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#EF4444"></div><div class="swatch-info"><div class="swatch-name">Blocked</div><div class="swatch-value">#EF4444 · Red</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#F59E0B"></div><div class="swatch-info"><div class="swatch-name">Delayed</div><div class="swatch-value">#F59E0B · Amber</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#9CA3AF"></div><div class="swatch-info"><div class="swatch-name">Complete</div><div class="swatch-value">#9CA3AF · Grey</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#E5E7EB; border:1px solid #D1D5DB"></div><div class="swatch-info"><div class="swatch-name">Snoozed</div><div class="swatch-value">#E5E7EB · Light Grey</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#A855F7"></div><div class="swatch-info"><div class="swatch-name">Needs Review</div><div class="swatch-value">#A855F7 · Purple</div></div></div>
+        </div>
+      </div>
+
+      <div class="ds-subsection">
+        <h3 class="ds-subsection-title">Neutral Scale</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-color" style="background:#F8FAFC; border-bottom:1px solid #E2E8F0"></div><div class="swatch-info"><div class="swatch-name">neutral-50</div><div class="swatch-value">#F8FAFC</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#F1F5F9"></div><div class="swatch-info"><div class="swatch-name">neutral-100</div><div class="swatch-value">#F1F5F9</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#E2E8F0"></div><div class="swatch-info"><div class="swatch-name">neutral-200</div><div class="swatch-value">#E2E8F0</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#CBD5E1"></div><div class="swatch-info"><div class="swatch-name">neutral-300</div><div class="swatch-value">#CBD5E1</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#94A3B8"></div><div class="swatch-info"><div class="swatch-name">neutral-400</div><div class="swatch-value">#94A3B8</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#64748B"></div><div class="swatch-info"><div class="swatch-name">neutral-500</div><div class="swatch-value">#64748B</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#475569"></div><div class="swatch-info"><div class="swatch-name">neutral-600</div><div class="swatch-value">#475569</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#334155"></div><div class="swatch-info"><div class="swatch-name">neutral-700</div><div class="swatch-value">#334155</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#1E293B"></div><div class="swatch-info"><div class="swatch-name">neutral-800</div><div class="swatch-value">#1E293B</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#0F172A"></div><div class="swatch-info"><div class="swatch-name">neutral-900</div><div class="swatch-value">#0F172A</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TYPOGRAPHY -->
+    <section class="ds-section" id="typography">
+      <h2 class="ds-section-title">Typography</h2>
+      <p class="ds-section-desc">Inter typeface with a 7-step scale. Use <code>var(--text-*)</code> tokens — never raw pixel values.</p>
+
+      <div class="type-row"><div class="type-meta"><div class="type-label">--text-display · 28px · Bold</div></div><div style="font-size:var(--text-display);font-weight:var(--weight-bold);letter-spacing:var(--tracking-tight);color:var(--text-primary)">Task Graph Management</div></div>
+      <div class="type-row"><div class="type-meta"><div class="type-label">--text-heading · 20px · Semibold</div></div><div style="font-size:var(--text-heading);font-weight:var(--weight-semibold);color:var(--text-primary)">Goal: Q3 Growth Initiative</div></div>
+      <div class="type-row"><div class="type-meta"><div class="type-label">--text-title · 16px · Semibold</div></div><div style="font-size:var(--text-title);font-weight:var(--weight-semibold);color:var(--text-primary)">Finalize pricing model for enterprise tier</div></div>
+      <div class="type-row"><div class="type-meta"><div class="type-label">--text-body · 14px · Regular</div></div><div style="font-size:var(--text-body);color:var(--text-primary);line-height:var(--leading-normal)">This task requires coordination between Product Ops and Finance to finalize the pricing structure before the Q3 board review on September 14th.</div></div>
+      <div class="type-row"><div class="type-meta"><div class="type-label">--text-body-sm · 13px · Regular</div></div><div style="font-size:var(--text-body-sm);color:var(--text-secondary)">Assigned to Sarah Chen · Due Sep 14 · Priority 8.4 · Infrastructure</div></div>
+      <div class="type-row"><div class="type-meta"><div class="type-label">--text-caption · 12px · Medium</div></div><div style="font-size:var(--text-caption);font-weight:var(--weight-medium);color:var(--text-tertiary)">Last updated 3 hours ago · 4 dependencies · 2 blockers</div></div>
+      <div class="type-row"><div class="type-meta"><div class="type-label">--text-micro · 11px · Semibold</div></div><div style="font-size:var(--text-micro);font-weight:var(--weight-semibold);text-transform:uppercase;letter-spacing:var(--tracking-caps);color:var(--text-tertiary)">SECTION LABEL · COLUMN HEADER</div></div>
+    </section>
+
+    <!-- SPACING -->
+    <section class="ds-section" id="spacing">
+      <h2 class="ds-section-title">Spacing</h2>
+      <p class="ds-section-desc">4px base unit. Use <code>var(--space-*)</code> tokens exclusively — no arbitrary pixel values.</p>
+      <div style="max-width:600px">
+        <div class="space-row"><div class="space-label">--space-0-5</div><div class="space-block" style="width:2px;height:16px"></div><div class="space-px">2px</div></div>
+        <div class="space-row"><div class="space-label">--space-1</div><div class="space-block" style="width:4px;height:16px"></div><div class="space-px">4px</div></div>
+        <div class="space-row"><div class="space-label">--space-2</div><div class="space-block" style="width:8px;height:16px"></div><div class="space-px">8px</div></div>
+        <div class="space-row"><div class="space-label">--space-3</div><div class="space-block" style="width:12px;height:16px"></div><div class="space-px">12px</div></div>
+        <div class="space-row"><div class="space-label">--space-4</div><div class="space-block" style="width:16px;height:16px"></div><div class="space-px">16px</div></div>
+        <div class="space-row"><div class="space-label">--space-5</div><div class="space-block" style="width:20px;height:16px"></div><div class="space-px">20px</div></div>
+        <div class="space-row"><div class="space-label">--space-6</div><div class="space-block" style="width:24px;height:16px"></div><div class="space-px">24px</div></div>
+        <div class="space-row"><div class="space-label">--space-8</div><div class="space-block" style="width:32px;height:16px"></div><div class="space-px">32px</div></div>
+        <div class="space-row"><div class="space-label">--space-10</div><div class="space-block" style="width:40px;height:16px"></div><div class="space-px">40px</div></div>
+        <div class="space-row"><div class="space-label">--space-12</div><div class="space-block" style="width:48px;height:16px"></div><div class="space-px">48px</div></div>
+        <div class="space-row"><div class="space-label">--space-16</div><div class="space-block" style="width:64px;height:16px"></div><div class="space-px">64px</div></div>
+      </div>
+    </section>
+
+    <!-- SHADOWS -->
+    <section class="ds-section" id="shadows">
+      <h2 class="ds-section-title">Shadows &amp; Elevation</h2>
+      <p class="ds-section-desc">5-level elevation system. Dark mode uses higher opacity shadows. Focus ring uses brand color.</p>
+      <div class="shadow-grid">
+        <div class="shadow-demo" style="box-shadow:none;border:1px solid var(--border-default)"><div class="shadow-demo-label">Level 0 — Flat</div><div class="shadow-demo-desc">Tables, background panels</div></div>
+        <div class="shadow-demo" style="box-shadow:0 1px 2px rgba(0,0,0,.05)"><div class="shadow-demo-label">Level 1 — Card</div><div class="shadow-demo-desc">Content cards, subtle lift</div></div>
+        <div class="shadow-demo" style="box-shadow:0 2px 8px rgba(0,0,0,.08)"><div class="shadow-demo-label">Level 2 — Dropdown</div><div class="shadow-demo-desc">Menus, popovers, tooltips</div></div>
+        <div class="shadow-demo" style="box-shadow:0 8px 24px rgba(0,0,0,.12)"><div class="shadow-demo-label">Level 3 — Modal</div><div class="shadow-demo-desc">Dialogs, modals, drawers</div></div>
+        <div class="shadow-demo" style="box-shadow:0 16px 48px rgba(0,0,0,.16)"><div class="shadow-demo-label">Level 4 — Floating</div><div class="shadow-demo-desc">Command palette, notifications</div></div>
+        <div class="shadow-demo" style="box-shadow:0 0 0 3px rgba(14,165,233,.25)"><div class="shadow-demo-label">Focus Ring</div><div class="shadow-demo-desc">Interactive element focus state</div></div>
+      </div>
+    </section>
+
+    <!-- BORDER RADIUS -->
+    <section class="ds-section" id="radius">
+      <h2 class="ds-section-title">Border Radius</h2>
+      <div class="radius-grid">
+        <div class="radius-item"><div class="radius-demo" style="border-radius:4px"></div><div class="radius-demo-label">sm · 4px<br>Badges, pills</div></div>
+        <div class="radius-item"><div class="radius-demo" style="border-radius:6px"></div><div class="radius-demo-label">md · 6px<br>Inputs, buttons</div></div>
+        <div class="radius-item"><div class="radius-demo" style="border-radius:8px"></div><div class="radius-demo-label">lg · 8px<br>Cards</div></div>
+        <div class="radius-item"><div class="radius-demo" style="border-radius:12px"></div><div class="radius-demo-label">xl · 12px<br>Modals, panels</div></div>
+        <div class="radius-item"><div class="radius-demo" style="border-radius:9999px"></div><div class="radius-demo-label">full · 9999px<br>Avatars, toggles</div></div>
+      </div>
+    </section>
+
+    <!-- BUTTONS -->
+    <section class="ds-section" id="buttons">
+      <h2 class="ds-section-title">Buttons</h2>
+      <p class="ds-section-desc">4 variants × 3 sizes. All have hover, focus (ring), active, disabled, and loading states.</p>
+
+      <div class="btn-matrix">
+        <table>
+          <thead>
+            <tr>
+              <th>Variant</th>
+              <th>Default</th>
+              <th>Small</th>
+              <th>Large</th>
+              <th>Disabled</th>
+              <th>With icon</th>
+              <th>Icon only</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="row-label">Primary</td>
+              <td><button class="btn btn-primary btn-md">Create task</button></td>
+              <td><button class="btn btn-primary btn-sm">Add</button></td>
+              <td><button class="btn btn-primary btn-lg">Get started</button></td>
+              <td><button class="btn btn-primary btn-md" disabled>Create task</button></td>
+              <td><button class="btn btn-primary btn-md"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New task</button></td>
+              <td><button class="btn btn-primary btn-md btn-icon" aria-label="Add"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></td>
+            </tr>
+            <tr>
+              <td class="row-label">Secondary</td>
+              <td><button class="btn btn-secondary btn-md">Filter</button></td>
+              <td><button class="btn btn-secondary btn-sm">Export</button></td>
+              <td><button class="btn btn-secondary btn-lg">Configure</button></td>
+              <td><button class="btn btn-secondary btn-md" disabled>Filter</button></td>
+              <td><button class="btn btn-secondary btn-md"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filter</button></td>
+              <td><button class="btn btn-secondary btn-md btn-icon" aria-label="Filter"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></td>
+            </tr>
+            <tr>
+              <td class="row-label">Ghost</td>
+              <td><button class="btn btn-ghost btn-md">View all</button></td>
+              <td><button class="btn btn-ghost btn-sm">Details</button></td>
+              <td><button class="btn btn-ghost btn-lg">Learn more</button></td>
+              <td><button class="btn btn-ghost btn-md" disabled>View all</button></td>
+              <td><button class="btn btn-ghost btn-md"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search</button></td>
+              <td><button class="btn btn-ghost btn-md btn-icon" aria-label="More options"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
+            </tr>
+            <tr>
+              <td class="row-label">Danger</td>
+              <td><button class="btn btn-danger btn-md">Delete</button></td>
+              <td><button class="btn btn-danger btn-sm">Remove</button></td>
+              <td><button class="btn btn-danger btn-lg">Delete task</button></td>
+              <td><button class="btn btn-danger btn-md" disabled>Delete</button></td>
+              <td><button class="btn btn-danger btn-md"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>Delete</button></td>
+              <td><button class="btn btn-danger btn-md btn-icon" aria-label="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- INPUTS -->
+    <section class="ds-section" id="inputs">
+      <h2 class="ds-section-title">Form Inputs</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-6)">
+        <!-- Text input states -->
+        <div>
+          <div class="component-label">Text Input</div>
+          <div class="form-group">
+            <label class="form-label" for="inp1">Task title <span class="required">*</span></label>
+            <input class="input" id="inp1" type="text" placeholder="e.g. Migrate auth to OAuth 2.0">
+            <div class="form-helper">Enter a clear, actionable task name</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inp2">Task title — focused</label>
+            <input class="input" id="inp2" type="text" value="Review PR #847: API rate limiting" style="border-color:var(--brand-primary);box-shadow:var(--shadow-focus)">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inp3">Due date — error</label>
+            <input class="input error" id="inp3" type="text" value="not-a-date">
+            <div class="form-error"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Please enter a valid date (YYYY-MM-DD)</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inp4">Disabled</label>
+            <input class="input" id="inp4" type="text" value="Read-only value" disabled>
+          </div>
+        </div>
+
+        <!-- Other inputs -->
+        <div>
+          <div class="component-label">Select &amp; Textarea</div>
+          <div class="form-group">
+            <label class="form-label" for="sel1">Status</label>
+            <select class="select" id="sel1">
+              <option>Active</option>
+              <option>In Progress</option>
+              <option>Blocked</option>
+              <option>Delayed</option>
+              <option>Complete</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ta1">Description</label>
+            <textarea class="textarea" id="ta1" rows="4" placeholder="Describe what needs to be done and why it matters..."></textarea>
+          </div>
+          <div class="form-group">
+            <div class="component-label">Search Input</div>
+            <div class="search-input">
+              <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" placeholder="Search tasks, agents, skills...">
+            </div>
+          </div>
+        </div>
+
+        <!-- Toggle, checkbox, slider -->
+        <div>
+          <div class="component-label">Toggles &amp; Checks</div>
+          <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+
+            <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+              <label class="checkbox-group">
+                <input type="checkbox" checked>
+                <span class="checkbox-label">Enable daily briefings</span>
+              </label>
+              <label class="checkbox-group">
+                <input type="checkbox">
+                <span class="checkbox-label">Notify on task completion</span>
+              </label>
+              <label class="checkbox-group">
+                <input type="checkbox" disabled>
+                <span class="checkbox-label" style="color:var(--text-tertiary)">Disabled option</span>
+              </label>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+              <label class="radio-group">
+                <input type="radio" name="priority" checked>
+                <span class="checkbox-label">Automatic scoring</span>
+              </label>
+              <label class="radio-group">
+                <input type="radio" name="priority">
+                <span class="checkbox-label">Manual override</span>
+              </label>
+            </div>
+
+            <label class="toggle">
+              <input type="checkbox" checked>
+              <div class="toggle-track"><div class="toggle-thumb"></div></div>
+              <span class="toggle-label">Agent auto-respond enabled</span>
+            </label>
+
+            <label class="toggle">
+              <input type="checkbox">
+              <div class="toggle-track"><div class="toggle-thumb"></div></div>
+              <span class="toggle-label">Interrupt threshold active</span>
+            </label>
+
+            <div>
+              <label class="form-label">Priority weight W1 — Urgency</label>
+              <input type="range" class="slider" min="0" max="10" value="7">
+              <div style="display:flex;justify-content:space-between;margin-top:4px">
+                <span style="font-size:var(--text-caption);color:var(--text-tertiary)">0</span>
+                <span style="font-size:var(--text-caption);color:var(--text-secondary);font-weight:var(--weight-semibold)">7.0</span>
+                <span style="font-size:var(--text-caption);color:var(--text-tertiary)">10</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BADGES & TAGS -->
+    <section class="ds-section" id="badges">
+      <h2 class="ds-section-title">Badges &amp; Tags</h2>
+
+      <div class="ds-subsection">
+        <h3 class="ds-subsection-title">State Badges — Standard</h3>
+        <div class="badge-showcase">
+          <span class="badge badge-active badge-dot">Active</span>
+          <span class="badge badge-progress badge-dot">In Progress</span>
+          <span class="badge badge-blocked badge-dot">Blocked</span>
+          <span class="badge badge-delayed badge-dot">Delayed</span>
+          <span class="badge badge-complete badge-dot">Complete</span>
+          <span class="badge badge-snoozed badge-dot">Snoozed</span>
+          <span class="badge badge-review badge-dot">Needs Review</span>
+        </div>
+      </div>
+
+      <div class="ds-subsection">
+        <h3 class="ds-subsection-title">Trust Badges</h3>
+        <div class="badge-showcase">
+          <span class="badge badge-trust-auto">AUTO</span>
+          <span class="badge badge-trust-gated">GATED</span>
+          <span class="badge badge-trust-blocked">BLOCKED</span>
+          <span class="badge badge-brand">Brand</span>
+          <span class="badge badge-neutral">Neutral</span>
+        </div>
+      </div>
+
+      <div class="ds-subsection">
+        <h3 class="ds-subsection-title">Small Badges</h3>
+        <div class="badge-showcase">
+          <span class="badge badge-sm badge-active">Active</span>
+          <span class="badge badge-sm badge-blocked">Blocked</span>
+          <span class="badge badge-sm badge-progress">In Progress</span>
+          <span class="badge badge-sm badge-review">Review</span>
+        </div>
+      </div>
+
+      <div class="ds-subsection">
+        <h3 class="ds-subsection-title">Tags (removable)</h3>
+        <div class="badge-showcase">
+          <span class="tag tag-blue">Infrastructure<button class="tag-remove" aria-label="Remove Infrastructure"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>
+          <span class="tag tag-green">Security<button class="tag-remove" aria-label="Remove Security"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>
+          <span class="tag tag-purple">Product Ops<button class="tag-remove" aria-label="Remove Product Ops"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>
+          <span class="tag tag-amber">High Priority<button class="tag-remove" aria-label="Remove High Priority"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>
+          <span class="tag">Growth</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CARDS -->
+    <section class="ds-section" id="cards">
+      <h2 class="ds-section-title">Cards</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-5)">
+
+        <div class="card card-1">
+          <div class="card-header">
+            <span class="card-header-title">Migrate auth to OAuth 2.0</span>
+            <span class="badge badge-active badge-dot">Active</span>
+          </div>
+          <div class="card-body-sm">
+            <p style="font-size:var(--text-body-sm);color:var(--text-secondary);line-height:var(--leading-loose)">Replace legacy session-based auth with OAuth 2.0 + PKCE flow across all services.</p>
+            <div style="display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-3)">
+              <div class="avatar avatar-sm" style="background:#DBEAFE;color:#1D4ED8">JK</div>
+              <span style="font-size:var(--text-caption);color:var(--text-tertiary)">James Kim</span>
+              <span class="sep-dot"></span>
+              <span style="font-size:var(--text-caption);color:var(--text-tertiary)">Due Oct 3</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span style="font-size:var(--text-caption);color:var(--text-tertiary)">Score: <strong style="color:var(--text-primary)">8.4</strong></span>
+            <span class="sep-dot"></span>
+            <span style="font-size:var(--text-caption);color:var(--text-tertiary)">3 dependencies</span>
+            <button class="btn btn-ghost btn-sm ml-auto">View</button>
+          </div>
+        </div>
+
+        <div class="card card-2 card-hover">
+          <div class="card-header">
+            <span class="card-header-title">Q3 board deck review</span>
+            <span class="badge badge-delayed badge-dot">Delayed</span>
+          </div>
+          <div class="card-body-sm">
+            <p style="font-size:var(--text-body-sm);color:var(--text-secondary);line-height:var(--leading-loose)">Final review of the board presentation including financial projections and roadmap slides.</p>
+            <div style="margin-top:var(--space-3)">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:var(--text-caption);color:var(--text-tertiary)">Progress</span>
+                <span style="font-size:var(--text-caption);font-weight:var(--weight-semibold);color:var(--text-secondary)">62%</span>
+              </div>
+              <div class="progress"><div class="progress-bar progress-bar-warning" style="width:62%"></div></div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="avatar-group">
+              <div class="avatar avatar-sm" style="background:#D1FAE5;color:#065F46">SC</div>
+              <div class="avatar avatar-sm" style="background:#EDE9FE;color:#4C1D95">AR</div>
+            </div>
+            <span style="font-size:var(--text-caption);color:var(--text-tertiary)">2 assignees</span>
+            <button class="btn btn-ghost btn-sm ml-auto">View</button>
+          </div>
+        </div>
+
+        <div class="card card-3">
+          <div class="card-header">
+            <span class="card-header-title">Deploy staging environment</span>
+            <span class="badge badge-blocked badge-dot">Blocked</span>
+          </div>
+          <div class="card-body-sm">
+            <p style="font-size:var(--text-body-sm);color:var(--text-secondary);line-height:var(--leading-loose)">Blocked by pending security review on Kubernetes node configuration. ETA unknown.</p>
+            <div style="display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-3)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--state-blocked)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span style="font-size:var(--text-caption);color:var(--state-blocked)">Waiting on: Security Review #112</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="tag tag-red" style="font-size:var(--text-micro)">urgent</span>
+            <button class="btn btn-danger btn-sm ml-auto">Escalate</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TABLES -->
+    <section class="ds-section" id="tables">
+      <h2 class="ds-section-title">Tables</h2>
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="col-checkbox"><label class="checkbox-group" style="margin:0"><input type="checkbox" aria-label="Select all"></label></th>
+              <th class="sortable sorted-desc">Task<svg class="sort-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></th>
+              <th class="sortable">Status</th>
+              <th class="sortable">Priority<svg class="sort-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 15 12 9 18 15"/></svg></th>
+              <th>Assignee</th>
+              <th class="sortable">Due date</th>
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="selected">
+              <td class="col-checkbox"><label class="checkbox-group" style="margin:0"><input type="checkbox" checked aria-label="Select row"></label></td>
+              <td><div style="font-weight:var(--weight-medium);color:var(--text-primary)">Finalize Q3 pricing model</div><div style="font-size:var(--text-caption);color:var(--text-tertiary);margin-top:2px">Product Ops · 2 deps</div></td>
+              <td><span class="badge badge-active badge-dot">Active</span></td>
+              <td><div class="score-bar"><div class="score-track"><div class="score-fill score-fill-high" style="width:91%"></div></div><span class="score-value">9.1</span></div></td>
+              <td><div style="display:flex;align-items:center;gap:var(--space-2)"><div class="avatar avatar-sm" style="background:#FEE2E2;color:#991B1B">SC</div><span style="font-size:var(--text-body-sm)">Sarah Chen</span></div></td>
+              <td><span style="font-size:var(--text-body-sm);color:var(--text-secondary)">Sep 14</span></td>
+              <td><div class="table-actions"><button class="btn btn-ghost btn-sm btn-icon" aria-label="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn btn-ghost btn-sm btn-icon" aria-label="More"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td class="col-checkbox"><label class="checkbox-group" style="margin:0"><input type="checkbox" aria-label="Select row"></label></td>
+              <td><div style="font-weight:var(--weight-medium);color:var(--text-primary)">Migrate auth to OAuth 2.0</div><div style="font-size:var(--text-caption);color:var(--text-tertiary);margin-top:2px">Infrastructure · 5 deps</div></td>
+              <td><span class="badge badge-progress badge-dot">In Progress</span></td>
+              <td><div class="score-bar"><div class="score-track"><div class="score-fill" style="width:84%;background:var(--state-delayed)"></div></div><span class="score-value">8.4</span></div></td>
+              <td><div style="display:flex;align-items:center;gap:var(--space-2)"><div class="avatar avatar-sm" style="background:#DBEAFE;color:#1E40AF">JK</div><span style="font-size:var(--text-body-sm)">James Kim</span></div></td>
+              <td><span style="font-size:var(--text-body-sm);color:var(--text-secondary)">Oct 3</span></td>
+              <td><div class="table-actions"><button class="btn btn-ghost btn-sm btn-icon" aria-label="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn btn-ghost btn-sm btn-icon" aria-label="More"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td class="col-checkbox"><label class="checkbox-group" style="margin:0"><input type="checkbox" aria-label="Select row"></label></td>
+              <td><div style="font-weight:var(--weight-medium);color:var(--text-primary)">Deploy staging environment</div><div style="font-size:var(--text-caption);color:var(--text-tertiary);margin-top:2px">Infrastructure · 3 deps</div></td>
+              <td><span class="badge badge-blocked badge-dot">Blocked</span></td>
+              <td><div class="score-bar"><div class="score-track"><div class="score-fill score-fill-high" style="width:78%"></div></div><span class="score-value">7.8</span></div></td>
+              <td><div style="display:flex;align-items:center;gap:var(--space-2)"><div class="avatar avatar-sm" style="background:#D1FAE5;color:#065F46">MR</div><span style="font-size:var(--text-body-sm)">Maya Rodriguez</span></div></td>
+              <td><span style="font-size:var(--text-body-sm);color:var(--state-blocked)">Overdue</span></td>
+              <td><div class="table-actions"><button class="btn btn-ghost btn-sm btn-icon" aria-label="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn btn-ghost btn-sm btn-icon" aria-label="More"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td class="col-checkbox"><label class="checkbox-group" style="margin:0"><input type="checkbox" aria-label="Select row"></label></td>
+              <td><div style="font-weight:var(--weight-medium);color:var(--text-primary)">Q3 board deck review</div><div style="font-size:var(--text-caption);color:var(--text-tertiary);margin-top:2px">Product Ops · 1 dep</div></td>
+              <td><span class="badge badge-delayed badge-dot">Delayed</span></td>
+              <td><div class="score-bar"><div class="score-track"><div class="score-fill" style="width:65%;background:var(--state-delayed)"></div></div><span class="score-value">6.5</span></div></td>
+              <td><div style="display:flex;align-items:center;gap:var(--space-2)"><div class="avatar avatar-sm" style="background:#EDE9FE;color:#4C1D95">AR</div><span style="font-size:var(--text-body-sm)">Alex Rivera</span></div></td>
+              <td><span style="font-size:var(--text-body-sm);color:var(--state-delayed)">Sep 20</span></td>
+              <td><div class="table-actions"><button class="btn btn-ghost btn-sm btn-icon" aria-label="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn btn-ghost btn-sm btn-icon" aria-label="More"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td class="col-checkbox"><label class="checkbox-group" style="margin:0"><input type="checkbox" aria-label="Select row"></label></td>
+              <td><div style="font-weight:var(--weight-medium);color:var(--text-primary);color:var(--text-tertiary)">Refactor billing webhook handlers</div><div style="font-size:var(--text-caption);color:var(--text-tertiary);margin-top:2px">Growth · 0 deps</div></td>
+              <td><span class="badge badge-complete badge-dot">Complete</span></td>
+              <td><div class="score-bar"><div class="score-track"><div class="score-fill" style="width:42%;background:var(--state-complete)"></div></div><span class="score-value">4.2</span></div></td>
+              <td><div style="display:flex;align-items:center;gap:var(--space-2)"><div class="avatar avatar-sm" style="background:#FEF3C7;color:#92400E">LP</div><span style="font-size:var(--text-body-sm)">Liu Peng</span></div></td>
+              <td><span style="font-size:var(--text-body-sm);color:var(--state-complete)">Sep 8 ✓</span></td>
+              <td><div class="table-actions"><button class="btn btn-ghost btn-sm btn-icon" aria-label="More"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- NAVIGATION -->
+    <section class="ds-section" id="navigation">
+      <h2 class="ds-section-title">Navigation</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-6)">
+
+        <!-- Sidebar mini demo -->
+        <div>
+          <div class="component-label">Sidebar</div>
+          <div class="sidebar-demo-wrap">
+            <div class="sidebar-logo">
+              <div class="sidebar-logo-mark">G</div>
+              <span class="sidebar-logo-title">GraphClaw</span>
+            </div>
+            <nav class="sidebar-nav" aria-label="Main navigation">
+              <div class="sidebar-section-label">Workspace</div>
+              <a class="nav-item active" href="#"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="nav-label">Goal View</span></a>
+              <a class="nav-item" href="#"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span class="nav-label">My Tasks</span><span class="nav-badge">3</span></a>
+              <a class="nav-item" href="#"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span class="nav-label">Timeline</span></a>
+              <div class="sidebar-section-label">System</div>
+              <a class="nav-item" href="#"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span><span class="nav-label">Agent Monitor</span></a>
+              <a class="nav-item" href="#"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></span><span class="nav-label">Skills</span></a>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Tabs demo -->
+        <div>
+          <div class="component-label">Tabs</div>
+          <div class="tabs" role="tablist">
+            <button class="tab-item active" role="tab">Goal View <span class="tab-count">24</span></button>
+            <button class="tab-item" role="tab">Projects <span class="tab-count">7</span></button>
+            <button class="tab-item" role="tab">My Tasks <span class="tab-count">12</span></button>
+            <button class="tab-item" role="tab">Resources</button>
+            <button class="tab-item" role="tab">Timeline</button>
+          </div>
+          <div style="padding:var(--space-4);background:var(--bg-surface-alt);border:1px solid var(--border-default);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg)">
+            <p style="font-size:var(--text-body-sm);color:var(--text-tertiary)">Tab content area</p>
+          </div>
+
+          <div style="margin-top:var(--space-6)">
+            <div class="component-label">Breadcrumbs</div>
+            <div class="breadcrumbs">
+              <a class="breadcrumb-item" href="#">GraphClaw</a>
+              <svg class="breadcrumb-sep" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              <a class="breadcrumb-item" href="#">Product Ops</a>
+              <svg class="breadcrumb-sep" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              <span class="breadcrumb-item current">Finalize Q3 pricing model</span>
+            </div>
+          </div>
+
+          <div style="margin-top:var(--space-6)">
+            <div class="component-label">View Switcher</div>
+            <div class="view-switcher" role="group" aria-label="View">
+              <button class="view-switcher-btn active">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                Graph
+              </button>
+              <button class="view-switcher-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                List
+              </button>
+              <button class="view-switcher-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Kanban
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEEDBACK -->
+    <section class="ds-section" id="feedback">
+      <h2 class="ds-section-title">Feedback</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-6)">
+
+        <div>
+          <div class="component-label">Toasts</div>
+          <div class="toast-stack">
+            <div class="toast toast-success" role="alert">
+              <div class="toast-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="toast-content"><div class="toast-title">Task created</div><div class="toast-desc">Finalize Q3 pricing model added to Product Ops</div></div>
+              <button class="toast-close" aria-label="Dismiss"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+            <div class="toast toast-error" role="alert">
+              <div class="toast-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+              <div class="toast-content"><div class="toast-title">Agent unreachable</div><div class="toast-desc">TaskPrioritizer has not responded in 47s</div></div>
+              <button class="toast-close" aria-label="Dismiss"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+            <div class="toast toast-warning" role="alert">
+              <div class="toast-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+              <div class="toast-content"><div class="toast-title">Scoring weights changed</div><div class="toast-desc">5 task scores will be recalculated</div></div>
+              <button class="toast-close" aria-label="Dismiss"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+            <div class="toast toast-info" role="alert">
+              <div class="toast-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+              <div class="toast-content"><div class="toast-title">Daily briefing ready</div><div class="toast-desc">14 tasks, 3 blockers, 2 new assignments</div></div>
+              <button class="toast-close" aria-label="Dismiss"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:var(--space-6)">
+          <div>
+            <div class="component-label">Skeleton Loaders</div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+              <div style="display:flex;align-items:center;gap:var(--space-3)">
+                <div class="skeleton skeleton-circle" style="width:32px;height:32px;flex-shrink:0"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:var(--space-2)">
+                  <div class="skeleton skeleton-text" style="width:60%"></div>
+                  <div class="skeleton skeleton-text-sm" style="width:40%"></div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:var(--space-3)">
+                <div class="skeleton skeleton-circle" style="width:32px;height:32px;flex-shrink:0"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:var(--space-2)">
+                  <div class="skeleton skeleton-text" style="width:75%"></div>
+                  <div class="skeleton skeleton-text-sm" style="width:45%"></div>
+                </div>
+              </div>
+              <div class="skeleton skeleton-card"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="component-label">Empty State</div>
+            <div class="empty-state" style="padding:var(--space-8);border:1px solid var(--border-default);border-radius:var(--radius-lg)">
+              <div class="empty-state-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+              </div>
+              <div class="empty-state-title">No tasks yet</div>
+              <div class="empty-state-desc">Create your first task or let the agent import from your connected channels.</div>
+              <button class="btn btn-primary btn-md">Create task</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="component-label">Spinners</div>
+            <div style="display:flex;align-items:center;gap:var(--space-4)">
+              <div class="spinner spinner-sm"></div>
+              <div class="spinner spinner-md"></div>
+              <div class="spinner spinner-lg"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="component-label">Status Indicators</div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+              <div style="display:flex;align-items:center;gap:var(--space-2)"><div class="status-dot status-dot-online"></div><span style="font-size:var(--text-body-sm);color:var(--text-secondary)">TaskPrioritizer — running</span></div>
+              <div style="display:flex;align-items:center;gap:var(--space-2)"><div class="status-dot status-dot-running animate-pulse"></div><span style="font-size:var(--text-body-sm);color:var(--text-secondary)">BriefingComposer — processing</span></div>
+              <div style="display:flex;align-items:center;gap:var(--space-2)"><div class="status-dot status-dot-error"></div><span style="font-size:var(--text-body-sm);color:var(--text-secondary)">FollowUpTracker — error</span></div>
+              <div style="display:flex;align-items:center;gap:var(--space-2)"><div class="status-dot status-dot-offline"></div><span style="font-size:var(--text-body-sm);color:var(--text-tertiary)">InboxParser — offline</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- OVERLAYS -->
+    <section class="ds-section" id="overlays">
+      <h2 class="ds-section-title">Overlays</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);margin-bottom:var(--space-6)">
+        <button class="btn btn-secondary btn-md" onclick="document.getElementById('demo-modal').classList.remove('hidden')">Open Modal</button>
+        <button class="btn btn-secondary btn-md" onclick="document.getElementById('demo-panel').classList.remove('hidden')">Open Side Panel</button>
+      </div>
+
+      <!-- Dropdown demo -->
+      <div>
+        <div class="component-label">Dropdown Menu</div>
+        <div style="position:relative;display:inline-block">
+          <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-lg);box-shadow:var(--shadow-3);min-width:200px;padding:var(--space-1) 0">
+            <div class="dropdown-header">Actions</div>
+            <button class="dropdown-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit task</button>
+            <button class="dropdown-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</button>
+            <button class="dropdown-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share link</button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item danger"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Delete task</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI CARDS -->
+    <section class="ds-section" id="kpis">
+      <h2 class="ds-section-title">KPI Cards</h2>
+      <p class="ds-section-desc">Agent performance metrics displayed in the agent monitor dashboard.</p>
+      <div class="kpi-demo-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Tasks Processed</div>
+          <div class="kpi-value">1,847</div>
+          <div class="kpi-trend kpi-trend-up">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            +12.4% this week
+          </div>
+          <div class="kpi-sparkline"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Response Time</div>
+          <div class="kpi-value" style="color:var(--state-delayed)">4.3s</div>
+          <div class="kpi-trend kpi-trend-down">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+            +0.8s vs last week
+          </div>
+          <div class="kpi-sparkline" style="background:linear-gradient(to right,transparent,rgba(245,158,11,0.15))"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Success Rate</div>
+          <div class="kpi-value" style="color:var(--state-progress)">98.2%</div>
+          <div class="kpi-trend kpi-trend-up">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            +0.3% vs last week
+          </div>
+          <div class="kpi-sparkline" style="background:linear-gradient(to right,transparent,rgba(16,185,129,0.15))"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">LLM Cost / Day</div>
+          <div class="kpi-value">$4.71</div>
+          <div class="kpi-trend kpi-trend-flat">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Stable — within budget
+          </div>
+          <div class="kpi-sparkline" style="background:linear-gradient(to right,transparent,rgba(148,163,184,0.15))"></div>
+        </div>
+      </div>
+
+      <!-- Inline alerts demo -->
+      <div style="margin-top:var(--space-8)">
+        <div class="component-label">Inline Alerts</div>
+        <div style="display:flex;flex-direction:column;gap:var(--space-3);max-width:600px">
+          <div class="alert alert-info"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div><div class="alert-title">Briefing available</div>Your daily briefing has been generated with 14 tasks pending review.</div></div>
+          <div class="alert alert-warning"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><div><div class="alert-title">Agent latency elevated</div>BriefingComposer is taking 23% longer than usual. Consider checking LLM provider status.</div></div>
+          <div class="alert alert-error"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><div><div class="alert-title">Email channel disconnected</div>Authentication expired for work@company.com. Reconnect to resume email processing.</div></div>
+        </div>
+      </div>
+    </section>
+
+  </main><!-- end ds-main -->
+</div><!-- end ds-root -->
+
+<!-- Modal demo -->
+<div class="modal-backdrop hidden" id="demo-modal" onclick="if(event.target===this)this.classList.add('hidden')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title">Create new task</h2>
+      <button class="modal-close" onclick="document.getElementById('demo-modal').classList.add('hidden')" aria-label="Close modal">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" for="m-title">Task title <span class="required">*</span></label>
+        <input class="input" id="m-title" type="text" placeholder="e.g. Review Kubernetes node scaling policy">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="m-desc">Description</label>
+        <textarea class="textarea" id="m-desc" rows="3" placeholder="What needs to happen and why?"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">
+        <div class="form-group">
+          <label class="form-label" for="m-status">Status</label>
+          <select class="select" id="m-status"><option>Active</option><option>In Progress</option><option>Snoozed</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="m-due">Due date</label>
+          <input class="input" id="m-due" type="date">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-md" onclick="document.getElementById('demo-modal').classList.add('hidden')">Cancel</button>
+      <button class="btn btn-primary btn-md">Create task</button>
+    </div>
+  </div>
+</div>
+
+<!-- Side panel demo -->
+<div class="side-panel hidden" id="demo-panel" role="complementary" aria-label="Task details">
+  <div class="side-panel-header">
+    <span class="side-panel-title">Task detail</span>
+    <button class="modal-close" onclick="document.getElementById('demo-panel').classList.add('hidden')" aria-label="Close panel">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="side-panel-body">
+    <div style="margin-bottom:var(--space-4)">
+      <h3 style="font-size:var(--text-title);font-weight:var(--weight-semibold);color:var(--text-primary);margin-bottom:var(--space-2)">Migrate auth to OAuth 2.0</h3>
+      <div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap">
+        <span class="badge badge-progress badge-dot">In Progress</span>
+        <span class="badge badge-brand">Infrastructure</span>
+        <span class="badge badge-trust-gated">GATED</span>
+      </div>
+    </div>
+    <div class="key-value-row"><div class="kv-key">Assignee</div><div class="kv-value"><div style="display:flex;align-items:center;gap:var(--space-2)"><div class="avatar avatar-sm" style="background:#DBEAFE;color:#1E40AF">JK</div>James Kim</div></div></div>
+    <div class="key-value-row"><div class="kv-key">Due date</div><div class="kv-value">October 3, 2026</div></div>
+    <div class="key-value-row"><div class="kv-key">Priority score</div><div class="kv-value"><div class="score-bar"><div class="score-track"><div class="score-fill" style="width:84%"></div></div><span class="score-value">8.4</span></div></div></div>
+    <div class="key-value-row"><div class="kv-key">Channel</div><div class="kv-value">Email — work@company.com</div></div>
+    <div class="key-value-row"><div class="kv-key">Dependencies</div><div class="kv-value">5 tasks</div></div>
+    <div style="margin-top:var(--space-5)">
+      <div class="label-eyebrow">Description</div>
+      <p style="font-size:var(--text-body-sm);color:var(--text-secondary);line-height:var(--leading-loose);margin-top:var(--space-2)">Replace legacy session-based authentication with OAuth 2.0 + PKCE across all API services. Includes migration of existing user sessions and updating the mobile clients.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('theme-icon-sun').style.display  = isDark ? 'block' : 'none';
+    document.getElementById('theme-icon-moon').style.display = isDark ? 'none'  : 'block';
+    document.getElementById('theme-label').textContent = isDark ? 'Dark mode' : 'Light mode';
+  }
+
+  // Active nav highlight on scroll
+  const sections = document.querySelectorAll('.ds-section');
+  const navLinks = document.querySelectorAll('.ds-nav a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector('.ds-nav a[href="#' + entry.target.id + '"]');
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3, rootMargin: '-10% 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  // Tab switcher demo
+  document.querySelectorAll('.tab-item').forEach(tab => {
+    tab.addEventListener('click', function() {
+      this.closest('.tabs').querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // View switcher demo
+  document.querySelectorAll('.view-switcher-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      this.closest('.view-switcher').querySelectorAll('.view-switcher-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+</script>
+  <script src="assets/nav.js"></script>
+</body>
+</html>

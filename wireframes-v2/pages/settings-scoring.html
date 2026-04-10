@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html data-page="settings-scoring" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Priority Scoring — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   Settings: Scoring — Page-specific styles
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: var(--font-sans); }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* ─── Sidebar ───────────────────────────────────────────── */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  height: 56px; flex-shrink: 0;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: var(--weight-bold); font-size: 13px; flex-shrink: 0;
+}
+.logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.nav-section {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--text-tertiary); padding: var(--space-3) var(--space-4) var(--space-1);
+}
+.nav-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  margin: 1px var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer; text-decoration: none;
+  color: var(--text-secondary);
+  font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background: rgba(56,189,248,0.12); }
+.nav-item .ni { display: flex; align-items: center; flex-shrink: 0; width: 18px; height: 18px; }
+.sidebar-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-4); }
+.sidebar-footer { padding: var(--space-2); border-top: 1px solid var(--border-default); }
+.user-row {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2); border-radius: var(--radius-md); cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.user-row:hover { background: var(--bg-inset); }
+.avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold); flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.user-role { font-size: 10px; color: var(--text-tertiary); }
+
+.main-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
+.topbar {
+  height: 56px; background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center;
+  padding: 0 var(--space-5); gap: var(--space-4); flex-shrink: 0;
+}
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; }
+.breadcrumb .sep { color: var(--text-tertiary); }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-medium); }
+.topbar-search { flex: 1; max-width: 340px; margin: 0 auto; position: relative; }
+.topbar-search input {
+  width: 100%; height: 32px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 0 var(--space-3) 0 32px;
+  font-size: var(--text-body-sm); font-family: var(--font-sans);
+  color: var(--text-primary); outline: none; transition: all var(--duration-normal);
+}
+.topbar-search input::placeholder { color: var(--text-tertiary); }
+.topbar-search input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.topbar-search .s-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.icon-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); border: none; background: transparent;
+  cursor: pointer; color: var(--icon-secondary);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 var(--space-1); }
+.topbar-avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold); cursor: pointer;
+}
+
+/* ─── Settings Layout ───────────────────────────────────── */
+.settings-body { display: flex; flex: 1; overflow: hidden; }
+.settings-nav {
+  width: 200px; flex-shrink: 0;
+  background: var(--bg-surface); border-right: 1px solid var(--border-default);
+  overflow-y: auto; padding: var(--space-4) var(--space-2);
+}
+.sn-title {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-tertiary); padding: 0 var(--space-2) var(--space-2); display: block;
+}
+.sn-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 7px var(--space-2); border-radius: var(--radius-md);
+  cursor: pointer; text-decoration: none;
+  color: var(--text-secondary); font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast); margin-bottom: 1px;
+}
+.sn-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.sn-item.active { background: var(--brand-primary-light); color: var(--brand-primary); font-weight: var(--weight-semibold); }
+[data-theme="dark"] .sn-item.active { background: rgba(56,189,248,0.12); }
+.sn-divider { height: 1px; background: var(--border-default); margin: var(--space-3) var(--space-2); }
+.sn-item.danger { color: var(--text-error); }
+.sn-item.danger:hover { background: var(--state-blocked-light); color: var(--state-blocked); }
+
+.settings-content { flex: 1; overflow-y: auto; min-width: 0; }
+.settings-inner { max-width: 760px; padding: var(--space-6) var(--space-8); }
+.settings-header { margin-bottom: var(--space-5); }
+.settings-title { font-size: var(--text-heading); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.02em; }
+.settings-subtitle { font-size: var(--text-body-sm); color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
+
+/* ─── Factor card ───────────────────────────────────────── */
+.factors-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
+  margin-bottom: var(--space-5);
+}
+.fc-header {
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-surface-alt);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.fc-title { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); display: flex; align-items: center; gap: var(--space-2); }
+
+/* Factor row */
+.factor-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background var(--duration-fast);
+}
+.factor-row:last-child { border-bottom: none; }
+.factor-row:hover { background: var(--bg-surface-alt); }
+
+.factor-num {
+  width: 24px; height: 24px; border-radius: var(--radius-full);
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: var(--weight-bold); color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+.factor-meta { min-width: 0; }
+.factor-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: 2px; }
+.factor-desc { font-size: var(--text-caption); color: var(--text-tertiary); line-height: 1.4; }
+
+.factor-slider-col {
+  display: flex; align-items: center; gap: var(--space-3);
+  min-width: 220px;
+}
+.factor-slider {
+  flex: 1; height: 4px; -webkit-appearance: none; appearance: none;
+  background: var(--border-strong); border-radius: 2px; outline: none; cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.factor-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--brand-primary); cursor: pointer; border: 2.5px solid var(--bg-surface);
+  box-shadow: 0 0 0 2px var(--brand-primary);
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+}
+.factor-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.factor-slider:focus { background: var(--brand-primary-light); }
+
+.factor-value-input {
+  width: 56px; height: 30px; text-align: center;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-mono);
+  font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  color: var(--text-primary); outline: none;
+  transition: all var(--duration-normal);
+  -moz-appearance: textfield;
+}
+.factor-value-input::-webkit-inner-spin-button,
+.factor-value-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.factor-value-input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+
+.factor-bar-col { min-width: 80px; display: flex; align-items: center; }
+.factor-bar-track {
+  width: 80px; height: 6px; background: var(--bg-inset);
+  border-radius: 3px; overflow: hidden;
+}
+.factor-bar-fill {
+  height: 100%; border-radius: 3px;
+  transition: width var(--duration-slow);
+}
+
+/* ─── Score preview ─────────────────────────────────────── */
+.preview-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
+  margin-bottom: var(--space-5);
+}
+.pc-header {
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-surface-alt);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center; gap: var(--space-2);
+}
+.pc-title { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.pc-body { padding: var(--space-5); }
+.pc-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); align-items: flex-start; }
+
+.score-display {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: var(--space-6);
+  background: var(--bg-inset);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-default);
+  text-align: center;
+}
+.score-big {
+  font-size: 56px; font-weight: var(--weight-bold);
+  color: var(--text-primary); letter-spacing: -0.04em;
+  line-height: 1; margin-bottom: 4px;
+}
+.score-big span { font-size: 20px; color: var(--text-secondary); font-weight: 400; }
+.score-label { font-size: var(--text-caption); color: var(--text-tertiary); font-weight: var(--weight-medium); text-transform: uppercase; letter-spacing: 0.08em; }
+.score-bar-track {
+  width: 100%; height: 8px; background: var(--bg-surface);
+  border-radius: 4px; overflow: hidden; margin-top: var(--space-3);
+  border: 1px solid var(--border-default);
+}
+.score-bar-fill {
+  height: 100%; width: 87.3%;
+  background: linear-gradient(90deg, var(--state-progress) 0%, var(--brand-primary) 100%);
+  border-radius: 4px;
+  transition: width var(--duration-slow);
+}
+
+/* Sample inputs */
+.sample-grid { display: flex; flex-direction: column; gap: var(--space-3); }
+.sample-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.sample-label { font-size: var(--text-caption); color: var(--text-secondary); white-space: nowrap; min-width: 120px; }
+.sample-control {
+  flex: 1; height: 28px; padding: 0 8px;
+  background: var(--bg-inset); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-sans);
+  font-size: var(--text-caption); color: var(--text-primary); outline: none;
+  transition: all var(--duration-normal);
+}
+.sample-control:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.sample-score-inline {
+  width: 42px; text-align: right;
+  font-size: var(--text-caption); font-weight: var(--weight-semibold);
+  color: var(--text-tertiary); font-family: var(--font-mono); flex-shrink: 0;
+}
+
+/* ─── Recalculation card ────────────────────────────────── */
+.recalc-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
+  margin-bottom: var(--space-5);
+}
+.rc-header {
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-surface-alt);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center; gap: var(--space-2);
+}
+.rc-title { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.rc-body { padding: var(--space-5); }
+.rc-row { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-5); }
+.rc-meta { flex: 1; }
+.rc-desc { font-size: var(--text-body-sm); color: var(--text-secondary); line-height: 1.5; }
+.rc-ts { font-size: var(--text-caption); color: var(--text-tertiary); margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.rc-warning {
+  display: flex; align-items: flex-start; gap: var(--space-2);
+  background: var(--state-delayed-light); border: 1px solid var(--state-delayed);
+  border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+  margin-top: var(--space-4);
+  font-size: var(--text-body-sm); color: var(--text-primary);
+}
+
+/* Btns */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 14px; height: 32px;
+  border-radius: var(--radius-md); border: 1.5px solid transparent;
+  font-family: var(--font-sans); font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  cursor: pointer; transition: all var(--duration-normal); outline: none; text-decoration: none;
+}
+.btn-sm { height: 28px; padding: 0 10px; font-size: var(--text-caption); }
+.btn-primary { background: var(--brand-primary); border-color: var(--brand-primary); color: white; }
+.btn-primary:hover { background: var(--brand-primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(var(--brand-primary-rgb),.3); }
+.btn-secondary { background: var(--bg-surface); border-color: var(--border-default); color: var(--text-primary); }
+.btn-secondary:hover { background: var(--bg-inset); border-color: var(--border-strong); }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--bg-inset); color: var(--text-primary); }
+.btn-warning { background: var(--state-delayed); border-color: var(--state-delayed); color: white; }
+.btn-warning:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-warning:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.settings-footer {
+  position: sticky; bottom: 0;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-default);
+  padding: var(--space-4) var(--space-8);
+  display: flex; align-items: center; gap: var(--space-3);
+}
+
+/* score dial color */
+.score-dial-ring {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  background: conic-gradient(var(--state-progress) 0% 31%, var(--brand-primary) 31% 87.3%, var(--bg-inset) 87.3% 100%);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; margin: 0 auto var(--space-3);
+}
+.score-dial-inner {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--bg-inset);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.score-dial-val { font-size: 22px; font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.03em; line-height: 1; }
+.score-dial-max { font-size: 10px; color: var(--text-tertiary); margin-top: 1px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ── Sidebar ───────────────────────────────────────── -->
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-logo">
+      
+      <div><div class="logo-text">GraphClaw</div></div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Workspace</div>
+      <a href="goal-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="layout-dashboard" style="width:16px;height:16px;" aria-label="Dashboard"></i></span>
+        Dashboard
+      </a>
+      <a href="my-tasks.html" class="nav-item">
+        <span class="ni"><i data-lucide="check-square" style="width:16px;height:16px;" aria-label="My Tasks"></i></span>
+        My Tasks
+      </a>
+      <a href="goal-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="target" style="width:16px;height:16px;" aria-label="Goals"></i></span>
+        Goals
+      </a>
+      <a href="project-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="folder-kanban" style="width:16px;height:16px;" aria-label="Projects"></i></span>
+        Projects
+      </a>
+      <a href="timeline-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="gantt-chart" style="width:16px;height:16px;" aria-label="Timeline"></i></span>
+        Timeline
+      </a>
+      <a href="resource-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="users" style="width:16px;height:16px;" aria-label="People"></i></span>
+        People
+      </a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">System</div>
+      <a href="agent-monitor.html" class="nav-item">
+        <span class="ni"><i data-lucide="activity" style="width:16px;height:16px;" aria-label="Agent Monitor"></i></span>
+        Agent Monitor
+      </a>
+      <a href="chat-sidebar.html" class="nav-item">
+        <span class="ni"><i data-lucide="message-circle" style="width:16px;height:16px;" aria-label="Chat"></i></span>
+        Chat
+      </a>
+      <a href="settings-scoring.html" class="nav-item active">
+        <span class="ni"><i data-lucide="settings" style="width:16px;height:16px;" aria-label="Settings"></i></span>
+        Settings
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar">PM</div>
+        <div class="user-info">
+          <div class="user-name">Priya Mehta</div>
+          <div class="user-role">Workspace Admin</div>
+        </div>
+        <i data-lucide="chevron-up" style="width:14px;height:14px;color:var(--text-tertiary);" aria-label="User menu"></i>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main-layout">
+    <div class="topbar">
+      <div class="breadcrumb">
+        <a href="#">Settings</a>
+        <span class="sep">/</span>
+        <span class="current">Priority Scoring</span>
+      </div>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" style="width:14px;height:14px;" aria-label="Search"></i></span>
+        <input type="text" placeholder="Search settings…" aria-label="Search settings" />
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle dark/light mode">
+          <i data-lucide="sun" style="width:16px;height:16px;" aria-label="Theme"></i>
+        </button>
+        <div class="divider-v"></div>
+        <div class="topbar-avatar" title="Priya Mehta">PM</div>
+      </div>
+    </div>
+
+    <div class="settings-body">
+      <nav class="settings-nav" aria-label="Settings navigation">
+        <span class="sn-title">Settings</span>
+        <a href="#" class="sn-item">
+          <i data-lucide="sliders" style="width:14px;height:14px;" aria-label="General"></i>
+          General
+        </a>
+        <a href="settings-channels.html" class="sn-item">
+          <i data-lucide="radio" style="width:14px;height:14px;" aria-label="Channels"></i>
+          Channels
+        </a>
+        <a href="settings-llm.html" class="sn-item">
+          <i data-lucide="cpu" style="width:14px;height:14px;" aria-label="LLM Providers"></i>
+          LLM Providers
+        </a>
+        <a href="settings-scoring.html" class="sn-item active">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;" aria-label="Scoring"></i>
+          Scoring
+        </a>
+        <a href="#" class="sn-item">
+          <i data-lucide="newspaper" style="width:14px;height:14px;" aria-label="Briefing"></i>
+          Briefing
+        </a>
+        <a href="#" class="sn-item">
+          <i data-lucide="timer" style="width:14px;height:14px;" aria-label="Triggers"></i>
+          Triggers
+        </a>
+        <a href="#" class="sn-item">
+          <i data-lucide="network" style="width:14px;height:14px;" aria-label="Agent-to-Agent"></i>
+          Agent-to-Agent
+        </a>
+        <div class="sn-divider"></div>
+        <a href="#" class="sn-item danger">
+          <i data-lucide="alert-triangle" style="width:14px;height:14px;" aria-label="Danger Zone"></i>
+          Danger Zone
+        </a>
+      </nav>
+
+      <div class="settings-content">
+        <div class="settings-inner">
+          <div class="settings-header">
+            <h1 class="settings-title">Priority Scoring Configuration</h1>
+            <p class="settings-subtitle">Adjust the weight each factor contributes to a task's priority score. Set a weight to 0 to disable a factor entirely. Changes affect the live scoring engine on save.</p>
+          </div>
+
+          <!-- ── Factor weights ──────────────────────── -->
+          <div class="factors-card">
+            <div class="fc-header">
+              <span class="fc-title">
+                <i data-lucide="sliders-horizontal" style="width:16px;height:16px;color:var(--brand-primary);" aria-label="Weights"></i>
+                Factor Weights
+                <span style="font-size:var(--text-caption);color:var(--text-tertiary);font-weight:400;margin-left:4px;">(range 0 – 2.0)</span>
+              </span>
+              <button class="btn btn-ghost btn-sm" id="resetDefaults">
+                <i data-lucide="rotate-ccw" style="width:12px;height:12px;" aria-label="Reset"></i>
+                Reset defaults
+              </button>
+            </div>
+
+            <!-- Factor 1 -->
+            <div class="factor-row">
+              <div class="factor-num">W1</div>
+              <div class="factor-meta">
+                <div class="factor-name">Urgency</div>
+                <div class="factor-desc">Due date proximity — tasks closer to deadline score higher</div>
+              </div>
+              <div class="factor-slider-col">
+                <input class="factor-slider" type="range" min="0" max="2" step="0.05" value="1.0"
+                  id="w1" aria-label="Urgency weight"
+                  oninput="syncFactor(this, 'w1-val', 'w1-bar')" />
+                <input class="factor-value-input" type="number" id="w1-val" value="1.00" min="0" max="2" step="0.05"
+                  aria-label="Urgency weight value"
+                  oninput="syncFromInput(this, 'w1', 'w1-bar')" />
+              </div>
+              <div class="factor-bar-col">
+                <div class="factor-bar-track">
+                  <div class="factor-bar-fill" id="w1-bar" style="width:50%;background:var(--brand-primary);"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Factor 2 -->
+            <div class="factor-row">
+              <div class="factor-num">W2</div>
+              <div class="factor-meta">
+                <div class="factor-name">Impact</div>
+                <div class="factor-desc">Business value — tasks with higher downstream impact score higher</div>
+              </div>
+              <div class="factor-slider-col">
+                <input class="factor-slider" type="range" min="0" max="2" step="0.05" value="1.5"
+                  id="w2" aria-label="Impact weight"
+                  oninput="syncFactor(this, 'w2-val', 'w2-bar')" />
+                <input class="factor-value-input" type="number" id="w2-val" value="1.50" min="0" max="2" step="0.05"
+                  aria-label="Impact weight value"
+                  oninput="syncFromInput(this, 'w2', 'w2-bar')" />
+              </div>
+              <div class="factor-bar-col">
+                <div class="factor-bar-track">
+                  <div class="factor-bar-fill" id="w2-bar" style="width:75%;background:#7C3AED;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Factor 3 -->
+            <div class="factor-row">
+              <div class="factor-num">W3</div>
+              <div class="factor-meta">
+                <div class="factor-name">Dependency Chain Depth</div>
+                <div class="factor-desc">Tasks that block many downstream tasks receive higher weight</div>
+              </div>
+              <div class="factor-slider-col">
+                <input class="factor-slider" type="range" min="0" max="2" step="0.05" value="1.2"
+                  id="w3" aria-label="Dependency depth weight"
+                  oninput="syncFactor(this, 'w3-val', 'w3-bar')" />
+                <input class="factor-value-input" type="number" id="w3-val" value="1.20" min="0" max="2" step="0.05"
+                  aria-label="Dependency depth weight value"
+                  oninput="syncFromInput(this, 'w3', 'w3-bar')" />
+              </div>
+              <div class="factor-bar-col">
+                <div class="factor-bar-track">
+                  <div class="factor-bar-fill" id="w3-bar" style="width:60%;background:var(--brand-primary);"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Factor 4 -->
+            <div class="factor-row">
+              <div class="factor-num">W4</div>
+              <div class="factor-meta">
+                <div class="factor-name">Requester Authority</div>
+                <div class="factor-desc">Tasks from higher-authority requesters (C-suite, board) score higher</div>
+              </div>
+              <div class="factor-slider-col">
+                <input class="factor-slider" type="range" min="0" max="2" step="0.05" value="0.8"
+                  id="w4" aria-label="Requester authority weight"
+                  oninput="syncFactor(this, 'w4-val', 'w4-bar')" />
+                <input class="factor-value-input" type="number" id="w4-val" value="0.80" min="0" max="2" step="0.05"
+                  aria-label="Requester authority weight value"
+                  oninput="syncFromInput(this, 'w4', 'w4-bar')" />
+              </div>
+              <div class="factor-bar-col">
+                <div class="factor-bar-track">
+                  <div class="factor-bar-fill" id="w4-bar" style="width:40%;background:var(--state-active);"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Factor 5 -->
+            <div class="factor-row">
+              <div class="factor-num">W5</div>
+              <div class="factor-meta">
+                <div class="factor-name">Age Penalty</div>
+                <div class="factor-desc">Tasks that have been open too long without progress are penalized</div>
+              </div>
+              <div class="factor-slider-col">
+                <input class="factor-slider" type="range" min="0" max="2" step="0.05" value="0.6"
+                  id="w5" aria-label="Age penalty weight"
+                  oninput="syncFactor(this, 'w5-val', 'w5-bar')" />
+                <input class="factor-value-input" type="number" id="w5-val" value="0.60" min="0" max="2" step="0.05"
+                  aria-label="Age penalty weight value"
+                  oninput="syncFromInput(this, 'w5', 'w5-bar')" />
+              </div>
+              <div class="factor-bar-col">
+                <div class="factor-bar-track">
+                  <div class="factor-bar-fill" id="w5-bar" style="width:30%;background:var(--state-delayed);"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Factor 6 -->
+            <div class="factor-row">
+              <div class="factor-num">W6</div>
+              <div class="factor-meta">
+                <div class="factor-name">Channel Priority</div>
+                <div class="factor-desc">Email/Slack direct messages carry higher weight than webhook events</div>
+              </div>
+              <div class="factor-slider-col">
+                <input class="factor-slider" type="range" min="0" max="2" step="0.05" value="0.9"
+                  id="w6" aria-label="Channel priority weight"
+                  oninput="syncFactor(this, 'w6-val', 'w6-bar')" />
+                <input class="factor-value-input" type="number" id="w6-val" value="0.90" min="0" max="2" step="0.05"
+                  aria-label="Channel priority weight value"
+                  oninput="syncFromInput(this, 'w6', 'w6-bar')" />
+              </div>
+              <div class="factor-bar-col">
+                <div class="factor-bar-track">
+                  <div class="factor-bar-fill" id="w6-bar" style="width:45%;background:var(--brand-primary);"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Factor 7 -->
+            <div class="factor-row">
+              <div class="factor-num">W7</div>
+              <div class="factor-meta">
+                <div class="factor-name">Agent Confidence</div>
+                <div class="factor-desc">Tasks where the agent has high-confidence extraction score higher</div>
+              </div>
+              <div class="factor-slider-col">
+                <input class="factor-slider" type="range" min="0" max="2" step="0.05" value="0.7"
+                  id="w7" aria-label="Agent confidence weight"
+                  oninput="syncFactor(this, 'w7-val', 'w7-bar')" />
+                <input class="factor-value-input" type="number" id="w7-val" value="0.70" min="0" max="2" step="0.05"
+                  aria-label="Agent confidence weight value"
+                  oninput="syncFromInput(this, 'w7', 'w7-bar')" />
+              </div>
+              <div class="factor-bar-col">
+                <div class="factor-bar-track">
+                  <div class="factor-bar-fill" id="w7-bar" style="width:35%;background:var(--state-progress);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Score Preview ───────────────────────── -->
+          <div class="preview-card">
+            <div class="pc-header">
+              <i data-lucide="calculator" style="width:16px;height:16px;color:var(--icon-secondary);" aria-label="Calculator"></i>
+              <span class="pc-title">Score Preview</span>
+              <span style="font-size:var(--text-caption);color:var(--text-tertiary);margin-left:6px;">Live · updates as you adjust weights</span>
+            </div>
+            <div class="pc-body">
+              <div class="pc-layout">
+                <!-- Score display -->
+                <div>
+                  <div class="score-display">
+                    <div class="score-dial-ring" aria-label="Score dial">
+                      <div class="score-dial-inner">
+                        <div class="score-dial-val" id="previewScore">87.3</div>
+                        <div class="score-dial-max">/ 100</div>
+                      </div>
+                    </div>
+                    <div class="score-label">Computed Priority Score</div>
+                    <div class="score-bar-track" style="margin-top:12px;width:100%;max-width:160px;">
+                      <div class="score-bar-fill" id="previewBar" style="width:87.3%;"></div>
+                    </div>
+                    <div style="margin-top:8px;font-size:var(--text-caption);color:var(--text-secondary);">
+                      <span style="color:var(--state-progress);">High priority</span> · Top 8% of active tasks
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sample inputs -->
+                <div>
+                  <div style="font-size:var(--text-caption);font-weight:var(--weight-semibold);color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;">Sample Task Inputs</div>
+                  <div class="sample-grid">
+                    <div class="sample-row">
+                      <span class="sample-label">Days to due date</span>
+                      <input class="sample-control" type="number" value="4" min="0" max="365" style="max-width:80px;" aria-label="Days to due" />
+                      <span class="sample-score-inline">×1.0</span>
+                    </div>
+                    <div class="sample-row">
+                      <span class="sample-label">Impact score</span>
+                      <select class="sample-control" style="max-width:110px;" aria-label="Impact score">
+                        <option>Critical</option>
+                        <option selected>High</option>
+                        <option>Medium</option>
+                        <option>Low</option>
+                      </select>
+                      <span class="sample-score-inline">×1.5</span>
+                    </div>
+                    <div class="sample-row">
+                      <span class="sample-label">Blockers downstream</span>
+                      <input class="sample-control" type="number" value="3" min="0" max="20" style="max-width:80px;" aria-label="Blockers" />
+                      <span class="sample-score-inline">×1.2</span>
+                    </div>
+                    <div class="sample-row">
+                      <span class="sample-label">Requester level</span>
+                      <select class="sample-control" style="max-width:110px;" aria-label="Requester level">
+                        <option selected>VP / Director</option>
+                        <option>C-Suite</option>
+                        <option>Manager</option>
+                        <option>IC</option>
+                      </select>
+                      <span class="sample-score-inline">×0.8</span>
+                    </div>
+                    <div class="sample-row">
+                      <span class="sample-label">Days since created</span>
+                      <input class="sample-control" type="number" value="7" min="0" max="365" style="max-width:80px;" aria-label="Age" />
+                      <span class="sample-score-inline">×0.6</span>
+                    </div>
+                    <div class="sample-row">
+                      <span class="sample-label">Source channel</span>
+                      <select class="sample-control" style="max-width:110px;" aria-label="Source channel">
+                        <option selected>Email direct</option>
+                        <option>Slack DM</option>
+                        <option>Webhook</option>
+                      </select>
+                      <span class="sample-score-inline">×0.9</span>
+                    </div>
+                    <div class="sample-row">
+                      <span class="sample-label">Agent confidence</span>
+                      <input class="sample-control" type="number" value="0.92" min="0" max="1" step="0.01" style="max-width:80px;" aria-label="Confidence" />
+                      <span class="sample-score-inline">×0.7</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Recalculation ───────────────────────── -->
+          <div class="recalc-card">
+            <div class="rc-header">
+              <i data-lucide="refresh-cw" style="width:16px;height:16px;color:var(--icon-secondary);" aria-label="Recalculate"></i>
+              <span class="rc-title">Recalculation</span>
+            </div>
+            <div class="rc-body">
+              <div class="rc-row">
+                <div class="rc-meta">
+                  <p class="rc-desc">Trigger a full rescore of all active tasks using the current weight configuration. This runs as a background job and does not affect system availability.</p>
+                  <div class="rc-ts">
+                    <i data-lucide="clock" style="width:11px;height:11px;" aria-label="Last run"></i>
+                    Last full rescore: Apr 10, 2026 at 07:00 AM · 1,247 tasks processed in 8.3s
+                  </div>
+                </div>
+                <div style="flex-shrink:0;">
+                  <button class="btn btn-warning" id="rescoreBtn">
+                    <i data-lucide="zap" style="width:14px;height:14px;" aria-label="Rescore"></i>
+                    Recalculate All Scores
+                  </button>
+                </div>
+              </div>
+
+              <div class="rc-warning">
+                <i data-lucide="alert-triangle" style="width:14px;height:14px;color:var(--state-delayed);flex-shrink:0;margin-top:1px;" aria-label="Warning"></i>
+                <div>
+                  <strong>This will reorder all task priorities immediately.</strong> Task briefings and agent queues will reflect the new scores within 60 seconds. Consider doing this during low-activity periods.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:80px;"></div>
+        </div>
+
+        <div class="settings-footer">
+          <button class="btn btn-primary" id="saveBtn">
+            <i data-lucide="save" style="width:14px;height:14px;" aria-label="Save"></i>
+            Save changes
+          </button>
+          <button class="btn btn-ghost">Discard</button>
+          <span style="font-size:var(--text-caption);color:var(--text-tertiary);margin-left:auto;">
+            Last saved: Apr 10, 2026 at 09:42 AM
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  lucide.createIcons();
+
+  const toggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+  function applyTheme(dark) {
+    html.setAttribute('data-theme', dark ? 'dark' : 'light');
+    const icon = toggle.querySelector('[data-lucide]');
+    icon.setAttribute('data-lucide', dark ? 'moon' : 'sun');
+    lucide.createIcons();
+  }
+  toggle.addEventListener('click', () => applyTheme(html.getAttribute('data-theme') !== 'dark'));
+
+  // Slider + input sync helpers
+  window.syncFactor = function(slider, valId, barId) {
+    const v = parseFloat(slider.value);
+    const input = document.getElementById(valId);
+    if (input) input.value = v.toFixed(2);
+    const bar = document.getElementById(barId);
+    if (bar) bar.style.width = (v / 2 * 100) + '%';
+    updatePreviewScore();
+  };
+  window.syncFromInput = function(input, sliderId, barId) {
+    let v = parseFloat(input.value);
+    if (isNaN(v)) return;
+    v = Math.max(0, Math.min(2, v));
+    const slider = document.getElementById(sliderId);
+    if (slider) slider.value = v;
+    const bar = document.getElementById(barId);
+    if (bar) bar.style.width = (v / 2 * 100) + '%';
+    updatePreviewScore();
+  };
+
+  function getWeight(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+  function updatePreviewScore() {
+    // Simple weighted formula for demo purposes
+    const w = [getWeight('w1'),getWeight('w2'),getWeight('w3'),getWeight('w4'),getWeight('w5'),getWeight('w6'),getWeight('w7')];
+    const inputs = [0.85, 0.90, 0.75, 0.80, 0.65, 0.88, 0.92]; // normalised sample values
+    let raw = 0, wt = 0;
+    w.forEach((ww, i) => { raw += ww * inputs[i]; wt += ww; });
+    const score = wt > 0 ? Math.min(100, (raw / wt) * 100).toFixed(1) : '0.0';
+    document.getElementById('previewScore').textContent = score;
+    document.getElementById('previewBar').style.width = score + '%';
+    // update dial ring
+    const dial = document.querySelector('.score-dial-ring');
+    if (dial) dial.style.background = `conic-gradient(var(--state-progress) 0% 31%, var(--brand-primary) 31% ${score}%, var(--bg-inset) ${score}% 100%)`;
+  }
+
+  // Reset defaults
+  const defaults = [['w1',1.0],['w2',1.5],['w3',1.2],['w4',0.8],['w5',0.6],['w6',0.9],['w7',0.7]];
+  const colors = ['var(--brand-primary)','#7C3AED','var(--brand-primary)','var(--state-active)','var(--state-delayed)','var(--brand-primary)','var(--state-progress)'];
+  document.getElementById('resetDefaults').addEventListener('click', function() {
+    defaults.forEach(([id, val], i) => {
+      const s = document.getElementById(id);
+      const v = document.getElementById(id+'-val');
+      const b = document.getElementById(id+'-bar');
+      if (s) s.value = val;
+      if (v) v.value = val.toFixed(2);
+      if (b) { b.style.width = (val/2*100)+'%'; b.style.background = colors[i]; }
+    });
+    updatePreviewScore();
+  });
+
+  // Rescore button
+  document.getElementById('rescoreBtn').addEventListener('click', function() {
+    const orig = this.innerHTML;
+    this.innerHTML = '<i data-lucide="loader-2" style="width:14px;height:14px;animation:spin .8s linear infinite;"></i> Rescoring…';
+    this.disabled = true;
+    lucide.createIcons();
+    setTimeout(() => {
+      this.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> 1,247 tasks rescored';
+      setTimeout(() => {
+        this.innerHTML = orig;
+        this.disabled = false;
+        lucide.createIcons();
+      }, 3000);
+      lucide.createIcons();
+    }, 2500);
+  });
+
+  // Save button
+  document.getElementById('saveBtn').addEventListener('click', function() {
+    const orig = this.innerHTML;
+    this.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> Saved!';
+    this.style.background = 'var(--state-progress)';
+    this.style.borderColor = 'var(--state-progress)';
+    lucide.createIcons();
+    setTimeout(() => {
+      this.innerHTML = orig;
+      this.style.background = '';
+      this.style.borderColor = '';
+      lucide.createIcons();
+    }, 2000);
+  });
+
+  // Add CSS animation for loader
+  const style = document.createElement('style');
+  style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+  document.head.appendChild(style);
+})();
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

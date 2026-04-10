@@ -1,0 +1,391 @@
+/* ============================================================
+   GraphClaw Design System — Design Tokens
+   Complete CSS custom property system for light + dark themes.
+   ============================================================ */
+
+/* --- Google Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ============================================================
+   LIGHT THEME (default)
+   ============================================================ */
+:root,
+[data-theme="light"] {
+  /* --- Brand --- */
+  --brand-primary: #0EA5E9;
+  --brand-primary-hover: #0284C7;
+  --brand-primary-light: #E0F2FE;
+  --brand-primary-dark: #0369A1;
+  --brand-primary-rgb: 14, 165, 233;
+
+  /* --- Semantic State Colors --- */
+  --state-active: #3B82F6;
+  --state-progress: #10B981;
+  --state-blocked: #EF4444;
+  --state-delayed: #F59E0B;
+  --state-complete: #9CA3AF;
+  --state-snoozed: #E5E7EB;
+  --state-review: #A855F7;
+
+  /* State color light tints (for badges/backgrounds) */
+  --state-active-light: #EFF6FF;
+  --state-progress-light: #ECFDF5;
+  --state-blocked-light: #FEF2F2;
+  --state-delayed-light: #FFFBEB;
+  --state-complete-light: #F9FAFB;
+  --state-snoozed-light: #F9FAFB;
+  --state-review-light: #FAF5FF;
+
+  /* --- Neutral Palette --- */
+  --neutral-50: #F8FAFC;
+  --neutral-100: #F1F5F9;
+  --neutral-200: #E2E8F0;
+  --neutral-300: #CBD5E1;
+  --neutral-400: #94A3B8;
+  --neutral-500: #64748B;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-800: #1E293B;
+  --neutral-900: #0F172A;
+  --neutral-950: #020617;
+
+  /* --- Semantic Background --- */
+  --bg-page: #FFFFFF;
+  --bg-surface: #FFFFFF;
+  --bg-surface-alt: #F8FAFC;
+  --bg-surface-raised: #FFFFFF;
+  --bg-surface-overlay: rgba(255, 255, 255, 0.95);
+  --bg-inset: #F1F5F9;
+  --bg-brand: #E0F2FE;
+  --bg-sidebar: #F8FAFC;
+
+  /* --- Semantic Border --- */
+  --border-default: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --border-subtle: #F1F5F9;
+  --border-brand: #0EA5E9;
+  --border-error: #EF4444;
+  --border-success: #10B981;
+
+  /* --- Semantic Text --- */
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-tertiary: #94A3B8;
+  --text-inverse: #FFFFFF;
+  --text-brand: #0369A1;
+  --text-error: #DC2626;
+  --text-success: #059669;
+  --text-warning: #D97706;
+  --text-link: #0EA5E9;
+  --text-link-hover: #0284C7;
+  --text-on-brand: #FFFFFF;
+
+  /* --- Semantic Icon --- */
+  --icon-primary: #334155;
+  --icon-secondary: #64748B;
+  --icon-tertiary: #94A3B8;
+  --icon-brand: #0EA5E9;
+  --icon-inverse: #FFFFFF;
+
+  /* --- Shadows / Elevation --- */
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-3: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-4: 0 16px 48px rgba(0, 0, 0, 0.16);
+  --shadow-focus: 0 0 0 3px rgba(14, 165, 233, 0.25);
+  --shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+
+  /* --- Scrollbar --- */
+  --scrollbar-thumb: #CBD5E1;
+  --scrollbar-track: transparent;
+
+  /* --- Backdrop --- */
+  --backdrop: rgba(15, 23, 42, 0.4);
+}
+
+/* ============================================================
+   DARK THEME
+   ============================================================ */
+[data-theme="dark"] {
+  /* --- Brand (slightly brighter for dark bg) --- */
+  --brand-primary: #38BDF8;
+  --brand-primary-hover: #0EA5E9;
+  --brand-primary-light: rgba(14, 165, 233, 0.12);
+  --brand-primary-dark: #7DD3FC;
+  --brand-primary-rgb: 56, 189, 248;
+
+  /* --- Semantic State Colors (slightly desaturated) --- */
+  --state-active: #60A5FA;
+  --state-progress: #34D399;
+  --state-blocked: #F87171;
+  --state-delayed: #FBBF24;
+  --state-complete: #6B7280;
+  --state-snoozed: #374151;
+  --state-review: #C084FC;
+
+  --state-active-light: rgba(96, 165, 250, 0.12);
+  --state-progress-light: rgba(52, 211, 153, 0.12);
+  --state-blocked-light: rgba(248, 113, 113, 0.12);
+  --state-delayed-light: rgba(251, 191, 36, 0.12);
+  --state-complete-light: rgba(107, 114, 128, 0.12);
+  --state-snoozed-light: rgba(55, 65, 81, 0.12);
+  --state-review-light: rgba(192, 132, 252, 0.12);
+
+  /* --- Neutral Palette (inverted) --- */
+  --neutral-50: #020617;
+  --neutral-100: #0F172A;
+  --neutral-200: #1E293B;
+  --neutral-300: #334155;
+  --neutral-400: #475569;
+  --neutral-500: #64748B;
+  --neutral-600: #94A3B8;
+  --neutral-700: #CBD5E1;
+  --neutral-800: #E2E8F0;
+  --neutral-900: #F1F5F9;
+  --neutral-950: #F8FAFC;
+
+  /* --- Semantic Background --- */
+  --bg-page: #0B1120;
+  --bg-surface: #111827;
+  --bg-surface-alt: #0F172A;
+  --bg-surface-raised: #1E293B;
+  --bg-surface-overlay: rgba(17, 24, 39, 0.95);
+  --bg-inset: #0B1120;
+  --bg-brand: rgba(14, 165, 233, 0.1);
+  --bg-sidebar: #0F172A;
+
+  /* --- Semantic Border --- */
+  --border-default: #1E293B;
+  --border-strong: #334155;
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-brand: #38BDF8;
+  --border-error: #F87171;
+  --border-success: #34D399;
+
+  /* --- Semantic Text --- */
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #64748B;
+  --text-inverse: #0F172A;
+  --text-brand: #7DD3FC;
+  --text-error: #FCA5A5;
+  --text-success: #6EE7B7;
+  --text-warning: #FCD34D;
+  --text-link: #38BDF8;
+  --text-link-hover: #7DD3FC;
+  --text-on-brand: #0F172A;
+
+  /* --- Semantic Icon --- */
+  --icon-primary: #E2E8F0;
+  --icon-secondary: #94A3B8;
+  --icon-tertiary: #64748B;
+  --icon-brand: #38BDF8;
+  --icon-inverse: #0F172A;
+
+  /* --- Shadows (reduced intensity for dark mode) --- */
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-3: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-4: 0 16px 48px rgba(0, 0, 0, 0.5);
+  --shadow-focus: 0 0 0 3px rgba(56, 189, 248, 0.3);
+  --shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+
+  /* --- Scrollbar --- */
+  --scrollbar-thumb: #334155;
+  --scrollbar-track: transparent;
+
+  /* --- Backdrop --- */
+  --backdrop: rgba(0, 0, 0, 0.6);
+}
+
+/* ============================================================
+   TYPOGRAPHY TOKENS
+   ============================================================ */
+:root {
+  /* --- Font Family --- */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', monospace;
+
+  /* --- Font Size Scale --- */
+  --text-micro: 0.6875rem;   /* 11px */
+  --text-caption: 0.75rem;    /* 12px */
+  --text-body-sm: 0.8125rem;  /* 13px */
+  --text-body: 0.875rem;      /* 14px */
+  --text-title: 1rem;          /* 16px */
+  --text-heading: 1.25rem;     /* 20px */
+  --text-display: 1.75rem;     /* 28px */
+
+  /* --- Font Weights --- */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* --- Line Heights --- */
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-loose: 1.6;
+
+  /* --- Letter Spacing --- */
+  --tracking-tight: -0.015em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-caps: 0.06em;
+}
+
+/* ============================================================
+   SPACING TOKENS (4px base)
+   ============================================================ */
+:root {
+  --space-0: 0;
+  --space-0-5: 0.125rem;  /* 2px */
+  --space-1: 0.25rem;     /* 4px */
+  --space-1-5: 0.375rem;  /* 6px */
+  --space-2: 0.5rem;      /* 8px */
+  --space-3: 0.75rem;     /* 12px */
+  --space-4: 1rem;        /* 16px */
+  --space-5: 1.25rem;     /* 20px */
+  --space-6: 1.5rem;      /* 24px */
+  --space-8: 2rem;        /* 32px */
+  --space-10: 2.5rem;     /* 40px */
+  --space-12: 3rem;       /* 48px */
+  --space-16: 4rem;       /* 64px */
+}
+
+/* ============================================================
+   BORDER RADIUS TOKENS
+   ============================================================ */
+:root {
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+}
+
+/* ============================================================
+   TRANSITION TOKENS
+   ============================================================ */
+:root {
+  --duration-fast: 100ms;
+  --duration-normal: 150ms;
+  --duration-slow: 250ms;
+  --duration-slower: 350ms;
+
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================
+   Z-INDEX SCALE
+   ============================================================ */
+:root {
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-popover: 500;
+  --z-toast: 600;
+  --z-tooltip: 700;
+  --z-max: 9999;
+}
+
+/* ============================================================
+   SIZING TOKENS
+   ============================================================ */
+:root {
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 56px;
+  --topbar-height: 56px;
+  --mobile-nav-height: 56px;
+  --content-max-width: 1280px;
+  --side-panel-width: 400px;
+  --modal-width-sm: 400px;
+  --modal-width-md: 560px;
+  --modal-width-lg: 720px;
+}
+
+/* ============================================================
+   BASE RESET & GLOBAL STYLES
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--text-primary);
+  background-color: var(--bg-page);
+  transition: background-color var(--duration-slow) var(--ease-default),
+              color var(--duration-slow) var(--ease-default);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-400);
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Selection */
+::selection {
+  background: rgba(var(--brand-primary-rgb), 0.2);
+  color: var(--text-primary);
+}
+
+a {
+  color: var(--text-link);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+a:hover {
+  color: var(--text-link-hover);
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Smooth theme transition */
+[data-theme] * {
+  transition: background-color var(--duration-slow) var(--ease-default),
+              border-color var(--duration-slow) var(--ease-default),
+              box-shadow var(--duration-slow) var(--ease-default);
+}

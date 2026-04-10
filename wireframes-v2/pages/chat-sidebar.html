@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html data-page="chat-sidebar" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   Chat Sidebar — Page-specific styles
+   ============================================================ */
+html, body { height: 100%; overflow: hidden; }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); position: relative; }
+
+/* --- Sidebar --- */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden; z-index: 10;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  height: 56px; flex-shrink: 0;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: var(--weight-bold); font-size: 13px; flex-shrink: 0;
+}
+.logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; line-height: 1.2; }
+.logo-sub { font-size: 10px; color: var(--text-tertiary); font-weight: 400; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.nav-section { font-size: 10px; font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-tertiary); padding: var(--space-3) var(--space-4) var(--space-1); }
+.nav-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  margin: 1px var(--space-2);
+  border-radius: var(--radius-md); cursor: pointer;
+  text-decoration: none; color: var(--text-secondary);
+  font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background: rgba(56,189,248,0.12); }
+.nav-item .ni { display: flex; align-items: center; flex-shrink: 0; width: 18px; height: 18px; }
+.nav-badge { margin-left: auto; background: var(--state-blocked); color: white; font-size: 10px; font-weight: var(--weight-bold); padding: 1px 5px; border-radius: var(--radius-full); min-width: 18px; text-align: center; }
+.nav-badge.green { background: var(--state-progress); }
+.sidebar-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-4); }
+.sidebar-footer { padding: var(--space-2); border-top: 1px solid var(--border-default); }
+.user-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border-radius: var(--radius-md); cursor: pointer; transition: background var(--duration-fast); }
+.user-row:hover { background: var(--bg-inset); }
+.avatar { width: 28px; height: 28px; border-radius: var(--radius-full); background: linear-gradient(135deg, #7C3AED, #0EA5E9); display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: var(--weight-semibold); flex-shrink: 0; }
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.user-role { font-size: 10px; color: var(--text-tertiary); }
+
+/* --- Main layout --- */
+.main-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; position: relative; }
+
+/* --- Topbar --- */
+.topbar { height: 56px; background: var(--bg-surface); border-bottom: 1px solid var(--border-default); display: flex; align-items: center; padding: 0 var(--space-5); gap: var(--space-4); flex-shrink: 0; }
+.breadcrumb { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text-primary); }
+.breadcrumb .sep { color: var(--text-tertiary); margin: 0 2px; }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-medium); }
+.topbar-search { flex: 1; max-width: 360px; margin: 0 auto; position: relative; }
+.topbar-search input { width: 100%; height: 32px; background: var(--bg-inset); border: 1.5px solid var(--border-default); border-radius: var(--radius-md); padding: 0 var(--space-3) 0 32px; font-size: var(--text-body-sm); font-family: var(--font-sans); color: var(--text-primary); outline: none; transition: all var(--duration-normal); }
+.topbar-search input::placeholder { color: var(--text-tertiary); }
+.topbar-search input:focus { border-color: var(--brand-primary); background: var(--bg-surface); box-shadow: var(--shadow-focus); }
+.topbar-search .s-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.icon-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); border: none; background: transparent; cursor: pointer; color: var(--icon-secondary); transition: background var(--duration-fast), color var(--duration-fast); }
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.notif-badge { position: relative; }
+.notif-badge::after { content: ''; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; background: var(--state-blocked); border-radius: 50%; border: 1.5px solid var(--bg-surface); }
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 var(--space-1); }
+.topbar-avatar { width: 28px; height: 28px; border-radius: var(--radius-full); background: linear-gradient(135deg, #7C3AED, #0EA5E9); display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: var(--weight-semibold); cursor: pointer; }
+
+/* --- Background content (goal-view preview) --- */
+.bg-content { flex: 1; overflow: hidden; background: var(--bg-page); padding: var(--space-5) var(--space-6); }
+.bg-content-title { font-size: var(--text-heading); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: var(--space-1); }
+.bg-content-sub { font-size: var(--text-body-sm); color: var(--text-secondary); margin-bottom: var(--space-5); }
+
+/* Goal card grid preview */
+.goal-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+.goal-card {
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg); padding: var(--space-4);
+  box-shadow: var(--shadow-1); opacity: 0.55;
+  filter: blur(0.5px); pointer-events: none;
+  transition: opacity var(--duration-normal);
+}
+.goal-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-3); }
+.goal-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.goal-status-chip { font-size: 11px; font-weight: var(--weight-semibold); padding: 2px 8px; border-radius: var(--radius-full); }
+.chip-active { background: var(--state-active-light); color: var(--state-active); }
+.chip-delayed { background: var(--state-delayed-light); color: var(--state-delayed); }
+.chip-review { background: var(--state-review-light); color: var(--state-review); }
+.goal-name { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: var(--space-1); }
+.goal-sub { font-size: var(--text-caption); color: var(--text-secondary); }
+.goal-progress-bar { height: 4px; background: var(--bg-inset); border-radius: var(--radius-full); margin-top: var(--space-3); overflow: hidden; }
+.goal-progress-fill { height: 100%; border-radius: var(--radius-full); }
+.goal-footer { display: flex; align-items: center; justify-content: space-between; margin-top: var(--space-3); font-size: var(--text-caption); color: var(--text-tertiary); }
+
+/* Semi-transparent overlay */
+.chat-overlay {
+  position: absolute; inset: 0;
+  background: var(--backdrop);
+  z-index: 20;
+  animation: fade-in 0.2s ease;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* --- Chat Panel --- */
+.chat-panel {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: 400px;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-default);
+  box-shadow: var(--shadow-4);
+  z-index: 30;
+  display: flex; flex-direction: column;
+  animation: slide-in 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+@keyframes slide-in { from { transform: translateX(100%); opacity: 0.8; } to { transform: translateX(0); opacity: 1; } }
+
+/* Panel header */
+.chat-header {
+  height: 52px; flex-shrink: 0;
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface);
+}
+.chat-agent-avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--brand-primary), #7C3AED);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 12px; font-weight: var(--weight-bold); flex-shrink: 0;
+}
+.chat-header-title { flex: 1; }
+.chat-title-text { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.chat-title-sub { font-size: 11px; color: var(--text-tertiary); display: flex; align-items: center; gap: 4px; }
+.online-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--state-progress); }
+.chat-header-actions { display: flex; align-items: center; gap: 2px; }
+
+/* Context bar */
+.chat-context-bar {
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface-alt);
+  display: flex; align-items: center; gap: var(--space-2);
+  flex-shrink: 0;
+}
+.ctx-label { font-size: 11px; color: var(--text-tertiary); font-weight: var(--weight-medium); }
+.ctx-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 22px; padding: 0 var(--space-2);
+  background: var(--brand-primary-light); color: var(--brand-primary);
+  border-radius: var(--radius-sm); font-size: 11px; font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+.ctx-chip:hover .ctx-x { opacity: 1; }
+.ctx-x { opacity: 0.6; display: flex; align-items: center; transition: opacity var(--duration-fast); }
+[data-theme="dark"] .ctx-chip { background: rgba(56,189,248,0.12); color: var(--brand-primary); }
+
+/* Message thread */
+.chat-thread {
+  flex: 1; overflow-y: auto; padding: var(--space-4);
+  display: flex; flex-direction: column; gap: var(--space-4);
+}
+
+/* Date divider */
+.date-divider {
+  display: flex; align-items: center; gap: var(--space-3);
+  font-size: var(--text-caption); color: var(--text-tertiary);
+  margin: var(--space-2) 0;
+}
+.date-divider::before,
+.date-divider::after { content: ''; flex: 1; height: 1px; background: var(--border-default); }
+
+/* Message bubbles */
+.msg-row { display: flex; gap: var(--space-2); align-items: flex-end; }
+.msg-row.user { flex-direction: row-reverse; }
+
+.msg-avatar-sm {
+  width: 24px; height: 24px; border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: var(--weight-semibold);
+  flex-shrink: 0;
+}
+.msg-avatar-sm.agent { background: linear-gradient(135deg, var(--brand-primary), #7C3AED); color: white; }
+.msg-avatar-sm.user { background: linear-gradient(135deg, #7C3AED, #0EA5E9); color: white; }
+
+.msg-bubble {
+  max-width: 280px; min-width: 60px;
+  padding: var(--space-3) var(--space-3);
+  border-radius: 12px;
+  font-size: var(--text-body-sm); line-height: 1.55;
+  position: relative;
+}
+.msg-bubble.agent {
+  background: var(--bg-surface-alt);
+  border: 1px solid var(--border-default);
+  border-bottom-left-radius: 4px;
+  color: var(--text-primary);
+}
+.msg-bubble.user {
+  background: var(--brand-primary);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+[data-theme="dark"] .msg-bubble.user { background: #0284C7; }
+
+/* Agent message actions (hover) */
+.msg-actions {
+  display: flex; align-items: center; gap: 2px;
+  position: absolute; top: -28px; right: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 3px 5px;
+  box-shadow: var(--shadow-1);
+  opacity: 0; transition: opacity var(--duration-fast);
+  pointer-events: none;
+}
+.msg-row:hover .msg-actions { opacity: 1; pointer-events: auto; }
+.msg-act-btn { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: none; background: transparent; cursor: pointer; color: var(--icon-secondary); }
+.msg-act-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+
+/* Code block within message */
+.msg-code {
+  background: var(--neutral-900);
+  color: #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 11px; line-height: 1.5;
+  overflow-x: auto; margin-top: var(--space-2);
+}
+[data-theme="dark"] .msg-code { background: var(--bg-inset); border: 1px solid var(--border-strong); }
+
+/* Tool use disclosure */
+.tool-use {
+  margin-top: var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden; font-size: var(--text-caption);
+}
+.tool-use summary {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-inset);
+  cursor: pointer; color: var(--text-secondary);
+  font-weight: var(--weight-medium);
+  list-style: none;
+  transition: background var(--duration-fast);
+}
+.tool-use summary::marker { display: none; }
+.tool-use summary:hover { background: var(--border-subtle); }
+.tool-use summary .tool-chevron { margin-left: auto; transition: transform var(--duration-fast); display: flex; }
+.tool-use[open] summary .tool-chevron { transform: rotate(90deg); }
+.tool-use-body { padding: var(--space-2) var(--space-3); background: var(--bg-surface); font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); overflow-x: auto; line-height: 1.5; }
+
+/* Task created card */
+.task-created-card {
+  margin-top: var(--space-2);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: var(--text-caption);
+}
+.task-card-header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.task-card-title { font-weight: var(--weight-semibold); color: var(--text-primary); font-size: var(--text-body-sm); flex: 1; }
+.score-chip { font-size: 10px; font-weight: var(--weight-bold); padding: 2px 6px; border-radius: var(--radius-sm); background: var(--state-active-light); color: var(--state-active); }
+.task-card-meta { display: flex; gap: var(--space-3); color: var(--text-tertiary); }
+.task-card-meta-item { display: flex; align-items: center; gap: 4px; }
+
+/* Markdown in agent message */
+.md-list { margin: var(--space-2) 0; padding-left: var(--space-4); }
+.md-list li { margin-bottom: 4px; color: var(--text-primary); }
+.md-strong { font-weight: var(--weight-semibold); color: var(--text-primary); }
+.md-code-inline { font-family: var(--font-mono); font-size: 11px; background: var(--bg-inset); padding: 1px 5px; border-radius: 3px; color: var(--text-secondary); }
+
+/* Input area */
+.chat-input-area {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+.chat-input-row {
+  display: flex; align-items: flex-end; gap: var(--space-2);
+  background: var(--bg-inset);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  transition: border-color var(--duration-normal), box-shadow var(--duration-normal);
+}
+.chat-input-row:focus-within { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.chat-input {
+  flex: 1; border: none; background: transparent; outline: none;
+  font-size: var(--text-body-sm); font-family: var(--font-sans);
+  color: var(--text-primary); resize: none; min-height: 20px; max-height: 120px;
+  line-height: 1.5; padding: 2px 0;
+}
+.chat-input::placeholder { color: var(--text-tertiary); }
+.chat-input-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.chat-input-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); border: none; background: transparent; cursor: pointer; color: var(--icon-secondary); transition: background var(--duration-fast), color var(--duration-fast); }
+.chat-input-btn:hover { background: var(--border-default); color: var(--text-primary); }
+.chat-send-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); border: none; background: var(--brand-primary); color: white; cursor: pointer; transition: background var(--duration-fast), transform var(--duration-fast); }
+.chat-send-btn:hover { background: var(--brand-primary-hover); transform: scale(1.05); }
+.chat-hint { font-size: 10px; color: var(--text-tertiary); margin-top: var(--space-2); display: flex; gap: var(--space-3); }
+.chat-hint kbd { background: var(--bg-inset); border: 1px solid var(--border-default); border-radius: 3px; padding: 1px 4px; font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      
+      <div>
+        <div class="logo-text">GraphClaw</div>
+        <div class="logo-sub">Cockpit</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Workspace</div>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="layout-dashboard" width="16" height="16" aria-label="Dashboard"></i></span>
+        Dashboard
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="check-square" width="16" height="16" aria-label="My Tasks"></i></span>
+        My Tasks
+        <span class="nav-badge">5</span>
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="target" width="16" height="16" aria-label="Goals"></i></span>
+        Goals
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="folder-kanban" width="16" height="16" aria-label="Projects"></i></span>
+        Projects
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="calendar-range" width="16" height="16" aria-label="Timeline"></i></span>
+        Timeline
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="users" width="16" height="16" aria-label="People"></i></span>
+        People
+      </a>
+
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Intelligence</div>
+      <a href="agent-monitor.html" class="nav-item">
+        <span class="ni"><i data-lucide="cpu" width="16" height="16" aria-label="Agent Monitor"></i></span>
+        Agent Monitor
+        <span class="nav-badge green">7</span>
+      </a>
+      <a href="chat-sidebar.html" class="nav-item active">
+        <span class="ni"><i data-lucide="message-circle" width="16" height="16" aria-label="Chat"></i></span>
+        Chat
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="puzzle" width="16" height="16" aria-label="Skills"></i></span>
+        Skills
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="plug" width="16" height="16" aria-label="MCP Registry"></i></span>
+        MCP Registry
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="#" class="nav-item" style="margin: 0 0 var(--space-1);">
+        <span class="ni"><i data-lucide="settings" width="16" height="16" aria-label="Settings"></i></span>
+        Settings
+      </a>
+      <div class="user-row">
+        <div class="avatar">AR</div>
+        <div class="user-info">
+          <div class="user-name">Arjun Reyes</div>
+          <div class="user-role">Product Lead</div>
+        </div>
+        <i data-lucide="chevron-up-down" width="14" height="14" style="color: var(--icon-tertiary);" aria-label="User menu"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN LAYOUT ============ -->
+  <div class="main-layout">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="breadcrumb">
+        <a href="#">Home</a>
+        <span class="sep">/</span>
+        <a href="#">Goals</a>
+        <span class="sep">/</span>
+        <span class="current">API Gateway Migration</span>
+      </div>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14" aria-label="Search"></i></span>
+        <input type="text" placeholder="Search goals, tasks, projects…" aria-label="Search">
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notif-badge" aria-label="Notifications">
+          <i data-lucide="bell" width="16" height="16" aria-label="Bell"></i>
+        </button>
+        <div class="divider-v"></div>
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+          <i data-lucide="moon" width="16" height="16" aria-label="Dark mode"></i>
+        </button>
+        <div class="topbar-avatar">AR</div>
+      </div>
+    </div>
+
+    <!-- Background content — Goal View (semi-visible) -->
+    <div class="bg-content">
+      <div class="bg-content-title">API Gateway Migration</div>
+      <div class="bg-content-sub">Platform Infrastructure · 18 tasks · Due May 30, 2026</div>
+
+      <div class="goal-cards">
+
+        <div class="goal-card">
+          <div class="goal-card-top">
+            <div class="goal-dot" style="background: var(--state-active)"></div>
+            <span class="goal-status-chip chip-active">In Progress</span>
+          </div>
+          <div class="goal-name">Migrate auth service to Kong</div>
+          <div class="goal-sub">Platform Team · Nadia Okonkwo</div>
+          <div class="goal-progress-bar">
+            <div class="goal-progress-fill" style="width:64%; background: var(--state-active);"></div>
+          </div>
+          <div class="goal-footer">
+            <span>64%</span>
+            <span>Due Apr 18</span>
+          </div>
+        </div>
+
+        <div class="goal-card">
+          <div class="goal-card-top">
+            <div class="goal-dot" style="background: var(--state-delayed)"></div>
+            <span class="goal-status-chip chip-delayed">Delayed</span>
+          </div>
+          <div class="goal-name">Rate limiting policy rollout</div>
+          <div class="goal-sub">Infrastructure · Tomás Herrera</div>
+          <div class="goal-progress-bar">
+            <div class="goal-progress-fill" style="width:31%; background: var(--state-delayed);"></div>
+          </div>
+          <div class="goal-footer">
+            <span>31%</span>
+            <span>Overdue Apr 12</span>
+          </div>
+        </div>
+
+        <div class="goal-card">
+          <div class="goal-card-top">
+            <div class="goal-dot" style="background: var(--state-review)"></div>
+            <span class="goal-status-chip chip-review">Review</span>
+          </div>
+          <div class="goal-name">Blue/green deployment config</div>
+          <div class="goal-sub">DevOps · Priya Sharma</div>
+          <div class="goal-progress-bar">
+            <div class="goal-progress-fill" style="width:88%; background: var(--state-review);"></div>
+          </div>
+          <div class="goal-footer">
+            <span>88%</span>
+            <span>Due Apr 20</span>
+          </div>
+        </div>
+
+        <div class="goal-card">
+          <div class="goal-card-top">
+            <div class="goal-dot" style="background: var(--state-blocked)"></div>
+            <span class="goal-status-chip" style="background: var(--state-blocked-light); color: var(--state-blocked);">Blocked</span>
+          </div>
+          <div class="goal-name">Canary traffic routing tests</div>
+          <div class="goal-sub">QA · Marcus Webb</div>
+          <div class="goal-progress-bar">
+            <div class="goal-progress-fill" style="width:12%; background: var(--state-blocked);"></div>
+          </div>
+          <div class="goal-footer">
+            <span>12%</span>
+            <span>Due Apr 25</span>
+          </div>
+        </div>
+
+        <div class="goal-card">
+          <div class="goal-card-top">
+            <div class="goal-dot" style="background: var(--state-progress)"></div>
+            <span class="goal-status-chip" style="background: var(--state-progress-light); color: var(--state-progress);">On Track</span>
+          </div>
+          <div class="goal-name">Gateway observability dashboards</div>
+          <div class="goal-sub">Platform Team · Jin Watanabe</div>
+          <div class="goal-progress-bar">
+            <div class="goal-progress-fill" style="width:52%; background: var(--state-progress);"></div>
+          </div>
+          <div class="goal-footer">
+            <span>52%</span>
+            <span>Due May 5</span>
+          </div>
+        </div>
+
+        <div class="goal-card">
+          <div class="goal-card-top">
+            <div class="goal-dot" style="background: var(--state-complete)"></div>
+            <span class="goal-status-chip" style="background: var(--state-complete-light); color: var(--state-complete); border: 1px solid var(--border-default);">Complete</span>
+          </div>
+          <div class="goal-name">Load test baseline — legacy gateway</div>
+          <div class="goal-sub">Platform Team · Nadia Okonkwo</div>
+          <div class="goal-progress-bar">
+            <div class="goal-progress-fill" style="width:100%; background: var(--state-complete);"></div>
+          </div>
+          <div class="goal-footer">
+            <span>100%</span>
+            <span>Done Apr 7</span>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /bg-content -->
+
+    <!-- Semi-transparent overlay -->
+    <div class="chat-overlay" id="chatOverlay" aria-hidden="true"></div>
+
+    <!-- ============ CHAT PANEL ============ -->
+    <aside class="chat-panel" role="complementary" aria-label="GraphClaw Agent Chat">
+
+      <!-- Header -->
+      <div class="chat-header">
+        <div class="chat-agent-avatar">GC</div>
+        <div class="chat-header-title">
+          <div class="chat-title-text">GraphClaw Agent</div>
+          <div class="chat-title-sub">
+            <div class="online-dot"></div>
+            Online · Claude Sonnet
+          </div>
+        </div>
+        <div class="chat-header-actions">
+          <button class="icon-btn" title="Expand to full page" onclick="window.location.href='chat-fullpage.html'" aria-label="Expand">
+            <i data-lucide="expand" width="15" height="15" aria-label="Expand"></i>
+          </button>
+          <button class="icon-btn" title="Minimize" aria-label="Minimize">
+            <i data-lucide="minus" width="15" height="15" aria-label="Minimize"></i>
+          </button>
+          <button class="icon-btn" title="Close" id="closeChatBtn" aria-label="Close">
+            <i data-lucide="x" width="15" height="15" aria-label="Close"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Context bar -->
+      <div class="chat-context-bar">
+        <span class="ctx-label">Context:</span>
+        <div class="ctx-chip">
+          <i data-lucide="target" width="11" height="11" aria-label="Goal"></i>
+          API Gateway Migration
+          <span class="ctx-x"><i data-lucide="x" width="11" height="11" aria-label="Remove context"></i></span>
+        </div>
+      </div>
+
+      <!-- Message thread -->
+      <div class="chat-thread" id="chatThread" role="log" aria-label="Conversation">
+
+        <div class="date-divider">Today, Apr 10</div>
+
+        <!-- Message 1: User -->
+        <div class="msg-row user">
+          <div class="msg-avatar-sm user">AR</div>
+          <div class="msg-bubble user">
+            What's the current status of the API gateway migration? Which tasks are blocking us?
+          </div>
+        </div>
+
+        <!-- Message 2: Agent -->
+        <div class="msg-row">
+          <div class="msg-avatar-sm agent">GC</div>
+          <div class="msg-bubble agent" style="position: relative;">
+            <div class="msg-actions">
+              <button class="msg-act-btn" title="Copy" aria-label="Copy message"><i data-lucide="copy" width="12" height="12" aria-label="Copy"></i></button>
+              <button class="msg-act-btn" title="Thumbs up" aria-label="Thumbs up"><i data-lucide="thumbs-up" width="12" height="12" aria-label="Good"></i></button>
+              <button class="msg-act-btn" title="Thumbs down" aria-label="Thumbs down"><i data-lucide="thumbs-down" width="12" height="12" aria-label="Bad"></i></button>
+            </div>
+            I ran a graph traversal across the <span class="md-code-inline">API Gateway Migration</span> goal. Here's the current picture:
+            <ul class="md-list">
+              <li><span class="md-strong">2 tasks are blocked</span> — canary routing tests waiting on load balancer config </li>
+              <li><span class="md-strong">Rate limiting rollout</span> is 5 days overdue, assigned to Tomás</li>
+              <li><span class="md-strong">Blue/green deployment</span> is 88% and in review</li>
+            </ul>
+            The critical path runs through the rate limiting task — it's a dependency for canary testing.
+            <details class="tool-use">
+              <summary>
+                <i data-lucide="wrench" width="12" height="12" aria-label="Tool"></i>
+                Called <span style="font-weight:600; margin-left:3px;">get_task_graph(goal_id="GX-1042")</span>
+                <span class="tool-chevron"><i data-lucide="chevron-right" width="12" height="12" aria-label="Expand"></i></span>
+              </summary>
+              <div class="tool-use-body">{ "goal_id": "GX-1042",
+  "total_tasks": 18,
+  "blocked": 2,
+  "delayed": 1,
+  "in_review": 1,
+  "critical_path": ["TK-4801", "TK-4803", "TK-4810"] }</div>
+            </details>
+          </div>
+        </div>
+
+        <!-- Message 3: User -->
+        <div class="msg-row user">
+          <div class="msg-avatar-sm user">AR</div>
+          <div class="msg-bubble user">
+            Can you create a task for me to follow up with Tomás about the rate limiting delay? High priority.
+          </div>
+        </div>
+
+        <!-- Message 4: Agent with task card -->
+        <div class="msg-row">
+          <div class="msg-avatar-sm agent">GC</div>
+          <div class="msg-bubble agent" style="position: relative;">
+            <div class="msg-actions">
+              <button class="msg-act-btn" title="Copy" aria-label="Copy message"><i data-lucide="copy" width="12" height="12" aria-label="Copy"></i></button>
+              <button class="msg-act-btn" title="Thumbs up" aria-label="Thumbs up"><i data-lucide="thumbs-up" width="12" height="12" aria-label="Good"></i></button>
+              <button class="msg-act-btn" title="Thumbs down" aria-label="Thumbs down"><i data-lucide="thumbs-down" width="12" height="12" aria-label="Bad"></i></button>
+            </div>
+            Done. I've created the follow-up task and linked it to the rate limiting work item.
+            <div class="task-created-card">
+              <div class="task-card-header">
+                <i data-lucide="check-circle-2" width="14" height="14" style="color: var(--state-progress); flex-shrink:0;" aria-label="Created"></i>
+                <span class="task-card-title">Follow up with Tomás on rate limiting rollout delay</span>
+                <span class="score-chip">P1</span>
+              </div>
+              <div class="task-card-meta">
+                <div class="task-card-meta-item">
+                  <i data-lucide="user" width="11" height="11" aria-label="Assignee"></i>
+                  Arjun Reyes
+                </div>
+                <div class="task-card-meta-item">
+                  <i data-lucide="calendar" width="11" height="11" aria-label="Due date"></i>
+                  Due tomorrow
+                </div>
+                <div class="task-card-meta-item">
+                  <i data-lucide="link" width="11" height="11" aria-label="Linked"></i>
+                  #TK-4803
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message 5: User -->
+        <div class="msg-row user">
+          <div class="msg-avatar-sm user">AR</div>
+          <div class="msg-bubble user">
+            What's blocking the canary routing tests specifically? Who can unblock it?
+          </div>
+        </div>
+
+        <!-- Message 6: Agent -->
+        <div class="msg-row">
+          <div class="msg-avatar-sm agent">GC</div>
+          <div class="msg-bubble agent" style="position: relative;">
+            <div class="msg-actions">
+              <button class="msg-act-btn" title="Copy" aria-label="Copy message"><i data-lucide="copy" width="12" height="12" aria-label="Copy"></i></button>
+              <button class="msg-act-btn" title="Thumbs up" aria-label="Thumbs up"><i data-lucide="thumbs-up" width="12" height="12" aria-label="Good"></i></button>
+              <button class="msg-act-btn" title="Thumbs down" aria-label="Thumbs down"><i data-lucide="thumbs-down" width="12" height="12" aria-label="Bad"></i></button>
+            </div>
+            The blocker is <span class="md-strong">task #TK-4801</span> — "Configure HAProxy upstream weights for canary split." It was assigned to Tomás as a dependency before the rate limiting work.
+            <br><br>
+            Marcus (QA) can't proceed on canary tests until this config is merged. The fastest unblock is to reassign #TK-4801 to Nadia or Jin — both have bandwidth today.
+            <details class="tool-use">
+              <summary>
+                <i data-lucide="wrench" width="12" height="12" aria-label="Tool"></i>
+                Called <span style="font-weight:600; margin-left:3px;">get_blockers(task_id="TK-4810")</span>
+                <span class="tool-chevron"><i data-lucide="chevron-right" width="12" height="12" aria-label="Expand"></i></span>
+              </summary>
+              <div class="tool-use-body">{ "blocking_tasks": ["TK-4801"],
+  "reason": "Upstream config required before traffic split",
+  "available_assignees": ["Nadia Okonkwo", "Jin Watanabe"] }</div>
+            </details>
+          </div>
+        </div>
+
+        <!-- Message 7: User -->
+        <div class="msg-row user">
+          <div class="msg-avatar-sm user">AR</div>
+          <div class="msg-bubble user">
+            Reassign #TK-4801 to Jin Watanabe and set priority to urgent.
+          </div>
+        </div>
+
+        <!-- Message 8: Agent confirmation -->
+        <div class="msg-row">
+          <div class="msg-avatar-sm agent">GC</div>
+          <div class="msg-bubble agent" style="position: relative;">
+            <div class="msg-actions">
+              <button class="msg-act-btn" title="Copy" aria-label="Copy message"><i data-lucide="copy" width="12" height="12" aria-label="Copy"></i></button>
+              <button class="msg-act-btn" title="Thumbs up" aria-label="Thumbs up"><i data-lucide="thumbs-up" width="12" height="12" aria-label="Good"></i></button>
+              <button class="msg-act-btn" title="Thumbs down" aria-label="Thumbs down"><i data-lucide="thumbs-down" width="12" height="12" aria-label="Bad"></i></button>
+            </div>
+            ✓ Done. <span class="md-strong">#TK-4801</span> is now assigned to <span class="md-strong">Jin Watanabe</span> with priority set to <span style="color: var(--state-blocked); font-weight: 600;">Urgent</span>. Jin has been notified via Slack.
+            <br><br>
+            The canary routing blocker should clear once Jin merges the HAProxy config — estimated ETA based on task complexity: <span class="md-strong">3–4 hours</span>.
+          </div>
+        </div>
+
+      </div><!-- /chat-thread -->
+
+      <!-- Input area -->
+      <div class="chat-input-area">
+        <div class="chat-input-row">
+          <textarea
+            class="chat-input"
+            id="chatInput"
+            placeholder="Ask about your tasks…"
+            rows="1"
+            aria-label="Type a message"
+          ></textarea>
+          <div class="chat-input-actions">
+            <button class="chat-input-btn" title="Attach file" aria-label="Attach">
+              <i data-lucide="paperclip" width="15" height="15" aria-label="Paperclip"></i>
+            </button>
+            <button class="chat-send-btn" id="sendBtn" aria-label="Send message">
+              <i data-lucide="send" width="14" height="14" aria-label="Send"></i>
+            </button>
+          </div>
+        </div>
+        <div class="chat-hint">
+          <span><kbd>/</kbd> for commands</span>
+          <span><kbd>@</kbd> to mention</span>
+          <span><kbd>⏎</kbd> to send</span>
+        </div>
+      </div>
+
+    </aside><!-- /chat-panel -->
+
+  </div><!-- /main-layout -->
+</div><!-- /app-shell -->
+
+<script>
+  lucide.createIcons();
+
+  // Theme toggle
+  const themeToggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+  function updateToggleIcon() {
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    themeToggle.innerHTML = isDark
+      ? '<i data-lucide="sun" width="16" height="16" aria-label="Light mode"></i>'
+      : '<i data-lucide="moon" width="16" height="16" aria-label="Dark mode"></i>';
+    lucide.createIcons();
+  }
+  themeToggle.addEventListener('click', () => {
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    updateToggleIcon();
+  });
+
+  // Auto-resize textarea
+  const chatInput = document.getElementById('chatInput');
+  chatInput.addEventListener('input', () => {
+    chatInput.style.height = 'auto';
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+  });
+
+  // Scroll to bottom
+  const thread = document.getElementById('chatThread');
+  thread.scrollTop = thread.scrollHeight;
+
+  // Close overlay
+  document.getElementById('closeChatBtn').addEventListener('click', () => {
+    document.querySelector('.chat-panel').style.display = 'none';
+    document.getElementById('chatOverlay').style.display = 'none';
+  });
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

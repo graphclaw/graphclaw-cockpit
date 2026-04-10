@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html data-page="canvas-editor" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canvas Editor — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   Canvas Editor — Full-viewport graph workspace
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: var(--font-sans); }
+.editor-shell { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* ─── Topbar ─────────────────────────────────────────────── */
+.topbar {
+  height: 56px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center;
+  padding: 0 var(--space-4);
+  gap: var(--space-3);
+  flex-shrink: 0;
+  z-index: 50;
+}
+.topbar-logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  text-decoration: none;
+  padding-right: var(--space-4);
+  border-right: 1px solid var(--border-default);
+  margin-right: var(--space-2);
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: var(--weight-bold); font-size: 13px; flex-shrink: 0;
+}
+.logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; }
+
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; transition: color var(--duration-fast); }
+.breadcrumb a:hover { color: var(--text-primary); }
+.breadcrumb .sep { color: var(--text-tertiary); margin: 0 1px; }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-semibold); }
+.graph-name-input {
+  background: transparent; border: 1.5px solid transparent;
+  border-radius: var(--radius-md); padding: 3px 8px;
+  font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  font-family: var(--font-sans); color: var(--text-primary);
+  cursor: text; outline: none; min-width: 0; max-width: 260px;
+  transition: border-color var(--duration-normal), background var(--duration-normal);
+}
+.graph-name-input:hover { border-color: var(--border-strong); background: var(--bg-inset); }
+.graph-name-input:focus { border-color: var(--brand-primary); background: var(--bg-surface); box-shadow: var(--shadow-focus); }
+
+.topbar-spacer { flex: 1; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-2); }
+
+.icon-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); border: none; background: transparent;
+  cursor: pointer; color: var(--icon-secondary);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 2px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 32px; padding: 0 14px;
+  border-radius: var(--radius-md); border: 1.5px solid transparent;
+  font-family: var(--font-sans); font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  cursor: pointer; text-decoration: none; transition: all var(--duration-normal);
+  white-space: nowrap; outline: none;
+}
+.btn-ghost {
+  background: transparent; border-color: var(--border-default);
+  color: var(--text-secondary);
+}
+.btn-ghost:hover { background: var(--bg-inset); border-color: var(--border-strong); color: var(--text-primary); }
+.btn-secondary {
+  background: var(--bg-surface); border-color: var(--border-default);
+  color: var(--text-primary);
+}
+.btn-secondary:hover { background: var(--bg-inset); border-color: var(--border-strong); }
+.btn-primary {
+  background: var(--brand-primary); border-color: var(--brand-primary);
+  color: white;
+}
+.btn-primary:hover { background: var(--brand-primary-hover); border-color: var(--brand-primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(var(--brand-primary-rgb), 0.35); }
+
+.topbar-avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold);
+  cursor: pointer; flex-shrink: 0; margin-left: 4px;
+}
+
+/* ─── Editor Body ───────────────────────────────────────── */
+.editor-body { display: flex; flex: 1; overflow: hidden; }
+
+/* ─── Canvas Toolbar ─────────────────────────────────────── */
+.canvas-toolbar {
+  position: absolute;
+  top: 72px; left: 50%; transform: translateX(-50%);
+  z-index: 40;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  display: flex; align-items: center; gap: 2px;
+  padding: 4px;
+}
+.tool-btn {
+  display: flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 10px;
+  border-radius: 5px; border: none; background: transparent;
+  font-family: var(--font-sans); font-size: var(--text-caption); font-weight: var(--weight-medium);
+  color: var(--text-secondary); cursor: pointer;
+  transition: all var(--duration-fast);
+}
+.tool-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.tool-btn.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .tool-btn.active { background: rgba(56,189,248,0.12); }
+.tool-sep { width: 1px; height: 20px; background: var(--border-default); margin: 0 2px; }
+
+/* ─── Left Panel ─────────────────────────────────────────── */
+.left-panel {
+  width: 220px; flex-shrink: 0;
+  background: #101828;
+  border-right: 1px solid rgba(255,255,255,0.07);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  z-index: 20;
+}
+[data-theme="light"] .left-panel {
+  background: #101828;
+  border-right: 1px solid rgba(255,255,255,0.07);
+}
+[data-theme="dark"] .left-panel {
+  background: #0B1120;
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+.lp-section {
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.lp-section-title {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 8px;
+}
+/* Node palette */
+.node-palette { display: flex; flex-direction: column; gap: 4px; }
+.palette-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-md);
+  cursor: grab; transition: all var(--duration-fast);
+  position: relative;
+}
+.palette-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); transform: translateX(2px); }
+.palette-item:active { cursor: grabbing; }
+.pi-border {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+.pi-icon { width: 28px; height: 28px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pi-label { font-size: var(--text-caption); font-weight: var(--weight-medium); color: rgba(255,255,255,0.75); }
+.pi-sublabel { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+
+/* Layers panel */
+.layers-scroll { flex: 1; overflow-y: auto; padding: 0 12px 12px; }
+.layers-scroll::-webkit-scrollbar { width: 4px; }
+.layers-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+.layer-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.layer-item:hover { background: rgba(255,255,255,0.05); }
+.layer-item.selected { background: rgba(14,165,233,0.15); }
+.layer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.layer-name { font-size: var(--text-caption); color: rgba(255,255,255,0.65); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.layer-actions { display: flex; gap: 2px; opacity: 0; transition: opacity var(--duration-fast); }
+.layer-item:hover .layer-actions { opacity: 1; }
+.layer-icon-btn {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 3px; border: none; background: transparent;
+  cursor: pointer; color: rgba(255,255,255,0.4);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.layer-icon-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+
+/* ─── Canvas Area ─────────────────────────────────────────── */
+.canvas-viewport {
+  flex: 1; position: relative;
+  background-color: #0F172A;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+  overflow: hidden;
+  cursor: default;
+}
+[data-theme="light"] .canvas-viewport {
+  background-color: #0F172A;
+}
+.canvas-inner {
+  position: absolute; inset: 0;
+}
+
+/* Graph nodes */
+.graph-node {
+  position: absolute;
+  width: 220px;
+  background: #1E293B;
+  border: 1.5px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: box-shadow var(--duration-normal), transform var(--duration-normal);
+  overflow: hidden;
+}
+.graph-node:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.55); transform: translateY(-1px); }
+.graph-node.selected {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.3), 0 8px 24px rgba(0,0,0,0.45);
+}
+.gn-accent { height: 3px; width: 100%; }
+.gn-body { padding: 12px 14px; }
+.gn-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+.gn-title { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: rgba(255,255,255,0.92); line-height: 1.35; }
+.gn-type { font-size: 10px; font-weight: var(--weight-medium); padding: 2px 6px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+.gn-footer { display: flex; align-items: center; justify-content: space-between; }
+.gn-assignee {
+  width: 22px; height: 22px; border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: var(--weight-bold); color: white;
+  flex-shrink: 0;
+}
+.gn-score {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  padding: 2px 7px; border-radius: var(--radius-full);
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6);
+  display: flex; align-items: center; gap: 3px;
+}
+.gn-score.high { background: rgba(239,68,68,0.18); color: #F87171; }
+.gn-score.med { background: rgba(245,158,11,0.18); color: #FBBF24; }
+.gn-status-badge {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  padding: 2px 7px; border-radius: var(--radius-full);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+
+/* SVG edge overlay */
+.edge-svg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* Minimap */
+.minimap {
+  position: absolute; bottom: 60px; right: 16px;
+  width: 140px; height: 88px;
+  background: rgba(15,23,42,0.9);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-2);
+}
+.minimap-inner { position: relative; width: 100%; height: 100%; }
+.minimap-node { position: absolute; border-radius: 2px; opacity: 0.7; }
+.minimap-viewport {
+  position: absolute; border: 1.5px solid rgba(14,165,233,0.7);
+  border-radius: 2px; background: rgba(14,165,233,0.08);
+}
+
+/* Zoom controls */
+.zoom-controls {
+  position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 1px;
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 3px;
+  box-shadow: var(--shadow-2); z-index: 30;
+}
+.zoom-btn {
+  width: 28px; height: 28px; border: none; background: transparent;
+  border-radius: 4px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--icon-secondary); font-size: var(--text-caption);
+  font-weight: var(--weight-semibold); font-family: var(--font-sans);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.zoom-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.zoom-label {
+  padding: 0 8px; font-size: var(--text-caption);
+  font-weight: var(--weight-semibold); color: var(--text-secondary);
+  font-family: var(--font-sans); min-width: 44px; text-align: center;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Right Panel ─────────────────────────────────────────── */
+.right-panel {
+  width: 280px; flex-shrink: 0;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  z-index: 20;
+}
+.rp-header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.rp-title { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.rp-body { flex: 1; overflow-y: auto; padding: 16px; }
+.rp-body::-webkit-scrollbar { width: 4px; }
+.rp-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+.field-group { margin-bottom: 16px; }
+.field-label {
+  font-size: var(--text-caption); font-weight: var(--weight-semibold);
+  color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 5px; display: block;
+}
+.field-input {
+  width: 100%; height: 34px; padding: 0 10px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-sans);
+  font-size: var(--text-body-sm); color: var(--text-primary); outline: none;
+  transition: all var(--duration-normal);
+}
+.field-input:focus { border-color: var(--brand-primary); background: var(--bg-surface); box-shadow: var(--shadow-focus); }
+.field-select {
+  width: 100%; height: 34px; padding: 0 10px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-sans);
+  font-size: var(--text-body-sm); color: var(--text-primary); outline: none;
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  padding-right: 30px;
+}
+.field-select:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+
+.tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px 2px 8px; border-radius: var(--radius-full);
+  font-size: var(--text-caption); font-weight: var(--weight-medium);
+  border: 1px solid var(--border-default);
+  background: var(--bg-inset); color: var(--text-secondary);
+}
+.tag-remove { display: flex; align-items: center; cursor: pointer; color: var(--text-tertiary); }
+.tag-remove:hover { color: var(--text-primary); }
+.tag-add {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: var(--radius-full);
+  font-size: var(--text-caption); font-weight: var(--weight-medium);
+  border: 1.5px dashed var(--border-strong); color: var(--text-tertiary);
+  cursor: pointer; background: transparent;
+  transition: all var(--duration-fast);
+}
+.tag-add:hover { border-color: var(--brand-primary); color: var(--brand-primary); background: var(--brand-primary-light); }
+
+.rp-divider { height: 1px; background: var(--border-default); margin: 14px -16px; }
+
+.edge-list { display: flex; flex-direction: column; gap: 4px; }
+.edge-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  background: var(--bg-inset);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+}
+.edge-arrow { color: var(--text-tertiary); display: flex; flex-shrink: 0; }
+.edge-name { font-size: var(--text-body-sm); color: var(--text-primary); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.edge-type { font-size: 10px; color: var(--text-tertiary); background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 3px; padding: 1px 5px; }
+
+.open-detail-link {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  color: var(--brand-primary); text-decoration: none;
+  background: var(--brand-primary-light);
+  transition: all var(--duration-fast);
+  margin-top: 4px;
+}
+.open-detail-link:hover { background: var(--brand-primary); color: white; }
+[data-theme="dark"] .open-detail-link { background: rgba(14,165,233,0.1); }
+[data-theme="dark"] .open-detail-link:hover { background: var(--brand-primary); color: var(--text-on-brand); }
+
+.rp-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-default);
+}
+
+/* ─── Misc ─────────────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: var(--radius-full);
+  font-size: 10px; font-weight: var(--weight-semibold);
+}
+</style>
+</head>
+<body>
+<div class="editor-shell">
+
+  <!-- ── Topbar ─────────────────────────────────────────── -->
+  <div class="topbar">
+    <a href="../index.html" class="topbar-logo">
+      
+      <span class="logo-text">GraphClaw</span>
+    </a>
+
+    <div class="breadcrumb">
+      <a href="#">Graphs</a>
+      <span class="sep">/</span>
+      <span class="current">Q2 API Migration</span>
+    </div>
+
+    <div style="width:1px; height:20px; background:var(--border-default); margin:0 8px;"></div>
+
+    <input class="graph-name-input" type="text" value="Q2 API Migration Graph" aria-label="Graph name" />
+
+    <div class="topbar-spacer"></div>
+
+    <div class="topbar-actions">
+      <!-- Last saved -->
+      <span style="font-size:var(--text-caption); color:var(--text-tertiary); margin-right:4px;">Saved 2 min ago</span>
+
+      <button class="btn btn-ghost" title="Undo">
+        <i data-lucide="undo-2" style="width:14px;height:14px;" aria-label="Undo"></i>
+        Undo
+      </button>
+      <button class="btn btn-ghost" title="Redo">
+        <i data-lucide="redo-2" style="width:14px;height:14px;" aria-label="Redo"></i>
+        Redo
+      </button>
+      <div class="divider-v"></div>
+      <button class="btn btn-secondary" id="exportBtn">
+        <i data-lucide="image-down" style="width:14px;height:14px;" aria-label="Export"></i>
+        Export PNG
+      </button>
+      <button class="btn btn-secondary" id="shareBtn">
+        <i data-lucide="share-2" style="width:14px;height:14px;" aria-label="Share"></i>
+        Share
+      </button>
+      <button class="btn btn-primary" id="saveBtn">
+        <i data-lucide="save" style="width:14px;height:14px;" aria-label="Save"></i>
+        Save
+      </button>
+      <div class="divider-v"></div>
+      <button class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle dark/light mode">
+        <i data-lucide="sun" style="width:16px;height:16px;" aria-label="Theme"></i>
+      </button>
+      <div class="topbar-avatar" title="Priya Mehta">PM</div>
+    </div>
+  </div>
+
+  <!-- ── Editor Body ─────────────────────────────────────── -->
+  <div class="editor-body">
+
+    <!-- Left Panel: Palette + Layers -->
+    <div class="left-panel">
+      <div class="lp-section">
+        <div class="lp-section-title">Node Palette</div>
+        <div class="node-palette">
+          <!-- Task -->
+          <div class="palette-item" draggable="true" title="Drag to canvas">
+            <div class="pi-border" style="background:#3B82F6;"></div>
+            <div class="pi-icon" style="background:rgba(59,130,246,0.15); color:#60A5FA;">
+              <i data-lucide="check-square" style="width:14px;height:14px;" aria-label="Task"></i>
+            </div>
+            <div>
+              <div class="pi-label">Task</div>
+              <div class="pi-sublabel">Assignable work item</div>
+            </div>
+          </div>
+          <!-- Goal -->
+          <div class="palette-item" draggable="true" title="Drag to canvas">
+            <div class="pi-border" style="background:#10B981;"></div>
+            <div class="pi-icon" style="background:rgba(16,185,129,0.15); color:#34D399;">
+              <i data-lucide="target" style="width:14px;height:14px;" aria-label="Goal"></i>
+            </div>
+            <div>
+              <div class="pi-label">Goal</div>
+              <div class="pi-sublabel">Outcome objective</div>
+            </div>
+          </div>
+          <!-- Milestone -->
+          <div class="palette-item" draggable="true" title="Drag to canvas">
+            <div class="pi-border" style="background:#A855F7;"></div>
+            <div class="pi-icon" style="background:rgba(168,85,247,0.15); color:#C084FC;">
+              <i data-lucide="milestone" style="width:14px;height:14px;" aria-label="Milestone"></i>
+            </div>
+            <div>
+              <div class="pi-label">Milestone</div>
+              <div class="pi-sublabel">Delivery checkpoint</div>
+            </div>
+          </div>
+          <!-- Dependency -->
+          <div class="palette-item" draggable="true" title="Drag to canvas">
+            <div class="pi-border" style="background:#F59E0B;"></div>
+            <div class="pi-icon" style="background:rgba(245,158,11,0.15); color:#FBBF24;">
+              <i data-lucide="git-merge" style="width:14px;height:14px;" aria-label="Dependency"></i>
+            </div>
+            <div>
+              <div class="pi-label">Dependency</div>
+              <div class="pi-sublabel">Blocking link</div>
+            </div>
+          </div>
+          <!-- Agent Node -->
+          <div class="palette-item" draggable="true" title="Drag to canvas">
+            <div class="pi-border" style="background:#0EA5E9;"></div>
+            <div class="pi-icon" style="background:rgba(14,165,233,0.15); color:#38BDF8;">
+              <i data-lucide="bot" style="width:14px;height:14px;" aria-label="Agent"></i>
+            </div>
+            <div>
+              <div class="pi-label">Agent Node</div>
+              <div class="pi-sublabel">Automated executor</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layers -->
+      <div class="lp-section" style="padding-bottom:8px;">
+        <div class="lp-section-title">Layers</div>
+      </div>
+      <div class="layers-scroll">
+        <div class="layer-item selected">
+          <div class="layer-dot" style="background:#3B82F6;"></div>
+          <span class="layer-name">Deploy API Gateway v2</span>
+          <div class="layer-actions">
+            <button class="layer-icon-btn" title="Toggle visibility"><i data-lucide="eye" style="width:12px;height:12px;" aria-label="Toggle visibility"></i></button>
+            <button class="layer-icon-btn" title="Lock"><i data-lucide="lock" style="width:12px;height:12px;" aria-label="Lock"></i></button>
+          </div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-dot" style="background:#10B981;"></div>
+          <span class="layer-name">Q2 Platform Migration</span>
+          <div class="layer-actions">
+            <button class="layer-icon-btn" title="Toggle visibility"><i data-lucide="eye" style="width:12px;height:12px;" aria-label="Toggle visibility"></i></button>
+            <button class="layer-icon-btn" title="Lock"><i data-lucide="lock" style="width:12px;height:12px;" aria-label="Lock"></i></button>
+          </div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-dot" style="background:#EF4444;"></div>
+          <span class="layer-name">Finalize auth service design</span>
+          <div class="layer-actions">
+            <button class="layer-icon-btn" title="Toggle visibility"><i data-lucide="eye" style="width:12px;height:12px;" aria-label="Toggle visibility"></i></button>
+            <button class="layer-icon-btn" title="Lock"><i data-lucide="lock" style="width:12px;height:12px;" aria-label="Lock"></i></button>
+          </div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-dot" style="background:#A855F7;"></div>
+          <span class="layer-name">Sprint 8 Milestone</span>
+          <div class="layer-actions">
+            <button class="layer-icon-btn" title="Toggle visibility"><i data-lucide="eye" style="width:12px;height:12px;" aria-label="Toggle visibility"></i></button>
+            <button class="layer-icon-btn" title="Lock"><i data-lucide="lock" style="width:12px;height:12px;" aria-label="Lock"></i></button>
+          </div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-dot" style="background:#F59E0B;"></div>
+          <span class="layer-name">Database schema migration</span>
+          <div class="layer-actions">
+            <button class="layer-icon-btn" title="Toggle visibility"><i data-lucide="eye" style="width:12px;height:12px;" aria-label="Toggle visibility"></i></button>
+            <button class="layer-icon-btn" title="Lock"><i data-lucide="lock" style="width:12px;height:12px;" aria-label="Lock"></i></button>
+          </div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-dot" style="background:#0EA5E9;"></div>
+          <span class="layer-name">Orchestrator Agent</span>
+          <div class="layer-actions">
+            <button class="layer-icon-btn" title="Toggle visibility"><i data-lucide="eye" style="width:12px;height:12px;" aria-label="Toggle visibility"></i></button>
+            <button class="layer-icon-btn" title="Lock"><i data-lucide="lock" style="width:12px;height:12px;" aria-label="Lock"></i></button>
+          </div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-dot" style="background:#9CA3AF;"></div>
+          <span class="layer-name">Write integration test suite</span>
+          <div class="layer-actions">
+            <button class="layer-icon-btn" title="Toggle visibility"><i data-lucide="eye" style="width:12px;height:12px;" aria-label="Toggle visibility"></i></button>
+            <button class="layer-icon-btn" title="Lock"><i data-lucide="lock" style="width:12px;height:12px;" aria-label="Lock"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Canvas Viewport ─────────────────────────────── -->
+    <div class="canvas-viewport" id="canvas">
+
+      <!-- Canvas toolbar (floating) -->
+      <div class="canvas-toolbar">
+        <button class="tool-btn active" id="toolSelect">
+          <i data-lucide="mouse-pointer-2" style="width:13px;height:13px;" aria-label="Select"></i>
+          Select
+        </button>
+        <button class="tool-btn" id="toolPan">
+          <i data-lucide="hand" style="width:13px;height:13px;" aria-label="Pan"></i>
+          Pan
+        </button>
+        <div class="tool-sep"></div>
+        <button class="tool-btn" id="toolAddNode">
+          <i data-lucide="plus-square" style="width:13px;height:13px;" aria-label="Add Node"></i>
+          Add Node
+        </button>
+        <button class="tool-btn" id="toolAddEdge">
+          <i data-lucide="arrow-right-from-line" style="width:13px;height:13px;" aria-label="Add Edge"></i>
+          Add Edge
+        </button>
+        <button class="tool-btn" id="toolComment">
+          <i data-lucide="message-square" style="width:13px;height:13px;" aria-label="Comment"></i>
+          Comment
+        </button>
+        <div class="tool-sep"></div>
+        <button class="tool-btn" title="Undo">
+          <i data-lucide="undo-2" style="width:13px;height:13px;" aria-label="Undo"></i>
+        </button>
+        <button class="tool-btn" title="Redo">
+          <i data-lucide="redo-2" style="width:13px;height:13px;" aria-label="Redo"></i>
+        </button>
+      </div>
+
+      <!-- SVG edges overlay -->
+      <svg class="edge-svg" id="edgeSvg" aria-hidden="true">
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="rgba(148,163,184,0.6)" />
+          </marker>
+          <marker id="arrowhead-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="rgba(14,165,233,0.8)" />
+          </marker>
+          <marker id="arrowhead-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="rgba(239,68,68,0.7)" />
+          </marker>
+        </defs>
+        <!-- Edges drawn by JS -->
+      </svg>
+
+      <!-- ── Graph Nodes ─────────────────────────────── -->
+
+      <!-- Node 1: Goal (top center) -->
+      <div class="graph-node" id="node-goal" style="top:80px; left:340px;">
+        <div class="gn-accent" style="background:#10B981;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Q2 Platform Migration</div>
+            <span class="gn-type" style="background:rgba(16,185,129,0.12); color:#34D399;">Goal</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#7C3AED,#0EA5E9);">PM</div>
+              <span style="font-size:10px; color:rgba(255,255,255,0.4);">Apr 30</span>
+            </div>
+            <span class="gn-score med">87.3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node 2: Milestone -->
+      <div class="graph-node" id="node-ms" style="top:80px; left:620px;">
+        <div class="gn-accent" style="background:#A855F7;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Sprint 8 Milestone</div>
+            <span class="gn-type" style="background:rgba(168,85,247,0.12); color:#C084FC;">Milestone</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#A855F7,#EC4899);">KR</div>
+              <span style="font-size:10px; color:rgba(255,255,255,0.4);">Apr 18</span>
+            </div>
+            <span class="gn-score high">91.0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node 3: Task — In Progress (selected) -->
+      <div class="graph-node selected" id="node-t1" style="top:240px; left:180px;">
+        <div class="gn-accent" style="background:#3B82F6;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Deploy API Gateway v2</div>
+            <span class="gn-type" style="background:rgba(59,130,246,0.12); color:#60A5FA;">Task</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#059669,#0EA5E9);">AS</div>
+              <span style="font-size:10px; color:rgba(255,255,255,0.4);">Apr 14</span>
+            </div>
+            <span class="gn-score high">94.2</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node 4: Task — Blocked -->
+      <div class="graph-node" id="node-t2" style="top:240px; left:440px;">
+        <div class="gn-accent" style="background:#EF4444;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Finalize auth service design</div>
+            <span class="gn-type" style="background:rgba(239,68,68,0.12); color:#F87171;">Task</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#DC2626,#9333EA);">NJ</div>
+              <span style="font-size:10px; color:rgba(255,255,255,0.4);">Apr 12</span>
+            </div>
+            <span class="gn-score high">88.7</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node 5: Task — Delayed -->
+      <div class="graph-node" id="node-t3" style="top:240px; left:700px;">
+        <div class="gn-accent" style="background:#F59E0B;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Database schema migration</div>
+            <span class="gn-type" style="background:rgba(245,158,11,0.12); color:#FBBF24;">Task</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#D97706,#EA580C);">LT</div>
+              <span style="font-size:10px; color:rgba(255,255,255,0.4);">Apr 11</span>
+            </div>
+            <span class="gn-score med">72.5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node 6: Agent Node -->
+      <div class="graph-node" id="node-agent" style="top:420px; left:380px;">
+        <div class="gn-accent" style="background:#0EA5E9;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Orchestrator Agent</div>
+            <span class="gn-type" style="background:rgba(14,165,233,0.12); color:#38BDF8;">Agent</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="pulse-dot" style="width:8px;height:8px;border-radius:50%;background:#10B981;position:relative;flex-shrink:0;">
+                <span style="position:absolute;inset:-3px;border-radius:50%;background:#10B981;opacity:0.3;animation:pulse-ring 2s ease-out infinite;"></span>
+              </div>
+              <span style="font-size:10px; color:rgba(255,255,255,0.4);">Running</span>
+            </div>
+            <span class="gn-score" style="background:rgba(14,165,233,0.15); color:#38BDF8;">Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node 7: Task — Complete -->
+      <div class="graph-node" id="node-t4" style="top:420px; left:640px;">
+        <div class="gn-accent" style="background:#9CA3AF;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Write integration test suite</div>
+            <span class="gn-type" style="background:rgba(156,163,175,0.12); color:#9CA3AF;">Task</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#6B7280,#374151);">RK</div>
+              <span style="font-size:10px; color:rgba(255,255,255,0.4);">Done</span>
+            </div>
+            <span class="gn-score">52.1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Minimap -->
+      <div class="minimap" aria-label="Graph minimap">
+        <div class="minimap-inner">
+          <div class="minimap-node" style="top:8px;left:32px;width:22px;height:8px;background:#10B981;border-radius:2px;"></div>
+          <div class="minimap-node" style="top:8px;left:66px;width:20px;height:8px;background:#A855F7;border-radius:2px;"></div>
+          <div class="minimap-node" style="top:26px;left:14px;width:22px;height:8px;background:#3B82F6;border-radius:2px;border:1px solid rgba(14,165,233,0.6);"></div>
+          <div class="minimap-node" style="top:26px;left:44px;width:22px;height:8px;background:#EF4444;border-radius:2px;"></div>
+          <div class="minimap-node" style="top:26px;left:74px;width:22px;height:8px;background:#F59E0B;border-radius:2px;"></div>
+          <div class="minimap-node" style="top:46px;left:38px;width:22px;height:8px;background:#0EA5E9;border-radius:2px;"></div>
+          <div class="minimap-node" style="top:46px;left:68px;width:22px;height:8px;background:#9CA3AF;border-radius:2px;"></div>
+          <div class="minimap-viewport" style="top:16px;left:8px;width:68px;height:44px;"></div>
+        </div>
+      </div>
+
+      <!-- Zoom controls -->
+      <div class="zoom-controls">
+        <button class="zoom-btn" id="zoomOut" title="Zoom out" aria-label="Zoom out">
+          <i data-lucide="minus" style="width:13px;height:13px;" aria-label="Zoom out"></i>
+        </button>
+        <span class="zoom-label" id="zoomLevel">100%</span>
+        <button class="zoom-btn" id="zoomIn" title="Zoom in" aria-label="Zoom in">
+          <i data-lucide="plus" style="width:13px;height:13px;" aria-label="Zoom in"></i>
+        </button>
+        <div style="width:1px;height:18px;background:var(--border-default);margin:0 2px;"></div>
+        <button class="zoom-btn" id="zoomFit" title="Fit to view" aria-label="Fit to view">
+          <i data-lucide="maximize-2" style="width:13px;height:13px;" aria-label="Fit"></i>
+        </button>
+      </div>
+
+    </div><!-- /canvas-viewport -->
+
+    <!-- Right Panel: Properties -->
+    <div class="right-panel">
+      <div class="rp-header">
+        <span class="rp-title">Properties</span>
+        <span style="font-size:10px; padding:2px 8px; border-radius:var(--radius-full); background:rgba(59,130,246,0.1); color:#60A5FA; font-weight:600;">Task</span>
+      </div>
+      <div class="rp-body">
+        <!-- Name -->
+        <div class="field-group">
+          <label class="field-label" for="nodeName">Name</label>
+          <input class="field-input" id="nodeName" type="text" value="Deploy API Gateway v2" />
+        </div>
+        <!-- Status -->
+        <div class="field-group">
+          <label class="field-label" for="nodeStatus">Status</label>
+          <select class="field-select" id="nodeStatus">
+            <option value="active" selected>🔵 Active</option>
+            <option value="progress">🟢 In Progress</option>
+            <option value="blocked">🔴 Blocked</option>
+            <option value="delayed">🟡 Delayed</option>
+            <option value="complete">⚪ Complete</option>
+            <option value="review">🟣 In Review</option>
+          </select>
+        </div>
+        <!-- Assignee -->
+        <div class="field-group">
+          <label class="field-label" for="nodeAssignee">Assignee</label>
+          <select class="field-select" id="nodeAssignee">
+            <option selected>Arjun Sharma</option>
+            <option>Priya Mehta</option>
+            <option>Nalini Joshi</option>
+            <option>Lars Theron</option>
+            <option>Kenji Rowe</option>
+          </select>
+        </div>
+        <!-- Due date -->
+        <div class="field-group">
+          <label class="field-label" for="nodeDue">Due Date</label>
+          <input class="field-input" id="nodeDue" type="date" value="2026-04-14" />
+        </div>
+        <!-- Tags -->
+        <div class="field-group">
+          <label class="field-label">Tags</label>
+          <div class="tag-list">
+            <span class="tag">infrastructure <span class="tag-remove"><i data-lucide="x" style="width:10px;height:10px;" aria-label="Remove tag"></i></span></span>
+            <span class="tag">api <span class="tag-remove"><i data-lucide="x" style="width:10px;height:10px;" aria-label="Remove tag"></i></span></span>
+            <span class="tag">q2 <span class="tag-remove"><i data-lucide="x" style="width:10px;height:10px;" aria-label="Remove tag"></i></span></span>
+            <button class="tag-add"><i data-lucide="plus" style="width:10px;height:10px;" aria-label="Add tag"></i> Add</button>
+          </div>
+        </div>
+
+        <div class="rp-divider"></div>
+
+        <!-- Outgoing edges -->
+        <div style="margin-bottom:10px;">
+          <div class="field-label" style="display:block; margin-bottom:8px;">Outgoing Edges</div>
+          <div class="edge-list">
+            <div class="edge-row">
+              <span class="edge-arrow"><i data-lucide="arrow-right" style="width:12px;height:12px;" aria-label="Edge to"></i></span>
+              <span class="edge-name">Q2 Platform Migration</span>
+              <span class="edge-type">blocks</span>
+            </div>
+            <div class="edge-row">
+              <span class="edge-arrow"><i data-lucide="arrow-right" style="width:12px;height:12px;" aria-label="Edge to"></i></span>
+              <span class="edge-name">Sprint 8 Milestone</span>
+              <span class="edge-type">feeds</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Open detail link -->
+        <a href="task-detail.html" class="open-detail-link">
+          <i data-lucide="external-link" style="width:14px;height:14px;" aria-label="Open detail"></i>
+          Open full task detail
+        </a>
+      </div>
+      <div class="rp-footer">
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-secondary" style="flex:1; justify-content:center;">
+            <i data-lucide="trash-2" style="width:13px;height:13px;" aria-label="Delete"></i>
+            Delete
+          </button>
+          <button class="btn btn-primary" style="flex:1; justify-content:center;">
+            <i data-lucide="check" style="width:13px;height:13px;" aria-label="Apply"></i>
+            Apply
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /editor-body -->
+</div><!-- /editor-shell -->
+
+<script>
+(function() {
+  lucide.createIcons();
+
+  // ── Dark/light toggle
+  const toggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+  function applyTheme(dark) {
+    html.setAttribute('data-theme', dark ? 'dark' : 'light');
+    const icon = toggle.querySelector('[data-lucide]');
+    icon.setAttribute('data-lucide', dark ? 'moon' : 'sun');
+    lucide.createIcons();
+  }
+  toggle.addEventListener('click', () => applyTheme(html.getAttribute('data-theme') !== 'dark'));
+
+  // ── Draw SVG edges
+  function getCenter(el) {
+    const rect = el.getBoundingClientRect();
+    const cvRect = document.getElementById('canvas').getBoundingClientRect();
+    return {
+      x: rect.left - cvRect.left + rect.width / 2,
+      y: rect.top - cvRect.top + rect.height / 2
+    };
+  }
+  function cubicPath(x1, y1, x2, y2) {
+    const mx = (x1 + x2) / 2;
+    return `M ${x1} ${y1} C ${mx} ${y1} ${mx} ${y2} ${x2} ${y2}`;
+  }
+  function drawEdges() {
+    const svg = document.getElementById('edgeSvg');
+    svg.innerHTML = `<defs>
+      <marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0,8 3,0 6" fill="rgba(148,163,184,0.55)"/>
+      </marker>
+      <marker id="ah-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0,8 3,0 6" fill="rgba(14,165,233,0.8)"/>
+      </marker>
+      <marker id="ah-red" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0,8 3,0 6" fill="rgba(239,68,68,0.65)"/>
+      </marker>
+    </defs>`;
+    const edges = [
+      {from:'node-t1', to:'node-goal', color:'rgba(59,130,246,0.6)', marker:'ah-blue'},
+      {from:'node-t2', to:'node-goal', color:'rgba(239,68,68,0.55)', marker:'ah-red'},
+      {from:'node-t3', to:'node-ms', color:'rgba(245,158,11,0.55)', marker:'ah'},
+      {from:'node-t1', to:'node-ms', color:'rgba(59,130,246,0.4)', marker:'ah-blue'},
+      {from:'node-agent', to:'node-t1', color:'rgba(14,165,233,0.5)', marker:'ah-blue'},
+      {from:'node-agent', to:'node-t2', color:'rgba(14,165,233,0.4)', marker:'ah-blue'},
+      {from:'node-t4', to:'node-t3', color:'rgba(148,163,184,0.4)', marker:'ah'},
+    ];
+    edges.forEach(e => {
+      const a = document.getElementById(e.from);
+      const b = document.getElementById(e.to);
+      if (!a || !b) return;
+      const c1 = getCenter(a), c2 = getCenter(b);
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', cubicPath(c1.x, c1.y, c2.x, c2.y));
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', e.color);
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('marker-end', `url(#${e.marker})`);
+      svg.appendChild(path);
+    });
+  }
+  setTimeout(drawEdges, 100);
+
+  // ── Tool toggle
+  document.querySelectorAll('.tool-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // ── Node selection
+  document.querySelectorAll('.graph-node').forEach(node => {
+    node.addEventListener('click', function() {
+      document.querySelectorAll('.graph-node').forEach(n => n.classList.remove('selected'));
+      this.classList.add('selected');
+    });
+  });
+
+  // ── Zoom controls
+  let zoomPct = 100;
+  document.getElementById('zoomIn').addEventListener('click', () => {
+    zoomPct = Math.min(200, zoomPct + 10);
+    document.getElementById('zoomLevel').textContent = zoomPct + '%';
+  });
+  document.getElementById('zoomOut').addEventListener('click', () => {
+    zoomPct = Math.max(25, zoomPct - 10);
+    document.getElementById('zoomLevel').textContent = zoomPct + '%';
+  });
+  document.getElementById('zoomFit').addEventListener('click', () => {
+    zoomPct = 100;
+    document.getElementById('zoomLevel').textContent = '100%';
+  });
+
+  // ── Save button
+  document.getElementById('saveBtn').addEventListener('click', function() {
+    this.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> Saved';
+    lucide.createIcons();
+    setTimeout(() => {
+      this.innerHTML = '<i data-lucide="save" style="width:14px;height:14px;"></i> Save';
+      lucide.createIcons();
+    }, 2000);
+  });
+})();
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

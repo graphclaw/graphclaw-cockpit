@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude auth:*)",
+      "Bash(python -m pytest --co -q)",
+      "Bash(python -m pytest tests/test_models/ -x -q)",
+      "Bash(python -c ':*)",
+      "Bash(.venv/Scripts/python.exe -m pytest --co -q)",
+      "Bash(.venv/Scripts/pip list:*)",
+      "Bash(python -m pip list)",
+      "Bash(pip install:*)",
+      "Bash(python -m pytest --ignore=tests/load --ignore=tests/test_load --co -q)",
+      "Bash(.venv/Scripts/pip install:*)",
+      "Bash(uv pip:*)",
+      "Bash(.venv/Scripts/python.exe -m pytest --ignore=tests/load --ignore=tests/test_load -q --tb=no)"
+    ]
+  }
+}

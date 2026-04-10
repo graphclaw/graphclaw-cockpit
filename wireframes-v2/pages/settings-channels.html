@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html data-page="settings-channels" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Channels — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   Settings: Channels — Page-specific styles
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: var(--font-sans); }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* ─── Sidebar ───────────────────────────────────────────── */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  height: 56px; flex-shrink: 0;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: var(--weight-bold); font-size: 13px; flex-shrink: 0;
+}
+.logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; }
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.nav-section {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  padding: var(--space-3) var(--space-4) var(--space-1);
+}
+.nav-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  margin: 1px var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer; text-decoration: none;
+  color: var(--text-secondary);
+  font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background: rgba(56,189,248,0.12); }
+.nav-item .ni { display: flex; align-items: center; flex-shrink: 0; width: 18px; height: 18px; }
+.nav-badge {
+  margin-left: auto; background: var(--state-blocked); color: white;
+  font-size: 10px; font-weight: var(--weight-bold);
+  padding: 1px 5px; border-radius: var(--radius-full);
+  min-width: 18px; text-align: center;
+}
+.sidebar-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-4); }
+.sidebar-footer { padding: var(--space-2); border-top: 1px solid var(--border-default); }
+.user-row {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.user-row:hover { background: var(--bg-inset); }
+.avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold); flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.user-role { font-size: 10px; color: var(--text-tertiary); }
+
+/* ─── Main Layout ───────────────────────────────────────── */
+.main-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
+
+/* ─── Topbar ─────────────────────────────────────────────── */
+.topbar {
+  height: 56px; background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center;
+  padding: 0 var(--space-5); gap: var(--space-4); flex-shrink: 0;
+}
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; transition: color var(--duration-fast); }
+.breadcrumb a:hover { color: var(--text-primary); }
+.breadcrumb .sep { color: var(--text-tertiary); }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-medium); }
+.topbar-search {
+  flex: 1; max-width: 340px; margin: 0 auto; position: relative;
+}
+.topbar-search input {
+  width: 100%; height: 32px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 0 var(--space-3) 0 32px;
+  font-size: var(--text-body-sm); font-family: var(--font-sans);
+  color: var(--text-primary); outline: none;
+  transition: all var(--duration-normal);
+}
+.topbar-search input::placeholder { color: var(--text-tertiary); }
+.topbar-search input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.topbar-search .s-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.icon-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); border: none; background: transparent;
+  cursor: pointer; color: var(--icon-secondary);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 var(--space-1); }
+.topbar-avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold); cursor: pointer;
+}
+
+/* ─── Settings Layout ───────────────────────────────────── */
+.settings-body { display: flex; flex: 1; overflow: hidden; }
+
+/* Inner settings nav */
+.settings-nav {
+  width: 200px; flex-shrink: 0;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-default);
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-2);
+}
+.sn-title {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  padding: 0 var(--space-2) var(--space-2);
+  display: block;
+}
+.sn-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 7px var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer; text-decoration: none;
+  color: var(--text-secondary);
+  font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast);
+  margin-bottom: 1px;
+}
+.sn-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.sn-item.active { background: var(--brand-primary-light); color: var(--brand-primary); font-weight: var(--weight-semibold); }
+[data-theme="dark"] .sn-item.active { background: rgba(56,189,248,0.12); }
+.sn-divider { height: 1px; background: var(--border-default); margin: var(--space-3) var(--space-2); }
+.sn-item.danger { color: var(--text-error); }
+.sn-item.danger:hover { background: var(--state-blocked-light); color: var(--state-blocked); }
+
+/* ─── Settings Content ──────────────────────────────────── */
+.settings-content { flex: 1; overflow-y: auto; min-width: 0; }
+.settings-inner { max-width: 800px; padding: var(--space-6) var(--space-8); }
+
+.settings-header { margin-bottom: var(--space-6); }
+.settings-title { font-size: var(--text-heading); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.02em; }
+.settings-subtitle { font-size: var(--text-body-sm); color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
+
+/* Section card */
+.section-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-5);
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
+}
+.sc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface-alt);
+}
+.sc-title { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); display: flex; align-items: center; gap: var(--space-2); }
+.sc-actions { display: flex; align-items: center; gap: var(--space-2); }
+.sc-body { padding: var(--space-5); }
+
+/* Channel card (connected) */
+.channel-card {
+  display: flex; align-items: flex-start; gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  margin-bottom: var(--space-3);
+  transition: box-shadow var(--duration-normal);
+}
+.channel-card:hover { box-shadow: var(--shadow-2); }
+.ch-icon {
+  width: 40px; height: 40px; border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 20px;
+}
+.ch-meta { flex: 1; min-width: 0; }
+.ch-name { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); display: flex; align-items: center; gap: var(--space-2); margin-bottom: 2px; }
+.ch-detail { font-size: var(--text-body-sm); color: var(--text-secondary); margin-bottom: 6px; }
+.ch-sync { font-size: var(--text-caption); color: var(--text-tertiary); display: flex; align-items: center; gap: 4px; }
+.ch-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+
+/* Status badge */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: var(--radius-full);
+  font-size: 11px; font-weight: var(--weight-semibold);
+}
+.badge-success { background: var(--state-progress-light); color: var(--state-progress); }
+.badge-error { background: var(--state-blocked-light); color: var(--state-blocked); }
+.badge-warning { background: var(--state-delayed-light); color: var(--state-delayed); }
+.badge-neutral { background: var(--bg-inset); color: var(--text-secondary); border: 1px solid var(--border-default); }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 14px; height: 32px;
+  border-radius: var(--radius-md); border: 1.5px solid transparent;
+  font-family: var(--font-sans); font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  cursor: pointer; transition: all var(--duration-normal); outline: none; text-decoration: none;
+}
+.btn-sm { height: 28px; padding: 0 10px; font-size: var(--text-caption); }
+.btn-primary { background: var(--brand-primary); border-color: var(--brand-primary); color: white; }
+.btn-primary:hover { background: var(--brand-primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(var(--brand-primary-rgb),.3); }
+.btn-secondary { background: var(--bg-surface); border-color: var(--border-default); color: var(--text-primary); }
+.btn-secondary:hover { background: var(--bg-inset); border-color: var(--border-strong); }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--bg-inset); color: var(--text-primary); }
+.btn-danger-ghost { background: transparent; border-color: var(--border-default); color: var(--text-error); }
+.btn-danger-ghost:hover { background: var(--state-blocked-light); border-color: var(--state-blocked); }
+
+/* Connect CTA card */
+.connect-cta {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-alt);
+  margin-bottom: var(--space-3);
+}
+.cta-icon {
+  width: 44px; height: 44px; border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 22px;
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+}
+.cta-meta { flex: 1; min-width: 0; }
+.cta-name { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: 2px; }
+.cta-desc { font-size: var(--text-body-sm); color: var(--text-secondary); line-height: 1.4; }
+
+/* Webhooks table */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; padding: 8px 12px;
+  font-size: 11px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); background: var(--bg-surface-alt);
+  border-bottom: 1px solid var(--border-default);
+}
+.data-table td {
+  padding: 10px 12px;
+  font-size: var(--text-body-sm); color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr { transition: background var(--duration-fast); }
+.data-table tbody tr:hover { background: var(--bg-surface-alt); }
+.mono { font-family: var(--font-mono); font-size: var(--text-caption); color: var(--text-secondary); }
+.event-tag {
+  display: inline-block; padding: 1px 6px; border-radius: 3px;
+  font-size: 10px; font-weight: var(--weight-medium);
+  background: var(--bg-inset); border: 1px solid var(--border-default);
+  color: var(--text-secondary); margin-right: 3px;
+}
+
+/* Polling intervals */
+.poll-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.field-row { display: flex; flex-direction: column; gap: 4px; }
+.field-label { font-size: var(--text-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+.field-input-group { display: flex; align-items: center; gap: 0; }
+.field-input {
+  height: 34px; padding: 0 10px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md) 0 0 var(--radius-md); font-family: var(--font-sans);
+  font-size: var(--text-body-sm); color: var(--text-primary); outline: none;
+  border-right: none;
+  width: 80px;
+  transition: all var(--duration-normal);
+}
+.field-input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); z-index: 1; position: relative; }
+.field-addon {
+  height: 34px; padding: 0 10px;
+  background: var(--bg-surface-alt); border: 1.5px solid var(--border-default);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-size: var(--text-body-sm); color: var(--text-tertiary);
+  display: flex; align-items: center;
+}
+
+/* Sticky footer */
+.settings-footer {
+  position: sticky; bottom: 0;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-default);
+  padding: var(--space-4) var(--space-8);
+  display: flex; align-items: center; gap: var(--space-3);
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ── Sidebar ───────────────────────────────────────── -->
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-logo">
+      
+      <div>
+        <div class="logo-text">GraphClaw</div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Workspace</div>
+      <a href="goal-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="layout-dashboard" style="width:16px;height:16px;" aria-label="Dashboard"></i></span>
+        Dashboard
+      </a>
+      <a href="my-tasks.html" class="nav-item">
+        <span class="ni"><i data-lucide="check-square" style="width:16px;height:16px;" aria-label="My Tasks"></i></span>
+        My Tasks
+        <span class="nav-badge">5</span>
+      </a>
+      <a href="goal-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="target" style="width:16px;height:16px;" aria-label="Goals"></i></span>
+        Goals
+      </a>
+      <a href="project-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="folder-kanban" style="width:16px;height:16px;" aria-label="Projects"></i></span>
+        Projects
+      </a>
+      <a href="timeline-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="gantt-chart" style="width:16px;height:16px;" aria-label="Timeline"></i></span>
+        Timeline
+      </a>
+      <a href="resource-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="users" style="width:16px;height:16px;" aria-label="People"></i></span>
+        People
+      </a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">System</div>
+      <a href="agent-monitor.html" class="nav-item">
+        <span class="ni"><i data-lucide="activity" style="width:16px;height:16px;" aria-label="Agent Monitor"></i></span>
+        Agent Monitor
+      </a>
+      <a href="chat-sidebar.html" class="nav-item">
+        <span class="ni"><i data-lucide="message-circle" style="width:16px;height:16px;" aria-label="Chat"></i></span>
+        Chat
+      </a>
+      <a href="settings-channels.html" class="nav-item active">
+        <span class="ni"><i data-lucide="settings" style="width:16px;height:16px;" aria-label="Settings"></i></span>
+        Settings
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar">PM</div>
+        <div class="user-info">
+          <div class="user-name">Priya Mehta</div>
+          <div class="user-role">Workspace Admin</div>
+        </div>
+        <i data-lucide="chevron-up" style="width:14px;height:14px;color:var(--text-tertiary);" aria-label="User menu"></i>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main ──────────────────────────────────────────── -->
+  <div class="main-layout">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="breadcrumb">
+        <a href="#">Settings</a>
+        <span class="sep">/</span>
+        <span class="current">Channels</span>
+      </div>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" style="width:14px;height:14px;" aria-label="Search"></i></span>
+        <input type="text" placeholder="Search settings…" aria-label="Search settings" />
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle dark/light mode">
+          <i data-lucide="sun" style="width:16px;height:16px;" aria-label="Theme"></i>
+        </button>
+        <div class="divider-v"></div>
+        <div class="topbar-avatar" title="Priya Mehta">PM</div>
+      </div>
+    </div>
+
+    <!-- Settings body -->
+    <div class="settings-body">
+
+      <!-- Inner settings nav -->
+      <nav class="settings-nav" aria-label="Settings navigation">
+        <span class="sn-title">Settings</span>
+        <a href="#" class="sn-item">
+          <i data-lucide="sliders" style="width:14px;height:14px;" aria-label="General"></i>
+          General
+        </a>
+        <a href="settings-channels.html" class="sn-item active">
+          <i data-lucide="radio" style="width:14px;height:14px;" aria-label="Channels"></i>
+          Channels
+        </a>
+        <a href="settings-llm.html" class="sn-item">
+          <i data-lucide="cpu" style="width:14px;height:14px;" aria-label="LLM Providers"></i>
+          LLM Providers
+        </a>
+        <a href="settings-scoring.html" class="sn-item">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;" aria-label="Scoring"></i>
+          Scoring
+        </a>
+        <a href="#" class="sn-item">
+          <i data-lucide="newspaper" style="width:14px;height:14px;" aria-label="Briefing"></i>
+          Briefing
+        </a>
+        <a href="#" class="sn-item">
+          <i data-lucide="timer" style="width:14px;height:14px;" aria-label="Triggers"></i>
+          Triggers
+        </a>
+        <a href="#" class="sn-item">
+          <i data-lucide="network" style="width:14px;height:14px;" aria-label="Agent-to-Agent"></i>
+          Agent-to-Agent
+        </a>
+        <div class="sn-divider"></div>
+        <a href="#" class="sn-item danger">
+          <i data-lucide="alert-triangle" style="width:14px;height:14px;" aria-label="Danger Zone"></i>
+          Danger Zone
+        </a>
+      </nav>
+
+      <!-- Main settings content -->
+      <div class="settings-content">
+        <div class="settings-inner">
+          <div class="settings-header">
+            <h1 class="settings-title">Channel Configuration</h1>
+            <p class="settings-subtitle">Connect communication channels to receive and send task updates. Changes take effect immediately after saving.</p>
+          </div>
+
+          <!-- ── Email ────────────────────────────────── -->
+          <div class="section-card">
+            <div class="sc-header">
+              <span class="sc-title">
+                <i data-lucide="mail" style="width:16px;height:16px;color:var(--icon-secondary);" aria-label="Email"></i>
+                Email
+              </span>
+              <button class="btn btn-secondary btn-sm">
+                <i data-lucide="plus" style="width:12px;height:12px;" aria-label="Add"></i>
+                Add account
+              </button>
+            </div>
+            <div class="sc-body" style="padding-bottom:var(--space-3);">
+              <!-- Connected account -->
+              <div class="channel-card">
+                <div class="ch-icon" style="background:#FEF2F2;">📧</div>
+                <div class="ch-meta">
+                  <div class="ch-name">
+                    priya.mehta@acmecorp.io
+                    <span class="badge badge-success">
+                      <i data-lucide="check-circle-2" style="width:10px;height:10px;" aria-label="Connected"></i>
+                      Connected
+                    </span>
+                  </div>
+                  <div class="ch-detail">Gmail · IMAP/SMTP · Inbox monitoring enabled</div>
+                  <div class="ch-sync">
+                    <i data-lucide="refresh-cw" style="width:11px;height:11px;" aria-label="Last sync"></i>
+                    Last sync: 2 minutes ago · 3 new messages processed
+                  </div>
+                </div>
+                <div class="ch-actions">
+                  <button class="btn btn-secondary btn-sm">
+                    <i data-lucide="settings-2" style="width:12px;height:12px;" aria-label="Configure"></i>
+                    Configure
+                  </button>
+                  <button class="btn btn-danger-ghost btn-sm">Disconnect</button>
+                </div>
+              </div>
+              <!-- Second account -->
+              <div class="channel-card" style="margin-bottom:0;">
+                <div class="ch-icon" style="background:#EFF6FF;">📬</div>
+                <div class="ch-meta">
+                  <div class="ch-name">
+                    ops-notifications@acmecorp.io
+                    <span class="badge badge-success">
+                      <i data-lucide="check-circle-2" style="width:10px;height:10px;" aria-label="Connected"></i>
+                      Connected
+                    </span>
+                  </div>
+                  <div class="ch-detail">Microsoft 365 · Outlook · Send-only</div>
+                  <div class="ch-sync">
+                    <i data-lucide="refresh-cw" style="width:11px;height:11px;" aria-label="Last sync"></i>
+                    Last sync: 9 minutes ago
+                  </div>
+                </div>
+                <div class="ch-actions">
+                  <button class="btn btn-secondary btn-sm">
+                    <i data-lucide="settings-2" style="width:12px;height:12px;" aria-label="Configure"></i>
+                    Configure
+                  </button>
+                  <button class="btn btn-danger-ghost btn-sm">Disconnect</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Slack ────────────────────────────────── -->
+          <div class="section-card">
+            <div class="sc-header">
+              <span class="sc-title">
+                <i data-lucide="hash" style="width:16px;height:16px;color:#4A154B;" aria-label="Slack"></i>
+                Slack
+              </span>
+            </div>
+            <div class="sc-body">
+              <div class="connect-cta">
+                <div class="cta-icon">💬</div>
+                <div class="cta-meta">
+                  <div class="cta-name">Slack not connected</div>
+                  <div class="cta-desc">Connect your Slack workspace to receive task briefings, status updates, and respond to follow-ups directly from Slack channels.</div>
+                </div>
+                <button class="btn btn-primary" style="flex-shrink:0;">
+                  <i data-lucide="link" style="width:13px;height:13px;" aria-label="Connect"></i>
+                  Connect Slack
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Microsoft Teams ──────────────────────── -->
+          <div class="section-card">
+            <div class="sc-header">
+              <span class="sc-title">
+                <i data-lucide="video" style="width:16px;height:16px;color:#4B53BC;" aria-label="Teams"></i>
+                Microsoft Teams
+              </span>
+            </div>
+            <div class="sc-body">
+              <div class="channel-card" style="margin-bottom:0;">
+                <div class="ch-icon" style="background:#EEF2FF;">🔷</div>
+                <div class="ch-meta">
+                  <div class="ch-name">
+                    Acme Corp
+                    <span class="badge badge-success">
+                      <i data-lucide="check-circle-2" style="width:10px;height:10px;" aria-label="Connected"></i>
+                      Connected
+                    </span>
+                  </div>
+                  <div class="ch-detail">Microsoft Teams · tenant: acmecorp.onmicrosoft.com · 4 channels subscribed</div>
+                  <div class="ch-sync">
+                    <i data-lucide="refresh-cw" style="width:11px;height:11px;" aria-label="Last sync"></i>
+                    Last sync: 5 minutes ago · Bot active in #engineering, #ops
+                  </div>
+                </div>
+                <div class="ch-actions">
+                  <button class="btn btn-secondary btn-sm">
+                    <i data-lucide="settings-2" style="width:12px;height:12px;" aria-label="Configure"></i>
+                    Configure
+                  </button>
+                  <button class="btn btn-danger-ghost btn-sm">Disconnect</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Webhooks ─────────────────────────────── -->
+          <div class="section-card">
+            <div class="sc-header">
+              <span class="sc-title">
+                <i data-lucide="webhook" style="width:16px;height:16px;color:var(--icon-secondary);" aria-label="Webhooks"></i>
+                Webhooks
+              </span>
+              <button class="btn btn-secondary btn-sm">
+                <i data-lucide="plus" style="width:12px;height:12px;" aria-label="Add"></i>
+                Add webhook
+              </button>
+            </div>
+            <div style="overflow:hidden;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>URL</th>
+                    <th>Events</th>
+                    <th>Last triggered</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="font-weight:var(--weight-semibold);">Jira Sync</td>
+                    <td><span class="mono">hooks.jira.com/xk9f3…</span></td>
+                    <td>
+                      <span class="event-tag">task.created</span>
+                      <span class="event-tag">task.closed</span>
+                    </td>
+                    <td style="color:var(--text-secondary);">Apr 10, 14:32</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                    <td>
+                      <div style="display:flex;gap:4px;justify-content:flex-end;">
+                        <button class="btn btn-ghost btn-sm"><i data-lucide="pencil" style="width:12px;height:12px;" aria-label="Edit"></i></button>
+                        <button class="btn btn-ghost btn-sm"><i data-lucide="trash-2" style="width:12px;height:12px;" aria-label="Delete"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:var(--weight-semibold);">GitHub Issues</td>
+                    <td><span class="mono">api.github.com/repos/…</span></td>
+                    <td>
+                      <span class="event-tag">task.blocked</span>
+                      <span class="event-tag">task.updated</span>
+                    </td>
+                    <td style="color:var(--text-secondary);">Apr 10, 11:07</td>
+                    <td><span class="badge badge-warning">Retrying</span></td>
+                    <td>
+                      <div style="display:flex;gap:4px;justify-content:flex-end;">
+                        <button class="btn btn-ghost btn-sm"><i data-lucide="pencil" style="width:12px;height:12px;" aria-label="Edit"></i></button>
+                        <button class="btn btn-ghost btn-sm"><i data-lucide="trash-2" style="width:12px;height:12px;" aria-label="Delete"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ── Polling intervals ────────────────────── -->
+          <div class="section-card">
+            <div class="sc-header">
+              <span class="sc-title">
+                <i data-lucide="clock" style="width:16px;height:16px;color:var(--icon-secondary);" aria-label="Polling"></i>
+                Polling Intervals
+              </span>
+            </div>
+            <div class="sc-body">
+              <p style="font-size:var(--text-body-sm);color:var(--text-secondary);margin-bottom:var(--space-4);line-height:1.5;">
+                How frequently each channel is checked for new messages. Lower values increase freshness but add API usage.
+              </p>
+              <div class="poll-grid">
+                <div class="field-row">
+                  <label class="field-label">Email (IMAP)</label>
+                  <div class="field-input-group">
+                    <input class="field-input" type="number" value="2" min="1" max="60" aria-label="Email polling interval" />
+                    <span class="field-addon">minutes</span>
+                  </div>
+                </div>
+                <div class="field-row">
+                  <label class="field-label">Microsoft Teams</label>
+                  <div class="field-input-group">
+                    <input class="field-input" type="number" value="1" min="1" max="60" aria-label="Teams polling interval" />
+                    <span class="field-addon">minutes</span>
+                  </div>
+                </div>
+                <div class="field-row">
+                  <label class="field-label">Slack (when connected)</label>
+                  <div class="field-input-group">
+                    <input class="field-input" type="number" value="1" min="1" max="60" aria-label="Slack polling interval" style="background:var(--bg-surface-alt);color:var(--text-tertiary);" disabled />
+                    <span class="field-addon">minutes</span>
+                  </div>
+                </div>
+                <div class="field-row">
+                  <label class="field-label">Webhook delivery timeout</label>
+                  <div class="field-input-group">
+                    <input class="field-input" type="number" value="30" min="5" max="120" aria-label="Webhook timeout" />
+                    <span class="field-addon">seconds</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:80px;"></div><!-- spacer above sticky footer for scroll -->
+        </div>
+
+        <!-- Sticky footer -->
+        <div class="settings-footer">
+          <button class="btn btn-primary" id="saveBtn">
+            <i data-lucide="save" style="width:14px;height:14px;" aria-label="Save"></i>
+            Save changes
+          </button>
+          <button class="btn btn-ghost">Discard</button>
+          <span style="font-size:var(--text-caption);color:var(--text-tertiary);margin-left:auto;">
+            Last saved: Apr 10, 2026 at 09:42 AM
+          </span>
+        </div>
+      </div>
+
+    </div><!-- /settings-body -->
+  </div><!-- /main-layout -->
+</div><!-- /app-shell -->
+
+<script>
+(function() {
+  lucide.createIcons();
+
+  const toggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+  function applyTheme(dark) {
+    html.setAttribute('data-theme', dark ? 'dark' : 'light');
+    const icon = toggle.querySelector('[data-lucide]');
+    icon.setAttribute('data-lucide', dark ? 'moon' : 'sun');
+    lucide.createIcons();
+  }
+  toggle.addEventListener('click', () => applyTheme(html.getAttribute('data-theme') !== 'dark'));
+
+  document.getElementById('saveBtn').addEventListener('click', function() {
+    const orig = this.innerHTML;
+    this.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> Saved!';
+    this.style.background = 'var(--state-progress)';
+    this.style.borderColor = 'var(--state-progress)';
+    lucide.createIcons();
+    setTimeout(() => {
+      this.innerHTML = orig;
+      this.style.background = '';
+      this.style.borderColor = '';
+      lucide.createIcons();
+    }, 2000);
+  });
+})();
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

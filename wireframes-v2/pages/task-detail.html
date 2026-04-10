@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html data-page="task-detail" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Detail — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+html, body { height:100%; overflow:hidden; }
+.app-shell { display:flex; height:100vh; overflow:hidden; background:var(--bg-page); }
+
+/* Sidebar */
+.sidebar { width:240px; flex-shrink:0; background:var(--bg-sidebar); border-right:1px solid var(--border-default); display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+.sidebar-logo { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-4); border-bottom:1px solid var(--border-default); height:56px; }
+.sidebar-logo-mark { width:28px; height:28px; background:linear-gradient(135deg,var(--brand-primary) 0%,#7C3AED 100%); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:13px; flex-shrink:0; }
+.sidebar-logo-text { font-size:var(--text-body); font-weight:700; color:var(--text-primary); letter-spacing:-0.01em; }
+.sidebar-logo-sub { font-size:var(--text-micro); color:var(--text-tertiary); }
+.sidebar-nav { flex:1; overflow-y:auto; padding:var(--space-2) 0; }
+.nav-section-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-tertiary); padding:var(--space-3) var(--space-4) var(--space-1); }
+.nav-item { display:flex; align-items:center; gap:var(--space-3); padding:var(--space-2) var(--space-3); margin:1px var(--space-2); border-radius:var(--radius-md); cursor:pointer; text-decoration:none; color:var(--text-secondary); font-size:var(--text-body-sm); font-weight:500; transition:background 100ms,color 100ms; }
+.nav-item:hover { background:var(--bg-inset); color:var(--text-primary); }
+.nav-item.active { background:var(--brand-primary-light); color:var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background:rgba(56,189,248,0.12); }
+.nav-icon { display:flex; align-items:center; flex-shrink:0; width:18px; height:18px; }
+.nav-count { margin-left:auto; background:var(--state-blocked); color:white; font-size:10px; font-weight:700; padding:1px 5px; border-radius:9999px; min-width:18px; text-align:center; }
+.sidebar-divider { height:1px; background:var(--border-default); margin:var(--space-2) var(--space-4); }
+.sidebar-footer { padding:var(--space-2) var(--space-2) var(--space-3); border-top:1px solid var(--border-default); }
+.user-row { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2); border-radius:var(--radius-md); cursor:pointer; transition:background 100ms; }
+.user-row:hover { background:var(--bg-inset); }
+.avatar { width:28px; height:28px; border-radius:9999px; background:linear-gradient(135deg,#7C3AED,#0EA5E9); display:flex; align-items:center; justify-content:center; color:white; font-size:11px; font-weight:600; flex-shrink:0; }
+.avatar-sm { width:22px; height:22px; font-size:9px; }
+.avatar-lg { width:40px; height:40px; font-size:16px; }
+
+.main-layout { display:flex; flex-direction:column; flex:1; min-width:0; overflow:hidden; }
+.topbar { height:56px; background:var(--bg-surface); border-bottom:1px solid var(--border-default); display:flex; align-items:center; padding:0 var(--space-5); gap:var(--space-4); flex-shrink:0; }
+.breadcrumb { display:flex; align-items:center; gap:var(--space-1); font-size:var(--text-body-sm); color:var(--text-tertiary); }
+.breadcrumb a { color:var(--text-tertiary); text-decoration:none; }
+.breadcrumb .current { color:var(--text-primary); font-weight:500; }
+.topbar-search { flex:1; max-width:360px; margin:0 auto; position:relative; }
+.topbar-search input { width:100%; height:32px; background:var(--bg-inset); border:1.5px solid var(--border-default); border-radius:var(--radius-md); padding:0 var(--space-3) 0 32px; font-size:var(--text-body-sm); font-family:var(--font-sans); color:var(--text-primary); outline:none; }
+.topbar-search input::placeholder { color:var(--text-tertiary); }
+.topbar-search .s-icon { position:absolute; left:8px; top:50%; transform:translateY(-50%); color:var(--icon-tertiary); display:flex; }
+.topbar-actions { display:flex; align-items:center; gap:var(--space-1); margin-left:auto; }
+.icon-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:var(--radius-md); border:none; background:transparent; cursor:pointer; color:var(--icon-secondary); transition:background 100ms,color 100ms; }
+.icon-btn:hover { background:var(--bg-inset); color:var(--text-primary); }
+.notif-badge { position:relative; }
+.notif-badge::after { content:''; position:absolute; top:5px; right:5px; width:7px; height:7px; background:var(--state-blocked); border-radius:50%; border:1.5px solid var(--bg-surface); }
+
+/* --- SPLIT LAYOUT --- */
+.main-content { flex:1; overflow:hidden; display:flex; min-height:0; }
+
+/* Left: ghost background (dim task list) */
+.bg-panel {
+  flex:1;
+  overflow-y:auto;
+  filter:blur(2px);
+  opacity:0.35;
+  pointer-events:none;
+  position:relative;
+  padding:var(--space-5);
+  background:var(--bg-page);
+}
+.bg-overlay {
+  position:absolute; inset:0;
+  background:linear-gradient(90deg, transparent 0%, var(--bg-page) 85%);
+  z-index:1;
+  pointer-events:none;
+}
+
+/* ghost task rows */
+.ghost-row { display:grid; grid-template-columns:48px 1fr 110px 80px; gap:var(--space-3); height:44px; align-items:center; padding:0 var(--space-2); border-bottom:1px solid var(--border-subtle); }
+.ghost-score { font-size:18px; font-weight:700; text-align:right; font-variant-numeric:tabular-nums; color:var(--state-blocked); }
+.ghost-name { font-size:var(--text-body-sm); font-weight:500; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ghost-active { background:rgba(14,165,233,0.08); }
+
+/* Right: detail panel */
+.detail-panel {
+  width:520px;
+  flex-shrink:0;
+  background:var(--bg-surface);
+  border-left:1px solid var(--border-default);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  box-shadow:var(--shadow-4);
+}
+.panel-topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:var(--space-3) var(--space-5);
+  border-bottom:1px solid var(--border-default);
+  flex-shrink:0;
+}
+.panel-close { display:flex; align-items:center; gap:var(--space-2); }
+.panel-actions { display:flex; align-items:center; gap:var(--space-2); }
+.panel-body { flex:1; overflow-y:auto; padding:var(--space-5) var(--space-5) 0; }
+.panel-footer { flex-shrink:0; padding:var(--space-4) var(--space-5); border-top:1px solid var(--border-default); background:var(--bg-surface); }
+
+/* Task title */
+.task-title-block { margin-bottom:var(--space-4); }
+.task-title {
+  font-size:var(--text-heading);
+  font-weight:var(--weight-bold);
+  color:var(--text-primary);
+  letter-spacing:-0.02em;
+  line-height:var(--leading-tight);
+  cursor:text;
+  padding:4px 6px;
+  border-radius:var(--radius-md);
+  margin:-4px -6px;
+  transition:background 100ms;
+}
+.task-title:hover { background:var(--bg-inset); }
+
+/* Badges row */
+.badges-row { display:flex; align-items:center; gap:var(--space-2); flex-wrap:wrap; margin-bottom:var(--space-3); }
+.status-badge { display:inline-flex; align-items:center; gap:5px; padding:4px var(--space-2); border-radius:var(--radius-sm); font-size:var(--text-caption); font-weight:600; }
+.trust-badge { font-size:10px; font-weight:700; padding:3px 7px; border-radius:var(--radius-sm); letter-spacing:0.03em; }
+.priority-badge { display:inline-flex; align-items:center; gap:4px; padding:4px var(--space-3); border-radius:9999px; font-size:var(--text-body-sm); font-weight:700; font-variant-numeric:tabular-nums; }
+
+.badge-active { background:var(--state-active-light); color:var(--state-active); }
+.badge-blocked { background:var(--state-blocked-light); color:var(--state-blocked); }
+.badge-progress { background:var(--state-progress-light); color:var(--state-progress); }
+.trust-gated { background:#FEF3C7; color:#D97706; }
+.trust-blocked { background:#FEE2E2; color:#DC2626; }
+.trust-auto { background:#DCFCE7; color:#16A34A; }
+[data-theme="dark"] .trust-gated { background:rgba(217,119,6,0.15); color:#FCD34D; }
+[data-theme="dark"] .trust-blocked { background:rgba(220,38,38,0.15); color:#FCA5A5; }
+[data-theme="dark"] .trust-auto { background:rgba(22,163,74,0.15); color:#4ADE80; }
+
+/* Breadcrumb in panel */
+.panel-breadcrumb { display:flex; align-items:center; gap:var(--space-1); font-size:var(--text-caption); color:var(--text-tertiary); margin-bottom:var(--space-4); }
+.panel-breadcrumb a { color:var(--text-tertiary); text-decoration:none; }
+.panel-breadcrumb a:hover { color:var(--brand-primary); }
+.panel-breadcrumb .bc-sep { color:var(--border-strong); }
+
+/* Tab bar */
+.tab-bar { display:flex; border-bottom:1px solid var(--border-default); margin:0 calc(-1 * var(--space-5)); padding:0 var(--space-5); margin-bottom:var(--space-5); }
+.tab-item { font-size:var(--text-body-sm); font-weight:500; color:var(--text-secondary); padding:var(--space-2) var(--space-3); cursor:pointer; border-bottom:2px solid transparent; transition:color 100ms,border-color 100ms; }
+.tab-item:hover { color:var(--text-primary); }
+.tab-item.active { color:var(--brand-primary); border-bottom-color:var(--brand-primary); font-weight:600; }
+
+/* Description block */
+.description-block {
+  background:var(--bg-inset);
+  border-radius:var(--radius-lg);
+  padding:var(--space-4);
+  margin-bottom:var(--space-5);
+  font-size:var(--text-body);
+  line-height:var(--leading-loose);
+  color:var(--text-secondary);
+  border-left:3px solid var(--brand-primary);
+}
+.description-block p { margin-bottom:var(--space-2); }
+.description-block p:last-child { margin-bottom:0; }
+
+/* Metadata grid */
+.meta-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3); margin-bottom:var(--space-5); }
+.meta-field { }
+.meta-key { font-size:var(--text-caption); font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; }
+.meta-val { font-size:var(--text-body-sm); color:var(--text-primary); font-weight:500; display:flex; align-items:center; gap:var(--space-1); }
+.meta-val .avatar { width:18px; height:18px; font-size:8px; }
+
+/* Section title */
+.section-title { font-size:var(--text-body-sm); font-weight:700; color:var(--text-primary); margin-bottom:var(--space-3); display:flex; align-items:center; gap:var(--space-2); }
+
+/* Dependency list */
+.dep-list { margin-bottom:var(--space-5); }
+.dep-item { display:flex; align-items:center; gap:var(--space-3); padding:var(--space-2); border:1px solid var(--border-default); border-radius:var(--radius-md); margin-bottom:var(--space-2); cursor:pointer; transition:background 100ms,border-color 100ms; }
+.dep-item:hover { background:var(--bg-inset); border-color:var(--brand-primary); }
+.dep-label { font-size:var(--text-caption); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; padding:2px 6px; border-radius:var(--radius-sm); flex-shrink:0; }
+.dep-blocks { background:rgba(239,68,68,0.1); color:var(--state-blocked); }
+.dep-blocked-by { background:rgba(245,158,11,0.1); color:var(--state-delayed); }
+.dep-name { flex:1; font-size:var(--text-body-sm); color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dep-status { font-size:var(--text-caption); font-weight:600; padding:2px 6px; border-radius:var(--radius-sm); }
+
+/* Score breakdown */
+.score-breakdown { margin-bottom:var(--space-5); }
+.score-total { display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3); }
+.score-big { font-size:3rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--state-blocked); line-height:1; }
+.score-big-label { font-size:var(--text-body-sm); color:var(--text-tertiary); }
+.score-factor { margin-bottom:var(--space-2); }
+.score-factor-row { display:flex; align-items:center; gap:var(--space-2); margin-bottom:4px; }
+.score-factor-name { font-size:var(--text-body-sm); color:var(--text-secondary); flex:1; }
+.score-factor-val { font-size:var(--text-body-sm); font-weight:700; font-variant-numeric:tabular-nums; color:var(--text-primary); min-width:40px; text-align:right; }
+.score-bar-track { height:6px; background:var(--bg-inset); border-radius:9999px; overflow:hidden; flex:2; }
+.score-bar-fill { height:100%; border-radius:9999px; }
+
+/* AI explanation */
+.ai-block {
+  background:linear-gradient(135deg, rgba(14,165,233,0.06) 0%, rgba(124,58,237,0.06) 100%);
+  border:1px solid rgba(14,165,233,0.2);
+  border-radius:var(--radius-lg);
+  padding:var(--space-4);
+  margin-bottom:var(--space-4);
+}
+.ai-block-header { display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-3); font-size:var(--text-body-sm); font-weight:700; color:var(--text-primary); }
+.ai-icon { width:24px; height:24px; background:linear-gradient(135deg,var(--brand-primary),#7C3AED); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; color:white; flex-shrink:0; }
+.ai-text { font-size:var(--text-body-sm); color:var(--text-secondary); line-height:var(--leading-loose); }
+.ai-recommendations { list-style:none; margin-top:var(--space-3); padding:0; display:flex; flex-direction:column; gap:var(--space-2); }
+.ai-rec-item { display:flex; align-items:flex-start; gap:var(--space-2); font-size:var(--text-body-sm); color:var(--text-secondary); }
+.ai-rec-bullet { width:18px; height:18px; border-radius:9999px; background:linear-gradient(135deg,var(--brand-primary),#7C3AED); color:white; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+
+/* Approval actions */
+.approval-section {
+  background:rgba(245,158,11,0.05);
+  border:1px solid rgba(245,158,11,0.25);
+  border-radius:var(--radius-lg);
+  padding:var(--space-4);
+  margin-bottom:var(--space-5);
+}
+.approval-header { display:flex; align-items:center; gap:var(--space-2); font-size:var(--text-body-sm); font-weight:700; color:var(--state-delayed); margin-bottom:var(--space-3); }
+.approval-msg { font-size:var(--text-body-sm); color:var(--text-secondary); margin-bottom:var(--space-3); line-height:1.5; }
+.approval-btns { display:flex; gap:var(--space-2); }
+
+/* Activity tab */
+.activity-item { display:flex; gap:var(--space-3); padding:var(--space-3) 0; border-bottom:1px solid var(--border-subtle); }
+.activity-item:last-child { border-bottom:none; }
+.activity-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+.activity-content { flex:1; min-width:0; }
+.activity-line { font-size:var(--text-body-sm); color:var(--text-secondary); line-height:1.5; }
+.activity-line strong { color:var(--text-primary); }
+.activity-time { font-size:var(--text-caption); color:var(--text-tertiary); margin-top:2px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">G</div>
+      <div>
+        <div class="sidebar-logo-text">GraphClaw</div>
+        <div class="sidebar-logo-sub">Cockpit</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="layout-dashboard" width="16" height="16"></i></span>Dashboard</a>
+      <a href="my-tasks.html" class="nav-item active"><span class="nav-icon"><i data-lucide="check-square" width="16" height="16"></i></span>My Tasks<span class="nav-count">3</span></a>
+      <a href="goal-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="target" width="16" height="16"></i></span>Goals</a>
+      <a href="project-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="kanban-square" width="16" height="16"></i></span>Projects</a>
+      <a href="timeline-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="gantt-chart" width="16" height="16"></i></span>Timeline</a>
+      <a href="resource-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="users" width="16" height="16"></i></span>People</a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section-label">Intelligence</div>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="cpu" width="16" height="16"></i></span>Agent Monitor</a>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="message-square" width="16" height="16"></i></span>Chat</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="settings" width="16" height="16"></i></span>Settings</a>
+      <div class="user-row">
+        <div class="avatar">AS</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:var(--text-body-sm);font-weight:600;color:var(--text-primary);">Abhishek S.</div>
+          <div style="font-size:var(--text-micro);color:var(--text-tertiary);">Admin · Product Ops</div>
+        </div>
+        <div style="color:var(--icon-tertiary);display:flex;"><i data-lucide="chevrons-up-down" width="14" height="14"></i></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN LAYOUT -->
+  <div class="main-layout">
+    <header class="topbar">
+      <nav class="breadcrumb">
+        <a href="#">Workspace</a>
+        <span style="color:var(--text-tertiary);display:flex;"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+        <a href="my-tasks.html">My Tasks</a>
+        <span style="color:var(--text-tertiary);display:flex;"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+        <span class="current">Task Detail</span>
+      </nav>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14"></i></span>
+        <input type="text" placeholder="Search tasks, projects…" />
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notif-badge"><i data-lucide="bell" width="18" height="18"></i></button>
+        <button class="icon-btn" id="theme-toggle"><i data-lucide="moon" width="18" height="18"></i></button>
+        <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#0EA5E9,#7C3AED);">AS</div>
+      </div>
+    </header>
+
+    <div class="main-content">
+
+      <!-- LEFT: Ghost background (blurred task list) -->
+      <div class="bg-panel">
+        <div class="bg-overlay"></div>
+        <div style="padding:0 var(--space-4);">
+          <!-- Ghost column headers -->
+          <div style="display:grid; grid-template-columns:48px 1fr 110px 80px; gap:var(--space-3); height:36px; align-items:center; border-bottom:2px solid var(--border-default); margin-bottom:2px;">
+            <div style="font-size:10px; font-weight:700; color:var(--text-tertiary); text-align:right; text-transform:uppercase;">Score</div>
+            <div style="font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase;">Task</div>
+            <div style="font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase;">Project</div>
+            <div style="font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase;">Status</div>
+          </div>
+          <!-- section: Today -->
+          <div style="height:30px; background:var(--bg-surface-alt); border-bottom:1px solid var(--border-default); display:flex; align-items:center; padding:0 var(--space-2); font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; gap:var(--space-2);">
+            Today <span style="background:rgba(239,68,68,0.12); color:var(--state-blocked); padding:1px 7px; border-radius:9999px;">3 OVERDUE</span>
+          </div>
+          <div class="ghost-row" style="background:rgba(14,165,233,0.05);">
+            <div class="ghost-score">96</div>
+            <div class="ghost-name">Pentest remediation — SQL injection in /api/search endpoint</div>
+            <span style="font-size:11px; font-weight:500; padding:2px 7px; background:#FDF4FF; color:#7E22CE; border-radius:4px;">Security Audit</span>
+            <span style="font-size:11px; font-weight:600; background:var(--state-blocked-light); color:var(--state-blocked); padding:2px 7px; border-radius:4px;">Blocked</span>
+          </div>
+          <div class="ghost-row ghost-active">
+            <div class="ghost-score" style="color:#E05A22;">94</div>
+            <div class="ghost-name" style="font-weight:700;">Migrate API Gateway service to Kubernetes containers</div>
+            <span style="font-size:11px; font-weight:500; padding:2px 7px; background:#EFF6FF; color:#1D4ED8; border-radius:4px;">API Gateway v3</span>
+            <span style="font-size:11px; font-weight:600; background:var(--state-progress-light); color:var(--state-progress); padding:2px 7px; border-radius:4px;">In Progress</span>
+          </div>
+          <div class="ghost-row">
+            <div class="ghost-score" style="color:#E05A22;">88</div>
+            <div class="ghost-name">GDPR data retention audit — review log retention policies</div>
+            <span style="font-size:11px; font-weight:500; padding:2px 7px; background:#FDF4FF; color:#7E22CE; border-radius:4px;">Security Audit</span>
+            <span style="font-size:11px; font-weight:600; background:var(--state-review-light); color:var(--state-review); padding:2px 7px; border-radius:4px;">Review</span>
+          </div>
+          <div class="ghost-row">
+            <div class="ghost-score" style="color:var(--state-delayed);">78</div>
+            <div class="ghost-name">Implement Spark job checkpointing for pipeline crash recovery</div>
+            <span style="font-size:11px; font-weight:500; padding:2px 7px; background:#FFF7ED; color:#C2410C; border-radius:4px;">Data Pipeline</span>
+            <span style="font-size:11px; font-weight:600; background:var(--state-progress-light); color:var(--state-progress); padding:2px 7px; border-radius:4px;">In Progress</span>
+          </div>
+          <!-- section: This Week -->
+          <div style="height:30px; background:var(--bg-surface-alt); border-bottom:1px solid var(--border-default); border-top:1px solid var(--border-default); display:flex; align-items:center; padding:0 var(--space-2); font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; margin-top:var(--space-1);">This Week</div>
+          <div class="ghost-row">
+            <div class="ghost-score" style="color:#E05A22;">83</div>
+            <div class="ghost-name">PR review: Add distributed tracing via OpenTelemetry instrumentation</div>
+            <span style="font-size:11px; font-weight:500; padding:2px 7px; background:#EFF6FF; color:#1D4ED8; border-radius:4px;">API Gateway v3</span>
+            <span style="font-size:11px; font-weight:600; background:var(--state-review-light); color:var(--state-review); padding:2px 7px; border-radius:4px;">Review</span>
+          </div>
+          <div class="ghost-row">
+            <div class="ghost-score" style="color:var(--state-delayed);">77</div>
+            <div class="ghost-name">Build real-time event stream for mobile push notification delivery</div>
+            <span style="font-size:11px; font-weight:500; padding:2px 7px; background:#ECFDF5; color:#047857; border-radius:4px;">Mobile App</span>
+            <span style="font-size:11px; font-weight:600; background:var(--state-progress-light); color:var(--state-progress); padding:2px 7px; border-radius:4px;">In Progress</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Detail Panel -->
+      <div class="detail-panel">
+        <!-- Panel topbar -->
+        <div class="panel-topbar">
+          <div class="panel-close">
+            <a href="my-tasks.html" class="icon-btn" title="Close"><i data-lucide="x" width="18" height="18"></i></a>
+            <span style="font-size:var(--text-caption); color:var(--text-tertiary);">Task Detail</span>
+          </div>
+          <div class="panel-actions">
+            <button class="icon-btn" title="Copy link"><i data-lucide="link" width="16" height="16"></i></button>
+            <button class="icon-btn" title="Open in full page"><i data-lucide="maximize-2" width="16" height="16"></i></button>
+            <button class="icon-btn" title="More options"><i data-lucide="more-horizontal" width="16" height="16"></i></button>
+          </div>
+        </div>
+
+        <!-- Panel scrollable body -->
+        <div class="panel-body">
+
+          <!-- Breadcrumb -->
+          <div class="panel-breadcrumb">
+            <a href="#">Migrate to Kubernetes</a>
+            <span class="bc-sep"><i data-lucide="chevron-right" width="12" height="12"></i></span>
+            <a href="#">API Gateway v3</a>
+            <span class="bc-sep"><i data-lucide="chevron-right" width="12" height="12"></i></span>
+            <span style="color:var(--text-primary);">Migrate Gateway to K8s</span>
+          </div>
+
+          <!-- Title -->
+          <div class="task-title-block">
+            <h1 class="task-title" contenteditable="true">Migrate API Gateway service to Kubernetes containers</h1>
+          </div>
+
+          <!-- Badges -->
+          <div class="badges-row">
+            <span class="status-badge badge-progress">
+              <i data-lucide="activity" width="11" height="11"></i>In Progress
+            </span>
+            <span class="trust-badge trust-gated">⚡ GATED</span>
+            <span class="priority-badge" style="background:rgba(239,68,68,0.1); color:var(--state-blocked);">
+              <i data-lucide="zap" width="13" height="13"></i>Score: 94
+            </span>
+          </div>
+
+          <!-- Tab bar -->
+          <div class="tab-bar">
+            <div class="tab-item active" id="tab-overview" onclick="showTab('overview')">Overview</div>
+            <div class="tab-item" id="tab-activity" onclick="showTab('activity')">Activity <span style="background:var(--bg-inset); color:var(--text-secondary); padding:0 5px; border-radius:9999px; font-size:10px; font-weight:700; margin-left:4px;">8</span></div>
+            <div class="tab-item" id="tab-notes" onclick="showTab('notes')">Notes</div>
+            <div class="tab-item" id="tab-linked" onclick="showTab('linked')">Linked Tasks <span style="background:var(--bg-inset); color:var(--text-secondary); padding:0 5px; border-radius:9999px; font-size:10px; font-weight:700; margin-left:4px;">3</span></div>
+          </div>
+
+          <!-- OVERVIEW TAB -->
+          <div id="content-overview">
+
+            <!-- Description -->
+            <div class="description-block">
+              <p>Containerise the existing API Gateway (Go/Gin) and migrate it from bare-metal VM to the new GKE Autopilot cluster. The service handles ~12k req/s peak. Must preserve all existing TLS termination, header rewriting, and rate-limiting middleware.</p>
+              <p>Blocked on Istio service mesh setup completing — need mTLS policies configured before cutover can proceed.</p>
+            </div>
+
+            <!-- Metadata grid -->
+            <div class="meta-grid">
+              <div class="meta-field">
+                <div class="meta-key">Owner</div>
+                <div class="meta-val">
+                  <div class="avatar" style="background:linear-gradient(135deg,#0EA5E9,#0369A1);">SC</div>
+                  Sarah Chen
+                </div>
+              </div>
+              <div class="meta-field">
+                <div class="meta-key">Assignee</div>
+                <div class="meta-val">
+                  <div class="avatar" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);">MW</div>
+                  Marcus Webb
+                </div>
+              </div>
+              <div class="meta-field">
+                <div class="meta-key">Due Date</div>
+                <div class="meta-val" style="color:var(--state-blocked);">
+                  <i data-lucide="calendar" width="13" height="13"></i>
+                  Apr 10 · Today · Overdue
+                </div>
+              </div>
+              <div class="meta-field">
+                <div class="meta-key">Created</div>
+                <div class="meta-val"><i data-lucide="calendar" width="13" height="13"></i>Mar 22, 2026</div>
+              </div>
+              <div class="meta-field">
+                <div class="meta-key">Updated</div>
+                <div class="meta-val"><i data-lucide="clock" width="13" height="13"></i>2 hours ago</div>
+              </div>
+              <div class="meta-field">
+                <div class="meta-key">Source Channel</div>
+                <div class="meta-val">
+                  <i data-lucide="mail" width="13" height="13"></i>
+                  <span>Email (sarah@company.io)</span>
+                </div>
+              </div>
+              <div class="meta-field">
+                <div class="meta-key">Project</div>
+                <div class="meta-val"><i data-lucide="folder" width="13" height="13"></i>API Gateway v3</div>
+              </div>
+              <div class="meta-field">
+                <div class="meta-key">Sprint</div>
+                <div class="meta-val"><i data-lucide="layers" width="13" height="13"></i>Sprint 12 (current)</div>
+              </div>
+            </div>
+
+            <!-- Dependencies -->
+            <div class="dep-list">
+              <div class="section-title"><i data-lucide="git-merge" width="16" height="16"></i>Dependencies</div>
+              <div class="dep-item">
+                <span class="dep-label dep-blocked-by">Blocked by</span>
+                <span class="dep-name">Set up Istio service mesh with mTLS</span>
+                <span class="dep-status" style="background:var(--state-blocked-light); color:var(--state-blocked);">Blocked</span>
+                <i data-lucide="chevron-right" width="14" height="14" style="color:var(--icon-tertiary); flex-shrink:0;"></i>
+              </div>
+              <div class="dep-item">
+                <span class="dep-label dep-blocked-by">Blocked by</span>
+                <span class="dep-name">Provision GKE Autopilot cluster (us-central1)</span>
+                <span class="dep-status" style="background:var(--state-complete-light); color:var(--state-complete);">Done ✓</span>
+                <i data-lucide="chevron-right" width="14" height="14" style="color:var(--icon-tertiary); flex-shrink:0;"></i>
+              </div>
+              <div class="dep-item">
+                <span class="dep-label dep-blocks">Blocks</span>
+                <span class="dep-name">Load test new cluster under 10k RPS</span>
+                <span class="dep-status" style="background:var(--state-delayed-light); color:var(--state-delayed);">Delayed</span>
+                <i data-lucide="chevron-right" width="14" height="14" style="color:var(--icon-tertiary); flex-shrink:0;"></i>
+              </div>
+            </div>
+
+            <!-- Score breakdown -->
+            <div class="score-breakdown">
+              <div class="section-title"><i data-lucide="bar-chart-2" width="16" height="16"></i>Priority Score Breakdown</div>
+              <div style="display:flex; align-items:flex-end; gap:var(--space-4); margin-bottom:var(--space-4);">
+                <div>
+                  <div class="score-big">94</div>
+                  <div class="score-big-label">Final Score</div>
+                </div>
+                <div style="flex:1; padding-bottom:4px;">
+                  <div style="font-size:var(--text-body-sm); color:var(--text-secondary); line-height:1.5;">Computed in real-time from 7 weighted factors. Score drives cross-workspace priority ordering.</div>
+                </div>
+              </div>
+              <div class="score-factor">
+                <div class="score-factor-row">
+                  <span class="score-factor-name">Urgency (W1)</span>
+                  <div class="score-bar-track"><div class="score-bar-fill" style="width:90%; background:linear-gradient(90deg,#DC2626,#EF4444);"></div></div>
+                  <span class="score-factor-val">9.0/10</span>
+                </div>
+              </div>
+              <div class="score-factor">
+                <div class="score-factor-row">
+                  <span class="score-factor-name">Strategic Impact (W2)</span>
+                  <div class="score-bar-track"><div class="score-bar-fill" style="width:90%; background:linear-gradient(90deg,#B45309,#F59E0B);"></div></div>
+                  <span class="score-factor-val">9.0/10</span>
+                </div>
+              </div>
+              <div class="score-factor">
+                <div class="score-factor-row">
+                  <span class="score-factor-name">Dependency Weight (W3)</span>
+                  <div class="score-bar-track"><div class="score-bar-fill" style="width:72%; background:linear-gradient(90deg,#1D4ED8,#3B82F6);"></div></div>
+                  <span class="score-factor-val">1.2× mult</span>
+                </div>
+              </div>
+              <div class="score-factor">
+                <div class="score-factor-row">
+                  <span class="score-factor-name">Context Relevance (W4)</span>
+                  <div class="score-bar-track"><div class="score-bar-fill" style="width:80%; background:linear-gradient(90deg,#6D28D9,#A855F7);"></div></div>
+                  <span class="score-factor-val">8.0/10</span>
+                </div>
+              </div>
+              <div class="score-factor">
+                <div class="score-factor-row">
+                  <span class="score-factor-name">Recency (W5)</span>
+                  <div class="score-bar-track"><div class="score-bar-fill" style="width:60%; background:linear-gradient(90deg,#047857,#10B981);"></div></div>
+                  <span class="score-factor-val">6.0/10</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Approval section (GATED) -->
+            <div class="approval-section">
+              <div class="approval-header">
+                <i data-lucide="shield-alert" width="16" height="16"></i>
+                GATED — Awaiting Human Approval
+              </div>
+              <div class="approval-msg">
+                This task is in GATED mode. The orchestrator agent has prepared a deployment plan but requires explicit approval before proceeding with service cutover. Review the plan and approve or escalate.
+              </div>
+              <div class="approval-btns">
+                <button class="btn btn-primary btn-sm"><i data-lucide="check" width="14" height="14"></i>Approve Deployment</button>
+                <button class="btn btn-danger btn-sm"><i data-lucide="x" width="14" height="14"></i>Reject</button>
+                <button class="btn btn-secondary btn-sm"><i data-lucide="arrow-up-right" width="14" height="14"></i>Escalate</button>
+              </div>
+            </div>
+
+            <!-- AI Explainability -->
+            <div class="ai-block">
+              <div class="ai-block-header">
+                <div class="ai-icon"><i data-lucide="cpu" width="14" height="14"></i></div>
+                Why is this task high priority? (AI Explanation)
+              </div>
+              <div class="ai-text">
+                This task is scored <strong>94/100</strong> because it sits on the critical path of the "Migrate to Kubernetes" Q2 goal (68% complete). It is currently <strong>overdue by 1 day</strong> and blocks 1 downstream task (load testing). The API Gateway processes 12k req/s in production — any delay extends the migration timeline and risks Q2 goal failure. The Istio service mesh blocker has been unresolved for 3 days, amplifying urgency.
+              </div>
+              <ul class="ai-recommendations">
+                <div style="font-size:var(--text-caption); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-tertiary); margin-top:var(--space-2); margin-bottom:var(--space-1);">Recommended Actions</div>
+                <li class="ai-rec-item"><span class="ai-rec-bullet">1</span><span>Unblock the Istio setup blocker first — assign Sarah Chen full-time to resolve mTLS policy configuration (est. 4h).</span></li>
+                <li class="ai-rec-item"><span class="ai-rec-bullet">2</span><span>Request temporary bandwidth throttling on the load-test task to buy 2–3 extra days for cutover preparation.</span></li>
+                <li class="ai-rec-item"><span class="ai-rec-bullet">3</span><span>Consider a staged rollout: migrate 10% traffic to K8s first, validate metrics, then proceed to 100% to reduce risk.</span></li>
+              </ul>
+            </div>
+
+            <div style="height:var(--space-6);"></div>
+
+          </div><!-- #content-overview -->
+
+          <!-- ACTIVITY TAB -->
+          <div id="content-activity" style="display:none;">
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--state-blocked);"></div>
+              <div class="activity-content">
+                <div class="activity-line"><strong>Marcus Webb</strong> changed status from <em>Active</em> to <em>In Progress</em></div>
+                <div class="activity-time">Today at 2:34 PM</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--brand-primary);"></div>
+              <div class="activity-content">
+                <div class="activity-line">Orchestrator Agent flagged <strong>Istio setup</strong> as a blocker. Task moved to GATED state.</div>
+                <div class="activity-time">Today at 11:08 AM</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--state-progress);"></div>
+              <div class="activity-content">
+                <div class="activity-line"><strong>Sarah Chen</strong> left a comment: "GKE cluster is ready, namespace created. Waiting for Istio mesh before we proceed."</div>
+                <div class="activity-time">Yesterday at 4:15 PM</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--state-complete);"></div>
+              <div class="activity-content">
+                <div class="activity-line">Priority score updated: <strong>81 → 94</strong> (deadline proximity factor increased)</div>
+                <div class="activity-time">Yesterday at 9:00 AM</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--state-active);"></div>
+              <div class="activity-content">
+                <div class="activity-line"><strong>Abhishek S.</strong> assigned task to <strong>Marcus Webb</strong></div>
+                <div class="activity-time">Apr 7 at 10:30 AM</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTES TAB -->
+          <div id="content-notes" style="display:none;">
+            <div style="background:var(--bg-inset); border-radius:var(--radius-lg); padding:var(--space-4); font-size:var(--text-body-sm); color:var(--text-secondary); line-height:var(--leading-loose);">
+              <p style="margin-bottom:var(--space-3); font-weight:600; color:var(--text-primary);">Architecture Notes (Marcus)</p>
+              <p style="margin-bottom:var(--space-2);">The API Gateway needs a config map for the TLS cert paths. Current VM setup uses /etc/ssl/certs — we need to mount a K8s Secret instead.</p>
+              <p style="margin-bottom:var(--space-2);">Rate limiting middleware is stateful via Redis — need to ensure same Redis cluster is reachable from K8s network. Using VPC peering for us-central1.</p>
+              <p>Consider helm chart from gateway-infra repo at commit 3a7f2b1 for baseline K8s manifests.</p>
+            </div>
+            <div style="margin-top:var(--space-3);">
+              <textarea class="textarea" placeholder="Add a note…" style="min-height:80px;"></textarea>
+              <div style="display:flex; justify-content:flex-end; margin-top:var(--space-2);">
+                <button class="btn btn-primary btn-sm">Save Note</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- LINKED TASKS TAB -->
+          <div id="content-linked" style="display:none;">
+            <div style="display:flex; flex-direction:column; gap:var(--space-2); margin-top:var(--space-2);">
+              <div class="dep-item">
+                <span class="dep-label dep-blocked-by">Blocked by</span>
+                <span class="dep-name">Set up Istio service mesh with mTLS</span>
+                <span class="dep-status" style="background:var(--state-blocked-light); color:var(--state-blocked);">Blocked</span>
+              </div>
+              <div class="dep-item">
+                <span class="dep-label dep-blocked-by">Depends on</span>
+                <span class="dep-name">Provision GKE Autopilot cluster (us-central1)</span>
+                <span class="dep-status" style="background:var(--state-complete-light); color:var(--state-complete);">Done ✓</span>
+              </div>
+              <div class="dep-item">
+                <span class="dep-label dep-blocks">Blocks</span>
+                <span class="dep-name">Load test new cluster under 10k RPS</span>
+                <span class="dep-status" style="background:var(--state-delayed-light); color:var(--state-delayed);">Delayed</span>
+              </div>
+              <button class="btn btn-ghost btn-sm" style="justify-content:flex-start; color:var(--text-tertiary); margin-top:var(--space-2);">
+                <i data-lucide="plus" width="14" height="14"></i> Link another task
+              </button>
+            </div>
+          </div>
+
+        </div><!-- .panel-body -->
+
+        <!-- Panel footer -->
+        <div class="panel-footer">
+          <div style="display:flex; align-items:center; gap:var(--space-3);">
+            <div style="flex:1; position:relative;">
+              <input class="input" placeholder="Add comment or ask agent…" style="padding-left:var(--space-8);" />
+              <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--icon-tertiary); display:flex;"><i data-lucide="message-circle" width="15" height="15"></i></span>
+            </div>
+            <button class="btn btn-primary btn-sm"><i data-lucide="send" width="14" height="14"></i></button>
+            <button class="icon-btn" title="Ask AI agent"><i data-lucide="cpu" width="16" height="16"></i></button>
+          </div>
+        </div>
+
+      </div><!-- .detail-panel -->
+    </div><!-- .main-content -->
+  </div><!-- .main-layout -->
+</div><!-- .app-shell -->
+
+<script>
+  lucide.createIcons();
+
+  document.getElementById('theme-toggle').addEventListener('click', function() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    this.querySelector('i').setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+    lucide.createIcons();
+  });
+
+  function showTab(name) {
+    const tabs = ['overview','activity','notes','linked'];
+    tabs.forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('active', t === name);
+      document.getElementById('content-' + t).style.display = t === name ? 'block' : 'none';
+    });
+  }
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

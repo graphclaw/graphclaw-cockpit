@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphClaw Cockpit Wireframes</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <main class="layout" style="max-width: 1100px; margin: 0 auto; padding-top: 24px;">
+    <div class="card">
+      <div class="brand" style="margin-bottom: 0;">
+        <img src="../docs/graphclaw.ai.png" alt="GraphClaw logo" />
+        <div>
+          <strong>GraphClaw Cockpit · HTML Wireframes</strong><br />
+          <span class="muted">Iteration 1 · Mixed platform aesthetics by module</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Module Pages</h2>
+      <table class="table">
+        <thead><tr><th>Module</th><th>Style reference</th><th>Focus</th><th>Open</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Cockpit Shell</td>
+            <td>Linear + Notion</td>
+            <td>IA, nav hierarchy, context rail</td>
+            <td><a class="pill" href="pages/cockpit-shell.html">Open page</a></td>
+          </tr>
+          <tr>
+            <td>Task & Explainability</td>
+            <td>Notion-like</td>
+            <td>Readable triage blocks + transparent scoring</td>
+            <td><a class="pill" href="pages/task-explainability.html">Open page</a></td>
+          </tr>
+          <tr>
+            <td>Agent Monitor</td>
+            <td>Linear + Cloud console</td>
+            <td>High-density operational visibility</td>
+            <td><a class="pill" href="pages/agent-monitor.html">Open page</a></td>
+          </tr>
+          <tr>
+            <td>Canvas Editor</td>
+            <td>Figma-like</td>
+            <td>Panelized node workflow and in-context testing</td>
+            <td><a class="pill" href="pages/canvas-editor.html">Open page</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Review Sequence (recommended)</h2>
+      <div class="block-stack">
+        <div class="block"><strong>Step 1:</strong> Cockpit Shell — validate information architecture and default navigation.</div>
+        <div class="block"><strong>Step 2:</strong> Task & Explainability — validate day-to-day usability and trust signals.</div>
+        <div class="block"><strong>Step 3:</strong> Agent Monitor — validate operational density and at-a-glance prioritization.</div>
+        <div class="block"><strong>Step 4:</strong> Canvas Editor — validate builder ergonomics and test-loop clarity.</div>
+      </div>
+      <div class="annotation">Use this order to reduce rework: shell decisions impact every downstream module.</div>
+    </div>
+
+    <div class="card">
+      <h2>Related Notes</h2>
+      <div class="footer-nav">
+        <a href="review-checklist.md">Open review checklist</a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

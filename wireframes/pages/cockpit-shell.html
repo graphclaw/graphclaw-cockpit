@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphClaw Wireframe · Cockpit Shell</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../../docs/graphclaw.ai.png" alt="GraphClaw logo" />
+        <div>
+          <strong>GraphClaw Cockpit</strong><br />
+          <span class="muted">Wireframe v1</span>
+        </div>
+      </div>
+
+      <span class="badge">Hybrid: Linear + Notion</span>
+
+      <div class="nav-section">
+        <h4>Workspace</h4>
+        <div class="nav-list">
+          <a class="nav-item active" href="cockpit-shell.html">GOAL VIEW</a>
+          <a class="nav-item" href="cockpit-shell.html">PROJECT VIEW</a>
+          <a class="nav-item" href="cockpit-shell.html">MY TASKS</a>
+          <a class="nav-item" href="cockpit-shell.html">RESOURCE</a>
+          <a class="nav-item" href="cockpit-shell.html">TIMELINE</a>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <h4>Modules</h4>
+        <div class="nav-list">
+          <a class="nav-item" href="task-explainability.html">Task & Explainability</a>
+          <a class="nav-item" href="agent-monitor.html">Agent Monitor</a>
+          <a class="nav-item" href="canvas-editor.html">Canvas Editor</a>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <h4>Secondary</h4>
+        <div class="nav-list">
+          <a class="nav-item" href="#">Chat (always on)</a>
+          <a class="nav-item" href="#">Settings</a>
+          <a class="nav-item" href="#">Admin</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h1>Cockpit Shell · Navigation and View Structure</h1>
+        <div class="meta">
+          <span class="chip">Org: Product Ops</span>
+          <span class="chip">Role: Member</span>
+          <span class="chip">SSE: Connected</span>
+        </div>
+      </header>
+
+      <section class="layout">
+        <div class="card">
+          <div class="panel-title">
+            <h2>Global Information Hierarchy</h2>
+            <span class="pill">Linear speed + Notion clarity</span>
+          </div>
+          <div class="kpis">
+            <div class="kpi"><div class="muted">Today Focus</div><div class="value">7 tasks</div></div>
+            <div class="kpi"><div class="muted">At Risk</div><div class="value">3 items</div></div>
+            <div class="kpi"><div class="muted">Pending Approvals</div><div class="value">2</div></div>
+            <div class="kpi"><div class="muted">Briefing Status</div><div class="value">Sent 08:00</div></div>
+          </div>
+          <div class="annotation">
+            Keep first row action-oriented and scannable. This mirrors Linear's dense top summary while preserving simple labels and plain language from Notion.
+          </div>
+        </div>
+
+        <div class="split two">
+          <div class="card">
+            <h3>Primary Work Area (View-dependent)</h3>
+            <table class="table">
+              <thead>
+                <tr><th>View</th><th>Main content</th><th>Default interaction</th><th>Power action</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>GOAL</td><td>Milestone blocks + progress</td><td>Open goal context</td><td>Expand into project graph</td></tr>
+                <tr><td>PROJECT</td><td>Graph tree with dependencies</td><td>Select node</td><td>Lasso + batch action</td></tr>
+                <tr><td>MY TASKS</td><td>Ranked list/table</td><td>Inline state update</td><td>Batch change + override</td></tr>
+                <tr><td>RESOURCE</td><td>Assignee load and bottlenecks</td><td>Open capacity details</td><td>Drag reassign</td></tr>
+                <tr><td>TIMELINE</td><td>Gantt and deadline shifts</td><td>Inspect critical path</td><td>Scenario compare</td></tr>
+              </tbody>
+            </table>
+            <div class="annotation">
+              Maintain one primary action per view to reduce friction for first-time users; advanced actions stay in contextual menus.
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Right Rail (Context Layer)</h3>
+            <div class="block-stack">
+              <div class="block"><strong>Context Card</strong><br /><span class="muted">Selected node / selected row summary</span></div>
+              <div class="block"><strong>Explain Why</strong><br /><span class="muted">Score or state rationale preview</span></div>
+              <div class="block"><strong>Quick Actions</strong><br /><span class="muted">Approve, Snooze, Delegate, Open Chat</span></div>
+              <div class="block"><strong>Live Events</strong><br /><span class="muted">Recent SSE events scoped to selected item</span></div>
+            </div>
+            <div class="annotation">
+              Persistent context rail borrows from cloud console patterns to reduce page hopping and preserve operator focus.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Core Flow Entrypoints</h3>
+          <div class="footer-nav">
+            <a href="task-explainability.html">Open task triage flow</a>
+            <a href="agent-monitor.html">Open monitoring flow</a>
+            <a href="canvas-editor.html">Open agent design flow</a>
+            <a href="../index.html">Back to wireframe index</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

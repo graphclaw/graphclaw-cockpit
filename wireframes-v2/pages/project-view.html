@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html data-page="project-view" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+html, body { height: 100%; overflow: hidden; }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* Sidebar */
+.sidebar { width:240px; flex-shrink:0; background:var(--bg-sidebar); border-right:1px solid var(--border-default); display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+.sidebar-logo { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-4); border-bottom:1px solid var(--border-default); height:56px; }
+.sidebar-logo-mark { width:28px; height:28px; background:linear-gradient(135deg,var(--brand-primary) 0%,#7C3AED 100%); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; color:white; font-weight:var(--weight-bold); font-size:13px; flex-shrink:0; }
+.sidebar-logo-text { font-size:var(--text-body); font-weight:var(--weight-bold); color:var(--text-primary); letter-spacing:-0.01em; }
+.sidebar-logo-sub { font-size:var(--text-micro); color:var(--text-tertiary); }
+.sidebar-nav { flex:1; overflow-y:auto; padding:var(--space-2) 0; }
+.nav-section-label { font-size:10px; font-weight:var(--weight-semibold); text-transform:uppercase; letter-spacing:0.07em; color:var(--text-tertiary); padding:var(--space-3) var(--space-4) var(--space-1); }
+.nav-item { display:flex; align-items:center; gap:var(--space-3); padding:var(--space-2) var(--space-3); margin:1px var(--space-2); border-radius:var(--radius-md); cursor:pointer; text-decoration:none; color:var(--text-secondary); font-size:var(--text-body-sm); font-weight:var(--weight-medium); transition:background var(--duration-fast),color var(--duration-fast); }
+.nav-item:hover { background:var(--bg-inset); color:var(--text-primary); }
+.nav-item.active { background:var(--brand-primary-light); color:var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background:rgba(56,189,248,0.12); }
+.nav-item .nav-icon { display:flex; align-items:center; flex-shrink:0; width:18px; height:18px; }
+.nav-item .nav-count { margin-left:auto; background:var(--state-blocked); color:white; font-size:10px; font-weight:var(--weight-bold); padding:1px 5px; border-radius:var(--radius-full); min-width:18px; text-align:center; }
+.sidebar-divider { height:1px; background:var(--border-default); margin:var(--space-2) var(--space-4); }
+.sidebar-footer { padding:var(--space-2) var(--space-2) var(--space-3); border-top:1px solid var(--border-default); }
+.user-row { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2); border-radius:var(--radius-md); cursor:pointer; transition:background var(--duration-fast); }
+.user-row:hover { background:var(--bg-inset); }
+.avatar { width:28px; height:28px; border-radius:var(--radius-full); background:linear-gradient(135deg,#7C3AED,#0EA5E9); display:flex; align-items:center; justify-content:center; color:white; font-size:11px; font-weight:var(--weight-semibold); flex-shrink:0; }
+.avatar-sm { width:22px; height:22px; font-size:9px; }
+
+/* Topbar */
+.main-layout { display:flex; flex-direction:column; flex:1; min-width:0; overflow:hidden; }
+.topbar { height:56px; background:var(--bg-surface); border-bottom:1px solid var(--border-default); display:flex; align-items:center; padding:0 var(--space-5); gap:var(--space-4); flex-shrink:0; }
+.breadcrumb { display:flex; align-items:center; gap:var(--space-1); font-size:var(--text-body-sm); color:var(--text-tertiary); }
+.breadcrumb a { color:var(--text-tertiary); text-decoration:none; }
+.breadcrumb a:hover { color:var(--text-primary); }
+.breadcrumb .current { color:var(--text-primary); font-weight:var(--weight-medium); }
+.topbar-search { flex:1; max-width:360px; margin:0 auto; position:relative; }
+.topbar-search input { width:100%; height:32px; background:var(--bg-inset); border:1.5px solid var(--border-default); border-radius:var(--radius-md); padding:0 var(--space-3) 0 32px; font-size:var(--text-body-sm); font-family:var(--font-sans); color:var(--text-primary); outline:none; transition:all var(--duration-normal); }
+.topbar-search input::placeholder { color:var(--text-tertiary); }
+.topbar-search input:focus { border-color:var(--brand-primary); background:var(--bg-surface); box-shadow:var(--shadow-focus); }
+.topbar-search .s-icon { position:absolute; left:8px; top:50%; transform:translateY(-50%); color:var(--icon-tertiary); display:flex; }
+.topbar-actions { display:flex; align-items:center; gap:var(--space-1); margin-left:auto; }
+.icon-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:var(--radius-md); border:none; background:transparent; cursor:pointer; color:var(--icon-secondary); transition:background var(--duration-fast),color var(--duration-fast); }
+.icon-btn:hover { background:var(--bg-inset); color:var(--text-primary); }
+.notif-badge { position:relative; }
+.notif-badge::after { content:''; position:absolute; top:5px; right:5px; width:7px; height:7px; background:var(--state-blocked); border-radius:50%; border:1.5px solid var(--bg-surface); }
+
+/* Project tabs */
+.project-tabs { display:flex; align-items:center; gap:0; border-bottom:1px solid var(--border-default); padding:0 var(--space-5); background:var(--bg-surface); flex-shrink:0; }
+.project-tab { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-3) var(--space-4); font-size:var(--text-body-sm); font-weight:var(--weight-medium); color:var(--text-secondary); cursor:pointer; border-bottom:2px solid transparent; transition:color var(--duration-fast),border-color var(--duration-fast); white-space:nowrap; }
+.project-tab:hover { color:var(--text-primary); }
+.project-tab.active { color:var(--brand-primary); border-bottom-color:var(--brand-primary); }
+.project-tab .tab-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* Filter row */
+.filter-row { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-3) var(--space-5); border-bottom:1px solid var(--border-default); background:var(--bg-surface); flex-shrink:0; }
+.filter-chip { display:inline-flex; align-items:center; gap:var(--space-1); height:28px; padding:0 var(--space-3); border:1.5px solid var(--border-default); border-radius:var(--radius-md); font-size:var(--text-body-sm); color:var(--text-secondary); background:var(--bg-surface); cursor:pointer; transition:all var(--duration-fast); font-family:var(--font-sans); }
+.filter-chip:hover { border-color:var(--brand-primary); color:var(--brand-primary); }
+.filter-chip.active { border-color:var(--brand-primary); background:var(--brand-primary-light); color:var(--brand-primary); font-weight:var(--weight-medium); }
+
+/* Kanban */
+.main-content { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+.kanban-board { display:flex; gap:var(--space-4); padding:var(--space-5); overflow-x:auto; flex:1; align-items:flex-start; }
+.kanban-col {
+  width:272px;
+  flex-shrink:0;
+  background:var(--bg-surface-alt);
+  border-radius:var(--radius-xl);
+  border:1px solid var(--border-default);
+  display:flex;
+  flex-direction:column;
+  max-height:calc(100vh - 220px);
+  overflow:hidden;
+}
+.kanban-col.wip-warning { border-color:var(--state-delayed); box-shadow:0 0 0 1px var(--state-delayed); }
+.col-header { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-3) var(--space-4); border-bottom:1px solid var(--border-default); flex-shrink:0; }
+.col-title { font-size:var(--text-body-sm); font-weight:var(--weight-semibold); color:var(--text-primary); flex:1; }
+.col-count { background:var(--bg-inset); color:var(--text-secondary); font-size:var(--text-caption); font-weight:var(--weight-semibold); padding:1px 7px; border-radius:var(--radius-full); }
+.col-count.wip-warn { background:rgba(245,158,11,0.15); color:var(--state-delayed); }
+.col-limit-warning {
+  margin:0 var(--space-3) 0;
+  padding:var(--space-2) var(--space-3);
+  background:rgba(245,158,11,0.08);
+  border-radius:var(--radius-md);
+  font-size:var(--text-caption);
+  color:var(--state-delayed);
+  display:flex; align-items:center; gap:var(--space-2);
+  margin-top:var(--space-2);
+}
+.col-cards { display:flex; flex-direction:column; gap:var(--space-2); padding:var(--space-3) var(--space-3); overflow-y:auto; flex:1; }
+.col-add { padding:var(--space-2) var(--space-3) var(--space-3); flex-shrink:0; }
+
+/* Kanban card */
+.kcard {
+  background:var(--bg-surface);
+  border:1px solid var(--border-default);
+  border-radius:var(--radius-lg);
+  padding:var(--space-3);
+  cursor:grab;
+  box-shadow:var(--shadow-1);
+  transition:box-shadow var(--duration-normal),transform var(--duration-fast);
+  position:relative;
+  display:flex;
+  gap:var(--space-2);
+}
+.kcard:hover { box-shadow:var(--shadow-2); transform:translateY(-1px); }
+.kcard:active { cursor:grabbing; }
+.kcard-drag { display:flex; align-items:flex-start; padding-top:2px; color:var(--icon-tertiary); opacity:0; transition:opacity var(--duration-fast); flex-shrink:0; }
+.kcard:hover .kcard-drag { opacity:1; }
+.kcard-body { flex:1; min-width:0; }
+.kcard-title { font-size:var(--text-body-sm); font-weight:var(--weight-medium); color:var(--text-primary); line-height:1.4; margin-bottom:var(--space-2); }
+.kcard-tags { display:flex; flex-wrap:wrap; gap:var(--space-1); margin-bottom:var(--space-2); }
+.tag {
+  font-size:10px; font-weight:var(--weight-medium);
+  padding:2px 7px; border-radius:var(--radius-sm);
+  background:var(--bg-inset); color:var(--text-secondary);
+  border:1px solid var(--border-default);
+}
+.tag-api { background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
+.tag-mobile { background:#F0FDF4; color:#15803D; border-color:#BBF7D0; }
+.tag-data { background:#FFF7ED; color:#C2410C; border-color:#FED7AA; }
+.tag-security { background:#FDF4FF; color:#7E22CE; border-color:#E9D5FF; }
+[data-theme="dark"] .tag-api { background:rgba(29,78,216,0.15); color:#93C5FD; border-color:rgba(29,78,216,0.3); }
+[data-theme="dark"] .tag-mobile { background:rgba(21,128,61,0.15); color:#86EFAC; border-color:rgba(21,128,61,0.3); }
+[data-theme="dark"] .tag-data { background:rgba(194,65,12,0.15); color:#FDBA74; border-color:rgba(194,65,12,0.3); }
+[data-theme="dark"] .tag-security { background:rgba(126,34,206,0.15); color:#D8B4FE; border-color:rgba(126,34,206,0.3); }
+
+.kcard-footer { display:flex; align-items:center; gap:var(--space-2); }
+.kcard-score {
+  font-size:var(--text-caption); font-weight:var(--weight-bold);
+  padding:2px 6px; border-radius:var(--radius-sm);
+  font-variant-numeric:tabular-nums;
+}
+.score-high { background:rgba(239,68,68,0.1); color:var(--state-blocked); }
+.score-med { background:rgba(245,158,11,0.1); color:var(--state-delayed); }
+.score-low { background:var(--bg-inset); color:var(--text-tertiary); }
+.kcard-due { font-size:var(--text-caption); color:var(--text-tertiary); }
+.kcard-due.overdue { color:var(--state-blocked); font-weight:var(--weight-medium); }
+.kcard-assigns { display:flex; margin-left:auto; }
+.kcard-assigns .avatar { margin-left:-4px; border:2px solid var(--bg-surface); }
+
+/* Status dot */
+.status-dot { width:8px; height:8px; border-radius:50%; }
+.dot-backlog { background:var(--text-tertiary); }
+.dot-progress { background:var(--state-progress); }
+.dot-review { background:var(--state-review); }
+.dot-done { background:var(--state-complete); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">G</div>
+      <div>
+        <div class="sidebar-logo-text">GraphClaw</div>
+        <div class="sidebar-logo-sub">Cockpit</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="layout-dashboard" width="16" height="16"></i></span>Dashboard</a>
+      <a href="my-tasks.html" class="nav-item"><span class="nav-icon"><i data-lucide="check-square" width="16" height="16"></i></span>My Tasks<span class="nav-count">3</span></a>
+      <a href="goal-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="target" width="16" height="16"></i></span>Goals</a>
+      <a href="project-view.html" class="nav-item active"><span class="nav-icon"><i data-lucide="kanban-square" width="16" height="16"></i></span>Projects</a>
+      <a href="timeline-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="gantt-chart" width="16" height="16"></i></span>Timeline</a>
+      <a href="resource-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="users" width="16" height="16"></i></span>People</a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section-label">Intelligence</div>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="cpu" width="16" height="16"></i></span>Agent Monitor</a>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="message-square" width="16" height="16"></i></span>Chat</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="settings" width="16" height="16"></i></span>Settings</a>
+      <div class="user-row">
+        <div class="avatar">AS</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:var(--text-body-sm); font-weight:var(--weight-semibold); color:var(--text-primary);">Abhishek S.</div>
+          <div style="font-size:var(--text-micro); color:var(--text-tertiary);">Admin · Product Ops</div>
+        </div>
+        <div style="color:var(--icon-tertiary); display:flex;"><i data-lucide="chevrons-up-down" width="14" height="14"></i></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN LAYOUT -->
+  <div class="main-layout">
+    <header class="topbar">
+      <nav class="breadcrumb">
+        <a href="#">Workspace</a>
+        <span style="color:var(--text-tertiary);display:flex;"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+        <span class="current">Projects</span>
+      </nav>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14"></i></span>
+        <input type="text" placeholder="Search tasks, projects…" />
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notif-badge"><i data-lucide="bell" width="18" height="18"></i></button>
+        <button class="icon-btn" id="theme-toggle"><i data-lucide="moon" width="18" height="18"></i></button>
+        <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#0EA5E9,#7C3AED);">AS</div>
+      </div>
+    </header>
+
+    <!-- PROJECT TABS -->
+    <div class="project-tabs">
+      <div class="project-tab active">
+        <span class="tab-dot" style="background:#0EA5E9;"></span>
+        All Projects
+      </div>
+      <div class="project-tab">
+        <span class="tab-dot" style="background:#7C3AED;"></span>
+        API Gateway v3
+      </div>
+      <div class="project-tab">
+        <span class="tab-dot" style="background:#F59E0B;"></span>
+        Data Pipeline
+      </div>
+      <div class="project-tab">
+        <span class="tab-dot" style="background:#10B981;"></span>
+        Mobile App
+      </div>
+      <div class="project-tab">
+        <span class="tab-dot" style="background:#EF4444;"></span>
+        Security Audit
+      </div>
+      <div style="margin-left:auto; display:flex; align-items:center; gap:var(--space-2); padding:0 var(--space-2);">
+        <button class="btn btn-primary btn-sm"><i data-lucide="plus" width="14" height="14"></i>Add Task</button>
+        <button class="icon-btn"><i data-lucide="sliders-horizontal" width="16" height="16"></i></button>
+        <div style="display:flex; border:1.5px solid var(--border-default); border-radius:var(--radius-md); overflow:hidden;">
+          <button class="icon-btn" style="border-radius:0; border:none; background:var(--brand-primary-light); color:var(--brand-primary);" title="Kanban"><i data-lucide="kanban-square" width="16" height="16"></i></button>
+          <button class="icon-btn" style="border-radius:0; border:none;" title="Table"><i data-lucide="table" width="16" height="16"></i></button>
+          <button class="icon-btn" style="border-radius:0; border:none;" title="Timeline"><i data-lucide="gantt-chart" width="16" height="16"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTER ROW -->
+    <div class="filter-row">
+      <button class="filter-chip active"><i data-lucide="layers" width="12" height="12"></i>All</button>
+      <button class="filter-chip"><i data-lucide="user" width="12" height="12"></i>Assigned to me</button>
+      <button class="filter-chip"><i data-lucide="alert-triangle" width="12" height="12"></i>Overdue</button>
+      <button class="filter-chip"><i data-lucide="zap" width="12" height="12"></i>High Priority</button>
+      <select class="input" style="width:auto; height:28px; font-size:var(--text-body-sm); padding:0 var(--space-6) 0 var(--space-3);">
+        <option>All Sprints</option>
+        <option>Sprint 12 (current)</option>
+        <option>Sprint 13</option>
+      </select>
+      <div style="margin-left:auto; font-size:var(--text-body-sm); color:var(--text-tertiary);">18 tasks across 4 projects</div>
+    </div>
+
+    <!-- KANBAN BOARD -->
+    <div class="main-content">
+      <div class="kanban-board">
+
+        <!-- BACKLOG -->
+        <div class="kanban-col">
+          <div class="col-header">
+            <span class="status-dot dot-backlog"></span>
+            <span class="col-title">Backlog</span>
+            <span class="col-count">4</span>
+            <button class="icon-btn" style="width:24px;height:24px;margin-left:auto;"><i data-lucide="plus" width="14" height="14"></i></button>
+          </div>
+          <div class="col-cards">
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Implement OAuth2 PKCE flow for mobile clients</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-security">Security</span>
+                  <span class="tag tag-mobile">Mobile</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-high">91</span>
+                  <span class="kcard-due overdue">Apr 8 · 2d overdue</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);" title="Marcus Webb">MW</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Design rate-limiting strategy for public API endpoints</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-api">API</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-med">74</span>
+                  <span class="kcard-due">Apr 28</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#0EA5E9,#0369A1);" title="Sarah Chen">SC</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Add WCAG AA contrast check to CI pipeline</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-security">Accessibility</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-low">48</span>
+                  <span class="kcard-due">May 5</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#F59E0B,#D97706);" title="Lena Torres">LT</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Write API changelog for v2.8.0 release</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-api">API</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-low">36</span>
+                  <span class="kcard-due">May 12</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#10B981,#059669);" title="Rohan Mehta">RM</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-add">
+            <button class="btn btn-ghost btn-sm" style="width:100%; color:var(--text-tertiary); justify-content:center;">
+              <i data-lucide="plus" width="13" height="13"></i> Add task
+            </button>
+          </div>
+        </div>
+
+        <!-- IN PROGRESS (WIP warning) -->
+        <div class="kanban-col wip-warning">
+          <div class="col-header">
+            <span class="status-dot dot-progress"></span>
+            <span class="col-title">In Progress</span>
+            <span class="col-count wip-warn">6 / WIP 5</span>
+            <button class="icon-btn" style="width:24px;height:24px;margin-left:auto;"><i data-lucide="plus" width="14" height="14"></i></button>
+          </div>
+          <div class="col-limit-warning">
+            <i data-lucide="alert-triangle" width="13" height="13"></i>
+            WIP limit exceeded — consider unblocking or moving tasks
+          </div>
+          <div class="col-cards">
+            <div class="kcard" onclick="window.location='task-detail.html'">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Migrate API Gateway service to Kubernetes containers</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-api">API</span>
+                  <span class="tag" style="background:rgba(239,68,68,0.1); color:var(--state-blocked); border-color:rgba(239,68,68,0.2);">P0</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-high">94</span>
+                  <span class="kcard-due overdue">Apr 10 · Today</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);">MW</div>
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#0EA5E9,#0369A1);">SC</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Build real-time event stream for mobile push notifications</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-mobile">Mobile</span>
+                  <span class="tag tag-data">Data</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-high">87</span>
+                  <span class="kcard-due">Apr 18</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#F59E0B,#D97706);">LT</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Implement Spark job checkpointing for pipeline recovery</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-data">Data Pipeline</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-med">78</span>
+                  <span class="kcard-due">Apr 22</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#10B981,#059669);">RM</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Pentest findings remediation — SQL injection vectors</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-security">Security Audit</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-high">96</span>
+                  <span class="kcard-due overdue">Apr 5 · 5d overdue</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#EF4444,#DC2626);">JK</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Offline sync engine for iOS client (Core Data migration)</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-mobile">Mobile</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-med">72</span>
+                  <span class="kcard-due">Apr 25</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#F59E0B,#D97706);">LT</div>
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);">MW</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Prototype GraphQL federation layer for microservices</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-api">API</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-med">65</span>
+                  <span class="kcard-due">May 2</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#0EA5E9,#0369A1);">SC</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-add">
+            <button class="btn btn-ghost btn-sm" style="width:100%; color:var(--text-tertiary); justify-content:center;">
+              <i data-lucide="plus" width="13" height="13"></i> Add task
+            </button>
+          </div>
+        </div>
+
+        <!-- IN REVIEW -->
+        <div class="kanban-col">
+          <div class="col-header">
+            <span class="status-dot dot-review"></span>
+            <span class="col-title">In Review</span>
+            <span class="col-count">4</span>
+            <button class="icon-btn" style="width:24px;height:24px;margin-left:auto;"><i data-lucide="plus" width="14" height="14"></i></button>
+          </div>
+          <div class="col-cards">
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">PR #418: Add distributed tracing via OpenTelemetry</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-api">API</span>
+                  <span class="tag" style="background:rgba(168,85,247,0.1);color:var(--state-review);border-color:rgba(168,85,247,0.2);">Review</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-med">81</span>
+                  <span class="kcard-due">Apr 12</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);">MW</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Biometric unlock for mobile app (FaceID / TouchID)</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-mobile">Mobile</span>
+                  <span class="tag tag-security">Auth</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-low">59</span>
+                  <span class="kcard-due">Apr 14</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#F59E0B,#D97706);">LT</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Data retention policy enforcement — GDPR compliance</div>
+                <div class="kcard-tags">
+                  <span class="tag tag-data">Data</span>
+                  <span class="tag tag-security">Legal</span>
+                </div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-high">88</span>
+                  <span class="kcard-due">Apr 15</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#10B981,#059669);">RM</div>
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#EF4444,#DC2626);">JK</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title">Load test results report — API gateway throughput</div>
+                <div class="kcard-tags"><span class="tag tag-api">API</span></div>
+                <div class="kcard-footer">
+                  <span class="kcard-score score-low">52</span>
+                  <span class="kcard-due">Apr 16</span>
+                  <div class="kcard-assigns">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#0EA5E9,#0369A1);">SC</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-add">
+            <button class="btn btn-ghost btn-sm" style="width:100%; color:var(--text-tertiary); justify-content:center;">
+              <i data-lucide="plus" width="13" height="13"></i> Add task
+            </button>
+          </div>
+        </div>
+
+        <!-- DONE -->
+        <div class="kanban-col">
+          <div class="col-header">
+            <span class="status-dot dot-done"></span>
+            <span class="col-title">Done</span>
+            <span class="col-count">4</span>
+            <button class="icon-btn" style="width:24px;height:24px;margin-left:auto;"><i data-lucide="chevron-down" width="14" height="14"></i></button>
+          </div>
+          <div class="col-cards" style="opacity:0.7;">
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body" style="text-decoration:none;">
+                <div class="kcard-title" style="text-decoration:line-through; color:var(--text-tertiary);">Provision GKE Autopilot cluster in us-central1</div>
+                <div class="kcard-tags"><span class="tag">Infrastructure</span></div>
+                <div class="kcard-footer">
+                  <span style="font-size:var(--text-caption); color:var(--state-complete);">✓ Completed Apr 7</span>
+                  <div class="kcard-assigns" style="margin-left:auto;">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#0EA5E9,#0369A1);">SC</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title" style="text-decoration:line-through; color:var(--text-tertiary);">Write runbook for on-call SRE rotation</div>
+                <div class="kcard-tags"><span class="tag">Documentation</span></div>
+                <div class="kcard-footer">
+                  <span style="font-size:var(--text-caption); color:var(--state-complete);">✓ Completed Apr 3</span>
+                  <div class="kcard-assigns" style="margin-left:auto;">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#F59E0B,#D97706);">LT</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title" style="text-decoration:line-through; color:var(--text-tertiary);">Set up Datadog APM for production services</div>
+                <div class="kcard-tags"><span class="tag">Observability</span></div>
+                <div class="kcard-footer">
+                  <span style="font-size:var(--text-caption); color:var(--state-complete);">✓ Completed Mar 28</span>
+                  <div class="kcard-assigns" style="margin-left:auto;">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#10B981,#059669);">RM</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="kcard">
+              <div class="kcard-drag"><i data-lucide="grip-vertical" width="14" height="14"></i></div>
+              <div class="kcard-body">
+                <div class="kcard-title" style="text-decoration:line-through; color:var(--text-tertiary);">Threat model review for new auth microservice</div>
+                <div class="kcard-tags"><span class="tag tag-security">Security</span></div>
+                <div class="kcard-footer">
+                  <span style="font-size:var(--text-caption); color:var(--state-complete);">✓ Completed Apr 1</span>
+                  <div class="kcard-assigns" style="margin-left:auto;">
+                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#EF4444,#DC2626);">JK</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- .kanban-board -->
+    </div>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+  document.getElementById('theme-toggle').addEventListener('click', function() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    this.querySelector('i').setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+    lucide.createIcons();
+  });
+  document.querySelectorAll('.project-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.project-tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

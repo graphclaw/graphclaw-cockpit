@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphClaw Wireframe · Canvas Editor</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../../docs/graphclaw.ai.png" alt="GraphClaw logo" />
+        <div><strong>Canvas Editor</strong><br /><span class="muted">Wireframe v1</span></div>
+      </div>
+      <span class="badge">Figma-like precision workspace</span>
+
+      <div class="nav-section">
+        <h4>Node Palette</h4>
+        <div class="nav-list">
+          <span class="nav-item">Input</span>
+          <span class="nav-item">LLM Call</span>
+          <span class="nav-item">Tool Call</span>
+          <span class="nav-item">Condition</span>
+          <span class="nav-item">Approval Gate</span>
+          <span class="nav-item">Transform</span>
+          <span class="nav-item">Output</span>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <h4>Views</h4>
+        <div class="nav-list">
+          <a class="nav-item" href="cockpit-shell.html">Cockpit Shell</a>
+          <a class="nav-item" href="task-explainability.html">Task & Explainability</a>
+          <a class="nav-item" href="agent-monitor.html">Agent Monitor</a>
+          <a class="nav-item active" href="canvas-editor.html">Canvas Editor</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h1>Agent/Skill Canvas (panelized editing)</h1>
+        <div class="meta">
+          <span class="chip">Mode: Draft</span>
+          <span class="chip">Version: v0.8</span>
+          <span class="chip">Grid: On</span>
+        </div>
+      </header>
+
+      <section class="layout">
+        <div class="split two" style="grid-template-columns: 2fr 1fr;">
+          <div class="card">
+            <div class="panel-title">
+              <h2>Canvas Workspace</h2>
+              <span class="pill">Drag nodes · connect ports · zoom</span>
+            </div>
+            <div class="canvas">
+              <div class="node" style="left: 20px; top: 40px;">Input<br /><span class="muted">task + context</span></div>
+              <div class="node" style="left: 200px; top: 40px;">LLM Call<br /><span class="muted">claude-sonnet</span></div>
+              <div class="node" style="left: 400px; top: 40px;">Condition<br /><span class="muted">confidence > 0.75</span></div>
+              <div class="node" style="left: 400px; top: 180px;">Approval Gate<br /><span class="muted">human required</span></div>
+              <div class="node" style="left: 620px; top: 40px;">Tool Call<br /><span class="muted">MCP: Slack</span></div>
+              <div class="node" style="left: 820px; top: 40px;">Output<br /><span class="muted">status update</span></div>
+            </div>
+            <div class="annotation">
+              Workspace mirrors Figma-like mental model: left palette, center canvas, right inspector, bottom test panel. This should reduce learning time for technical builders.
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Inspector Panel</h2>
+            <div class="block-stack">
+              <div class="block"><strong>Selected Node:</strong> LLM Call</div>
+              <div class="block"><strong>Provider</strong><br /><span class="muted">Anthropic</span></div>
+              <div class="block"><strong>Model</strong><br /><span class="muted">claude-sonnet</span></div>
+              <div class="block"><strong>System Prompt</strong><br /><span class="muted">Use concise tone and include confidence score.</span></div>
+              <div class="block"><strong>Temperature</strong><br /><span class="muted">0.2</span></div>
+              <div class="block"><strong>Max Tokens</strong><br /><span class="muted">1200</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Bottom Test Panel</h3>
+          <table class="table">
+            <thead><tr><th>Input sample</th><th>Execution trace</th><th>Output + cost</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>
+                  task_id: TSK-882<br />state: BLOCKED<br />deadline: 2026-03-22
+                </td>
+                <td>
+                  Input → LLM Call ✓<br />Condition ✓<br />Tool Call (GATED) paused for approval
+                </td>
+                <td>
+                  status: awaiting approval<br />tokens: 1248<br />estimated cost: $0.03
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="annotation">
+            Testing stays in-context (no page switch) so users can iterate faster on agent behavior and trust outputs before publish.
+          </div>
+        </div>
+
+        <div class="footer-nav">
+          <a href="agent-monitor.html">Back to monitor</a>
+          <a href="task-explainability.html">Open task flow</a>
+          <a href="../index.html">Wireframe index</a>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

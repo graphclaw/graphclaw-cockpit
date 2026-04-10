@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html data-page="agent-monitor" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Monitor — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   Agent Monitor — Page-specific styles
+   ============================================================ */
+html, body { height: 100%; overflow: hidden; }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* --- Sidebar --- */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  height: 56px; flex-shrink: 0;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: var(--weight-bold); font-size: 13px; flex-shrink: 0;
+}
+.logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; line-height: 1.2; }
+.logo-sub { font-size: 10px; color: var(--text-tertiary); font-weight: 400; }
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.nav-section {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  padding: var(--space-3) var(--space-4) var(--space-1);
+}
+.nav-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  margin: 1px var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer; text-decoration: none;
+  color: var(--text-secondary);
+  font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast);
+  position: relative;
+}
+.nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background: rgba(56,189,248,0.12); }
+.nav-item .ni { display: flex; align-items: center; flex-shrink: 0; width: 18px; height: 18px; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--state-blocked); color: white;
+  font-size: 10px; font-weight: var(--weight-bold);
+  padding: 1px 5px; border-radius: var(--radius-full);
+  min-width: 18px; text-align: center;
+}
+.nav-badge.green { background: var(--state-progress); }
+.sidebar-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-4); }
+.sidebar-footer { padding: var(--space-2); border-top: 1px solid var(--border-default); }
+.user-row {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.user-row:hover { background: var(--bg-inset); }
+.avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold); flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.user-role { font-size: 10px; color: var(--text-tertiary); }
+
+/* --- Main Layout --- */
+.main-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
+
+/* --- Topbar --- */
+.topbar {
+  height: 56px; background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center;
+  padding: 0 var(--space-5); gap: var(--space-4); flex-shrink: 0;
+}
+.breadcrumb { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text-primary); }
+.breadcrumb .sep { color: var(--text-tertiary); margin: 0 2px; }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-medium); }
+.topbar-search {
+  flex: 1; max-width: 360px; margin: 0 auto; position: relative;
+}
+.topbar-search input {
+  width: 100%; height: 32px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 0 var(--space-3) 0 32px;
+  font-size: var(--text-body-sm); font-family: var(--font-sans);
+  color: var(--text-primary); outline: none;
+  transition: all var(--duration-normal);
+}
+.topbar-search input::placeholder { color: var(--text-tertiary); }
+.topbar-search input:focus { border-color: var(--brand-primary); background: var(--bg-surface); box-shadow: var(--shadow-focus); }
+.topbar-search .s-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.icon-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); border: none; background: transparent;
+  cursor: pointer; color: var(--icon-secondary);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.notif-badge { position: relative; }
+.notif-badge::after {
+  content: ''; position: absolute; top: 5px; right: 5px;
+  width: 7px; height: 7px; background: var(--state-blocked);
+  border-radius: 50%; border: 1.5px solid var(--bg-surface);
+}
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 var(--space-1); }
+.topbar-avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+/* --- Page Content --- */
+.page-scroll { flex: 1; overflow-y: auto; }
+.page-inner { padding: var(--space-5) var(--space-6); }
+
+/* --- Page Header --- */
+.pg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-5); }
+.pg-title { font-size: var(--text-heading); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.02em; }
+.pg-subtitle { font-size: var(--text-body-sm); color: var(--text-secondary); margin-top: 2px; }
+.pg-actions { display: flex; align-items: center; gap: var(--space-2); }
+
+/* --- KPI Cards --- */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-6); }
+
+.kpi-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-1);
+  display: flex; flex-direction: column; gap: var(--space-2);
+  transition: box-shadow var(--duration-normal), transform var(--duration-normal);
+  cursor: default;
+}
+.kpi-card:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+
+.kpi-header { display: flex; align-items: center; justify-content: space-between; }
+.kpi-label { font-size: var(--text-body-sm); color: var(--text-secondary); font-weight: var(--weight-medium); }
+.kpi-icon { width: 32px; height: 32px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; }
+.kpi-icon.blue { background: var(--state-active-light); color: var(--state-active); }
+.kpi-icon.green { background: var(--state-progress-light); color: var(--state-progress); }
+.kpi-icon.amber { background: var(--state-delayed-light); color: var(--state-delayed); }
+.kpi-icon.red { background: var(--state-blocked-light); color: var(--state-blocked); }
+
+.kpi-value { font-size: 28px; font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.03em; line-height: 1; }
+.kpi-value sub { font-size: var(--text-body); font-weight: var(--weight-regular); color: var(--text-secondary); vertical-align: baseline; margin-left: 3px; }
+.kpi-footer { display: flex; align-items: center; gap: var(--space-2); }
+.kpi-trend { font-size: var(--text-caption); font-weight: var(--weight-medium); display: flex; align-items: center; gap: 3px; }
+.kpi-trend.up { color: var(--state-progress); }
+.kpi-trend.down { color: var(--state-blocked); }
+.kpi-period { font-size: var(--text-caption); color: var(--text-tertiary); }
+
+/* Pulse dot */
+.pulse-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--state-progress);
+  position: relative; flex-shrink: 0;
+}
+.pulse-dot::after {
+  content: ''; position: absolute;
+  inset: -3px; border-radius: 50%;
+  background: var(--state-progress);
+  opacity: 0.3;
+  animation: pulse-ring 2s ease-out infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.4; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.pulse-dot.red { background: var(--state-blocked); }
+.pulse-dot.red::after { background: var(--state-blocked); }
+.pulse-dot.grey { background: var(--state-complete); }
+.pulse-dot.grey::after { display: none; }
+
+/* --- Agent Section Header --- */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+.section-title { font-size: var(--text-title); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.section-actions { display: flex; align-items: center; gap: var(--space-2); }
+
+/* --- Agent Grid --- */
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.agent-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-1);
+  transition: box-shadow var(--duration-normal), transform var(--duration-normal);
+  position: relative;
+  overflow: hidden;
+}
+.agent-card:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.agent-card.running { border-left: 3px solid var(--state-progress); }
+.agent-card.idle { border-left: 3px solid var(--state-complete); }
+.agent-card.error { border-left: 3px solid var(--state-blocked); }
+
+.agent-card-header { display: flex; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-3); }
+.agent-icon-wrap {
+  width: 36px; height: 36px; border-radius: var(--radius-md);
+  background: var(--bg-inset); display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0; color: var(--icon-secondary);
+}
+.agent-icon-wrap.running { background: var(--state-progress-light); color: var(--state-progress); }
+.agent-icon-wrap.error { background: var(--state-blocked-light); color: var(--state-blocked); }
+.agent-meta { flex: 1; min-width: 0; }
+.agent-name { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); display: flex; align-items: center; gap: var(--space-2); }
+.agent-type-badge {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  padding: 1px 7px; border-radius: var(--radius-full);
+  text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0;
+}
+.agent-type-badge.skill { background: var(--state-active-light); color: var(--state-active); }
+.agent-type-badge.orchestrator { background: var(--state-review-light); color: var(--state-review); }
+.agent-type-badge.channel { background: var(--state-progress-light); color: var(--state-progress); }
+.agent-type-badge.data { background: var(--state-delayed-light); color: var(--state-delayed); }
+
+.agent-status-row { display: flex; align-items: center; gap: var(--space-2); margin-top: 3px; }
+.agent-status-text { font-size: var(--text-caption); font-weight: var(--weight-medium); }
+.agent-status-text.running { color: var(--state-progress); }
+.agent-status-text.idle { color: var(--text-tertiary); }
+.agent-status-text.error { color: var(--state-blocked); }
+.agent-card-actions { display: flex; gap: var(--space-1); flex-shrink: 0; }
+.agent-action-btn {
+  height: 26px; padding: 0 var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: transparent; cursor: pointer; font-size: 11px;
+  font-family: var(--font-sans); color: var(--text-secondary);
+  display: flex; align-items: center; gap: 4px;
+  transition: all var(--duration-fast); white-space: nowrap;
+}
+.agent-action-btn:hover { background: var(--bg-inset); color: var(--text-primary); border-color: var(--border-strong); }
+.agent-action-btn.danger:hover { background: var(--state-blocked-light); color: var(--state-blocked); border-color: var(--state-blocked); }
+
+/* Current task */
+.agent-task {
+  background: var(--bg-inset);
+  border-radius: var(--radius-md); padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3); font-size: var(--text-body-sm);
+  color: var(--text-secondary); display: flex; align-items: center; gap: var(--space-2);
+}
+.agent-task .task-id { font-size: var(--text-caption); color: var(--text-tertiary); font-family: var(--font-mono); }
+.agent-task .task-name { flex: 1; font-weight: var(--weight-medium); color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Sparkline */
+.sparkline-row {
+  display: flex; align-items: flex-end; gap: 2px;
+  height: 24px; margin-bottom: var(--space-3);
+}
+.spark-bar {
+  flex: 1; border-radius: 2px 2px 0 0;
+  background: var(--state-progress);
+  opacity: 0.6;
+  min-height: 2px;
+  transition: opacity var(--duration-fast);
+}
+.spark-bar:hover { opacity: 1; }
+.spark-bar.dead { background: var(--state-complete); opacity: 0.3; }
+.spark-bar.spike { background: var(--state-delayed); opacity: 0.9; }
+.spark-label { font-size: 10px; color: var(--text-tertiary); margin-bottom: var(--space-1); }
+
+/* Stats row */
+.agent-stats { display: flex; gap: var(--space-4); }
+.agent-stat { display: flex; flex-direction: column; gap: 2px; }
+.agent-stat-val { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.agent-stat-key { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* Error notice */
+.agent-error {
+  margin-top: var(--space-3); background: var(--state-blocked-light);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--radius-md); padding: var(--space-2) var(--space-3);
+  display: flex; align-items: flex-start; gap: var(--space-2);
+  font-size: var(--text-caption); color: var(--text-error);
+}
+.agent-error-msg { flex: 1; font-family: var(--font-mono); font-size: 11px; line-height: 1.4; overflow: hidden; }
+
+/* --- Activity Log Section --- */
+.log-section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+.log-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface);
+}
+.log-filters { display: flex; align-items: center; gap: var(--space-2); }
+.filter-select {
+  height: 30px; padding: 0 var(--space-3);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); background: var(--bg-surface);
+  font-size: var(--text-body-sm); font-family: var(--font-sans);
+  color: var(--text-secondary); cursor: pointer; outline: none;
+  transition: border-color var(--duration-fast);
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: var(--space-5);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+.filter-select:focus { border-color: var(--brand-primary); }
+[data-theme="dark"] .filter-select { background-color: var(--bg-inset); color: var(--text-primary); }
+
+.log-table-wrap { overflow-x: auto; }
+.log-table { width: 100%; border-collapse: collapse; font-size: var(--text-body-sm); }
+.log-table th {
+  padding: var(--space-2) var(--space-4); text-align: left;
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); background: var(--bg-surface-alt);
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+.log-table td {
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+.log-table tr:last-child td { border-bottom: none; }
+.log-table tbody tr:hover { background: var(--bg-inset); }
+.log-table tbody tr { transition: background var(--duration-fast); }
+
+.log-ts { font-size: var(--text-caption); color: var(--text-tertiary); font-family: var(--font-mono); white-space: nowrap; }
+.log-agent { font-weight: var(--weight-medium); color: var(--text-primary); white-space: nowrap; }
+.log-event-badge {
+  display: inline-flex; align-items: center;
+  height: 20px; padding: 0 7px;
+  border-radius: var(--radius-sm); font-size: 10px;
+  font-weight: var(--weight-semibold); letter-spacing: 0.04em;
+  white-space: nowrap; font-family: var(--font-mono);
+}
+.ev-info { background: #EFF6FF; color: var(--state-active); }
+.ev-success { background: #ECFDF5; color: var(--state-progress); }
+.ev-warning { background: #FFFBEB; color: var(--state-delayed); }
+.ev-error { background: #FEF2F2; color: var(--state-blocked); }
+[data-theme="dark"] .ev-info { background: rgba(96,165,250,0.15); color: #93C5FD; }
+[data-theme="dark"] .ev-success { background: rgba(52,211,153,0.15); color: #6EE7B7; }
+[data-theme="dark"] .ev-warning { background: rgba(251,191,36,0.15); color: #FCD34D; }
+[data-theme="dark"] .ev-error { background: rgba(248,113,113,0.15); color: #FCA5A5; }
+
+.log-msg { color: var(--text-secondary); max-width: 400px; }
+.log-task { font-size: var(--text-caption); font-family: var(--font-mono); color: var(--text-tertiary); white-space: nowrap; }
+
+/* Blink animation for live badge */
+@keyframes blink { 50% { opacity: 0.4; } }
+.live-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 22px; padding: 0 var(--space-2);
+  background: var(--state-blocked-light);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: var(--radius-full); font-size: 11px;
+  font-weight: var(--weight-semibold); color: var(--state-blocked);
+}
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--state-blocked); animation: blink 1.4s ease-in-out infinite; }
+
+/* Scrollable log body */
+.log-table-wrap { max-height: 380px; overflow-y: auto; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--space-2); font-family: var(--font-sans);
+  font-weight: var(--weight-medium); border-radius: var(--radius-md);
+  border: 1.5px solid transparent; cursor: pointer;
+  transition: background var(--duration-normal), color var(--duration-normal),
+              box-shadow var(--duration-normal), transform var(--duration-fast);
+  text-decoration: none; user-select: none; white-space: nowrap;
+}
+.btn:active { transform: translateY(1px); }
+.btn-sm { height: 28px; padding: 0 var(--space-3); font-size: var(--text-body-sm); }
+.btn-md { height: 36px; padding: 0 var(--space-4); font-size: var(--text-body); }
+.btn-ghost { background: transparent; color: var(--text-secondary); border-color: var(--border-default); }
+.btn-ghost:hover { background: var(--bg-inset); color: var(--text-primary); border-color: var(--border-strong); }
+.btn-primary { background: var(--brand-primary); color: white; border-color: var(--brand-primary); }
+.btn-primary:hover { background: var(--brand-primary-hover); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      
+      <div>
+        <div class="logo-text">GraphClaw</div>
+        <div class="logo-sub">Cockpit</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Workspace</div>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="layout-dashboard" width="16" height="16" aria-label="Dashboard"></i></span>
+        Dashboard
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="check-square" width="16" height="16" aria-label="My Tasks"></i></span>
+        My Tasks
+        <span class="nav-badge">5</span>
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="target" width="16" height="16" aria-label="Goals"></i></span>
+        Goals
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="folder-kanban" width="16" height="16" aria-label="Projects"></i></span>
+        Projects
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="calendar-range" width="16" height="16" aria-label="Timeline"></i></span>
+        Timeline
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="users" width="16" height="16" aria-label="People"></i></span>
+        People
+      </a>
+
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Intelligence</div>
+      <a href="agent-monitor.html" class="nav-item active">
+        <span class="ni"><i data-lucide="cpu" width="16" height="16" aria-label="Agent Monitor"></i></span>
+        Agent Monitor
+        <span class="nav-badge green">7</span>
+      </a>
+      <a href="chat-sidebar.html" class="nav-item">
+        <span class="ni"><i data-lucide="message-circle" width="16" height="16" aria-label="Chat"></i></span>
+        Chat
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="puzzle" width="16" height="16" aria-label="Skills"></i></span>
+        Skills
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="plug" width="16" height="16" aria-label="MCP Registry"></i></span>
+        MCP Registry
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="#" class="nav-item" style="margin: 0 0 var(--space-1);">
+        <span class="ni"><i data-lucide="settings" width="16" height="16" aria-label="Settings"></i></span>
+        Settings
+      </a>
+      <div class="user-row">
+        <div class="avatar">AR</div>
+        <div class="user-info">
+          <div class="user-name">Arjun Reyes</div>
+          <div class="user-role">Product Lead</div>
+        </div>
+        <i data-lucide="chevron-up-down" width="14" height="14" style="color: var(--icon-tertiary);" aria-label="User menu"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN LAYOUT ============ -->
+  <div class="main-layout">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="breadcrumb">
+        <a href="#">Home</a>
+        <span class="sep">/</span>
+        <span class="current">Agent Monitor</span>
+      </div>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14" aria-label="Search"></i></span>
+        <input type="text" placeholder="Search agents, events, task IDs…" aria-label="Search">
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notif-badge" aria-label="Notifications">
+          <i data-lucide="bell" width="16" height="16" aria-label="Bell"></i>
+        </button>
+        <div class="divider-v"></div>
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+          <i data-lucide="moon" width="16" height="16" aria-label="Dark mode"></i>
+        </button>
+        <div class="topbar-avatar">AR</div>
+      </div>
+    </div>
+
+    <!-- Page scroll -->
+    <div class="page-scroll">
+      <div class="page-inner">
+
+        <!-- Page header -->
+        <div class="pg-header">
+          <div>
+            <div class="pg-title">Agent Monitor</div>
+            <div class="pg-subtitle">Real-time status: 7 active agents processing your task graph</div>
+          </div>
+          <div class="pg-actions">
+            <button class="btn btn-ghost btn-sm">
+              <i data-lucide="refresh-cw" width="14" height="14" aria-label="Refresh"></i>
+              Refresh
+            </button>
+            <button class="btn btn-primary btn-sm">
+              <i data-lucide="play-circle" width="14" height="14" aria-label="Start"></i>
+              Launch Agent
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Row -->
+        <div class="kpi-row">
+
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Active Agents</span>
+              <div class="kpi-icon green">
+                <i data-lucide="cpu" width="16" height="16" aria-label="Agents"></i>
+              </div>
+            </div>
+            <div class="kpi-value">7 <sub>/ 12</sub></div>
+            <div class="kpi-footer">
+              <div class="pulse-dot"></div>
+              <span class="kpi-trend up">
+                <i data-lucide="trending-up" width="12" height="12" aria-label="Trending up"></i>
+                +2 from yesterday
+              </span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Tasks Completed Today</span>
+              <div class="kpi-icon blue">
+                <i data-lucide="check-circle-2" width="16" height="16" aria-label="Completed"></i>
+              </div>
+            </div>
+            <div class="kpi-value">143</div>
+            <div class="kpi-footer">
+              <span class="kpi-trend up">
+                <i data-lucide="trending-up" width="12" height="12" aria-label="Trending up"></i>
+                +18%
+              </span>
+              <span class="kpi-period">vs. 7-day avg</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Avg Response Time</span>
+              <div class="kpi-icon amber">
+                <i data-lucide="timer" width="16" height="16" aria-label="Timer"></i>
+              </div>
+            </div>
+            <div class="kpi-value">1.2<sub>s</sub></div>
+            <div class="kpi-footer">
+              <span class="kpi-trend up">
+                <i data-lucide="trending-down" width="12" height="12" aria-label="Trending down"></i>
+                −0.3s
+              </span>
+              <span class="kpi-period">from last hour</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Failed Jobs (24h)</span>
+              <div class="kpi-icon red">
+                <i data-lucide="alert-triangle" width="16" height="16" aria-label="Alerts"></i>
+              </div>
+            </div>
+            <div class="kpi-value" style="color: var(--state-blocked);">3</div>
+            <div class="kpi-footer">
+              <div class="pulse-dot red"></div>
+              <span class="kpi-trend down">
+                <i data-lucide="trending-up" width="12" height="12" aria-label="Trending up"></i>
+                Needs attention
+              </span>
+            </div>
+          </div>
+
+        </div><!-- /kpi-row -->
+
+        <!-- Agent Cards Grid -->
+        <div class="section-header">
+          <div class="section-title">Agents</div>
+          <div class="section-actions">
+            <select class="filter-select" aria-label="Filter by status">
+              <option>All Status</option>
+              <option>Running</option>
+              <option>Idle</option>
+              <option>Error</option>
+            </select>
+            <select class="filter-select" aria-label="Filter by type">
+              <option>All Types</option>
+              <option>Skill Agent</option>
+              <option>Orchestrator</option>
+              <option>Channel Agent</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="agent-grid">
+
+          <!-- Agent 1: Research Agent -->
+          <div class="agent-card running">
+            <div class="agent-card-header">
+              <div class="agent-icon-wrap running">
+                <i data-lucide="search-code" width="18" height="18" aria-label="Research"></i>
+              </div>
+              <div class="agent-meta">
+                <div class="agent-name">
+                  Research Agent
+                  <span class="agent-type-badge skill">Skill</span>
+                </div>
+                <div class="agent-status-row">
+                  <div class="pulse-dot"></div>
+                  <span class="agent-status-text running">Running</span>
+                </div>
+              </div>
+              <div class="agent-card-actions">
+                <button class="agent-action-btn" title="View logs">
+                  <i data-lucide="terminal" width="12" height="12" aria-label="Logs"></i>
+                  Logs
+                </button>
+                <button class="agent-action-btn" title="Pause agent">
+                  <i data-lucide="pause" width="12" height="12" aria-label="Pause"></i>
+                </button>
+              </div>
+            </div>
+            <div class="agent-task">
+              <span class="task-id">#TK-4821</span>
+              <span class="task-name">Competitive analysis: Notion vs. Linear pricing tiers</span>
+            </div>
+            <div class="spark-label">Heartbeat — last 60s</div>
+            <div class="sparkline-row">
+              <div class="spark-bar" style="height:35%"></div><div class="spark-bar" style="height:55%"></div>
+              <div class="spark-bar" style="height:40%"></div><div class="spark-bar" style="height:70%"></div>
+              <div class="spark-bar" style="height:60%"></div><div class="spark-bar" style="height:80%"></div>
+              <div class="spark-bar" style="height:50%"></div><div class="spark-bar" style="height:65%"></div>
+              <div class="spark-bar" style="height:75%"></div><div class="spark-bar" style="height:85%"></div>
+              <div class="spark-bar" style="height:55%"></div><div class="spark-bar" style="height:90%"></div>
+              <div class="spark-bar" style="height:70%"></div><div class="spark-bar" style="height:80%"></div>
+              <div class="spark-bar" style="height:95%"></div><div class="spark-bar" style="height:75%"></div>
+              <div class="spark-bar" style="height:80%"></div><div class="spark-bar" style="height:100%"></div>
+            </div>
+            <div class="agent-stats">
+              <div class="agent-stat">
+                <div class="agent-stat-val">4</div>
+                <div class="agent-stat-key">Queue</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">38</div>
+                <div class="agent-stat-key">Tasks/hr</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">99.1%</div>
+                <div class="agent-stat-key">Uptime</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">1.1s</div>
+                <div class="agent-stat-key">Avg RT</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agent 2: Email Routing Agent -->
+          <div class="agent-card running">
+            <div class="agent-card-header">
+              <div class="agent-icon-wrap running">
+                <i data-lucide="mail" width="18" height="18" aria-label="Email"></i>
+              </div>
+              <div class="agent-meta">
+                <div class="agent-name">
+                  Email Routing Agent
+                  <span class="agent-type-badge channel">Channel</span>
+                </div>
+                <div class="agent-status-row">
+                  <div class="pulse-dot"></div>
+                  <span class="agent-status-text running">Running</span>
+                </div>
+              </div>
+              <div class="agent-card-actions">
+                <button class="agent-action-btn">
+                  <i data-lucide="terminal" width="12" height="12" aria-label="Logs"></i>
+                  Logs
+                </button>
+                <button class="agent-action-btn">
+                  <i data-lucide="pause" width="12" height="12" aria-label="Pause"></i>
+                </button>
+              </div>
+            </div>
+            <div class="agent-task">
+              <span class="task-id">#TK-4867</span>
+              <span class="task-name">Processing inbound: Q3 budget approval from CFO</span>
+            </div>
+            <div class="spark-label">Heartbeat — last 60s</div>
+            <div class="sparkline-row">
+              <div class="spark-bar" style="height:60%"></div><div class="spark-bar" style="height:45%"></div>
+              <div class="spark-bar" style="height:70%"></div><div class="spark-bar" style="height:55%"></div>
+              <div class="spark-bar" style="height:80%"></div><div class="spark-bar" style="height:65%"></div>
+              <div class="spark-bar" style="height:50%"></div><div class="spark-bar" style="height:75%"></div>
+              <div class="spark-bar" style="height:60%"></div><div class="spark-bar" style="height:85%"></div>
+              <div class="spark-bar" style="height:70%"></div><div class="spark-bar" style="height:55%"></div>
+              <div class="spark-bar" style="height:90%"></div><div class="spark-bar" style="height:70%"></div>
+              <div class="spark-bar" style="height:65%"></div><div class="spark-bar" style="height:80%"></div>
+              <div class="spark-bar" style="height:75%"></div><div class="spark-bar" style="height:95%"></div>
+            </div>
+            <div class="agent-stats">
+              <div class="agent-stat">
+                <div class="agent-stat-val">12</div>
+                <div class="agent-stat-key">Queue</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">54</div>
+                <div class="agent-stat-key">Tasks/hr</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">99.8%</div>
+                <div class="agent-stat-key">Uptime</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">0.8s</div>
+                <div class="agent-stat-key">Avg RT</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agent 3: Code Review Agent -->
+          <div class="agent-card idle">
+            <div class="agent-card-header">
+              <div class="agent-icon-wrap">
+                <i data-lucide="code-2" width="18" height="18" aria-label="Code Review"></i>
+              </div>
+              <div class="agent-meta">
+                <div class="agent-name">
+                  Code Review Agent
+                  <span class="agent-type-badge skill">Skill</span>
+                </div>
+                <div class="agent-status-row">
+                  <div class="pulse-dot grey"></div>
+                  <span class="agent-status-text idle">Idle — waiting for work</span>
+                </div>
+              </div>
+              <div class="agent-card-actions">
+                <button class="agent-action-btn">
+                  <i data-lucide="terminal" width="12" height="12" aria-label="Logs"></i>
+                  Logs
+                </button>
+                <button class="agent-action-btn danger">
+                  <i data-lucide="power-off" width="12" height="12" aria-label="Stop"></i>
+                </button>
+              </div>
+            </div>
+            <div class="agent-task" style="color: var(--text-tertiary); font-style: italic;">
+              <i data-lucide="minus" width="14" height="14" style="color: var(--text-tertiary);" aria-label="Idle"></i>
+              <span class="task-name" style="font-weight: 400; color: var(--text-tertiary);">No active task</span>
+            </div>
+            <div class="spark-label">Heartbeat — last 60s</div>
+            <div class="sparkline-row">
+              <div class="spark-bar dead" style="height:10%"></div><div class="spark-bar dead" style="height:10%"></div>
+              <div class="spark-bar dead" style="height:10%"></div><div class="spark-bar dead" style="height:10%"></div>
+              <div class="spark-bar dead" style="height:10%"></div><div class="spark-bar dead" style="height:10%"></div>
+              <div class="spark-bar dead" style="height:10%"></div><div class="spark-bar dead" style="height:10%"></div>
+              <div class="spark-bar dead" style="height:10%"></div><div class="spark-bar dead" style="height:10%"></div>
+              <div class="spark-bar dead" style="height:10%"></div><div class="spark-bar dead" style="height:10%"></div>
+              <div class="spark-bar dead" style="height:10%"></div><div class="spark-bar dead" style="height:10%"></div>
+              <div class="spark-bar dead" style="height:10%"></div><div class="spark-bar dead" style="height:10%"></div>
+              <div class="spark-bar dead" style="height:10%"></div><div class="spark-bar dead" style="height:10%"></div>
+            </div>
+            <div class="agent-stats">
+              <div class="agent-stat">
+                <div class="agent-stat-val">0</div>
+                <div class="agent-stat-key">Queue</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">—</div>
+                <div class="agent-stat-key">Tasks/hr</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">100%</div>
+                <div class="agent-stat-key">Uptime</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">—</div>
+                <div class="agent-stat-key">Avg RT</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agent 4: Data Pipeline Agent — ERROR -->
+          <div class="agent-card error">
+            <div class="agent-card-header">
+              <div class="agent-icon-wrap error">
+                <i data-lucide="database" width="18" height="18" aria-label="Data Pipeline"></i>
+              </div>
+              <div class="agent-meta">
+                <div class="agent-name">
+                  Data Pipeline Agent
+                  <span class="agent-type-badge data">Data</span>
+                </div>
+                <div class="agent-status-row">
+                  <div class="pulse-dot red"></div>
+                  <span class="agent-status-text error">Error — job crashed</span>
+                </div>
+              </div>
+              <div class="agent-card-actions">
+                <button class="agent-action-btn">
+                  <i data-lucide="terminal" width="12" height="12" aria-label="Logs"></i>
+                  Logs
+                </button>
+                <button class="agent-action-btn" style="color: var(--state-progress); border-color: var(--state-progress);">
+                  <i data-lucide="rotate-cw" width="12" height="12" aria-label="Restart"></i>
+                  Restart
+                </button>
+              </div>
+            </div>
+            <div class="agent-task" style="background: var(--state-blocked-light);">
+              <span class="task-id">#TK-4790</span>
+              <span class="task-name">Sync Snowflake → Postgres nightly ETL batch</span>
+            </div>
+            <div class="spark-label">Heartbeat — last 60s</div>
+            <div class="sparkline-row">
+              <div class="spark-bar" style="height:80%"></div><div class="spark-bar" style="height:75%"></div>
+              <div class="spark-bar" style="height:85%"></div><div class="spark-bar" style="height:70%"></div>
+              <div class="spark-bar spike" style="height:100%"></div><div class="spark-bar spike" style="height:95%"></div>
+              <div class="spark-bar dead" style="height:15%"></div><div class="spark-bar dead" style="height:10%"></div>
+              <div class="spark-bar dead" style="height:8%"></div><div class="spark-bar dead" style="height:5%"></div>
+              <div class="spark-bar dead" style="height:5%"></div><div class="spark-bar dead" style="height:5%"></div>
+              <div class="spark-bar dead" style="height:5%"></div><div class="spark-bar dead" style="height:5%"></div>
+              <div class="spark-bar dead" style="height:5%"></div><div class="spark-bar dead" style="height:5%"></div>
+              <div class="spark-bar dead" style="height:5%"></div><div class="spark-bar dead" style="height:5%"></div>
+            </div>
+            <div class="agent-stats">
+              <div class="agent-stat">
+                <div class="agent-stat-val" style="color:var(--state-blocked)">3</div>
+                <div class="agent-stat-key">Queue</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">12</div>
+                <div class="agent-stat-key">Tasks/hr</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val" style="color:var(--state-blocked)">94.2%</div>
+                <div class="agent-stat-key">Uptime</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">3.4s</div>
+                <div class="agent-stat-key">Avg RT</div>
+              </div>
+            </div>
+            <div class="agent-error">
+              <i data-lucide="alert-circle" width="14" height="14" style="flex-shrink:0; margin-top:1px;" aria-label="Error"></i>
+              <div class="agent-error-msg">ConnectionError: Snowflake connector timed out after 30s (retry 3/3). SQLSTATE: 08001</div>
+            </div>
+          </div>
+
+          <!-- Agent 5: Scheduling Agent -->
+          <div class="agent-card running">
+            <div class="agent-card-header">
+              <div class="agent-icon-wrap running">
+                <i data-lucide="calendar-clock" width="18" height="18" aria-label="Scheduling"></i>
+              </div>
+              <div class="agent-meta">
+                <div class="agent-name">
+                  Scheduling Agent
+                  <span class="agent-type-badge orchestrator">Orchestrator</span>
+                </div>
+                <div class="agent-status-row">
+                  <div class="pulse-dot"></div>
+                  <span class="agent-status-text running">Running</span>
+                </div>
+              </div>
+              <div class="agent-card-actions">
+                <button class="agent-action-btn">
+                  <i data-lucide="terminal" width="12" height="12" aria-label="Logs"></i>
+                  Logs
+                </button>
+                <button class="agent-action-btn">
+                  <i data-lucide="pause" width="12" height="12" aria-label="Pause"></i>
+                </button>
+              </div>
+            </div>
+            <div class="agent-task">
+              <span class="task-id">#TK-4855</span>
+              <span class="task-name">Coordinating sprint planning across 4 sub-agents</span>
+            </div>
+            <div class="spark-label">Heartbeat — last 60s</div>
+            <div class="sparkline-row">
+              <div class="spark-bar" style="height:50%"></div><div class="spark-bar" style="height:65%"></div>
+              <div class="spark-bar" style="height:55%"></div><div class="spark-bar" style="height:80%"></div>
+              <div class="spark-bar" style="height:60%"></div><div class="spark-bar" style="height:75%"></div>
+              <div class="spark-bar" style="height:70%"></div><div class="spark-bar" style="height:55%"></div>
+              <div class="spark-bar" style="height:85%"></div><div class="spark-bar" style="height:65%"></div>
+              <div class="spark-bar" style="height:60%"></div><div class="spark-bar" style="height:80%"></div>
+              <div class="spark-bar" style="height:70%"></div><div class="spark-bar" style="height:90%"></div>
+              <div class="spark-bar" style="height:65%"></div><div class="spark-bar" style="height:75%"></div>
+              <div class="spark-bar" style="height:80%"></div><div class="spark-bar" style="height:95%"></div>
+            </div>
+            <div class="agent-stats">
+              <div class="agent-stat">
+                <div class="agent-stat-val">7</div>
+                <div class="agent-stat-key">Queue</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">29</div>
+                <div class="agent-stat-key">Tasks/hr</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">98.7%</div>
+                <div class="agent-stat-key">Uptime</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">1.4s</div>
+                <div class="agent-stat-key">Avg RT</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agent 6: Budget Analyzer Agent -->
+          <div class="agent-card running">
+            <div class="agent-card-header">
+              <div class="agent-icon-wrap running">
+                <i data-lucide="bar-chart-3" width="18" height="18" aria-label="Budget"></i>
+              </div>
+              <div class="agent-meta">
+                <div class="agent-name">
+                  Budget Analyzer Agent
+                  <span class="agent-type-badge skill">Skill</span>
+                </div>
+                <div class="agent-status-row">
+                  <div class="pulse-dot"></div>
+                  <span class="agent-status-text running">Running</span>
+                </div>
+              </div>
+              <div class="agent-card-actions">
+                <button class="agent-action-btn">
+                  <i data-lucide="terminal" width="12" height="12" aria-label="Logs"></i>
+                  Logs
+                </button>
+                <button class="agent-action-btn">
+                  <i data-lucide="pause" width="12" height="12" aria-label="Pause"></i>
+                </button>
+              </div>
+            </div>
+            <div class="agent-task">
+              <span class="task-id">#TK-4843</span>
+              <span class="task-name">Variance analysis: Q3 OpEx vs. forecast (−$214K)</span>
+            </div>
+            <div class="spark-label">Heartbeat — last 60s</div>
+            <div class="sparkline-row">
+              <div class="spark-bar" style="height:40%"></div><div class="spark-bar" style="height:60%"></div>
+              <div class="spark-bar" style="height:50%"></div><div class="spark-bar" style="height:75%"></div>
+              <div class="spark-bar" style="height:65%"></div><div class="spark-bar" style="height:55%"></div>
+              <div class="spark-bar" style="height:80%"></div><div class="spark-bar" style="height:70%"></div>
+              <div class="spark-bar" style="height:60%"></div><div class="spark-bar" style="height:85%"></div>
+              <div class="spark-bar" style="height:75%"></div><div class="spark-bar" style="height:65%"></div>
+              <div class="spark-bar" style="height:90%"></div><div class="spark-bar" style="height:80%"></div>
+              <div class="spark-bar" style="height:70%"></div><div class="spark-bar" style="height:95%"></div>
+              <div class="spark-bar" style="height:85%"></div><div class="spark-bar" style="height:100%"></div>
+            </div>
+            <div class="agent-stats">
+              <div class="agent-stat">
+                <div class="agent-stat-val">2</div>
+                <div class="agent-stat-key">Queue</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">21</div>
+                <div class="agent-stat-key">Tasks/hr</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">97.4%</div>
+                <div class="agent-stat-key">Uptime</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-val">2.1s</div>
+                <div class="agent-stat-key">Avg RT</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /agent-grid -->
+
+        <!-- Activity Log -->
+        <div class="log-section">
+          <div class="log-header">
+            <div style="display:flex; align-items: center; gap: var(--space-3);">
+              <span class="section-title">Event Log</span>
+              <div class="live-badge">
+                <div class="live-dot"></div> LIVE
+              </div>
+            </div>
+            <div class="log-filters">
+              <select class="filter-select" aria-label="Filter by agent">
+                <option>All Agents</option>
+                <option>Research Agent</option>
+                <option>Email Routing Agent</option>
+                <option>Code Review Agent</option>
+                <option>Data Pipeline Agent</option>
+                <option>Scheduling Agent</option>
+                <option>Budget Analyzer Agent</option>
+              </select>
+              <select class="filter-select" aria-label="Filter by severity">
+                <option>All Severity</option>
+                <option>Info</option>
+                <option>Success</option>
+                <option>Warning</option>
+                <option>Error</option>
+              </select>
+              <select class="filter-select" aria-label="Time range">
+                <option>Last 1 hour</option>
+                <option>Last 6 hours</option>
+                <option>Last 24 hours</option>
+                <option>Last 7 days</option>
+              </select>
+              <button class="btn btn-ghost btn-sm">
+                <i data-lucide="download" width="13" height="13" aria-label="Export"></i>
+                Export
+              </button>
+            </div>
+          </div>
+
+          <div class="log-table-wrap">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Agent</th>
+                  <th>Event</th>
+                  <th>Message</th>
+                  <th>Task ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="log-ts">14:32:07.814</td>
+                  <td class="log-agent">Data Pipeline Agent</td>
+                  <td><span class="log-event-badge ev-error">TASK_FAIL</span></td>
+                  <td class="log-msg">Snowflake connector timed out. Max retries reached. Job aborted.</td>
+                  <td class="log-task">#TK-4790</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:31:55.223</td>
+                  <td class="log-agent">Data Pipeline Agent</td>
+                  <td><span class="log-event-badge ev-warning">QUEUE_FULL</span></td>
+                  <td class="log-msg">Queue depth reached 8. Throttling new task acceptance.</td>
+                  <td class="log-task">#TK-4790</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:31:42.011</td>
+                  <td class="log-agent">Budget Analyzer Agent</td>
+                  <td><span class="log-event-badge ev-success">TASK_COMPLETE</span></td>
+                  <td class="log-msg">Q2 variance summary generated. Delta: −$214,320 vs. forecast.</td>
+                  <td class="log-task">#TK-4839</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:31:38.500</td>
+                  <td class="log-agent">Email Routing Agent</td>
+                  <td><span class="log-event-badge ev-info">TASK_START</span></td>
+                  <td class="log-msg">Processing inbound email: CFO budget approval thread (3 attachments).</td>
+                  <td class="log-task">#TK-4867</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:31:22.709</td>
+                  <td class="log-agent">Scheduling Agent</td>
+                  <td><span class="log-event-badge ev-info">TASK_START</span></td>
+                  <td class="log-msg">Sprint planning coordination started. Delegating to 4 sub-tasks.</td>
+                  <td class="log-task">#TK-4855</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:31:10.167</td>
+                  <td class="log-agent">Research Agent</td>
+                  <td><span class="log-event-badge ev-success">TASK_COMPLETE</span></td>
+                  <td class="log-msg">Report compiled: 7 competitive pricing insights across 3 SaaS tiers.</td>
+                  <td class="log-task">#TK-4814</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:31:00.001</td>
+                  <td class="log-agent">Research Agent</td>
+                  <td><span class="log-event-badge ev-info">HEARTBEAT</span></td>
+                  <td class="log-msg">Agent healthy. CPU 34%, memory 612MB, queue depth 4.</td>
+                  <td class="log-task">—</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:30:58.334</td>
+                  <td class="log-agent">Budget Analyzer Agent</td>
+                  <td><span class="log-event-badge ev-info">TASK_START</span></td>
+                  <td class="log-msg">Starting variance analysis for Q3 OpEx period 2026-Q3.</td>
+                  <td class="log-task">#TK-4843</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:30:45.092</td>
+                  <td class="log-agent">Email Routing Agent</td>
+                  <td><span class="log-event-badge ev-success">TASK_COMPLETE</span></td>
+                  <td class="log-msg">Extracted 2 action items from thread. Tasks created: #TK-4868, #TK-4869.</td>
+                  <td class="log-task">#TK-4860</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:30:31.778</td>
+                  <td class="log-agent">Data Pipeline Agent</td>
+                  <td><span class="log-event-badge ev-warning">TASK_FAIL</span></td>
+                  <td class="log-msg">Retry 2/3 failed. Snowflake connection pool exhausted. Backing off 15s.</td>
+                  <td class="log-task">#TK-4790</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:30:00.002</td>
+                  <td class="log-agent">Scheduling Agent</td>
+                  <td><span class="log-event-badge ev-info">HEARTBEAT</span></td>
+                  <td class="log-msg">Agent healthy. 7 tasks in queue. Avg wait: 8.2s.</td>
+                  <td class="log-task">—</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:29:52.441</td>
+                  <td class="log-agent">Code Review Agent</td>
+                  <td><span class="log-event-badge ev-info">AGENT_START</span></td>
+                  <td class="log-msg">Agent initialized. Listening for tasks on queue: code_review_v2.</td>
+                  <td class="log-task">—</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:29:40.187</td>
+                  <td class="log-agent">Research Agent</td>
+                  <td><span class="log-event-badge ev-info">TASK_START</span></td>
+                  <td class="log-msg">Fetching Notion/Linear pricing pages for competitive analysis.</td>
+                  <td class="log-task">#TK-4821</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:29:15.994</td>
+                  <td class="log-agent">Data Pipeline Agent</td>
+                  <td><span class="log-event-badge ev-error">TASK_FAIL</span></td>
+                  <td class="log-msg">Retry 1/3 failed. SSL handshake error connecting to Snowflake us-east-1.</td>
+                  <td class="log-task">#TK-4790</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:29:00.003</td>
+                  <td class="log-agent">Email Routing Agent</td>
+                  <td><span class="log-event-badge ev-info">HEARTBEAT</span></td>
+                  <td class="log-msg">Agent healthy. 12 messages in IMAP inbox, processing rate 54/hr.</td>
+                  <td class="log-task">—</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:28:47.320</td>
+                  <td class="log-agent">Budget Analyzer Agent</td>
+                  <td><span class="log-event-badge ev-success">TASK_COMPLETE</span></td>
+                  <td class="log-msg">Headcount forecast model updated with Apr actuals. Variance +2.1%.</td>
+                  <td class="log-task">#TK-4831</td>
+                </tr>
+                <tr>
+                  <td class="log-ts">14:28:31.560</td>
+                  <td class="log-agent">Scheduling Agent</td>
+                  <td><span class="log-event-badge ev-success">TASK_COMPLETE</span></td>
+                  <td class="log-msg">Rescheduled 3 delayed tasks. New ETA assignments sent to owners.</td>
+                  <td class="log-task">#TK-4849</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div><!-- /log-section -->
+
+      </div><!-- /page-inner -->
+    </div><!-- /page-scroll -->
+  </div><!-- /main-layout -->
+</div><!-- /app-shell -->
+
+<script>
+  // Init Lucide icons
+  lucide.createIcons();
+
+  // Dark/light toggle
+  const themeToggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+
+  function updateToggleIcon() {
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    themeToggle.innerHTML = isDark
+      ? '<i data-lucide="sun" width="16" height="16" aria-label="Light mode"></i>'
+      : '<i data-lucide="moon" width="16" height="16" aria-label="Dark mode"></i>';
+    lucide.createIcons();
+  }
+
+  themeToggle.addEventListener('click', () => {
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    updateToggleIcon();
+  });
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

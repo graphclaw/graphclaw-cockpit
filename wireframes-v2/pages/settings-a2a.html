@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html data-page="settings-a2a" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Agent-to-Agent — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   Settings: Agent-to-Agent (A2A) — Page-specific styles
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: var(--font-sans); }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* ─── Sidebar ───────────────────────────────────────────── */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  height: 56px; flex-shrink: 0;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: var(--weight-bold); font-size: 13px; flex-shrink: 0;
+}
+.logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.nav-section {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--text-tertiary); padding: var(--space-3) var(--space-4) var(--space-1);
+}
+.nav-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3); margin: 1px var(--space-2);
+  border-radius: var(--radius-md); cursor: pointer; text-decoration: none;
+  color: var(--text-secondary); font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background: rgba(56,189,248,0.12); }
+.nav-item .ni { display: flex; align-items: center; flex-shrink: 0; width: 18px; height: 18px; }
+.sidebar-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-4); }
+.sidebar-footer { padding: var(--space-2); border-top: 1px solid var(--border-default); }
+.user-row {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2); border-radius: var(--radius-md); cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.user-row:hover { background: var(--bg-inset); }
+.avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold); flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.user-role { font-size: 10px; color: var(--text-tertiary); }
+
+/* ─── Main layout ──────────────────────────────────────── */
+.main-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
+.topbar {
+  height: 56px; background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center;
+  padding: 0 var(--space-5); gap: var(--space-4); flex-shrink: 0;
+}
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; transition: color var(--duration-fast); }
+.breadcrumb a:hover { color: var(--text-primary); }
+.breadcrumb .sep { color: var(--text-tertiary); }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-medium); }
+.topbar-search { flex: 1; max-width: 340px; margin: 0 auto; position: relative; }
+.topbar-search input {
+  width: 100%; height: 32px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 0 var(--space-3) 0 32px;
+  font-size: var(--text-body-sm); font-family: var(--font-sans);
+  color: var(--text-primary); outline: none; transition: all var(--duration-normal);
+}
+.topbar-search input::placeholder { color: var(--text-tertiary); }
+.topbar-search input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.topbar-search .s-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.icon-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); border: none; background: transparent;
+  cursor: pointer; color: var(--icon-secondary);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 var(--space-1); }
+.topbar-avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold); cursor: pointer;
+}
+
+/* ─── Settings layout ───────────────────────────────────── */
+.settings-body { display: flex; flex: 1; overflow: hidden; }
+.settings-nav {
+  width: 200px; flex-shrink: 0;
+  background: var(--bg-surface); border-right: 1px solid var(--border-default);
+  overflow-y: auto; padding: var(--space-4) var(--space-2);
+}
+.sn-title {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-tertiary); padding: 0 var(--space-2) var(--space-2); display: block;
+}
+.sn-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 7px var(--space-2); border-radius: var(--radius-md);
+  cursor: pointer; text-decoration: none;
+  color: var(--text-secondary); font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast); margin-bottom: 1px;
+}
+.sn-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.sn-item.active { background: var(--brand-primary-light); color: var(--brand-primary); font-weight: var(--weight-semibold); }
+[data-theme="dark"] .sn-item.active { background: rgba(56,189,248,0.12); }
+.sn-divider { height: 1px; background: var(--border-default); margin: var(--space-3) var(--space-2); }
+.sn-item.danger { color: var(--text-error); }
+.sn-item.danger:hover { background: var(--state-blocked-light); }
+
+.settings-content { flex: 1; overflow-y: auto; min-width: 0; }
+.settings-inner { max-width: 820px; padding: var(--space-6) var(--space-8); padding-bottom: 80px; }
+.settings-header { margin-bottom: var(--space-6); }
+.settings-title { font-size: var(--text-heading); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.02em; }
+.settings-subtitle { font-size: var(--text-body-sm); color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
+
+/* ─── Section cards ─────────────────────────────────────── */
+.section-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden; box-shadow: var(--shadow-1);
+  margin-bottom: var(--space-5);
+}
+.card-header {
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-surface-alt); border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title {
+  font-size: var(--text-body); font-weight: var(--weight-semibold);
+  color: var(--text-primary); display: flex; align-items: center; gap: var(--space-2);
+}
+.card-title-icon { color: var(--brand-primary); display: flex; }
+.card-body { padding: var(--space-5); }
+
+/* ─── Toggle switch ─────────────────────────────────────── */
+.toggle-switch {
+  position: relative; width: 40px; height: 22px; flex-shrink: 0; cursor: pointer;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: var(--neutral-300); border-radius: 11px;
+  transition: background var(--duration-normal);
+}
+.toggle-switch input:checked + .toggle-track { background: var(--brand-primary); }
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; background: white; border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: left var(--duration-normal);
+}
+.toggle-switch input:checked ~ .toggle-thumb { left: 21px; }
+
+/* ─── Protocol form ─────────────────────────────────────── */
+.proto-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--space-4); padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.proto-row:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+.proto-label-group { display: flex; flex-direction: column; gap: 2px; }
+.proto-label { font-size: var(--text-body-sm); font-weight: var(--weight-medium); color: var(--text-primary); }
+.proto-desc { font-size: var(--text-caption); color: var(--text-tertiary); }
+.proto-value {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-family: var(--font-mono); font-size: var(--text-body-sm);
+  color: var(--text-secondary);
+}
+.proto-badge {
+  font-size: 11px; font-weight: var(--weight-semibold); padding: 2px 8px;
+  background: var(--state-progress-light); color: var(--state-progress);
+  border-radius: var(--radius-full); border: 1px solid rgba(16,185,129,.2);
+}
+.endpoint-row {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-inset); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-mono);
+  font-size: var(--text-body-sm); color: var(--text-secondary);
+  flex: 1; overflow: hidden;
+}
+.endpoint-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.copy-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 28px; padding: 0 var(--space-2);
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); cursor: pointer; color: var(--text-secondary);
+  font-size: var(--text-caption); font-family: var(--font-sans); font-weight: var(--weight-medium);
+  transition: all var(--duration-fast); flex-shrink: 0;
+}
+.copy-btn:hover { background: var(--bg-inset); color: var(--text-primary); border-color: var(--border-strong); }
+
+/* ─── Registry table ────────────────────────────────────── */
+.reg-table {
+  width: 100%; border-collapse: collapse;
+}
+.reg-table thead { background: var(--bg-surface-alt); }
+.reg-table th {
+  padding: var(--space-2) var(--space-4); text-align: left;
+  font-size: 11px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-default); white-space: nowrap;
+}
+.reg-table th:first-child { padding-left: var(--space-5); }
+.reg-table th:last-child { padding-right: var(--space-5); text-align: right; }
+.reg-table tbody tr { border-bottom: 1px solid var(--border-subtle); transition: background var(--duration-fast); }
+.reg-table tbody tr:last-child { border-bottom: none; }
+.reg-table tbody tr:hover { background: var(--bg-surface-alt); }
+.reg-table td {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-body-sm); color: var(--text-primary); vertical-align: middle;
+}
+.reg-table td:first-child { padding-left: var(--space-5); }
+.reg-table td:last-child { padding-right: var(--space-5); text-align: right; }
+
+/* Agent name cell */
+.agent-cell { display: flex; align-items: center; gap: var(--space-2); }
+.agent-icon {
+  width: 28px; height: 28px; border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.agent-icon.internal { background: var(--brand-primary-light); color: var(--brand-primary); }
+.agent-icon.trusted  { background: var(--state-progress-light); color: var(--state-progress); }
+.agent-icon.restricted { background: var(--state-delayed-light); color: var(--state-delayed); }
+.agent-name { font-weight: var(--weight-semibold); color: var(--text-primary); }
+.agent-sub  { font-size: var(--text-caption); color: var(--text-tertiary); }
+
+/* type badge */
+.type-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 7px; border-radius: var(--radius-sm);
+  font-size: 11px; font-weight: var(--weight-semibold); white-space: nowrap;
+}
+.type-internal   { background: var(--brand-primary-light); color: var(--brand-primary); }
+.type-trusted    { background: var(--state-progress-light); color: var(--state-progress); }
+.type-restricted { background: var(--state-delayed-light); color: var(--state-delayed); }
+[data-theme="dark"] .type-internal   { background: rgba(14,165,233,.12); color: #38BDF8; }
+[data-theme="dark"] .type-trusted    { background: rgba(16,185,129,.12); color: #6EE7B7; }
+[data-theme="dark"] .type-restricted { background: rgba(245,158,11,.12); color: #FCD34D; }
+
+/* public key truncated */
+.pubkey {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);
+  background: var(--bg-inset); padding: 2px 6px; border-radius: var(--radius-sm);
+  letter-spacing: 0.05em; cursor: default;
+}
+.pubkey:hover { color: var(--text-secondary); }
+
+/* permission */
+.perm-list { display: flex; gap: 4px; flex-wrap: wrap; }
+.perm-chip {
+  font-size: 10px; font-weight: var(--weight-semibold); padding: 1px 6px;
+  border-radius: var(--radius-sm); white-space: nowrap;
+}
+.perm-read   { background: var(--bg-inset); color: var(--text-secondary); }
+.perm-create { background: var(--state-active-light); color: var(--state-active); }
+.perm-update { background: var(--state-review-light); color: var(--state-review); }
+
+/* status dot badge */
+.status-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: var(--weight-medium);
+}
+.sdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.sdot.active { background: var(--state-progress); }
+.sdot.inactive { background: var(--neutral-400); }
+
+/* row actions */
+.ra { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+.btn-icon-sm {
+  width: 28px; height: 28px; border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; cursor: pointer; color: var(--icon-secondary);
+  transition: all var(--duration-fast);
+}
+.btn-icon-sm:hover { background: var(--bg-inset); color: var(--text-primary); }
+
+/* Add agent button row */
+.add-agent-row {
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--border-subtle);
+}
+.btn-primary {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 34px; padding: 0 var(--space-4);
+  background: var(--brand-primary); color: white;
+  border: none; border-radius: var(--radius-md);
+  font-family: var(--font-sans); font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  cursor: pointer; transition: all var(--duration-fast);
+  box-shadow: 0 1px 3px rgba(14,165,233,.3);
+}
+.btn-primary:hover { background: var(--brand-primary-hover); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(14,165,233,.35); }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 34px; padding: 0 var(--space-4);
+  background: var(--bg-surface); color: var(--text-primary);
+  border: 1.5px solid var(--border-default); border-radius: var(--radius-md);
+  font-family: var(--font-sans); font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  cursor: pointer; transition: all var(--duration-fast);
+}
+.btn-secondary:hover { background: var(--bg-inset); border-color: var(--border-strong); }
+
+/* ─── Policy form ───────────────────────────────────────── */
+.policy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.policy-field { display: flex; flex-direction: column; gap: var(--space-1); }
+.policy-label { font-size: 11px; font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-secondary); }
+.policy-input {
+  height: 36px; padding: 0 var(--space-3);
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-mono);
+  font-size: var(--text-body-sm); color: var(--text-primary); outline: none;
+  transition: all var(--duration-normal); -moz-appearance: textfield;
+}
+.policy-input::-webkit-inner-spin-button,
+.policy-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.policy-input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.policy-suffix {
+  position: relative;
+}
+.policy-suffix .policy-input { padding-right: 52px; }
+.policy-suffix-label {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  font-size: var(--text-caption); color: var(--text-tertiary); pointer-events: none;
+}
+
+/* toggle row for policy */
+.policy-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle);
+}
+.policy-toggle-row:first-child { padding-top: 0; }
+.policy-toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+.ptl { font-size: var(--text-body-sm); font-weight: var(--weight-medium); color: var(--text-primary); }
+.ptl-desc { font-size: var(--text-caption); color: var(--text-tertiary); margin-top: 1px; }
+
+/* Operations checklist */
+.ops-section { margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--border-subtle); }
+.ops-label { font-size: 11px; font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-secondary); margin-bottom: var(--space-3); display: block; }
+.ops-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+.ops-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
+  cursor: pointer; user-select: none;
+  transition: background var(--duration-fast);
+}
+.ops-item:hover { background: var(--bg-surface-alt); }
+.ops-checkbox {
+  width: 16px; height: 16px; flex-shrink: 0;
+  border: 2px solid var(--border-strong); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-surface); transition: all var(--duration-fast);
+}
+.ops-checkbox.checked { background: var(--brand-primary); border-color: var(--brand-primary); color: white; }
+.ops-checkbox.unchecked { background: var(--bg-surface); }
+.ops-text { display: flex; flex-direction: column; gap: 1px; }
+.ops-name { font-size: var(--text-body-sm); color: var(--text-primary); }
+.ops-risk {
+  font-size: 10px; font-weight: var(--weight-semibold); padding: 1px 5px;
+  border-radius: var(--radius-sm); width: fit-content;
+}
+.ops-risk.low  { background: var(--state-progress-light); color: var(--state-progress); }
+.ops-risk.med  { background: var(--state-delayed-light); color: var(--state-delayed); }
+.ops-risk.high { background: var(--state-blocked-light); color: var(--state-blocked); }
+
+/* ─── Communication log ─────────────────────────────────── */
+.log-table { width: 100%; border-collapse: collapse; }
+.log-table thead { background: var(--bg-surface-alt); }
+.log-table th {
+  padding: var(--space-2) var(--space-4); text-align: left;
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-default); white-space: nowrap;
+}
+.log-table th:first-child { padding-left: var(--space-5); }
+.log-table th:last-child { padding-right: var(--space-5); text-align: right; }
+.log-table tbody tr { border-bottom: 1px solid var(--border-subtle); transition: background var(--duration-fast); }
+.log-table tbody tr:last-child { border-bottom: none; }
+.log-table tbody tr:hover { background: var(--bg-surface-alt); }
+.log-table td {
+  padding: 8px var(--space-4); font-size: 12px; color: var(--text-primary); vertical-align: middle;
+}
+.log-table td:first-child { padding-left: var(--space-5); }
+.log-table td:last-child { padding-right: var(--space-5); text-align: right; }
+
+.log-ts { font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
+.log-agent { font-weight: var(--weight-medium); font-size: 12px; }
+.log-op { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
+.log-result {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: var(--weight-semibold); padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+.result-ok  { background: var(--state-progress-light); color: var(--state-progress); }
+.result-err { background: var(--state-blocked-light); color: var(--state-blocked); }
+.result-ratelimit { background: var(--state-delayed-light); color: var(--state-delayed); }
+.log-latency { font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); }
+
+/* ─── Save bar ──────────────────────────────────────────── */
+.save-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-4) 0; margin-top: var(--space-2);
+  border-top: 1px solid var(--border-default);
+}
+.save-changed { font-size: var(--text-body-sm); color: var(--text-tertiary); display: flex; align-items: center; gap: var(--space-2); }
+.save-changed .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--state-delayed); }
+.save-actions { display: flex; gap: var(--space-2); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ═══ Sidebar ════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      
+      <span class="logo-text">GraphClaw</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="layout-dashboard" width="16" height="16"></i></span>Dashboard
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="check-square" width="16" height="16"></i></span>My Tasks
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="target" width="16" height="16"></i></span>Goals
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="folder" width="16" height="16"></i></span>Projects
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="gantt-chart" width="16" height="16"></i></span>Timeline
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="users" width="16" height="16"></i></span>People
+      </a>
+      <div class="sidebar-divider"></div>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="cpu" width="16" height="16"></i></span>Agent Monitor
+      </a>
+      <a href="#" class="nav-item">
+        <span class="ni"><i data-lucide="message-square" width="16" height="16"></i></span>Chat
+      </a>
+      <a href="#" class="nav-item active">
+        <span class="ni"><i data-lucide="settings" width="16" height="16"></i></span>Settings
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar">AK</div>
+        <div class="user-info">
+          <div class="user-name">Alex Kim</div>
+          <div class="user-role">Product Lead</div>
+        </div>
+        <i data-lucide="chevron-up-down" width="14" height="14" style="color:var(--text-tertiary);flex-shrink:0"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ Main ═══════════════════════════════════════════ -->
+  <div class="main-layout">
+
+    <!-- ─ Topbar ─────────────────────────────────────────── -->
+    <header class="topbar">
+      <nav class="breadcrumb">
+        <a href="#">Settings</a>
+        <span class="sep">/</span>
+        <span class="current">Agent-to-Agent</span>
+      </nav>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14"></i></span>
+        <input type="text" placeholder="Search settings…" aria-label="Search settings">
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+          <i data-lucide="moon" width="16" height="16" id="themeIcon"></i>
+        </button>
+        <div class="divider-v"></div>
+        <div class="topbar-avatar" aria-label="User menu">AK</div>
+      </div>
+    </header>
+
+    <!-- ─ Settings body ────────────────────────────────────── -->
+    <div class="settings-body">
+
+      <!-- ─ Inner nav ─────────────────────────────────────── -->
+      <nav class="settings-nav">
+        <span class="sn-title">Settings</span>
+        <a href="#" class="sn-item"><i data-lucide="sliders" width="14" height="14"></i>General</a>
+        <a href="#" class="sn-item"><i data-lucide="radio" width="14" height="14"></i>Channels</a>
+        <a href="#" class="sn-item"><i data-lucide="brain" width="14" height="14"></i>LLM Providers</a>
+        <a href="#" class="sn-item"><i data-lucide="bar-chart-2" width="14" height="14"></i>Scoring</a>
+        <a href="#" class="sn-item"><i data-lucide="bell" width="14" height="14"></i>Briefing</a>
+        <a href="#" class="sn-item"><i data-lucide="zap" width="14" height="14"></i>Triggers</a>
+        <a href="#" class="sn-item active"><i data-lucide="share-2" width="14" height="14"></i>Agent-to-Agent</a>
+        <div class="sn-divider"></div>
+        <a href="#" class="sn-item danger"><i data-lucide="triangle-alert" width="14" height="14"></i>Danger Zone</a>
+      </nav>
+
+      <!-- ─ Scrollable content ────────────────────────────── -->
+      <main class="settings-content">
+        <div class="settings-inner">
+          <div class="settings-header">
+            <h1 class="settings-title">Agent-to-Agent (A2A) Settings</h1>
+            <p class="settings-subtitle">Configure how external and internal agents communicate with GraphClaw via the A2A protocol. Control trust levels, permissions, and rate limits.</p>
+          </div>
+
+          <!-- ══ A2A Protocol ════════════════════════════ -->
+          <div class="section-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="card-title-icon"><i data-lucide="shield" width="16" height="16"></i></span>
+                A2A Protocol
+              </div>
+              <label class="toggle-switch" aria-label="Enable A2A protocol">
+                <input type="checkbox" checked>
+                <span class="toggle-track"></span>
+                <span class="toggle-thumb"></span>
+              </label>
+            </div>
+            <div class="card-body">
+              <div class="proto-row">
+                <div class="proto-label-group">
+                  <div class="proto-label">Protocol version</div>
+                  <div class="proto-desc">GraphClaw A2A specification in use</div>
+                </div>
+                <div class="proto-value">
+                  <span class="proto-badge">v1.2</span>
+                  <span style="font-size:var(--text-caption);color:var(--text-tertiary)">Latest</span>
+                </div>
+              </div>
+              <div class="proto-row">
+                <div class="proto-label-group" style="flex:1;margin-right:var(--space-4)">
+                  <div class="proto-label">Endpoint URL</div>
+                  <div class="proto-desc">Share this with external agents to connect</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:var(--space-2);flex:1.5">
+                  <div class="endpoint-row">
+                    <span class="endpoint-text">https://graphclaw.ai/a2a/v1</span>
+                  </div>
+                  <button class="copy-btn" onclick="copyEndpoint(this)">
+                    <i data-lucide="copy" width="12" height="12"></i>
+                    Copy
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══ Trusted Agent Registry ═════════════════ -->
+          <div class="section-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="card-title-icon"><i data-lucide="shield-check" width="16" height="16"></i></span>
+                Trusted Agent Registry
+                <span style="font-size:var(--text-caption);font-weight:400;color:var(--text-tertiary);margin-left:var(--space-2)">4 agents registered</span>
+              </div>
+            </div>
+            <table class="reg-table">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th>Type</th>
+                  <th>Public Key</th>
+                  <th>Permissions</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Row 1 -->
+                <tr>
+                  <td>
+                    <div class="agent-cell">
+                      <div class="agent-icon internal"><i data-lucide="cpu" width="14" height="14"></i></div>
+                      <div>
+                        <div class="agent-name">Research Agent</div>
+                        <div class="agent-sub">graphclaw.ai/agents/research</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="type-badge type-internal">Internal</span></td>
+                  <td><span class="pubkey">pk_ed25519_A3f2…9cKm</span></td>
+                  <td>
+                    <div class="perm-list">
+                      <span class="perm-chip perm-read">read</span>
+                      <span class="perm-chip perm-create">create</span>
+                    </div>
+                  </td>
+                  <td><span class="status-badge"><span class="sdot active"></span>Active</span></td>
+                  <td>
+                    <div class="ra">
+                      <button class="btn-icon-sm" aria-label="Edit agent"><i data-lucide="pencil" width="13" height="13"></i></button>
+                      <button class="btn-icon-sm" aria-label="More options"><i data-lucide="more-horizontal" width="14" height="14"></i></button>
+                    </div>
+                  </td>
+                </tr>
+                <!-- Row 2 -->
+                <tr>
+                  <td>
+                    <div class="agent-cell">
+                      <div class="agent-icon internal"><i data-lucide="code-2" width="14" height="14"></i></div>
+                      <div>
+                        <div class="agent-name">Code Review Agent</div>
+                        <div class="agent-sub">graphclaw.ai/agents/codereview</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="type-badge type-internal">Internal</span></td>
+                  <td><span class="pubkey">pk_ed25519_7Yb1…2nRp</span></td>
+                  <td>
+                    <div class="perm-list">
+                      <span class="perm-chip perm-read">read</span>
+                      <span class="perm-chip perm-update">update</span>
+                    </div>
+                  </td>
+                  <td><span class="status-badge"><span class="sdot active"></span>Active</span></td>
+                  <td>
+                    <div class="ra">
+                      <button class="btn-icon-sm" aria-label="Edit agent"><i data-lucide="pencil" width="13" height="13"></i></button>
+                      <button class="btn-icon-sm" aria-label="More options"><i data-lucide="more-horizontal" width="14" height="14"></i></button>
+                    </div>
+                  </td>
+                </tr>
+                <!-- Row 3 -->
+                <tr>
+                  <td>
+                    <div class="agent-cell">
+                      <div class="agent-icon trusted"><i data-lucide="shield" width="14" height="14"></i></div>
+                      <div>
+                        <div class="agent-name">External Audit Agent</div>
+                        <div class="agent-sub">audit-partner.io/a2a</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="type-badge type-trusted">Trusted</span></td>
+                  <td><span class="pubkey">pk_ed25519_Ex8c…4qWz</span></td>
+                  <td>
+                    <div class="perm-list">
+                      <span class="perm-chip perm-read">read only</span>
+                    </div>
+                  </td>
+                  <td><span class="status-badge"><span class="sdot active"></span>Active</span></td>
+                  <td>
+                    <div class="ra">
+                      <button class="btn-icon-sm" aria-label="Edit agent"><i data-lucide="pencil" width="13" height="13"></i></button>
+                      <button class="btn-icon-sm" aria-label="More options"><i data-lucide="more-horizontal" width="14" height="14"></i></button>
+                    </div>
+                  </td>
+                </tr>
+                <!-- Row 4 -->
+                <tr>
+                  <td>
+                    <div class="agent-cell">
+                      <div class="agent-icon restricted"><i data-lucide="flask-conical" width="14" height="14"></i></div>
+                      <div>
+                        <div class="agent-name">Beta Test Agent</div>
+                        <div class="agent-sub">sandbox.graphclaw.dev/a2a</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="type-badge type-restricted">Restricted</span></td>
+                  <td><span class="pubkey">pk_ed25519_Bt9d…8mLv</span></td>
+                  <td>
+                    <div class="perm-list">
+                      <span class="perm-chip perm-read">read only</span>
+                    </div>
+                  </td>
+                  <td><span class="status-badge"><span class="sdot inactive"></span>Inactive</span></td>
+                  <td>
+                    <div class="ra">
+                      <button class="btn-icon-sm" aria-label="Edit agent"><i data-lucide="pencil" width="13" height="13"></i></button>
+                      <button class="btn-icon-sm" aria-label="More options"><i data-lucide="more-horizontal" width="14" height="14"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="add-agent-row">
+              <button class="btn-primary" style="height:30px;font-size:var(--text-caption)">
+                <i data-lucide="plus" width="12" height="12"></i>
+                Add trusted agent
+              </button>
+            </div>
+          </div>
+
+          <!-- ══ Inbound Policy ══════════════════════════ -->
+          <div class="section-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="card-title-icon"><i data-lucide="lock" width="16" height="16"></i></span>
+                Inbound Policy
+              </div>
+            </div>
+            <div class="card-body">
+              <!-- Require signature -->
+              <div class="policy-toggle-row">
+                <div>
+                  <div class="ptl">Require message signature</div>
+                  <div class="ptl-desc">All inbound A2A requests must carry a valid Ed25519 signature from a registered agent</div>
+                </div>
+                <label class="toggle-switch" aria-label="Require signature">
+                  <input type="checkbox" checked>
+                  <span class="toggle-track"></span>
+                  <span class="toggle-thumb"></span>
+                </label>
+              </div>
+
+              <!-- Numeric limits -->
+              <div class="policy-grid" style="margin-top:var(--space-4);">
+                <div class="policy-field">
+                  <label class="policy-label" for="maxConcurrent">Max concurrent tasks</label>
+                  <input type="number" class="policy-input" id="maxConcurrent" value="10" min="1" max="100">
+                </div>
+                <div class="policy-field">
+                  <label class="policy-label" for="rateLimit">Rate limit</label>
+                  <div class="policy-suffix">
+                    <input type="number" class="policy-input" id="rateLimit" value="100" min="1">
+                    <span class="policy-suffix-label">req / hr</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Operations checklist -->
+              <div class="ops-section">
+                <span class="ops-label">Allowed Operations</span>
+                <div class="ops-grid">
+                  <label class="ops-item">
+                    <div class="ops-checkbox checked"><i data-lucide="check" width="10" height="10"></i></div>
+                    <div class="ops-text">
+                      <span class="ops-name">Read tasks</span>
+                      <span class="ops-risk low">Low risk</span>
+                    </div>
+                  </label>
+                  <label class="ops-item">
+                    <div class="ops-checkbox checked"><i data-lucide="check" width="10" height="10"></i></div>
+                    <div class="ops-text">
+                      <span class="ops-name">Create tasks</span>
+                      <span class="ops-risk med">Medium risk</span>
+                    </div>
+                  </label>
+                  <label class="ops-item">
+                    <div class="ops-checkbox checked"><i data-lucide="check" width="10" height="10"></i></div>
+                    <div class="ops-text">
+                      <span class="ops-name">Update task status</span>
+                      <span class="ops-risk med">Medium risk</span>
+                    </div>
+                  </label>
+                  <label class="ops-item">
+                    <div class="ops-checkbox checked"><i data-lucide="check" width="10" height="10"></i></div>
+                    <div class="ops-text">
+                      <span class="ops-name">Escalate to human</span>
+                      <span class="ops-risk med">Medium risk</span>
+                    </div>
+                  </label>
+                  <label class="ops-item">
+                    <div class="ops-checkbox unchecked"></div>
+                    <div class="ops-text">
+                      <span class="ops-name">Delete tasks</span>
+                      <span class="ops-risk high">High risk</span>
+                    </div>
+                  </label>
+                  <label class="ops-item">
+                    <div class="ops-checkbox unchecked"></div>
+                    <div class="ops-text">
+                      <span class="ops-name">Modify agent configs</span>
+                      <span class="ops-risk high">High risk</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══ A2A Communication Log ═══════════════════ -->
+          <div class="section-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="card-title-icon"><i data-lucide="terminal" width="16" height="16"></i></span>
+                A2A Communication Log
+                <span style="font-size:var(--text-caption);font-weight:400;color:var(--text-tertiary);margin-left:var(--space-2)">Last 6 entries</span>
+              </div>
+              <button class="btn-secondary" style="height:28px;font-size:var(--text-caption)">
+                <i data-lucide="external-link" width="12" height="12"></i>
+                Full log
+              </button>
+            </div>
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Operation</th>
+                  <th>Result</th>
+                  <th>Latency</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="log-ts">2026-04-10 07:58:42</span></td>
+                  <td><span class="log-agent">Research Agent</span></td>
+                  <td><span style="font-size:12px;color:var(--text-secondary)">GraphClaw Core</span></td>
+                  <td><span class="log-op">create_task</span></td>
+                  <td><span class="log-result result-ok"><i data-lucide="check" width="10" height="10"></i> 201</span></td>
+                  <td><span class="log-latency">142 ms</span></td>
+                </tr>
+                <tr>
+                  <td><span class="log-ts">2026-04-10 07:55:11</span></td>
+                  <td><span class="log-agent">Code Review Agent</span></td>
+                  <td><span style="font-size:12px;color:var(--text-secondary)">GraphClaw Core</span></td>
+                  <td><span class="log-op">update_status</span></td>
+                  <td><span class="log-result result-ok"><i data-lucide="check" width="10" height="10"></i> 200</span></td>
+                  <td><span class="log-latency">89 ms</span></td>
+                </tr>
+                <tr>
+                  <td><span class="log-ts">2026-04-10 07:52:03</span></td>
+                  <td><span class="log-agent">Research Agent</span></td>
+                  <td><span style="font-size:12px;color:var(--text-secondary)">GraphClaw Core</span></td>
+                  <td><span class="log-op">read_tasks</span></td>
+                  <td><span class="log-result result-ok"><i data-lucide="check" width="10" height="10"></i> 200</span></td>
+                  <td><span class="log-latency">54 ms</span></td>
+                </tr>
+                <tr>
+                  <td><span class="log-ts">2026-04-10 07:48:30</span></td>
+                  <td><span class="log-agent">External Audit Agent</span></td>
+                  <td><span style="font-size:12px;color:var(--text-secondary)">GraphClaw Core</span></td>
+                  <td><span class="log-op">read_tasks</span></td>
+                  <td><span class="log-result result-ok"><i data-lucide="check" width="10" height="10"></i> 200</span></td>
+                  <td><span class="log-latency">211 ms</span></td>
+                </tr>
+                <tr>
+                  <td><span class="log-ts">2026-04-10 07:47:18</span></td>
+                  <td><span class="log-agent">Beta Test Agent</span></td>
+                  <td><span style="font-size:12px;color:var(--text-secondary)">GraphClaw Core</span></td>
+                  <td><span class="log-op">update_status</span></td>
+                  <td><span class="log-result result-err"><i data-lucide="x" width="10" height="10"></i> 403</span></td>
+                  <td><span class="log-latency">38 ms</span></td>
+                </tr>
+                <tr>
+                  <td><span class="log-ts">2026-04-10 07:31:55</span></td>
+                  <td><span class="log-agent">Research Agent</span></td>
+                  <td><span style="font-size:12px;color:var(--text-secondary)">GraphClaw Core</span></td>
+                  <td><span class="log-op">create_task</span></td>
+                  <td><span class="log-result result-ratelimit"><i data-lucide="clock" width="10" height="10"></i> 429</span></td>
+                  <td><span class="log-latency">12 ms</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ── Save row ─────────────────────────────── -->
+          <div class="save-row">
+            <div class="save-changed">
+              <span class="dot"></span>
+              Unsaved changes
+            </div>
+            <div class="save-actions">
+              <button class="btn-secondary">Discard</button>
+              <button class="btn-primary">
+                <i data-lucide="save" width="14" height="14"></i>
+                Save Changes
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /settings-inner -->
+      </main>
+    </div><!-- /settings-body -->
+  </div><!-- /main-layout -->
+</div><!-- /app-shell -->
+
+<script>
+  // ── Dark / light toggle ──────────────────────────────────
+  const themeToggle = document.getElementById('themeToggle');
+  const themeIcon   = document.getElementById('themeIcon');
+  const html        = document.documentElement;
+
+  themeToggle.addEventListener('click', () => {
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    themeIcon.setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+    lucide.createIcons();
+  });
+
+  // ── Copy endpoint URL ────────────────────────────────────
+  function copyEndpoint(btn) {
+    navigator.clipboard.writeText('https://graphclaw.ai/a2a/v1').then(() => {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!';
+      btn.style.color = 'var(--state-progress)';
+      btn.style.borderColor = 'var(--state-progress)';
+      setTimeout(() => {
+        btn.innerHTML = orig;
+        btn.style.color = '';
+        btn.style.borderColor = '';
+        lucide.createIcons();
+      }, 2000);
+    });
+  }
+
+  lucide.createIcons();
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

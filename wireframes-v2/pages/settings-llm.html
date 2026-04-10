@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html data-page="settings-llm" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — LLM Providers — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   Settings: LLM Providers — Page-specific styles
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: var(--font-sans); }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* ─── (Reused) Sidebar ──────────────────────────────────── */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  height: 56px; flex-shrink: 0;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: var(--weight-bold); font-size: 13px; flex-shrink: 0;
+}
+.logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.nav-section {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--text-tertiary); padding: var(--space-3) var(--space-4) var(--space-1);
+}
+.nav-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  margin: 1px var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer; text-decoration: none;
+  color: var(--text-secondary);
+  font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background: rgba(56,189,248,0.12); }
+.nav-item .ni { display: flex; align-items: center; flex-shrink: 0; width: 18px; height: 18px; }
+.sidebar-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-4); }
+.sidebar-footer { padding: var(--space-2); border-top: 1px solid var(--border-default); }
+.user-row {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2); border-radius: var(--radius-md); cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.user-row:hover { background: var(--bg-inset); }
+.avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold); flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.user-role { font-size: 10px; color: var(--text-tertiary); }
+
+.main-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
+.topbar {
+  height: 56px; background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center;
+  padding: 0 var(--space-5); gap: var(--space-4); flex-shrink: 0;
+}
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; }
+.breadcrumb .sep { color: var(--text-tertiary); }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-medium); }
+.topbar-search { flex: 1; max-width: 340px; margin: 0 auto; position: relative; }
+.topbar-search input {
+  width: 100%; height: 32px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 0 var(--space-3) 0 32px;
+  font-size: var(--text-body-sm); font-family: var(--font-sans);
+  color: var(--text-primary); outline: none; transition: all var(--duration-normal);
+}
+.topbar-search input::placeholder { color: var(--text-tertiary); }
+.topbar-search input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.topbar-search .s-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--icon-tertiary); display: flex; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.icon-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); border: none; background: transparent;
+  cursor: pointer; color: var(--icon-secondary);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 var(--space-1); }
+.topbar-avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold); cursor: pointer;
+}
+
+/* ─── Settings Layout ───────────────────────────────────── */
+.settings-body { display: flex; flex: 1; overflow: hidden; }
+.settings-nav {
+  width: 200px; flex-shrink: 0;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-default);
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-2);
+}
+.sn-title {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-tertiary); padding: 0 var(--space-2) var(--space-2); display: block;
+}
+.sn-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 7px var(--space-2); border-radius: var(--radius-md);
+  cursor: pointer; text-decoration: none;
+  color: var(--text-secondary); font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  transition: background var(--duration-fast), color var(--duration-fast); margin-bottom: 1px;
+}
+.sn-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.sn-item.active { background: var(--brand-primary-light); color: var(--brand-primary); font-weight: var(--weight-semibold); }
+[data-theme="dark"] .sn-item.active { background: rgba(56,189,248,0.12); }
+.sn-divider { height: 1px; background: var(--border-default); margin: var(--space-3) var(--space-2); }
+.sn-item.danger { color: var(--text-error); }
+.sn-item.danger:hover { background: var(--state-blocked-light); color: var(--state-blocked); }
+
+.settings-content { flex: 1; overflow-y: auto; min-width: 0; }
+.settings-inner { max-width: 800px; padding: var(--space-6) var(--space-8); }
+.settings-header { margin-bottom: var(--space-5); }
+.settings-title { font-size: var(--text-heading); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.02em; }
+.settings-subtitle { font-size: var(--text-body-sm); color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
+
+/* Warning banner */
+.warning-banner {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--state-delayed-light); border: 1px solid var(--state-delayed);
+  border-radius: var(--radius-md); margin-bottom: var(--space-5);
+}
+.wb-icon { flex-shrink: 0; color: var(--state-delayed); margin-top: 1px; }
+.wb-text { font-size: var(--text-body-sm); color: var(--text-primary); font-weight: var(--weight-medium); }
+.wb-sub { font-size: var(--text-caption); color: var(--text-secondary); margin-top: 2px; }
+
+/* Section card */
+.section-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-5);
+  overflow: visible;
+  box-shadow: var(--shadow-1);
+}
+.sc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface-alt);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.sc-title { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); display: flex; align-items: center; gap: var(--space-2); }
+.sc-badge { font-size: 10px; padding: 2px 8px; border-radius: var(--radius-full); font-weight: var(--weight-semibold); }
+.sc-body { padding: var(--space-5); }
+
+/* Form layout — 2-col grid */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4) var(--space-5); }
+.form-grid .full { grid-column: 1 / -1; }
+.field-group { display: flex; flex-direction: column; gap: 5px; }
+.field-label {
+  font-size: var(--text-caption); font-weight: var(--weight-semibold);
+  color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em;
+}
+.field-input {
+  width: 100%; height: 34px; padding: 0 10px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-sans);
+  font-size: var(--text-body-sm); color: var(--text-primary); outline: none;
+  transition: all var(--duration-normal);
+}
+.field-input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); background: var(--bg-surface); }
+.field-select {
+  width: 100%; height: 34px; padding: 0 10px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-sans);
+  font-size: var(--text-body-sm); color: var(--text-primary); outline: none;
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px;
+}
+.field-select:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.field-hint { font-size: var(--text-caption); color: var(--text-tertiary); margin-top: 2px; }
+
+/* Slider row */
+.slider-row { display: flex; align-items: center; gap: var(--space-3); }
+.slider-input {
+  flex: 1; height: 4px; -webkit-appearance: none; appearance: none;
+  background: var(--border-strong); border-radius: 2px; outline: none; cursor: pointer;
+}
+.slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--brand-primary); cursor: pointer; border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 0 2px var(--brand-primary);
+  transition: transform var(--duration-fast);
+}
+.slider-input::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.slider-value {
+  width: 40px; text-align: center;
+  font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  color: var(--text-primary); font-family: var(--font-mono);
+}
+
+/* Secret input */
+.secret-row { position: relative; }
+.secret-row .field-input { padding-right: 36px; font-family: var(--font-mono); font-size: var(--text-caption); letter-spacing: 0.12em; }
+.secret-toggle {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--icon-tertiary);
+  padding: 2px; display: flex; align-items: center; transition: color var(--duration-fast);
+}
+.secret-toggle:hover { color: var(--icon-primary); }
+
+/* Btn */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 14px; height: 32px;
+  border-radius: var(--radius-md); border: 1.5px solid transparent;
+  font-family: var(--font-sans); font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  cursor: pointer; transition: all var(--duration-normal); outline: none; text-decoration: none;
+}
+.btn-sm { height: 28px; padding: 0 10px; font-size: var(--text-caption); }
+.btn-primary { background: var(--brand-primary); border-color: var(--brand-primary); color: white; }
+.btn-primary:hover { background: var(--brand-primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(var(--brand-primary-rgb),.3); }
+.btn-secondary { background: var(--bg-surface); border-color: var(--border-default); color: var(--text-primary); }
+.btn-secondary:hover { background: var(--bg-inset); border-color: var(--border-strong); }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--bg-inset); color: var(--text-primary); }
+
+/* Credentials table */
+.cred-table { width: 100%; border-collapse: collapse; }
+.cred-table th {
+  text-align: left; padding: 8px 12px;
+  font-size: 11px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); background: var(--bg-surface-alt);
+  border-bottom: 1px solid var(--border-default);
+}
+.cred-table td {
+  padding: 10px 12px;
+  font-size: var(--text-body-sm); color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.cred-table tr:last-child td { border-bottom: none; }
+.cred-table tbody tr { transition: background var(--duration-fast); }
+.cred-table tbody tr:hover { background: var(--bg-surface-alt); }
+.mono { font-family: var(--font-mono); font-size: var(--text-caption); color: var(--text-secondary); }
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: var(--radius-full);
+  font-size: 11px; font-weight: var(--weight-semibold);
+}
+.badge-success { background: var(--state-progress-light); color: var(--state-progress); }
+.badge-error { background: var(--state-blocked-light); color: var(--state-blocked); }
+.badge-neutral { background: var(--bg-inset); color: var(--text-secondary); border: 1px solid var(--border-default); }
+.provider-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-weight: var(--weight-semibold);
+}
+.provider-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* Test banner */
+.test-banner {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-surface-alt); border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg); margin-bottom: var(--space-5);
+}
+.tb-text { flex: 1; font-size: var(--text-body-sm); color: var(--text-secondary); }
+.tb-ts { font-size: var(--text-caption); color: var(--text-tertiary); margin-top: 2px; }
+
+/* Sticky footer */
+.settings-footer {
+  position: sticky; bottom: 0;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-default);
+  padding: var(--space-4) var(--space-8);
+  display: flex; align-items: center; gap: var(--space-3);
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ── Sidebar ───────────────────────────────────────── -->
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-logo">
+      
+      <div><div class="logo-text">GraphClaw</div></div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Workspace</div>
+      <a href="goal-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="layout-dashboard" style="width:16px;height:16px;" aria-label="Dashboard"></i></span>
+        Dashboard
+      </a>
+      <a href="my-tasks.html" class="nav-item">
+        <span class="ni"><i data-lucide="check-square" style="width:16px;height:16px;" aria-label="My Tasks"></i></span>
+        My Tasks
+      </a>
+      <a href="goal-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="target" style="width:16px;height:16px;" aria-label="Goals"></i></span>
+        Goals
+      </a>
+      <a href="project-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="folder-kanban" style="width:16px;height:16px;" aria-label="Projects"></i></span>
+        Projects
+      </a>
+      <a href="timeline-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="gantt-chart" style="width:16px;height:16px;" aria-label="Timeline"></i></span>
+        Timeline
+      </a>
+      <a href="resource-view.html" class="nav-item">
+        <span class="ni"><i data-lucide="users" style="width:16px;height:16px;" aria-label="People"></i></span>
+        People
+      </a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">System</div>
+      <a href="agent-monitor.html" class="nav-item">
+        <span class="ni"><i data-lucide="activity" style="width:16px;height:16px;" aria-label="Agent Monitor"></i></span>
+        Agent Monitor
+      </a>
+      <a href="chat-sidebar.html" class="nav-item">
+        <span class="ni"><i data-lucide="message-circle" style="width:16px;height:16px;" aria-label="Chat"></i></span>
+        Chat
+      </a>
+      <a href="settings-llm.html" class="nav-item active">
+        <span class="ni"><i data-lucide="settings" style="width:16px;height:16px;" aria-label="Settings"></i></span>
+        Settings
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar">PM</div>
+        <div class="user-info">
+          <div class="user-name">Priya Mehta</div>
+          <div class="user-role">Workspace Admin</div>
+        </div>
+        <i data-lucide="chevron-up" style="width:14px;height:14px;color:var(--text-tertiary);" aria-label="User menu"></i>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main ──────────────────────────────────────────── -->
+  <div class="main-layout">
+    <div class="topbar">
+      <div class="breadcrumb">
+        <a href="#">Settings</a>
+        <span class="sep">/</span>
+        <span class="current">LLM Providers</span>
+      </div>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" style="width:14px;height:14px;" aria-label="Search"></i></span>
+        <input type="text" placeholder="Search settings…" aria-label="Search settings" />
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle dark/light mode">
+          <i data-lucide="sun" style="width:16px;height:16px;" aria-label="Theme"></i>
+        </button>
+        <div class="divider-v"></div>
+        <div class="topbar-avatar" title="Priya Mehta">PM</div>
+      </div>
+    </div>
+
+    <div class="settings-body">
+      <!-- Inner nav -->
+      <nav class="settings-nav" aria-label="Settings navigation">
+        <span class="sn-title">Settings</span>
+        <a href="#" class="sn-item">
+          <i data-lucide="sliders" style="width:14px;height:14px;" aria-label="General"></i>
+          General
+        </a>
+        <a href="settings-channels.html" class="sn-item">
+          <i data-lucide="radio" style="width:14px;height:14px;" aria-label="Channels"></i>
+          Channels
+        </a>
+        <a href="settings-llm.html" class="sn-item active">
+          <i data-lucide="cpu" style="width:14px;height:14px;" aria-label="LLM Providers"></i>
+          LLM Providers
+        </a>
+        <a href="settings-scoring.html" class="sn-item">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;" aria-label="Scoring"></i>
+          Scoring
+        </a>
+        <a href="#" class="sn-item">
+          <i data-lucide="newspaper" style="width:14px;height:14px;" aria-label="Briefing"></i>
+          Briefing
+        </a>
+        <a href="#" class="sn-item">
+          <i data-lucide="timer" style="width:14px;height:14px;" aria-label="Triggers"></i>
+          Triggers
+        </a>
+        <a href="#" class="sn-item">
+          <i data-lucide="network" style="width:14px;height:14px;" aria-label="Agent-to-Agent"></i>
+          Agent-to-Agent
+        </a>
+        <div class="sn-divider"></div>
+        <a href="#" class="sn-item danger">
+          <i data-lucide="alert-triangle" style="width:14px;height:14px;" aria-label="Danger Zone"></i>
+          Danger Zone
+        </a>
+      </nav>
+
+      <!-- Content -->
+      <div class="settings-content">
+        <div class="settings-inner">
+          <div class="settings-header">
+            <h1 class="settings-title">LLM Provider Configuration</h1>
+            <p class="settings-subtitle">Configure language model providers for the orchestrator agent, skill agents, and embedding generation. All settings apply workspace-wide.</p>
+          </div>
+
+          <!-- Warning banner -->
+          <div class="warning-banner" role="alert">
+            <span class="wb-icon"><i data-lucide="alert-triangle" style="width:16px;height:16px;" aria-label="Warning"></i></span>
+            <div>
+              <div class="wb-text">Changes affect all agents in this workspace. Always test connections before saving to production.</div>
+              <div class="wb-sub">Active agents will reload their configuration on the next task cycle (~60 seconds).</div>
+            </div>
+          </div>
+
+          <!-- ── Orchestrator Agent ───────────────────── -->
+          <div class="section-card">
+            <div class="sc-header">
+              <span class="sc-title">
+                <i data-lucide="brain" style="width:16px;height:16px;color:#7C3AED;" aria-label="Orchestrator"></i>
+                Orchestrator Agent
+              </span>
+              <span class="sc-badge" style="background:rgba(124,58,237,0.1);color:#7C3AED;">Primary</span>
+            </div>
+            <div class="sc-body">
+              <div class="form-grid">
+                <div class="field-group">
+                  <label class="field-label" for="orchProvider">Provider</label>
+                  <select class="field-select" id="orchProvider">
+                    <option selected>Anthropic</option>
+                    <option>OpenAI</option>
+                    <option>LiteLLM</option>
+                    <option>Azure OpenAI</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="orchModel">Model</label>
+                  <select class="field-select" id="orchModel">
+                    <option>claude-opus-4-5</option>
+                    <option selected>claude-sonnet-4-5</option>
+                    <option>claude-haiku-3-5</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="orchTemp">Temperature — <span id="orchTempVal" style="font-weight:600;color:var(--text-primary);">0.7</span></label>
+                  <div class="slider-row">
+                    <input class="slider-input" id="orchTemp" type="range" min="0" max="1" step="0.05" value="0.7"
+                      aria-label="Temperature" oninput="document.getElementById('orchTempVal').textContent=parseFloat(this.value).toFixed(2)" />
+                    <span class="slider-value">0.7</span>
+                  </div>
+                  <span class="field-hint">Lower = more deterministic. Higher = more creative.</span>
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="orchTokens">Max Tokens</label>
+                  <input class="field-input" id="orchTokens" type="number" value="4096" min="256" max="32768" />
+                  <span class="field-hint">Maximum output tokens per call.</span>
+                </div>
+                <div class="field-group full">
+                  <label class="field-label" for="orchKey">API Key</label>
+                  <div class="secret-row">
+                    <input class="field-input" id="orchKey" type="password" value="sk-ant-abcdef1234567890abcdef" autocomplete="off" spellcheck="false" aria-label="Anthropic API key" />
+                    <button class="secret-toggle" id="orchKeyToggle" type="button" aria-label="Show/hide API key">
+                      <i data-lucide="eye" style="width:14px;height:14px;" aria-label="Show key"></i>
+                    </button>
+                  </div>
+                  <span class="field-hint">Stored encrypted. Only admins can update this value.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Skill Agents ────────────────────────── -->
+          <div class="section-card">
+            <div class="sc-header">
+              <span class="sc-title">
+                <i data-lucide="zap" style="width:16px;height:16px;color:var(--state-delayed);" aria-label="Skill Agents"></i>
+                Skill Agents
+              </span>
+              <span class="sc-badge" style="background:var(--state-delayed-light);color:var(--state-delayed);">Multi-provider</span>
+            </div>
+            <div class="sc-body">
+              <div class="form-grid">
+                <div class="field-group">
+                  <label class="field-label" for="skillProvider">Provider</label>
+                  <select class="field-select" id="skillProvider">
+                    <option selected>LiteLLM</option>
+                    <option>Anthropic</option>
+                    <option>OpenAI</option>
+                  </select>
+                  <span class="field-hint">LiteLLM enables multi-provider routing.</span>
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="skillModel">Default Model</label>
+                  <select class="field-select" id="skillModel">
+                    <option>claude-sonnet-4-5</option>
+                    <option selected>claude-haiku-3-5</option>
+                    <option>gpt-4o-mini</option>
+                    <option>gemini-flash-1.5</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="skillRouter">Router Strategy</label>
+                  <select class="field-select" id="skillRouter">
+                    <option selected>Round Robin</option>
+                    <option>Least Cost</option>
+                    <option>Latency-based</option>
+                    <option>Quality-first</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="skillFallback">Fallback Model</label>
+                  <select class="field-select" id="skillFallback">
+                    <option>claude-haiku-3-5</option>
+                    <option selected>gpt-4o-mini</option>
+                    <option>gemini-flash-1.5</option>
+                  </select>
+                  <span class="field-hint">Used when primary model is unavailable.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Embeddings ─────────────────────────── -->
+          <div class="section-card">
+            <div class="sc-header">
+              <span class="sc-title">
+                <i data-lucide="sparkles" style="width:16px;height:16px;color:var(--state-active);" aria-label="Embeddings"></i>
+                Embeddings
+              </span>
+              <span class="sc-badge" style="background:var(--state-active-light);color:var(--state-active);">pgvector</span>
+            </div>
+            <div class="sc-body">
+              <div class="form-grid">
+                <div class="field-group">
+                  <label class="field-label" for="embProvider">Provider</label>
+                  <select class="field-select" id="embProvider">
+                    <option selected>OpenAI</option>
+                    <option>Cohere</option>
+                    <option>Voyage AI</option>
+                    <option>Local (sentence-transformers)</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="embModel">Model</label>
+                  <select class="field-select" id="embModel">
+                    <option selected>text-embedding-3-small</option>
+                    <option>text-embedding-3-large</option>
+                    <option>text-embedding-ada-002</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label class="field-label">Dimensions</label>
+                  <input class="field-input" type="number" value="1536" readonly aria-label="Embedding dimensions" style="background:var(--bg-surface-alt);color:var(--text-secondary);" />
+                  <span class="field-hint">Fixed by model. pgvector index uses this value.</span>
+                </div>
+                <div class="field-group">
+                  <label class="field-label">Batch Size</label>
+                  <input class="field-input" type="number" value="512" min="1" max="2048" aria-label="Embedding batch size" />
+                  <span class="field-hint">Texts to embed per API call.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Provider Credentials ───────────────── -->
+          <div class="section-card">
+            <div class="sc-header">
+              <span class="sc-title">
+                <i data-lucide="key" style="width:16px;height:16px;color:var(--icon-secondary);" aria-label="Credentials"></i>
+                Provider Credentials
+              </span>
+              <button class="btn btn-secondary btn-sm">
+                <i data-lucide="plus" style="width:12px;height:12px;" aria-label="Add"></i>
+                Add credential
+              </button>
+            </div>
+            <div style="overflow:hidden;">
+              <table class="cred-table">
+                <thead>
+                  <tr>
+                    <th>Provider</th>
+                    <th>Key name</th>
+                    <th>Secret</th>
+                    <th>Status</th>
+                    <th>Last verified</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div class="provider-chip">
+                        <div class="provider-dot" style="background:#D97706;"></div>
+                        Anthropic
+                      </div>
+                    </td>
+                    <td><span class="mono">ANTHROPIC_API_KEY</span></td>
+                    <td><span class="mono">sk-ant-••••••••••••3f8a</span></td>
+                    <td><span class="badge badge-success"><i data-lucide="check-circle-2" style="width:10px;height:10px;" aria-label="Valid"></i> Valid</span></td>
+                    <td style="color:var(--text-secondary);">Apr 10, 08:00</td>
+                    <td>
+                      <div style="display:flex;gap:4px;justify-content:flex-end;">
+                        <button class="btn btn-ghost btn-sm"><i data-lucide="pencil" style="width:12px;height:12px;" aria-label="Edit"></i></button>
+                        <button class="btn btn-ghost btn-sm"><i data-lucide="refresh-cw" style="width:12px;height:12px;" aria-label="Rotate"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="provider-chip">
+                        <div class="provider-dot" style="background:#10B981;"></div>
+                        OpenAI
+                      </div>
+                    </td>
+                    <td><span class="mono">OPENAI_API_KEY</span></td>
+                    <td><span class="mono">sk-••••••••••••••••7c12</span></td>
+                    <td><span class="badge badge-success"><i data-lucide="check-circle-2" style="width:10px;height:10px;" aria-label="Valid"></i> Valid</span></td>
+                    <td style="color:var(--text-secondary);">Apr 10, 08:00</td>
+                    <td>
+                      <div style="display:flex;gap:4px;justify-content:flex-end;">
+                        <button class="btn btn-ghost btn-sm"><i data-lucide="pencil" style="width:12px;height:12px;" aria-label="Edit"></i></button>
+                        <button class="btn btn-ghost btn-sm"><i data-lucide="refresh-cw" style="width:12px;height:12px;" aria-label="Rotate"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="provider-chip">
+                        <div class="provider-dot" style="background:#3B82F6;"></div>
+                        LiteLLM
+                      </div>
+                    </td>
+                    <td><span class="mono">LITELLM_PROXY_KEY</span></td>
+                    <td><span class="mono">sk-lite-••••••••••••9a4e</span></td>
+                    <td><span class="badge badge-error"><i data-lucide="alert-circle" style="width:10px;height:10px;" aria-label="Expired"></i> Expired</span></td>
+                    <td style="color:var(--text-error);">Apr 8, 14:22</td>
+                    <td>
+                      <div style="display:flex;gap:4px;justify-content:flex-end;">
+                        <button class="btn btn-ghost btn-sm"><i data-lucide="pencil" style="width:12px;height:12px;" aria-label="Edit"></i></button>
+                        <button class="btn btn-ghost btn-sm"><i data-lucide="refresh-cw" style="width:12px;height:12px;" aria-label="Rotate"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ── Test all connections ────────────────── -->
+          <div class="test-banner">
+            <div style="width:40px;height:40px;border-radius:var(--radius-lg);background:var(--bg-inset);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--icon-secondary);">
+              <i data-lucide="plug" style="width:20px;height:20px;" aria-label="Test connections"></i>
+            </div>
+            <div class="tb-text">
+              <div style="font-weight:var(--weight-semibold);color:var(--text-primary);margin-bottom:2px;">Connection Health Check</div>
+              <div class="tb-ts">Last tested: Apr 10, 2026 at 08:00 AM — 2 of 3 providers healthy</div>
+            </div>
+            <button class="btn btn-secondary" id="testBtn">
+              <i data-lucide="play-circle" style="width:14px;height:14px;" aria-label="Test"></i>
+              Test All Connections
+            </button>
+          </div>
+
+          <div style="height:80px;"></div>
+        </div>
+
+        <!-- Sticky footer -->
+        <div class="settings-footer">
+          <button class="btn btn-primary" id="saveBtn">
+            <i data-lucide="save" style="width:14px;height:14px;" aria-label="Save"></i>
+            Save changes
+          </button>
+          <button class="btn btn-ghost">Discard</button>
+          <span style="font-size:var(--text-caption);color:var(--text-tertiary);margin-left:auto;">
+            Last saved: Apr 10, 2026 at 09:42 AM
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  lucide.createIcons();
+
+  const toggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+  function applyTheme(dark) {
+    html.setAttribute('data-theme', dark ? 'dark' : 'light');
+    const icon = toggle.querySelector('[data-lucide]');
+    icon.setAttribute('data-lucide', dark ? 'moon' : 'sun');
+    lucide.createIcons();
+  }
+  toggle.addEventListener('click', () => applyTheme(html.getAttribute('data-theme') !== 'dark'));
+
+  // Secret toggle
+  const orchKeyInput = document.getElementById('orchKey');
+  document.getElementById('orchKeyToggle').addEventListener('click', function() {
+    const show = orchKeyInput.type === 'password';
+    orchKeyInput.type = show ? 'text' : 'password';
+    const icon = this.querySelector('[data-lucide]');
+    icon.setAttribute('data-lucide', show ? 'eye-off' : 'eye');
+    lucide.createIcons();
+  });
+
+  // Temperature sync
+  document.getElementById('orchTemp').addEventListener('input', function() {
+    document.getElementById('orchTempVal').textContent = parseFloat(this.value).toFixed(2);
+    this.nextElementSibling && (this.nextElementSibling.textContent = parseFloat(this.value).toFixed(2));
+  });
+  // Sync sibling span for slider
+  const tempSlider = document.getElementById('orchTemp');
+  const tempVal = tempSlider.parentElement.nextElementSibling;
+  if (tempVal && tempVal.classList.contains('slider-value')) {
+    tempSlider.addEventListener('input', () => tempVal.textContent = parseFloat(tempSlider.value).toFixed(2));
+  }
+
+  // Test button
+  document.getElementById('testBtn').addEventListener('click', function() {
+    const orig = this.innerHTML;
+    this.innerHTML = '<i data-lucide="loader-2" style="width:14px;height:14px;animation:spin .8s linear infinite;"></i> Testing…';
+    this.disabled = true;
+    lucide.createIcons();
+    setTimeout(() => {
+      this.innerHTML = '<i data-lucide="check-circle-2" style="width:14px;height:14px;color:#10B981;"></i> 2 / 3 passed';
+      this.disabled = false;
+      lucide.createIcons();
+    }, 2000);
+  });
+
+  // Save button
+  document.getElementById('saveBtn').addEventListener('click', function() {
+    const orig = this.innerHTML;
+    this.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> Saved!';
+    this.style.background = 'var(--state-progress)';
+    this.style.borderColor = 'var(--state-progress)';
+    lucide.createIcons();
+    setTimeout(() => {
+      this.innerHTML = orig;
+      this.style.background = '';
+      this.style.borderColor = '';
+      lucide.createIcons();
+    }, 2000);
+  });
+})();
+</script>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

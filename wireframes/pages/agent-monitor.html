@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphClaw Wireframe · Agent Monitor</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../../docs/graphclaw.ai.png" alt="GraphClaw logo" />
+        <div><strong>Agent Monitor</strong><br /><span class="muted">Wireframe v1</span></div>
+      </div>
+      <span class="badge">Linear + Cloud console density</span>
+      <div class="nav-section">
+        <h4>Views</h4>
+        <div class="nav-list">
+          <a class="nav-item" href="cockpit-shell.html">Cockpit Shell</a>
+          <a class="nav-item" href="task-explainability.html">Task & Explainability</a>
+          <a class="nav-item active" href="agent-monitor.html">Agent Monitor</a>
+          <a class="nav-item" href="canvas-editor.html">Canvas Editor</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h1>Agent Monitor Dashboard</h1>
+        <div class="meta">
+          <span class="chip">Live mode</span>
+          <span class="chip">Refresh: SSE</span>
+          <span class="chip">Scope: current org</span>
+        </div>
+      </header>
+
+      <section class="layout">
+        <div class="kpis">
+          <div class="kpi"><div class="muted">Agent State</div><div class="value">RUNNING</div></div>
+          <div class="kpi"><div class="muted">Action Queue</div><div class="value">12 items</div></div>
+          <div class="kpi"><div class="muted">Errors (24h)</div><div class="value">1</div></div>
+          <div class="kpi"><div class="muted">Cost Today</div><div class="value">$18.42</div></div>
+        </div>
+
+        <div class="split two">
+          <div class="card">
+            <h2>Ranked Action Queue</h2>
+            <table class="table">
+              <thead><tr><th>Rank</th><th>Task</th><th>Score</th><th>Action</th><th>Autonomy</th><th>Top factor</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>TSK-JD-0042</td><td>0.71</td><td>Request approval</td><td>Require Approval</td><td>Timeline urgency</td></tr>
+                <tr><td>2</td><td>TSK-JD-0090</td><td>0.68</td><td>Unblock dependency</td><td>Suggest</td><td>Dependency pressure</td></tr>
+                <tr><td>3</td><td>TSK-JD-0105</td><td>0.64</td><td>Auto-follow up</td><td>Autonomous</td><td>State risk</td></tr>
+              </tbody>
+            </table>
+            <div class="annotation">
+              Keep this table dense and keyboard-first (Linear style) because monitor users are operational and speed-sensitive.
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Recent Activity Feed</h2>
+            <div class="block-stack">
+              <div class="block"><span class="pill status-ok">11:16:09</span> `task.scored` · TSK-JD-0042 moved to rank #1</div>
+              <div class="block"><span class="pill status-warn">11:14:27</span> `approval.pending` · Security gate decision requested</div>
+              <div class="block"><span class="pill">11:10:03</span> `briefing.ready` · Morning briefing delivered to Web Chat</div>
+              <div class="block"><span class="pill status-danger">10:57:49</span> `skill.failed` · Slack connector test retry #1</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="split three">
+          <div class="card">
+            <h3>Trigger Schedule</h3>
+            <table class="table">
+              <thead><tr><th>Trigger</th><th>Type</th><th>Next</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>daily-briefing</td><td>SCHEDULED</td><td>Tomorrow 08:00</td><td><span class="pill status-ok">ACTIVE</span></td></tr>
+                <tr><td>follow-up-check</td><td>EVENT</td><td>In 42 min</td><td><span class="pill">PENDING</span></td></tr>
+                <tr><td>inbound-processor</td><td>INBOUND</td><td>Realtime</td><td><span class="pill status-ok">LISTENING</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <h3>Worker Health</h3>
+            <table class="table">
+              <thead><tr><th>Worker</th><th>State</th><th>Heartbeat</th></tr></thead>
+              <tbody>
+                <tr><td>worker-a</td><td>IDLE</td><td>6 sec ago</td></tr>
+                <tr><td>worker-b</td><td>RUNNING</td><td>3 sec ago</td></tr>
+                <tr><td>worker-c</td><td>FAILED</td><td>18 min ago</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <h3>Cost Breakdown</h3>
+            <table class="table">
+              <thead><tr><th>Model</th><th>Tokens</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr><td>claude-sonnet</td><td>412k</td><td>$10.11</td></tr>
+                <tr><td>gpt-5-mini</td><td>287k</td><td>$5.62</td></tr>
+                <tr><td>llama-3.1</td><td>190k</td><td>$2.69</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="footer-nav">
+          <a href="task-explainability.html">Back to tasks</a>
+          <a href="canvas-editor.html">Next: canvas</a>
+          <a href="../index.html">Wireframe index</a>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

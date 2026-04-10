@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html data-page="home" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GraphClaw Cockpit — Wireframes v2</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<link rel="stylesheet" href="assets/layout.css">
+<link rel="stylesheet" href="assets/utilities.css">
+<style>
+  body { background: var(--bg-page); }
+
+  .hub-header {
+    background: linear-gradient(135deg, #0B1120 0%, #0C1F3A 60%, #0B1120 100%);
+    padding: var(--space-12) var(--space-8);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hub-header::before {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(14,165,233,0.12) 0%, transparent 70%);
+    top: -200px; right: 80px;
+    pointer-events: none;
+  }
+
+  .hub-header::after {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%);
+    bottom: -100px; left: 200px;
+    pointer-events: none;
+  }
+
+  .hub-header-content { position: relative; z-index: 1; }
+
+  .hub-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+
+  .hub-logo-mark {
+    width: 40px; height: 40px;
+    background: var(--brand-primary);
+    border-radius: var(--radius-lg);
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-heading);
+    box-shadow: 0 0 20px rgba(14,165,233,0.4);
+  }
+
+  .hub-logo-name {
+    font-size: var(--text-heading);
+    font-weight: var(--weight-bold);
+    color: #F1F5F9;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .hub-logo-tag {
+    font-size: var(--text-caption);
+    color: #64748B;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+  }
+
+  .hub-title {
+    font-size: 2rem;
+    font-weight: var(--weight-bold);
+    color: #F1F5F9;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-2);
+  }
+
+  .hub-subtitle {
+    font-size: var(--text-body);
+    color: #94A3B8;
+    max-width: 520px;
+    line-height: var(--leading-loose);
+  }
+
+  .hub-header-right {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-3);
+  }
+
+  .hub-stats {
+    display: flex;
+    gap: var(--space-5);
+  }
+
+  .hub-stat {
+    text-align: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .hub-stat-value { font-size: var(--text-heading); font-weight: var(--weight-bold); color: #38BDF8; }
+  .hub-stat-label { font-size: var(--text-micro); color: #64748B; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Main content */
+  .hub-main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-8);
+  }
+
+  /* Phase section */
+  .phase-section {
+    margin-bottom: var(--space-10);
+  }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .phase-badge {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    font-size: var(--text-body-sm);
+    font-weight: var(--weight-bold);
+    flex-shrink: 0;
+  }
+
+  .phase-badge-a  { background: var(--state-progress-light); color: var(--state-progress); }
+  .phase-badge-bc { background: var(--brand-primary-light);   color: var(--brand-primary); }
+  .phase-badge-de { background: var(--bg-inset);              color: var(--text-tertiary); }
+
+  .phase-info { flex: 1; }
+  .phase-title { font-size: var(--text-title); font-weight: var(--weight-semibold); color: var(--text-primary); }
+  .phase-desc  { font-size: var(--text-body-sm); color: var(--text-secondary); margin-top: 2px; }
+
+  .phase-status-pill {
+    font-size: var(--text-caption);
+    font-weight: var(--weight-semibold);
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+  }
+
+  .phase-status-done       { background: var(--state-progress-light); color: var(--state-progress); }
+  .phase-status-next       { background: var(--brand-primary-light);   color: var(--brand-primary); }
+  .phase-status-pending    { background: var(--bg-inset);              color: var(--text-tertiary); }
+
+  /* Page cards grid */
+  .pages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-4);
+  }
+
+  .page-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow var(--duration-normal), transform var(--duration-normal), border-color var(--duration-normal);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-1);
+  }
+
+  .page-card:hover {
+    box-shadow: var(--shadow-3);
+    transform: translateY(-2px);
+    border-color: var(--brand-primary);
+  }
+
+  .page-card-preview {
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Preview backgrounds per module type */
+  .preview-ds     { background: linear-gradient(135deg, #0B1120, #0F2942); }
+  .preview-graph  { background: linear-gradient(135deg, #EFF6FF, #DBEAFE); }
+  .preview-task   { background: linear-gradient(135deg, #F0FDF4, #DCFCE7); }
+  .preview-agent  { background: linear-gradient(135deg, #FFF7ED, #FED7AA); }
+  .preview-canvas { background: linear-gradient(135deg, #FAF5FF, #EDE9FE); }
+  .preview-chat   { background: linear-gradient(135deg, #F0FDF4, #BBF7D0); }
+  .preview-settings { background: linear-gradient(135deg, #F8FAFC, #F1F5F9); }
+  .preview-admin  { background: linear-gradient(135deg, #FFF1F2, #FFE4E6); }
+
+  [data-theme="dark"] .preview-graph   { background: linear-gradient(135deg, #1E293B, #1E3A5F); }
+  [data-theme="dark"] .preview-task    { background: linear-gradient(135deg, #0F2A1A, #14532D); }
+  [data-theme="dark"] .preview-agent   { background: linear-gradient(135deg, #2A1A0A, #431407); }
+  [data-theme="dark"] .preview-canvas  { background: linear-gradient(135deg, #1A0F2A, #2E1065); }
+  [data-theme="dark"] .preview-chat    { background: linear-gradient(135deg, #0A2A14, #064E3B); }
+  [data-theme="dark"] .preview-settings { background: linear-gradient(135deg, #111827, #1E293B); }
+  [data-theme="dark"] .preview-admin   { background: linear-gradient(135deg, #1F0A0E, #4C0519); }
+
+  .preview-icon {
+    width: 48px; height: 48px;
+    border-radius: var(--radius-xl);
+    background: rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px);
+  }
+
+  .page-card-body {
+    padding: var(--space-4);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .page-card-title {
+    font-size: var(--text-body);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+  }
+
+  .page-card-desc {
+    font-size: var(--text-caption);
+    color: var(--text-secondary);
+    line-height: var(--leading-normal);
+    flex: 1;
+  }
+
+  .page-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--border-default);
+    background: var(--bg-surface-alt);
+  }
+
+  .page-card-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .priority-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  .priority-p1 { background: var(--state-blocked); }
+  .priority-p2 { background: var(--state-delayed); }
+  .priority-p3 { background: var(--state-complete); }
+
+  .priority-label {
+    font-size: var(--text-micro);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .priority-p1-label { color: var(--state-blocked); }
+  .priority-p2-label { color: var(--state-delayed); }
+  .priority-p3-label { color: var(--text-tertiary); }
+
+  /* Theme toggle */
+  .theme-toggle {
+    position: fixed;
+    top: var(--space-4); right: var(--space-4);
+    z-index: var(--z-toast);
+    background: rgba(30,41,59,0.9);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-full);
+    padding: var(--space-2) var(--space-3);
+    display: flex; align-items: center; gap: var(--space-2);
+    cursor: pointer;
+    box-shadow: var(--shadow-2);
+    font-size: var(--text-body-sm);
+    font-weight: var(--weight-medium);
+    color: #94A3B8;
+    backdrop-filter: blur(8px);
+    border: none;
+    font-family: var(--font-sans);
+    transition: all var(--duration-normal);
+  }
+
+  [data-theme="light"] .theme-toggle {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+  }
+
+  .theme-toggle:hover { box-shadow: var(--shadow-3); }
+
+  /* Progress bar footer */
+  .hub-progress {
+    background: var(--bg-surface-alt);
+    border-top: 1px solid var(--border-default);
+    padding: var(--space-4) var(--space-8);
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+  }
+
+  .progress-item { display: flex; align-items: center; gap: var(--space-3); min-width: 180px; }
+  .progress-item-label { font-size: var(--text-caption); color: var(--text-secondary); min-width: 70px; }
+  .progress-item-count { font-size: var(--text-caption); font-weight: var(--weight-semibold); color: var(--text-primary); margin-left: auto; }
+
+  @media (max-width: 768px) {
+    .hub-header { flex-direction: column; align-items: flex-start; padding: var(--space-8) var(--space-5); }
+    .hub-header-right { align-items: flex-start; }
+    .hub-stats { gap: var(--space-3); }
+    .hub-main { padding: var(--space-5) var(--space-4); }
+    .pages-grid { grid-template-columns: 1fr 1fr; }
+    .hub-progress { flex-wrap: wrap; padding: var(--space-4); gap: var(--space-3); }
+  }
+
+  @media (max-width: 480px) {
+    .pages-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+  <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <span id="toggle-label">Dark mode</span>
+</button>
+
+<!-- Header -->
+<header class="hub-header">
+  <div class="hub-header-content">
+    <div class="hub-logo">
+      <div class="hub-logo-mark">G</div>
+      <span class="hub-logo-name">GraphClaw</span>
+      <span class="hub-logo-tag">Wireframes v2</span>
+    </div>
+    <h1 class="hub-title">Cockpit UI Mockups</h1>
+    <p class="hub-subtitle">High-fidelity HTML wireframes for GraphClaw Cockpit. Built with the 3-agent pipeline: Builder (Sonnet 4.6) → Tester (Sonnet 4.6) → Evaluator (Opus 4.6).</p>
+  </div>
+  <div class="hub-header-right">
+    <div class="hub-stats">
+      <div class="hub-stat">
+        <div class="hub-stat-value">1</div>
+        <div class="hub-stat-label">Complete</div>
+      </div>
+      <div class="hub-stat">
+        <div class="hub-stat-value" style="color:#94A3B8">18</div>
+        <div class="hub-stat-label">Remaining</div>
+      </div>
+      <div class="hub-stat">
+        <div class="hub-stat-value" style="color:#A855F7">5</div>
+        <div class="hub-stat-label">Phases</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="hub-main">
+
+  <!-- Phase A: Design System (COMPLETE) -->
+  <section class="phase-section">
+    <div class="phase-header">
+      <div class="phase-badge phase-badge-a">A</div>
+      <div class="phase-info">
+        <div class="phase-title">Phase A — Design System Foundation</div>
+        <div class="phase-desc">Tokens, components, layout, utilities + visual reference page</div>
+      </div>
+      <span class="phase-status-pill phase-status-done">Complete</span>
+    </div>
+    <div class="pages-grid">
+      <a class="page-card" href="design-system.html">
+        <div class="page-card-preview preview-ds">
+          <div class="preview-icon" style="background:rgba(56,189,248,0.2)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          </div>
+        </div>
+        <div class="page-card-body">
+          <div class="page-card-title">Design System</div>
+          <div class="page-card-desc">Complete token reference, component library, color swatches, typography scale, and interactive demos.</div>
+        </div>
+        <div class="page-card-footer">
+          <div class="page-card-meta">
+            <div class="priority-dot priority-p1"></div>
+            <span class="priority-label priority-p1-label">Foundation</span>
+          </div>
+          <span class="badge badge-progress badge-dot badge-sm">Ready</span>
+        </div>
+      </a>
+
+      <div class="page-card" style="opacity:0.55;cursor:default">
+        <div class="page-card-preview preview-settings">
+          <div class="preview-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--icon-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </div>
+        </div>
+        <div class="page-card-body">
+          <div class="page-card-title">Hub Index</div>
+          <div class="page-card-desc">This page — navigation hub for all wireframe pages with phase status.</div>
+        </div>
+        <div class="page-card-footer">
+          <div class="page-card-meta">
+            <div class="priority-dot priority-p1"></div>
+            <span class="priority-label priority-p1-label">Foundation</span>
+          </div>
+          <span class="badge badge-progress badge-dot badge-sm">You are here</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Phase B: Task Views -->
+  <section class="phase-section">
+    <div class="phase-header">
+      <div class="phase-badge phase-badge-bc">B</div>
+      <div class="phase-info">
+        <div class="phase-title">Phase B — Core Task Views</div>
+        <div class="phase-desc">5 graph view modes + task detail panel — the main cockpit canvas</div>
+      </div>
+      <span class="phase-status-pill phase-status-next">Next</span>
+    </div>
+    <div class="pages-grid">
+      <div class="page-card" style="opacity:0.55;cursor:default">
+        <div class="page-card-preview preview-graph">
+          <div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--state-active)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+        </div>
+        <div class="page-card-body"><div class="page-card-title">Goal View</div><div class="page-card-desc">Tree/graph of goals with nested tasks, score heatmap, dependency edges.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p1"></div><span class="priority-label priority-p1-label">P1</span></div><span class="badge badge-snoozed badge-sm">Not started</span></div>
+      </div>
+      <div class="page-card" style="opacity:0.55;cursor:default">
+        <div class="page-card-preview preview-task">
+          <div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--state-progress)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+        </div>
+        <div class="page-card-body"><div class="page-card-title">My Tasks</div><div class="page-card-desc">Personal task list sorted by priority score with status filters and inline actions.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p1"></div><span class="priority-label priority-p1-label">P1</span></div><span class="badge badge-snoozed badge-sm">Not started</span></div>
+      </div>
+      <div class="page-card" style="opacity:0.55;cursor:default">
+        <div class="page-card-preview preview-graph">
+          <div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--state-active)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        </div>
+        <div class="page-card-body"><div class="page-card-title">Project View</div><div class="page-card-desc">Kanban board grouped by project with swimlanes, WIP limits, and drag-to-move.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p2"></div><span class="priority-label priority-p2-label">P2</span></div><span class="badge badge-snoozed badge-sm">Not started</span></div>
+      </div>
+      <div class="page-card" style="opacity:0.55;cursor:default">
+        <div class="page-card-preview preview-agent">
+          <div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--state-delayed)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        </div>
+        <div class="page-card-body"><div class="page-card-title">Timeline View</div><div class="page-card-desc">Gantt-style timeline with task bars, dependency arrows, and critical path.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p2"></div><span class="priority-label priority-p2-label">P2</span></div><span class="badge badge-snoozed badge-sm">Not started</span></div>
+      </div>
+      <div class="page-card" style="opacity:0.55;cursor:default">
+        <div class="page-card-preview preview-task">
+          <div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--state-progress)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        </div>
+        <div class="page-card-body"><div class="page-card-title">Task Detail</div><div class="page-card-desc">Full task detail view with score breakdown, history, dependencies, and agent actions.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p1"></div><span class="priority-label priority-p1-label">P1</span></div><span class="badge badge-snoozed badge-sm">Not started</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Phase C -->
+  <section class="phase-section">
+    <div class="phase-header">
+      <div class="phase-badge phase-badge-bc">C</div>
+      <div class="phase-info">
+        <div class="phase-title">Phase C — Agent Monitor &amp; Chat</div>
+        <div class="phase-desc">Agent KPIs, queue, heartbeat log + chat sidebar and full-page chat</div>
+      </div>
+      <span class="phase-status-pill phase-status-pending">Pending</span>
+    </div>
+    <div class="pages-grid">
+      <div class="page-card" style="opacity:0.45;cursor:default">
+        <div class="page-card-preview preview-agent">
+          <div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--state-delayed)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        </div>
+        <div class="page-card-body"><div class="page-card-title">Agent Monitor</div><div class="page-card-desc">KPI strip, agent queue table, heartbeat timeline, cost tracker, error log.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p1"></div><span class="priority-label priority-p1-label">P1</span></div><span class="badge badge-snoozed badge-sm">Not started</span></div>
+      </div>
+      <div class="page-card" style="opacity:0.45;cursor:default">
+        <div class="page-card-preview preview-chat">
+          <div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--state-progress)" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        </div>
+        <div class="page-card-body"><div class="page-card-title">Chat Sidebar</div><div class="page-card-desc">Slide-out chat panel with agent, message thread, typing indicator, suggested actions.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p1"></div><span class="priority-label priority-p1-label">P1</span></div><span class="badge badge-snoozed badge-sm">Not started</span></div>
+      </div>
+      <div class="page-card" style="opacity:0.45;cursor:default">
+        <div class="page-card-preview preview-chat">
+          <div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--state-progress)" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/></svg></div>
+        </div>
+        <div class="page-card-body"><div class="page-card-title">Chat Full Page</div><div class="page-card-desc">Full-page chat interface with history, attachments, search, and pinned messages.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p2"></div><span class="priority-label priority-p2-label">P2</span></div><span class="badge badge-snoozed badge-sm">Not started</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Phase D -->
+  <section class="phase-section">
+    <div class="phase-header">
+      <div class="phase-badge phase-badge-de">D</div>
+      <div class="phase-info">
+        <div class="phase-title">Phase D — Canvas Editor &amp; Settings</div>
+        <div class="phase-desc">Visual graph editor + all 6 settings panels</div>
+      </div>
+      <span class="phase-status-pill phase-status-pending">Pending</span>
+    </div>
+    <div class="pages-grid">
+      <div class="page-card" style="opacity:0.35;cursor:default">
+        <div class="page-card-preview preview-canvas"><div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--state-review)" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div></div>
+        <div class="page-card-body"><div class="page-card-title">Canvas Editor</div><div class="page-card-desc">Infinite canvas with node palette, edge drawing, property inspector, minimap.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p2"></div><span class="priority-label priority-p2-label">P2</span></div><span class="badge badge-snoozed badge-sm">Not started</span></div>
+      </div>
+      <div class="page-card" style="opacity:0.35;cursor:default">
+        <div class="page-card-preview preview-settings"><div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--icon-secondary)" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></div></div>
+        <div class="page-card-body"><div class="page-card-title">Settings: Channels</div><div class="page-card-desc">Email, Slack, and other channel configuration with OAuth connection status.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p1"></div><span class="priority-label priority-p1-label">P1</span></div><span class="badge badge-snoozed badge-sm">Not started</span></div>
+      </div>
+      <div class="page-card" style="opacity:0.35;cursor:default">
+        <div class="page-card-preview preview-settings"><div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--icon-secondary)" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div></div>
+        <div class="page-card-body"><div class="page-card-title">Settings: LLM Providers</div><div class="page-card-desc">LLM provider config with API keys, model selection, cost limits, fallbacks.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p1"></div><span class="priority-label priority-p1-label">P1</span></div><span class="badge badge-snoozed badge-sm">Not started</span></div>
+      </div>
+      <div class="page-card" style="opacity:0.35;cursor:default">
+        <div class="page-card-preview preview-settings"><div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--icon-secondary)" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div></div>
+        <div class="page-card-body"><div class="page-card-title">Settings: Scoring</div><div class="page-card-desc">Priority weight sliders W1–W7, preset profiles, live preview of score impact.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p1"></div><span class="priority-label priority-p1-label">P1</span></div><span class="badge badge-snoozed badge-sm">Not started</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Phase E -->
+  <section class="phase-section">
+    <div class="phase-header">
+      <div class="phase-badge phase-badge-de">E</div>
+      <div class="phase-info">
+        <div class="phase-title">Phase E — Marketplace, Registry &amp; Admin</div>
+        <div class="phase-desc">Skill marketplace, MCP server registry, and admin panel</div>
+      </div>
+      <span class="phase-status-pill phase-status-done">Complete</span>
+    </div>
+    <div class="pages-grid">
+      <a href="pages/skill-marketplace.html" class="page-card">
+        <div class="page-card-preview preview-canvas"><div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--state-review)" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div></div>
+        <div class="page-card-body"><div class="page-card-title">Skill Marketplace</div><div class="page-card-desc">Browse, install, and configure skills with version management and ratings.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p2"></div><span class="priority-label priority-p2-label">P2</span></div><span class="badge badge-progress badge-sm">Done</span></div>
+      </a>
+      <a href="pages/mcp-registry.html" class="page-card">
+        <div class="page-card-preview preview-agent"><div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--state-delayed)" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div></div>
+        <div class="page-card-body"><div class="page-card-title">MCP Registry</div><div class="page-card-desc">MCP server list, health dashboard, protocol config, and capability browser.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p2"></div><span class="priority-label priority-p2-label">P2</span></div><span class="badge badge-progress badge-sm">Done</span></div>
+      </a>
+      <a href="pages/admin-panel.html" class="page-card">
+        <div class="page-card-preview preview-admin"><div class="preview-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--state-blocked)" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div></div>
+        <div class="page-card-body"><div class="page-card-title">Admin Panel</div><div class="page-card-desc">User management, audit logs, feature gating, and system health dashboard.</div></div>
+        <div class="page-card-footer"><div class="page-card-meta"><div class="priority-dot priority-p3"></div><span class="priority-label priority-p3-label">P3</span></div><span class="badge badge-progress badge-sm">Done</span></div>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<!-- Footer progress bar -->
+<footer class="hub-progress">
+  <div style="font-size:var(--text-body-sm);font-weight:var(--weight-semibold);color:var(--text-primary);min-width:100px">Overall progress</div>
+  <div style="display:flex;align-items:center;gap:var(--space-3);flex:1">
+    <div class="progress" style="flex:1"><div class="progress-bar progress-bar-success" style="width:100%"></div></div>
+    <span style="font-size:var(--text-caption);color:var(--text-tertiary);white-space:nowrap">25 / 25 pages ✓</span>
+  </div>
+  <div style="display:flex;gap:var(--space-4)">
+    <div style="display:flex;align-items:center;gap:var(--space-2)"><div style="width:8px;height:8px;border-radius:50%;background:var(--state-blocked)"></div><span style="font-size:var(--text-caption);color:var(--text-secondary)">P1 · 8 pages</span></div>
+    <div style="display:flex;align-items:center;gap:var(--space-2)"><div style="width:8px;height:8px;border-radius:50%;background:var(--state-delayed)"></div><span style="font-size:var(--text-caption);color:var(--text-secondary)">P2 · 7 pages</span></div>
+    <div style="display:flex;align-items:center;gap:var(--space-2)"><div style="width:8px;height:8px;border-radius:50%;background:var(--state-complete)"></div><span style="font-size:var(--text-caption);color:var(--text-secondary)">P3 · 4 pages</span></div>
+  </div>
+</footer>
+
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('sun-icon').style.display  = isDark ? 'block' : 'none';
+    document.getElementById('moon-icon').style.display = isDark ? 'none' : 'block';
+    document.getElementById('toggle-label').textContent = isDark ? 'Dark mode' : 'Light mode';
+  }
+</script>
+  <script src="assets/nav.js"></script>
+</body>
+</html>

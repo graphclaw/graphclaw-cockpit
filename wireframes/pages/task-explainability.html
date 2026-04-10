@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphClaw Wireframe · Task & Explainability</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../../docs/graphclaw.ai.png" alt="GraphClaw logo" />
+        <div><strong>Task Review</strong><br /><span class="muted">Wireframe v1</span></div>
+      </div>
+      <span class="badge">Notion-like blocks + clear reading flow</span>
+      <div class="nav-section">
+        <h4>Views</h4>
+        <div class="nav-list">
+          <a class="nav-item" href="cockpit-shell.html">Cockpit Shell</a>
+          <a class="nav-item active" href="task-explainability.html">Task & Explainability</a>
+          <a class="nav-item" href="agent-monitor.html">Agent Monitor</a>
+          <a class="nav-item" href="canvas-editor.html">Canvas Editor</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h1>Task Review + Explainability (Notion-inspired readability)</h1>
+        <div class="meta">
+          <span class="chip">List Mode</span>
+          <span class="chip">Shortcut: E = Explain</span>
+          <span class="chip">Undo stack: 50</span>
+        </div>
+      </header>
+
+      <section class="layout">
+        <div class="split two">
+          <div class="card">
+            <div class="panel-title">
+              <h2>My Tasks · Priority-first block list</h2>
+              <span class="pill">Beginner-friendly</span>
+            </div>
+            <div class="block-stack">
+              <div class="block">
+                <strong>#1 TSK-JD-0042 · Confirm deployment rollback plan</strong><br />
+                <span class="muted">State: Needs Review · Assignee: John · Deadline: Today 5:00 PM</span><br /><br />
+                <span class="pill status-warn">Explain score</span>
+                <span class="pill">Approve</span>
+                <span class="pill">Snooze</span>
+                <span class="pill">Delegate</span>
+              </div>
+              <div class="block">
+                <strong>#2 TSK-JD-0090 · Resolve Slack connector timeout</strong><br />
+                <span class="muted">State: Blocked · Assignee: Platform Agent · Deadline: Tomorrow 11:00 AM</span><br /><br />
+                <span class="pill status-danger">Why blocked?</span>
+                <span class="pill">Open dependency chain</span>
+              </div>
+              <div class="block">
+                <strong>#3 TSK-JD-0112 · Publish weekly briefing draft</strong><br />
+                <span class="muted">State: In Progress · Assignee: Ops Agent · Deadline: Fri 8:00 AM</span><br /><br />
+                <span class="pill status-ok">On track</span>
+                <span class="pill">Override priority</span>
+              </div>
+            </div>
+            <div class="annotation">
+              Tasks are chunked as readable blocks first, with dense metadata hidden behind secondary actions. This supports non-technical operators while keeping speed actions available.
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Explainability Panel (context for selected task)</h2>
+            <table class="table">
+              <thead><tr><th>Factor</th><th>Weight</th><th>Raw</th><th>Weighted</th><th>Plain explanation</th></tr></thead>
+              <tbody>
+                <tr><td>W1 Timeline urgency</td><td>0.25</td><td>0.88</td><td>0.22</td><td>Deadline is within 1 day.</td></tr>
+                <tr><td>W2 Dependency pressure</td><td>0.20</td><td>0.76</td><td>0.15</td><td>Two downstream tasks are blocked.</td></tr>
+                <tr><td>W3 Goal criticality</td><td>0.18</td><td>0.82</td><td>0.15</td><td>Linked to active milestone.</td></tr>
+                <tr><td>W4 Resource reliability</td><td>0.12</td><td>0.50</td><td>0.06</td><td>Assigned resource has medium reliability.</td></tr>
+                <tr><td>W5 State risk</td><td>0.10</td><td>0.67</td><td>0.07</td><td>Needs Review raises urgency.</td></tr>
+                <tr><td>W6 Inbound confidence</td><td>0.08</td><td>0.40</td><td>0.03</td><td>No recent high-confidence update.</td></tr>
+                <tr><td>W7 Override impact</td><td>0.07</td><td>0.30</td><td>0.02</td><td>No active manual boost.</td></tr>
+              </tbody>
+            </table>
+            <div class="block" style="margin-top:8px;">
+              <strong>Natural-language summary:</strong> This task is ranked #1 because it is deadline-critical and currently gatekeeping two downstream tasks.
+            </div>
+            <div class="block" style="margin-top:8px;">
+              <strong>History mini timeline:</strong> 09:00 rank #4 → 11:15 state changed to Needs Review → 11:16 rank #1.
+            </div>
+            <div class="annotation">
+              "Explain score" is always one click away to preserve trust. The table and summary should be readable without technical jargon.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Decision Controls (progressive disclosure)</h3>
+          <table class="table">
+            <thead><tr><th>Level</th><th>Visible by default</th><th>Advanced on expand</th></tr></thead>
+            <tbody>
+              <tr><td>Operator</td><td>Approve, Snooze, Delegate</td><td>None</td></tr>
+              <tr><td>Power user</td><td>All above + Change state</td><td>Priority override + expiry</td></tr>
+              <tr><td>Admin</td><td>All above</td><td>Autonomy mode and lock controls</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="footer-nav">
+          <a href="cockpit-shell.html">Back to shell</a>
+          <a href="agent-monitor.html">Next: monitor</a>
+          <a href="../index.html">Wireframe index</a>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
