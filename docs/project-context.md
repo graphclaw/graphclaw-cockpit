@@ -2,6 +2,7 @@
 
 > Persistent context document for the cockpit wireframe rebuild.
 > Last updated: 2026-04-10
+> **Baseline version** — git tag `v2-baseline` created 2026-04-10. All 25 pages complete.
 
 ## What Is This Project?
 GraphClaw Cockpit is the web UI for the GraphClaw task graph management system. It provides a visual interface for managing tasks, monitoring AI agents, editing task graphs, configuring channels/LLM providers, and interacting via chat.
@@ -36,6 +37,10 @@ The v1 wireframes (`wireframes/`) were low-fidelity and looked AI-generated. Spe
 | 2026-04-10 | 5-phase execution | A (tokens) -> B (tasks) -> C (agent/chat) -> D (canvas/settings) -> E (admin) |
 | 2026-04-10 | Self-contained HTML pages | No build step; each page works standalone with shared CSS |
 | 2026-04-10 | wireframes-v2/ directory | Keep v1 for comparison; fresh start |
+| 2026-04-10 | nav.js shared injection | All pages get identical sidebar via JS; single source of truth |
+| 2026-04-10 | theme.js theme picker | 6 themes via CSS custom properties; JS bypasses media query for collapse |
+| 2026-04-10 | mix-blend-mode logo | PNG transparency without Photoshop; works across all 6 themes |
+| 2026-04-10 | v2-baseline git tag | Checkpoint after all 25 pages complete + navigation wired + evaluated |
 
 ## Tech Constraints (from PRD §10)
 - Target stack: React 19 + TypeScript + Vite + shadcn/ui + Tailwind + TanStack Query

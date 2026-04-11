@@ -79,6 +79,62 @@ Builder creates page
 - [x] `wireframes-v2/pages/admin-panel.html` — User management, audit logs, system health
 - **Status:** COMPLETE ✓
 
+### Phase E Evaluation Results (2026-04-10)
+Full evaluation by cockpit-evaluator. Reviews: `wireframes-v2/reviews/`
+
+| Page | Weighted Avg | Verdict |
+|------|-------------|---------|
+| index.html | 4.21 | ✅ PASS |
+| goal-view.html | 4.16 | ✅ PASS |
+| my-tasks.html | 4.07 | ✅ PASS |
+| project-view.html | 3.71 | ✅ PASS |
+| timeline-view.html | 3.66 | ✅ PASS |
+| resource-view.html | 3.66 | ✅ PASS |
+| task-detail.html | 4.25 | ✅ PASS |
+| agent-monitor.html | 4.37 | ✅ PASS |
+| chat-sidebar.html | 3.91 | ✅ PASS |
+| chat-fullpage.html | 4.24 | ✅ PASS |
+| canvas-editor.html | 4.09 | ✅ PASS |
+| settings-channels.html | 3.88 | ✅ PASS |
+| settings-llm.html | 3.88 | ✅ PASS |
+| settings-scoring.html | 4.09 | ✅ PASS |
+| settings-briefing.html | 3.88 | ✅ PASS |
+| settings-triggers.html | 3.96 | ✅ PASS |
+| settings-a2a.html | 4.04 | ✅ PASS |
+| skill-marketplace.html | 4.28 | ✅ PASS |
+| mcp-registry.html | 3.96 | ✅ PASS |
+| admin-panel.html | 4.22 | ✅ PASS |
+| **Portfolio Average** | **4.03** | **✅ ALL PASS** |
+
+**Top blockers for Phase F:** (1) Toggle `role="switch"` accessibility across all pages, (2) index.html stale stats counter ✅ fixed, (3) Filter input missing `aria-label`, (4) canvas-editor mobile strategy, (5) goal-view 3-col responsive breakpoints.
+
+### Phase E+ — UI Polish & Shared System (2026-04-10) ✅ BASELINE
+
+> **Baseline version** — git tag `v2-baseline`. All 25 pages wired, evaluated, and polished.
+
+#### Shared Assets Added
+- [x] `assets/nav.js` — Injects complete sidebar into all pages via `data-page` attribute. Logo image, full nav links, settings sub-nav, active state highlighting.
+- [x] `assets/theme.js` — Theme picker (6 themes) + collapsible sidebar. JS-driven show/hide bypasses responsive media query. localStorage persistence.
+- [x] `wire_nav.py` — Idempotent wiring script: adds `data-page` and script tags to all 25 pages.
+
+#### 5 UI Changes (Evaluator score: 3.73/5.0 — all PASS)
+1. **Theme picker dropdown** — replaces dark/light toggle. 6 themes with color swatches, persistent, fully accessible (aria-haspopup, arrow keys, Escape).
+2. **Collapsible sidebar** — `≡` hamburger collapses to 56px icon rail. `aria-expanded` updates. State persists to localStorage.
+3. **Logo transparency** — `mix-blend-mode:multiply` (light) / `screen` (dark). `isolation:isolate` prevents bleed. No white halo.
+4. **Removed "GraphClaw" text** — logo image fills header. *Cockpit* italic label below logo (`aria-hidden`).
+5. **Nav badge tokens** — Agent Monitor badge uses `var(--state-progress)`, Skills badge uses `var(--state-delayed)`.
+
+#### Evaluator Builder Instructions Applied
+- `aria-expanded` + `aria-label` on sidebar toggle button
+- Arrow key navigation inside theme picker menu (`menuitemradio` ARIA pattern)
+- `--btn-swatch-border` CSS variable defined per theme block
+- `borderColor` sync on picker swatch when theme changes
+- `isolation:isolate` on sidebar element
+- `setProperty('display', ..., 'important')` in JS beats media query `display:none`
+
+#### Index Hub Updated
+- Stats: 25 pages, Phases A–E, 4.03 eval score (was stale "1 Complete / 18 Remaining")
+
 ## Page Priority Map
 
 ### P1 — Must Have (Core Experience)

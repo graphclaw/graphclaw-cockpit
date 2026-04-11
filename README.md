@@ -36,6 +36,38 @@ All APIs are served by the GraphClaw backend project at `C:/Users/abhis/Projects
 
 - **Backend API PRD**: [`graphclaw/docs/cockpit-backend-api-prd.md`](../graphclaw/docs/cockpit-backend-api-prd.md)
 
+## Wireframes v2 — Baseline Checkpoint
+
+> **Baseline version** — tagged `v2-baseline` (2026-04-10).
+> All 25 pages complete, navigation wired, themes implemented, evaluator PASS.
+> Use this tag to restore to the baseline wireframe state.
+
+### What's in the Baseline
+
+| Asset | Description |
+|-------|-------------|
+| `wireframes-v2/index.html` | Hub page — 25 pages, Phases A–E, 4.03 eval score |
+| `wireframes-v2/pages/*.html` | 21 page wireframes (all PASS) |
+| `wireframes-v2/assets/tokens.css` | Design tokens (light/dark/solarized/midnight/high-contrast) |
+| `wireframes-v2/assets/components.css` | Full component library |
+| `wireframes-v2/assets/layout.css` | Shell, sidebar, responsive breakpoints |
+| `wireframes-v2/assets/utilities.css` | Helpers, animations, scrollbar |
+| `wireframes-v2/assets/nav.js` | Shared sidebar injection (logo, links, settings sub-nav) |
+| `wireframes-v2/assets/theme.js` | Theme picker (6 themes) + collapsible sidebar |
+| `wireframes-v2/assets/logo.png` | GraphClaw logo (transparent via mix-blend-mode) |
+| `wireframes-v2/reviews/` | Evaluator reports (20 pages scored) |
+
+### Shared Navigation System
+All pages are wired via `data-page` attribute + `assets/nav.js` injection.
+Sidebar: full 220px expanded ↔ 56px icon rail (collapsible, persisted to localStorage).
+Theme picker: Light, Dark, Solarized Light, Solarized Dark, Midnight Blue, High Contrast.
+
+### Evaluation Summary (Baseline)
+- **Overall**: 4.03 / 5.0 — All 20 content pages PASS
+- **Top**: Agent Monitor (4.37), Skill Marketplace (4.28), Task Detail (4.25)
+- **UI Changes**: Theme picker (3.81), Logo rework (3.81), Sidebar collapse (3.62)
+- Full reports in `wireframes-v2/reviews/`
+
 ## Tech Stack (Planned)
 
 - **Framework**: React 19+ with TypeScript
