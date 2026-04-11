@@ -40,6 +40,8 @@ PAGES = {
 
 SCRIPT_TAG_PAGES = '<script src="assets/nav.js"></script>'
 SCRIPT_TAG_SUB = '<script src="../assets/nav.js"></script>'
+THEME_TAG_PAGES = '<script src="assets/theme.js"></script>'
+THEME_TAG_SUB = '<script src="../assets/theme.js"></script>'
 
 
 def process(rel_path, cfg):
@@ -63,10 +65,13 @@ def process(rel_path, cfg):
         count=1
     )
 
-    # 2. Inject nav.js before </body>
+    # 2. Inject nav.js + theme.js before </body>
     tag = SCRIPT_TAG_PAGES if depth == 0 else SCRIPT_TAG_SUB
+    theme_tag = THEME_TAG_PAGES if depth == 0 else THEME_TAG_SUB
     if tag not in html:
         html = html.replace("</body>", f"  {tag}\n</body>")
+    if theme_tag not in html:
+        html = html.replace("</body>", f"  {theme_tag}\n</body>")
 
     # 3. Replace logo-mark divs (nav.js injects real logo, but keep div so layout doesn't jump)
     # Replace <div class="logo-mark">GC</div> or <div class="logo-mark">G</div>
