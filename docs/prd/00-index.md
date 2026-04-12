@@ -28,6 +28,7 @@
 | **12** | [Task Views](12-task-views.md) | Tabular task list, dependency graph view, view switcher, saved filter presets |
 | **13** | [Chat Interface](13-chat-interface.md) | Always-active web chat (default channel), WebSocket, agent response rendering, conversation history |
 | **14** | [Config & Secrets](14-config-and-secrets.md) | Single JSON config per user, AWS Secrets Manager from UI, channel enablement model |
+| **15** | [Intelligence Hub](15-intelligence-hub.md) | Agent profile editor, three-tier memory viewer (working/episodic/semantic), compact operation, skill authoring — Wave G |
 
 ---
 
