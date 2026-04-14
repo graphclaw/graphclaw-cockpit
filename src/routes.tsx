@@ -17,6 +17,9 @@ const GoalViewPage = lazy(() =>
 const MyTasksPage = lazy(() =>
   import('@/features/tasks/MyTasksPage').then((m) => ({ default: m.MyTasksPage })),
 );
+const AgentMonitorPage = lazy(() =>
+  import('@/features/agent/AgentMonitorPage').then((m) => ({ default: m.AgentMonitorPage })),
+);
 
 // Skeleton page factory for unbuilt routes
 function skeleton(title: string) {
@@ -50,7 +53,7 @@ export function AppRoutes() {
                     <Route path="people" element={skeleton('People')} />
 
                     {/* Intelligence */}
-                    <Route path="agent-monitor" element={skeleton('Agent Monitor')} />
+                    <Route path="agent-monitor" element={<AgentMonitorPage />} />
                     <Route path="chat" element={skeleton('Chat')} />
                     <Route path="skills" element={skeleton('Skills')} />
                     <Route path="mcp" element={skeleton('MCP Registry')} />
