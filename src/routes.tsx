@@ -77,6 +77,9 @@ const SkillAuthoringPage = lazy(() =>
     default: m.SkillAuthoringPage,
   })),
 );
+const ChatPage = lazy(() =>
+  import('@/features/chat/ChatPage').then((m) => ({ default: m.ChatPage })),
+);
 
 // Skeleton page factory for unbuilt routes
 function skeleton(title: string) {
@@ -111,7 +114,7 @@ export function AppRoutes() {
 
                     {/* Intelligence */}
                     <Route path="agent-monitor" element={<AgentMonitorPage />} />
-                    <Route path="chat" element={skeleton('Chat')} />
+                    <Route path="chat" element={<ChatPage />} />
                     <Route path="skills" element={<SkillsPage />} />
                     <Route path="mcp" element={<McpRegistryPage />} />
                     <Route path="canvas" element={<CanvasEditorPage />} />
