@@ -44,6 +44,9 @@ const SkillsPage = lazy(() =>
 const McpRegistryPage = lazy(() =>
   import('@/features/mcp/McpRegistryPage').then((m) => ({ default: m.McpRegistryPage })),
 );
+const CanvasEditorPage = lazy(() =>
+  import('@/features/canvas/CanvasEditorPage').then((m) => ({ default: m.CanvasEditorPage })),
+);
 
 // Skeleton page factory for unbuilt routes
 function skeleton(title: string) {
@@ -81,7 +84,7 @@ export function AppRoutes() {
                     <Route path="chat" element={skeleton('Chat')} />
                     <Route path="skills" element={<SkillsPage />} />
                     <Route path="mcp" element={<McpRegistryPage />} />
-                    <Route path="canvas" element={skeleton('Canvas Editor')} />
+                    <Route path="canvas" element={<CanvasEditorPage />} />
                     <Route path="intelligence/*" element={skeleton('Intelligence Hub')} />
 
                     {/* Settings */}
