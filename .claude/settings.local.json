@@ -12,7 +12,26 @@
       "Bash(python -m pytest --ignore=tests/load --ignore=tests/test_load --co -q)",
       "Bash(.venv/Scripts/pip install:*)",
       "Bash(uv pip:*)",
-      "Bash(.venv/Scripts/python.exe -m pytest --ignore=tests/load --ignore=tests/test_load -q --tb=no)"
+      "Bash(.venv/Scripts/python.exe -m pytest --ignore=tests/load --ignore=tests/test_load -q --tb=no)",
+      "Bash(python -m pytest tests/test_infra/test_storage_paths.py tests/test_api/test_intelligence_routes.py tests/test_infra/test_storage.py tests/test_api/test_settings_routes.py tests/test_skills/test_registry.py -v --tb=short)",
+      "Bash(python -m pytest --tb=short -q)",
+      "Bash(python -m pytest tests/test_infra/test_storage_paths.py tests/test_api/test_intelligence_routes.py -q --tb=short)",
+      "Bash(python -c \"from graphclaw.infra.config import StorageConfig; c = StorageConfig.from_env\\(\\); print\\('from_env:', c\\); client = c.create_client\\(\\); print\\('client:', client.__class__.__name__\\)\")",
+      "Bash(STORAGE_ENDPOINT_URL=http://minio:9000 STORAGE_BUCKET=graphclaw python -c \"from graphclaw.infra.config import StorageConfig; c = StorageConfig.from_env\\(\\); print\\('MinIO mode:', c.endpoint_url\\); client = c.create_client\\(\\); print\\('bucket:', client._bucket, 'endpoint:', client._endpoint_url\\)\")",
+      "Bash(docker compose:*)",
+      "Bash(docker pull:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(grep -E \"\\\\.py$\")",
+      "Bash(gh run:*)",
+      "Bash(gh auth:*)",
+      "Bash(grep -E \"\\\\.\\(py|txt\\).*[EFW][0-9]{3,4}\")",
+      "Bash(grep -E \"\\\\.\\(py\\).*[[:space:]][EFW][0-9]{3,4}\")",
+      "Bash(ruff check:*)",
+      "Bash(git add:*)",
+      "Bash(grep -v \"^$\")",
+      "Bash(ruff format:*)",
+      "Bash(xargs -0 grep -i \"monaco\\\\|editor\")"
     ]
   }
 }

@@ -427,9 +427,9 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font-sans); }
 
   <!-- ── Topbar ─────────────────────────────────────────── -->
   <div class="topbar">
-    <a href="../index.html" class="topbar-logo">
-      
-      <span class="logo-text">GraphClaw</span>
+    <a href="../index.html" class="topbar-logo" style="display:flex;align-items:center;gap:6px;text-decoration:none;">
+      <img src="../assets/logo.png" alt="GraphClaw" style="height:28px;width:auto;flex-shrink:0;mix-blend-mode:multiply;" onerror="this.style.display='none'">
+      <span class="logo-text" aria-hidden="true" style="font-style:italic;font-size:11px;color:var(--text-tertiary);">Cockpit</span>
     </a>
 
     <div class="breadcrumb">
@@ -473,7 +473,7 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font-sans); }
       <button class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle dark/light mode">
         <i data-lucide="sun" style="width:16px;height:16px;" aria-label="Theme"></i>
       </button>
-      <div class="topbar-avatar" title="Priya Mehta">PM</div>
+      <div class="topbar-avatar" title="Arjun Reyes">AR</div>
     </div>
   </div>
 

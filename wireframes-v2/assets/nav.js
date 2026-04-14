@@ -9,7 +9,15 @@
   var isRoot = !window.location.pathname.includes('/pages/');
   var base = isRoot ? '' : '../';
 
-  function a(page) { return currentPage === page ? ' class="nav-item active"' : ' class="nav-item"'; }
+  // Alias map: some pages are sub-views of a nav item
+  var PAGE_ALIASES = {
+    'chat-fullpage': 'chat-sidebar',
+    'task-detail':   'my-tasks',
+  };
+  function a(page) {
+    var effective = PAGE_ALIASES[currentPage] || currentPage;
+    return effective === page ? ' class="nav-item active"' : ' class="nav-item"';
+  }
   function logo() {
     return '<div class="sidebar-logo" style="display:flex;align-items:center;height:56px;border-bottom:1px solid var(--border-default);flex-shrink:0;">'
       + '<a href="' + base + 'index.html" class="sidebar-logo-link" style="display:flex;align-items:center;gap:6px;text-decoration:none;flex:1;min-width:0;padding:0 4px 0 14px;overflow:hidden;">'
@@ -57,6 +65,8 @@
       + '<span class="ni"><i data-lucide="plug" width="16" height="16" aria-label="MCP Registry"></i></span><span class="nav-label">MCP Registry</span></a>'
       + '<a href="' + p + 'canvas-editor.html" title="Canvas"' + a('canvas-editor') + '>'
       + '<span class="ni"><i data-lucide="git-fork" width="16" height="16" aria-label="Canvas Editor"></i></span><span class="nav-label">Canvas</span></a>'
+      + '<a href="' + p + 'intelligence-hub.html" title="Intelligence Hub"' + a('intelligence-hub') + '>'
+      + '<span class="ni"><i data-lucide="brain" width="16" height="16" aria-label="Intelligence Hub"></i></span><span class="nav-label">Intelligence</span></a>'
       + (currentPage.startsWith('admin') ? '<div class="sidebar-divider"></div><div class="nav-section sidebar-section-label">Admin</div>'
         + '<a href="' + p + 'admin-panel.html"' + a('admin-panel') + '>'
         + '<span class="ni"><i data-lucide="shield" width="16" height="16" aria-label="Admin"></i></span><span class="nav-label">Admin Panel</span></a>' : '')

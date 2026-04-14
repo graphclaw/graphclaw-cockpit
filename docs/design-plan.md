@@ -1,7 +1,7 @@
 # GraphClaw Cockpit — Design Plan
 
 > Living document. Updated as work progresses.
-> Last updated: 2026-04-10
+> Last updated: 2026-04-12
 
 ## Agent System
 
@@ -72,6 +72,22 @@ Builder creates page
 - [x] `wireframes-v2/pages/settings-briefing.html` (47.5KB) — Morning/evening schedules, interrupt alerts, email preview card mock
 - [x] `wireframes-v2/pages/settings-triggers.html` (42.0KB) — Trigger table (5 rows), inline condition builder, action list editor
 - [x] `wireframes-v2/pages/settings-a2a.html` (48.4KB) — A2A protocol config, trusted agent registry, inbound policy, comms log
+
+### Phase G: Intelligence Hub ✅ COMPLETE (2026-04-12)
+- [x] `wireframes-v2/pages/intelligence-hub.html` — Agent Profile editor, Working Memory + Compact dialog, Episodic Memory browser + slide-over viewer, Semantic Memory topic list + editor, Skill Authoring (list + editor + validation panel + fork/import)
+- [x] `wireframes-v2/assets/nav.js` — Intelligence Hub nav item added (brain icon, `data-page="intelligence-hub"`)
+- [x] `wireframes-v2/index.html` — Phase G section card added, stats updated to 26 pages
+- **PRD:** `docs/prd/15-intelligence-hub.md`
+- **Eval score:** 4.30 / 5.0 — **✅ PASS**
+- **Status:** COMPLETE ✓
+
+#### Phase G Evaluation Results (2026-04-12)
+
+| Page | Weighted Avg | Verdict |
+|------|-------------|---------|
+| intelligence-hub.html | 4.30 | ✅ PASS |
+
+**Post-eval fixes applied:** tablet ih-nav horizontal collapse, mobile episodic table column drop, semantic memory mobile stack, editor gutter hidden on mobile, dark mode rgba opacity increase, focus trap on all modals/slide-over, `role="table"` on episodic wrapper, duplicate `display:none` removed.
 
 ### Phase E: Marketplace, Registry & Admin (P2/P3)
 - [x] `wireframes-v2/pages/skill-marketplace.html` — Browse/install skills
@@ -191,3 +207,7 @@ All API work lives in `c:/Users/abhis/Projects/graphclaw/src/graphclaw/api/`.
 | Date | Phase | Page | Action | Verdict |
 |------|-------|------|--------|---------|
 | 2026-04-10 | F | Backend API Wave 1 | Started build | In progress |
+| 2026-04-12 | G | intelligence-hub.html | Built — 5 sub-sections (Profile, Working, Episodic, Semantic, Skill Authoring) | ✅ PASS 4.30/5 |
+| 2026-04-12 | G | intelligence-hub.html | Post-eval fixes: mobile layout, dark mode tints, focus traps, role=table | ✅ |
+| 2026-04-12 | G | nav.js | Intelligence Hub nav item added | ✅ |
+| 2026-04-12 | G | index.html | Phase G card + stats 26 pages | ✅ |

@@ -247,7 +247,7 @@
   }
 
   function injectPicker() {
-    var oldBtn = document.getElementById('theme-toggle');
+    var oldBtn = document.getElementById('theme-toggle') || document.getElementById('themeToggle');
     if (!oldBtn || document.getElementById('gc-theme-picker')) return;
 
     var currentId = document.documentElement.getAttribute('data-theme') || 'light';

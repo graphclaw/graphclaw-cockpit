@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html data-page="intelligence-hub" lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intelligence Hub — GraphClaw Cockpit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <link rel="stylesheet" href="../assets/components.css">
+  <link rel="stylesheet" href="../assets/layout.css">
+  <link rel="stylesheet" href="../assets/utilities.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    /* ── Intelligence Hub Layout ─────────────────────────────────────── */
+    .ih-shell {
+      display: flex; flex-direction: column; flex: 1; overflow: hidden; height: 100%;
+    }
+    .ih-topbar {
+      height: 56px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 var(--space-5);
+      border-bottom: 1px solid var(--border-default);
+      background: var(--bg-surface);
+    }
+    .ih-topbar-left { display: flex; align-items: center; gap: var(--space-3); }
+    .ih-breadcrumb {
+      font-size: var(--text-body); font-weight: var(--weight-semibold);
+      color: var(--text-primary); display: flex; align-items: center; gap: var(--space-2);
+    }
+    .ih-breadcrumb-icon {
+      width: 28px; height: 28px; border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; flex-shrink: 0;
+    }
+    .ih-agent-selector {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-1) var(--space-3);
+      border: 1px solid var(--border-default); border-radius: var(--radius-md);
+      background: var(--bg-surface); cursor: pointer;
+      font-size: var(--text-body-sm); color: var(--text-secondary);
+      transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+    }
+    .ih-agent-selector:hover { border-color: var(--border-strong); color: var(--text-primary); }
+    .ih-agent-selector select {
+      border: none; background: transparent; cursor: pointer;
+      font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+      color: var(--text-primary); outline: none;
+      font-family: inherit;
+    }
+
+    /* ── Two-panel body ─────────────────────────────────────────────── */
+    .ih-body {
+      display: flex; flex: 1; overflow: hidden;
+    }
+    .ih-nav {
+      width: 200px; flex-shrink: 0;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-default);
+      overflow-y: auto; padding: var(--space-3) var(--space-2);
+      display: flex; flex-direction: column; gap: 1px;
+    }
+    .ih-nav-title {
+      font-size: 10px; font-weight: var(--weight-semibold);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--text-tertiary); padding: 0 var(--space-2) var(--space-2);
+      display: block;
+    }
+    .ih-nav-item {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: 7px var(--space-2); border-radius: var(--radius-md);
+      cursor: pointer; color: var(--text-secondary);
+      font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+      text-decoration: none;
+      transition: background var(--duration-fast), color var(--duration-fast);
+      border: none; background: transparent; width: 100%; text-align: left;
+    }
+    .ih-nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+    .ih-nav-item.active {
+      background: var(--brand-primary-light); color: var(--brand-primary);
+    }
+    .ih-nav-item .dirty-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--state-delayed); margin-left: auto; flex-shrink: 0;
+      display: none;
+    }
+    .ih-nav-item.dirty .dirty-dot { display: block; }
+    .ih-nav-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-2); }
+    .ih-nav-group-label {
+      font-size: 10px; font-weight: var(--weight-semibold);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-tertiary); padding: var(--space-2) var(--space-2) 2px;
+      display: block;
+    }
+
+    /* ── Content panel ──────────────────────────────────────────────── */
+    .ih-content {
+      flex: 1; overflow-y: auto; background: var(--bg-page); min-width: 0;
+    }
+    .ih-panel { display: none; height: 100%; flex-direction: column; }
+    .ih-panel.active { display: flex; }
+
+    /* ── Panel header ───────────────────────────────────────────────── */
+    .panel-header {
+      padding: var(--space-5) var(--space-6) var(--space-4);
+      border-bottom: 1px solid var(--border-default);
+      background: var(--bg-surface); flex-shrink: 0;
+    }
+    .panel-title {
+      font-size: var(--text-heading); font-weight: var(--weight-semibold);
+      color: var(--text-primary); margin-bottom: 4px;
+    }
+    .panel-subtitle { font-size: var(--text-body-sm); color: var(--text-secondary); }
+
+    /* ── Editor shell ───────────────────────────────────────────────── */
+    .editor-wrap {
+      flex: 1; display: flex; flex-direction: column;
+      padding: var(--space-5) var(--space-6); min-height: 0;
+    }
+    .editor-shell {
+      display: flex; flex-direction: column; flex: 1;
+      border: 1px solid var(--border-default); border-radius: var(--radius-md);
+      overflow: hidden; background: var(--bg-inset);
+    }
+    .editor-toolbar {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border-bottom: 1px solid var(--border-default);
+      background: var(--bg-surface); flex-shrink: 0;
+    }
+    .editor-toolbar-sep {
+      width: 1px; height: 20px; background: var(--border-default); margin: 0 var(--space-1);
+    }
+    .editor-toolbar-label {
+      font-size: var(--text-caption); color: var(--text-tertiary); margin-left: auto;
+    }
+    .editor-body { display: flex; flex: 1; overflow: hidden; min-height: 300px; }
+    .editor-gutter {
+      width: 44px; padding: 12px 8px;
+      background: var(--bg-inset); color: var(--text-tertiary);
+      font: 12px/1.6 'JetBrains Mono', monospace;
+      text-align: right; user-select: none; flex-shrink: 0;
+      border-right: 1px solid var(--border-default);
+      overflow: hidden;
+    }
+    .editor-content {
+      flex: 1; padding: 12px var(--space-3);
+      background: var(--bg-inset); color: var(--text-primary);
+      font: 13px/1.6 'JetBrains Mono', monospace;
+      border: none; outline: none; resize: none; tab-size: 2;
+      min-height: 0;
+    }
+    .editor-content[readonly] { cursor: default; }
+    .editor-status-bar {
+      display: flex; align-items: center; gap: var(--space-4);
+      padding: 4px var(--space-3);
+      border-top: 1px solid var(--border-default);
+      background: var(--bg-surface); flex-shrink: 0;
+      font-size: 11px; color: var(--text-tertiary);
+    }
+
+    /* ── Warning banner ─────────────────────────────────────────────── */
+    .warn-banner {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-5);
+      background: rgba(245, 158, 11, 0.08);
+      border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+      font-size: var(--text-body-sm); color: var(--state-delayed);
+      flex-shrink: 0;
+    }
+    .warn-banner i { flex-shrink: 0; }
+    .warn-banner-actions { margin-left: auto; display: flex; gap: var(--space-2); align-items: center; }
+
+    /* ── Episodic table ─────────────────────────────────────────────── */
+    .ep-table-wrap { flex: 1; overflow-y: auto; }
+    .ep-table-header {
+      display: grid;
+      grid-template-columns: 140px 180px 1fr 110px;
+      gap: var(--space-3); align-items: center;
+      padding: var(--space-2) var(--space-5);
+      background: var(--bg-surface-alt);
+      border-bottom: 1px solid var(--border-default);
+      font-size: 11px; font-weight: var(--weight-semibold);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--text-tertiary); flex-shrink: 0;
+    }
+    .ep-row {
+      display: grid;
+      grid-template-columns: 140px 180px 1fr 110px;
+      gap: var(--space-3); align-items: center;
+      padding: var(--space-3) var(--space-5);
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background var(--duration-fast); cursor: pointer;
+    }
+    .ep-row:hover { background: var(--bg-surface-alt); }
+    .ep-date { font-size: var(--text-body-sm); font-weight: var(--weight-medium); color: var(--text-primary); }
+    .ep-label {
+      display: inline-flex; align-items: center;
+      font-size: 12px; font-weight: var(--weight-medium);
+      color: var(--text-secondary); background: var(--bg-inset);
+      border: 1px solid var(--border-default); border-radius: var(--radius-full);
+      padding: 2px 8px;
+    }
+    .ep-name { font-size: var(--text-caption); color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace; }
+    .ep-actions { display: flex; align-items: center; gap: var(--space-1); }
+
+    /* Row action buttons */
+    .ra-btn {
+      width: 28px; height: 28px; display: flex; align-items: center;
+      justify-content: center; border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm); background: transparent; cursor: pointer;
+      color: var(--text-tertiary);
+      transition: all var(--duration-fast);
+    }
+    .ra-btn:hover { background: var(--bg-inset); color: var(--text-primary); border-color: var(--border-strong); }
+    .ra-btn.danger:hover { background: rgba(239,68,68,0.08); color: var(--state-blocked); border-color: var(--state-blocked); }
+
+    /* ── Semantic Memory ────────────────────────────────────────────── */
+    .sem-body { display: flex; flex: 1; overflow: hidden; }
+    .sem-topics {
+      width: 200px; flex-shrink: 0;
+      border-right: 1px solid var(--border-default);
+      background: var(--bg-surface); overflow-y: auto;
+      display: flex; flex-direction: column;
+    }
+    .sem-topics-header {
+      padding: var(--space-3) var(--space-3) var(--space-2);
+      border-bottom: 1px solid var(--border-default); flex-shrink: 0;
+      font-size: 11px; font-weight: var(--weight-semibold);
+      text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary);
+    }
+    .sem-topic-item {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: 8px var(--space-3); cursor: pointer;
+      font-size: var(--text-body-sm); font-weight: var(--weight-medium); color: var(--text-secondary);
+      border: none; background: transparent; width: 100%; text-align: left;
+      transition: background var(--duration-fast), color var(--duration-fast);
+    }
+    .sem-topic-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+    .sem-topic-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+    .sem-topic-item .active-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--brand-primary); margin-left: auto; flex-shrink: 0;
+    }
+    .sem-new-topic-wrap { padding: var(--space-2) var(--space-3); flex-shrink: 0; }
+    .sem-new-topic-btn {
+      display: flex; align-items: center; gap: var(--space-2);
+      width: 100%; padding: 6px var(--space-2); border-radius: var(--radius-sm);
+      border: 1px dashed var(--border-default); background: transparent; cursor: pointer;
+      font-size: var(--text-body-sm); color: var(--text-tertiary);
+      transition: all var(--duration-fast);
+    }
+    .sem-new-topic-btn:hover { border-color: var(--brand-primary); color: var(--brand-primary); background: var(--brand-primary-light); }
+    .sem-new-topic-input {
+      width: 100%; padding: 5px var(--space-2); border-radius: var(--radius-sm);
+      border: 1px solid var(--brand-primary); outline: none; font-size: var(--text-body-sm);
+      font-family: inherit; background: var(--bg-surface); color: var(--text-primary);
+    }
+    .sem-input-error { font-size: 11px; color: var(--state-blocked); margin-top: 4px; }
+    .sem-editor-wrap { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: var(--space-4); }
+
+    /* ── Skill Authoring ────────────────────────────────────────────── */
+    .skill-action-bar {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-default);
+      background: var(--bg-surface); flex-shrink: 0;
+    }
+    .skill-table-header {
+      display: grid; grid-template-columns: 200px 1fr 120px;
+      gap: var(--space-3); align-items: center;
+      padding: var(--space-2) var(--space-5);
+      background: var(--bg-surface-alt);
+      border-bottom: 1px solid var(--border-default);
+      font-size: 11px; font-weight: var(--weight-semibold);
+      text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary);
+    }
+    .skill-row {
+      display: grid; grid-template-columns: 200px 1fr 120px;
+      gap: var(--space-3); align-items: center;
+      padding: var(--space-3) var(--space-5);
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background var(--duration-fast); cursor: pointer;
+    }
+    .skill-row:hover { background: var(--bg-surface-alt); }
+    .skill-id {
+      font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+      color: var(--text-primary); display: flex; align-items: center; gap: var(--space-2);
+    }
+    .skill-path { font-size: var(--text-caption); color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace; }
+
+    /* ── Skill Editor view ──────────────────────────────────────────── */
+    .skill-editor-header {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-5);
+      border-bottom: 1px solid var(--border-default);
+      background: var(--bg-surface); flex-shrink: 0;
+    }
+    .skill-id-field {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-1) var(--space-3);
+      border: 1px solid var(--border-default); border-radius: var(--radius-md);
+      background: var(--bg-page); flex: 1; max-width: 300px;
+    }
+    .skill-id-field span { font-size: var(--text-caption); color: var(--text-tertiary); }
+    .skill-id-field input {
+      border: none; background: transparent; outline: none;
+      font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+      color: var(--text-primary); font-family: 'JetBrains Mono', monospace; flex: 1;
+    }
+    .skill-id-error { font-size: 11px; color: var(--state-blocked); }
+
+    /* Validation panel */
+    .validation-panel {
+      margin: var(--space-3) var(--space-5);
+      border-radius: var(--radius-md); overflow: hidden;
+      border: 1px solid var(--border-default); flex-shrink: 0;
+    }
+    .validation-panel.valid { border-color: rgba(16,185,129,0.4); }
+    .validation-panel.invalid { border-color: rgba(239,68,68,0.4); }
+    .vp-header {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+    }
+    .validation-panel.valid .vp-header { background: rgba(16,185,129,0.1); color: var(--state-progress); }
+    .validation-panel.invalid .vp-header { background: rgba(239,68,68,0.08); color: var(--state-blocked); }
+    .vp-body { padding: var(--space-3); background: var(--bg-surface); }
+    .vp-kv-row {
+      display: grid; grid-template-columns: 160px 1fr;
+      gap: var(--space-2); padding: 3px 0;
+      font-size: var(--text-caption);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .vp-kv-row:last-child { border-bottom: none; }
+    .vp-key { color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace; }
+    .vp-val { color: var(--text-primary); }
+    .vp-error-item {
+      display: flex; align-items: flex-start; gap: var(--space-2);
+      padding: 3px 0; font-size: var(--text-caption); color: var(--state-blocked);
+    }
+
+    /* ── Modals ─────────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--bg-surface); border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-4); width: 520px; max-width: 95vw;
+      display: flex; flex-direction: column;
+      transform: scale(0.96); transition: transform 0.2s;
+    }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-header {
+      padding: var(--space-5) var(--space-5) var(--space-4);
+      border-bottom: 1px solid var(--border-default);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-size: var(--text-title); font-weight: var(--weight-semibold); color: var(--text-primary); }
+    .modal-body { padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); }
+    .modal-footer {
+      padding: var(--space-4) var(--space-5);
+      border-top: 1px solid var(--border-default);
+      display: flex; gap: var(--space-2); justify-content: flex-end;
+    }
+    .form-group { display: flex; flex-direction: column; gap: var(--space-1); }
+    .form-label { font-size: var(--text-body-sm); font-weight: var(--weight-medium); color: var(--text-secondary); }
+    .form-label span { color: var(--text-tertiary); font-weight: 400; }
+    .form-input {
+      padding: var(--space-2) var(--space-3); border: 1px solid var(--border-default);
+      border-radius: var(--radius-md); background: var(--bg-page);
+      font-size: var(--text-body-sm); color: var(--text-primary); font-family: inherit;
+      outline: none; transition: border-color var(--duration-fast);
+    }
+    .form-input:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-primary-light); }
+    .form-textarea {
+      resize: vertical; min-height: 80px; max-height: 300px;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6;
+    }
+    .modal-desc { font-size: var(--text-body-sm); color: var(--text-secondary); line-height: 1.6; }
+
+    /* ── Slide-over ─────────────────────────────────────────────────── */
+    .slideover-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 150; display: none;
+    }
+    .slideover-panel {
+      position: fixed; right: 0; top: 0; bottom: 0; width: 520px; max-width: 95vw;
+      background: var(--bg-surface); border-left: 1px solid var(--border-default);
+      box-shadow: var(--shadow-4); z-index: 151;
+      display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform 0.25s ease;
+    }
+    .slideover-panel.open { transform: translateX(0); }
+    .slideover-header {
+      height: 56px; padding: 0 var(--space-5);
+      display: flex; align-items: center; gap: var(--space-3);
+      border-bottom: 1px solid var(--border-default); flex-shrink: 0;
+    }
+    .slideover-title { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); flex: 1; }
+    .slideover-body { flex: 1; overflow-y: auto; padding: 0; display: flex; flex-direction: column; }
+
+    /* ── Toast ──────────────────────────────────────────────────────── */
+    #toast-container {
+      position: fixed; bottom: var(--space-5); right: var(--space-5);
+      display: flex; flex-direction: column; gap: var(--space-2); z-index: 300;
+    }
+    .toast {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      background: var(--bg-surface); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-3); border: 1px solid var(--border-default);
+      font-size: var(--text-body-sm); color: var(--text-primary);
+      min-width: 280px; max-width: 400px;
+      animation: toastIn 0.25s ease;
+    }
+    .toast.success { border-color: rgba(16,185,129,0.4); }
+    .toast.error { border-color: rgba(239,68,68,0.4); }
+    .toast.warning { border-color: rgba(245,158,11,0.4); }
+    .toast-icon { flex-shrink: 0; }
+    .toast.success .toast-icon { color: var(--state-progress); }
+    .toast.error .toast-icon { color: var(--state-blocked); }
+    .toast.warning .toast-icon { color: var(--state-delayed); }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Empty states ───────────────────────────────────────────────── */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: var(--space-16); gap: var(--space-3); text-align: center;
+    }
+    .empty-state-icon {
+      width: 48px; height: 48px; border-radius: var(--radius-xl);
+      background: var(--bg-inset); display: flex; align-items: center; justify-content: center;
+      color: var(--text-tertiary); margin-bottom: var(--space-2);
+    }
+    .empty-state-title { font-size: var(--text-body); font-weight: var(--weight-semibold); color: var(--text-primary); }
+    .empty-state-desc { font-size: var(--text-body-sm); color: var(--text-tertiary); max-width: 320px; line-height: 1.6; }
+
+    /* ── Skeleton loader ────────────────────────────────────────────── */
+    .skeleton-wrap { padding: var(--space-5) var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); }
+    .skeleton-line {
+      height: 14px; border-radius: var(--radius-sm);
+      background: linear-gradient(90deg, var(--bg-inset) 25%, var(--bg-surface-alt) 50%, var(--bg-inset) 75%);
+      background-size: 200% 100%; animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ── Tablet — collapse ih-nav to horizontal strip ────────────────── */
+    @media (max-width: 1024px) and (min-width: 768px) {
+      .ih-nav {
+        width: 100%; min-width: 0; border-right: none;
+        border-bottom: 1px solid var(--border-default);
+        flex-direction: row; overflow-x: auto; padding: var(--space-2); gap: var(--space-1);
+        flex-shrink: 0;
+      }
+      .ih-body { flex-direction: column; }
+      .ih-nav-divider, .ih-nav-group-label, .ih-nav-title { display: none; }
+      .ih-nav-item { white-space: nowrap; }
+    }
+
+    /* ── Mobile warning ─────────────────────────────────────────────── */
+    .mobile-notice { display: none; }
+    @media (max-width: 767px) {
+      .ih-body { flex-direction: column; }
+      .ih-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--border-default); flex-direction: row; overflow-x: auto; padding: var(--space-2); gap: var(--space-1); }
+      .ih-nav-divider, .ih-nav-group-label, .ih-nav-title { display: none; }
+      .ih-nav-item { white-space: nowrap; flex-direction: row; }
+      .editor-content { font-size: 12px; }
+      /* Episodic table — hide entry name column, keep date/label/actions */
+      .ep-table-header, .ep-row { grid-template-columns: 100px 1fr 80px; font-size: 12px; }
+      .ep-table-header span:nth-child(3), .ep-row .ep-name { display: none; }
+      /* Editor gutter — hide on narrow screens */
+      .editor-gutter { display: none; }
+      /* Semantic topics — stack vertically */
+      .sem-body { flex-direction: column; }
+      .sem-topics { width: 100%; max-height: 160px; border-right: none; border-bottom: 1px solid var(--border-default); }
+      /* Topbar — wrap if needed */
+      .ih-topbar { flex-wrap: wrap; gap: var(--space-2); height: auto; min-height: 56px; padding: var(--space-2) var(--space-3); }
+      .ih-topbar > div:last-child .agent-label-text { display: none; }
+      .mobile-notice { display: flex; }
+    }
+
+    /* ── Dark mode: increase opacity of tinted banners ───────────────── */
+    [data-theme="dark"] .warn-banner {
+      background: rgba(245, 158, 11, 0.14);
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+    [data-theme="dark"] .validation-panel.valid .vp-header { background: rgba(16, 185, 129, 0.15); }
+    [data-theme="dark"] .validation-panel.invalid .vp-header { background: rgba(239, 68, 68, 0.13); }
+    [data-theme="dark"] .validation-panel.valid { border-color: rgba(16, 185, 129, 0.5); }
+    [data-theme="dark"] .validation-panel.invalid { border-color: rgba(239, 68, 68, 0.5); }
+
+    /* ── Confirm dialog (small) ──────────────────────────────────────── */
+    .confirm-modal { width: 420px; }
+    .confirm-icon {
+      width: 40px; height: 40px; border-radius: var(--radius-full);
+      background: rgba(239,68,68,0.1); display: flex; align-items: center; justify-content: center;
+      color: var(--state-blocked); flex-shrink: 0;
+    }
+    .confirm-content { display: flex; gap: var(--space-4); align-items: flex-start; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- Sidebar injected by nav.js -->
+  <aside class="sidebar">
+    <div class="sidebar-logo"></div>
+    <nav class="sidebar-nav"></nav>
+    <div class="sidebar-footer"></div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main-content" style="display:flex;flex-direction:column;overflow:hidden;">
+    <div class="ih-shell">
+
+      <!-- Hub topbar -->
+      <div class="ih-topbar">
+        <div class="ih-topbar-left">
+          <div class="ih-breadcrumb">
+            <div class="ih-breadcrumb-icon" aria-hidden="true">
+              <i data-lucide="brain" width="14" height="14"></i>
+            </div>
+            Intelligence Hub
+          </div>
+          <span style="color:var(--border-strong);font-size:18px;line-height:1;" aria-hidden="true">/</span>
+          <span id="active-section-label" style="font-size:var(--text-body-sm);color:var(--text-secondary);">Agent Profile</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--space-3);">
+          <span style="font-size:var(--text-caption);color:var(--text-tertiary);">Agent</span>
+          <div class="ih-agent-selector">
+            <i data-lucide="cpu" width="14" height="14" style="color:var(--state-progress);" aria-hidden="true"></i>
+            <select id="agent-select" aria-label="Select agent" onchange="onAgentChange(this.value)">
+              <option value="main">main</option>
+              <option value="research">research</option>
+              <option value="ops">ops</option>
+            </select>
+            <i data-lucide="chevrons-up-down" width="12" height="12" style="color:var(--text-tertiary);" aria-hidden="true"></i>
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--space-2);margin-left:var(--space-3);">
+            <button class="icon-btn" aria-label="Notifications" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);border:none;background:transparent;cursor:pointer;color:var(--icon-secondary);">
+              <i data-lucide="bell" width="16" height="16"></i>
+            </button>
+            <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);border:none;background:transparent;cursor:pointer;color:var(--icon-secondary);">
+              <i data-lucide="sun" width="16" height="16"></i>
+            </button>
+            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0EA5E9,#7C3AED);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;" title="Arjun Reyes">AR</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-panel body -->
+      <div class="ih-body">
+
+        <!-- Left nav -->
+        <nav class="ih-nav" aria-label="Intelligence Hub sections">
+          <span class="ih-nav-title">Intelligence</span>
+          <button class="ih-nav-item active" data-section="profile" onclick="showSection('profile')" aria-current="page">
+            <i data-lucide="user-circle" width="14" height="14" aria-hidden="true"></i>
+            Agent Profile
+            <span class="dirty-dot" id="dirty-profile" aria-label="Unsaved changes"></span>
+          </button>
+          <div class="ih-nav-divider" role="separator"></div>
+          <span class="ih-nav-group-label">Memory</span>
+          <button class="ih-nav-item" data-section="working" onclick="showSection('working')">
+            <i data-lucide="file-text" width="14" height="14" aria-hidden="true"></i>
+            Working Memory
+            <span class="dirty-dot" id="dirty-working" aria-label="Unsaved changes"></span>
+          </button>
+          <button class="ih-nav-item" data-section="episodic" onclick="showSection('episodic')">
+            <i data-lucide="archive" width="14" height="14" aria-hidden="true"></i>
+            Episodic Memory
+            <span class="dirty-dot" id="dirty-episodic" aria-label="Unsaved changes"></span>
+          </button>
+          <button class="ih-nav-item" data-section="semantic" onclick="showSection('semantic')">
+            <i data-lucide="layers" width="14" height="14" aria-hidden="true"></i>
+            Semantic Memory
+            <span class="dirty-dot" id="dirty-semantic" aria-label="Unsaved changes"></span>
+          </button>
+          <div class="ih-nav-divider" role="separator"></div>
+          <button class="ih-nav-item" data-section="skills" onclick="showSection('skills')">
+            <i data-lucide="code-2" width="14" height="14" aria-hidden="true"></i>
+            Skill Authoring
+            <span class="dirty-dot" id="dirty-skills" aria-label="Unsaved changes"></span>
+          </button>
+        </nav>
+
+        <!-- Content panels -->
+        <div class="ih-content" role="region" aria-live="polite">
+
+          <!-- ══════════════════════════════════════════════════════ -->
+          <!-- PANEL 1: Agent Profile                                 -->
+          <!-- ══════════════════════════════════════════════════════ -->
+          <div id="panel-profile" class="ih-panel active" role="tabpanel" aria-label="Agent Profile">
+            <div class="panel-header">
+              <div class="panel-title">Agent Profile</div>
+              <div class="panel-subtitle">Define the agent's persona, goals, domain expertise, and working style. The agent reads this on every invocation.</div>
+            </div>
+            <!-- Skeleton loader (simulates API fetch) -->
+            <div id="skeleton-profile" class="skeleton-wrap">
+              <div class="skeleton-line" style="width:60%"></div>
+              <div class="skeleton-line" style="width:40%"></div>
+              <div class="skeleton-line" style="width:80%"></div>
+              <div class="skeleton-line" style="width:55%"></div>
+            </div>
+            <div class="editor-wrap" id="content-profile" style="display:none;">
+              <div class="editor-shell">
+                <div class="editor-toolbar">
+                  <button class="btn btn-sm btn-primary" id="save-profile" onclick="saveProfile()" aria-label="Save profile">
+                    <i data-lucide="save" width="13" height="13"></i> Save
+                  </button>
+                  <button class="btn btn-sm btn-ghost" onclick="discardProfile()" aria-label="Discard changes">
+                    <i data-lucide="rotate-ccw" width="13" height="13"></i> Discard
+                  </button>
+                  <div class="editor-toolbar-sep" aria-hidden="true"></div>
+                  <span class="editor-toolbar-label">Markdown · profile.md</span>
+                </div>
+                <div class="editor-body">
+                  <div class="editor-gutter" id="gutter-profile" aria-hidden="true"></div>
+                  <textarea class="editor-content" id="editor-profile"
+                    spellcheck="false" aria-label="Agent profile content"
+                    oninput="onEditorInput('profile')"
+                    onscroll="syncScroll('profile')"># Agent: main
+
+## Persona
+You are a focused research and task orchestration assistant embedded in GraphClaw. You coordinate complex multi-step projects, synthesise information accurately, and deliver actionable output with minimal friction.
+
+## Goals
+- Prioritise high-impact tasks and surface blockers early.
+- Summarise and synthesise information for the team with precision.
+- Maintain clear task context across long-running projects.
+- Escalate ambiguous decisions to the appropriate stakeholder.
+
+## Domain Expertise
+- Software engineering project management
+- Kubernetes infrastructure and cloud operations
+- Product strategy and OKR planning
+- Data pipeline design and observability
+
+## Working Style
+- Be concise — one clear sentence beats three hedged ones.
+- Cite sources and reference specific task IDs when available.
+- When uncertain, state uncertainty explicitly rather than guessing.
+- Prefer structured output (tables, bullet lists) for complex comparisons.</textarea>
+                </div>
+                <div class="editor-status-bar" aria-live="polite">
+                  <span id="status-profile">Markdown</span>
+                  <span>·</span>
+                  <span id="chars-profile">0 chars</span>
+                  <span>·</span>
+                  <span style="color:var(--state-progress);" id="saved-profile">Saved</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══════════════════════════════════════════════════════ -->
+          <!-- PANEL 2: Working Memory                                -->
+          <!-- ══════════════════════════════════════════════════════ -->
+          <div id="panel-working" class="ih-panel" role="tabpanel" aria-label="Working Memory">
+            <div class="panel-header">
+              <div class="panel-title">Working Memory</div>
+              <div class="panel-subtitle">The agent's live scratchpad — updated on each cycle. Inspect and correct the current session context.</div>
+            </div>
+            <!-- Large-context warning banner -->
+            <div class="warn-banner" id="working-warn" aria-live="assertive">
+              <i data-lucide="alert-triangle" width="14" height="14" aria-hidden="true"></i>
+              <span>Working context is large <strong>(9 240 chars)</strong>. Consider compacting to free up space.</span>
+              <div class="warn-banner-actions">
+                <button class="btn btn-sm btn-warning" onclick="openCompactModal()" aria-label="Open compact dialog">
+                  <i data-lucide="archive" width="13" height="13"></i> Compact…
+                </button>
+                <button class="btn btn-sm btn-ghost" onclick="document.getElementById('working-warn').style.display='none'" aria-label="Dismiss warning">
+                  <i data-lucide="x" width="13" height="13"></i>
+                </button>
+              </div>
+            </div>
+            <!-- Skeleton loader -->
+            <div id="skeleton-working" class="skeleton-wrap">
+              <div class="skeleton-line" style="width:70%"></div>
+              <div class="skeleton-line" style="width:45%"></div>
+              <div class="skeleton-line" style="width:85%"></div>
+              <div class="skeleton-line" style="width:60%"></div>
+              <div class="skeleton-line" style="width:50%"></div>
+            </div>
+            <div class="editor-wrap" id="content-working" style="display:none;">
+              <div class="editor-shell">
+                <div class="editor-toolbar">
+                  <button class="btn btn-sm btn-primary" id="save-working" onclick="saveWorking()">
+                    <i data-lucide="save" width="13" height="13"></i> Save
+                  </button>
+                  <button class="btn btn-sm btn-ghost" onclick="discardWorking()">
+                    <i data-lucide="rotate-ccw" width="13" height="13"></i> Discard
+                  </button>
+                  <div class="editor-toolbar-sep" aria-hidden="true"></div>
+                  <button class="btn btn-sm btn-ghost" onclick="openCompactModal()" aria-label="Compact working memory">
+                    <i data-lucide="archive" width="13" height="13"></i> Compact…
+                  </button>
+                  <span class="editor-toolbar-label">Markdown · context.md</span>
+                </div>
+                <div class="editor-body">
+                  <div class="editor-gutter" id="gutter-working" aria-hidden="true"></div>
+                  <textarea class="editor-content" id="editor-working"
+                    spellcheck="false" aria-label="Working memory content"
+                    oninput="onEditorInput('working')"
+                    onscroll="syncScroll('working')"># Working Context — 2026-04-12
+
+## Current Task Cluster
+Investigating K8s node instability in prod-cluster-2. Three pods have restarted unexpectedly in the last 6h. Current hypothesis: memory pressure from the embeddings worker (graphclaw-embed-5f9d).
+
+### Observations
+- Pod `graphclaw-embed-5f9d` reached 94% memory limit at 03:17 UTC
+- Node `gke-prod-pool-3-abc12` shows MemoryPressure=True since 02:50 UTC
+- No OOM events in kernel log yet — likely soft limit enforcement
+
+### Next Steps
+1. Retrieve full pod describe output for graphclaw-embed-5f9d
+2. Check HPA config — current min replicas may be too low
+3. Review embeddings batch size config in `settings-llm` — reduce from 512→256
+4. Schedule node drain if pressure persists past 06:00 UTC
+
+## Pending Decisions
+- [ ] Approve PR #441 — scoring algorithm refactor (blocked on Alice's review)
+- [ ] Reply to @marcus re: Q2 OKR cadence meeting reschedule
+- [ ] Confirm infrastructure budget for Phase H backend rollout
+
+## Context Notes
+Arjun is OOO until Apr 14. Escalate infra decisions to Priya (Slack: @priya-ops).
+Last compact: 2026-04-10 · research-phase-1</textarea>
+                </div>
+                <div class="editor-status-bar">
+                  <span>Markdown</span><span>·</span>
+                  <span id="chars-working">0 chars</span><span>·</span>
+                  <span id="saved-working" style="color:var(--state-progress);">Saved</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══════════════════════════════════════════════════════ -->
+          <!-- PANEL 3: Episodic Memory                               -->
+          <!-- ══════════════════════════════════════════════════════ -->
+          <div id="panel-episodic" class="ih-panel" role="tabpanel" aria-label="Episodic Memory">
+            <div class="panel-header">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                  <div class="panel-title">Episodic Memory</div>
+                  <div class="panel-subtitle">Append-only archive of past session summaries created by the Compact operation. Read-only entries.</div>
+                </div>
+                <span style="font-size:var(--text-caption);color:var(--text-tertiary);">5 entries</span>
+              </div>
+            </div>
+            <!-- Table -->
+            <div class="ep-table-wrap" role="table" aria-label="Episodic memory entries">
+              <div class="ep-table-header" role="row">
+                <span role="columnheader">Date</span>
+                <span role="columnheader">Session Label</span>
+                <span role="columnheader">Entry Name</span>
+                <span role="columnheader">Actions</span>
+              </div>
+              <div id="ep-table-body">
+                <!-- rows injected by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- ══════════════════════════════════════════════════════ -->
+          <!-- PANEL 4: Semantic Memory                               -->
+          <!-- ══════════════════════════════════════════════════════ -->
+          <div id="panel-semantic" class="ih-panel" role="tabpanel" aria-label="Semantic Memory">
+            <div class="panel-header">
+              <div class="panel-title">Semantic Memory</div>
+              <div class="panel-subtitle">Long-term topic knowledge files. Each topic is a slug-named Markdown file authored by you or the agent.</div>
+            </div>
+            <div class="sem-body" style="flex:1;overflow:hidden;">
+              <!-- Topic list -->
+              <div class="sem-topics">
+                <div class="sem-topics-header">Topics</div>
+                <div id="sem-topic-list">
+                  <!-- injected by JS -->
+                </div>
+                <div class="sem-new-topic-wrap">
+                  <button class="sem-new-topic-btn" id="sem-new-btn" onclick="showNewTopicInput()" aria-label="Add new topic">
+                    <i data-lucide="plus" width="13" height="13"></i> New Topic
+                  </button>
+                  <div id="sem-new-input-wrap" style="display:none;">
+                    <input class="sem-new-topic-input" id="sem-new-input" type="text"
+                      placeholder="topic-slug" maxlength="40"
+                      aria-label="New topic slug"
+                      oninput="validateTopicSlug(this.value)"
+                      onkeydown="handleTopicKeydown(event)">
+                    <div class="sem-input-error" id="sem-slug-error" role="alert"></div>
+                  </div>
+                </div>
+              </div>
+              <!-- Editor -->
+              <div class="sem-editor-wrap">
+                <div class="editor-shell">
+                  <div class="editor-toolbar">
+                    <button class="btn btn-sm btn-primary" id="save-semantic" onclick="saveSemantic()">
+                      <i data-lucide="save" width="13" height="13"></i> Save
+                    </button>
+                    <button class="btn btn-sm btn-ghost" onclick="discardSemantic()">
+                      <i data-lucide="rotate-ccw" width="13" height="13"></i> Discard
+                    </button>
+                    <div class="editor-toolbar-sep" aria-hidden="true"></div>
+                    <button class="btn btn-sm btn-ghost btn-danger-hover" onclick="deleteTopicConfirm()" id="del-topic-btn" aria-label="Delete topic">
+                      <i data-lucide="trash-2" width="13" height="13"></i> Delete Topic
+                    </button>
+                    <span class="editor-toolbar-label" id="sem-editor-label">users.md</span>
+                  </div>
+                  <div class="editor-body">
+                    <div class="editor-gutter" id="gutter-semantic" aria-hidden="true"></div>
+                    <textarea class="editor-content" id="editor-semantic"
+                      spellcheck="false" aria-label="Semantic memory topic content"
+                      oninput="onEditorInput('semantic')"
+                      onscroll="syncScroll('semantic')"></textarea>
+                  </div>
+                  <div class="editor-status-bar">
+                    <span>Markdown</span><span>·</span>
+                    <span id="chars-semantic">0 chars</span><span>·</span>
+                    <span id="saved-semantic" style="color:var(--state-progress);">Saved</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══════════════════════════════════════════════════════ -->
+          <!-- PANEL 5: Skill Authoring                               -->
+          <!-- ══════════════════════════════════════════════════════ -->
+          <div id="panel-skills" class="ih-panel" role="tabpanel" aria-label="Skill Authoring">
+            <!-- List view -->
+            <div id="skill-list-view">
+              <div class="panel-header">
+                <div class="panel-title">Skill Authoring</div>
+                <div class="panel-subtitle">Write, edit, fork, and validate SKILL.md definitions. Authored skills can be installed via the Skill Marketplace.</div>
+              </div>
+              <div class="skill-action-bar">
+                <button class="btn btn-primary" onclick="openSkillEditor('new')" aria-label="Create new skill">
+                  <i data-lucide="plus" width="14" height="14"></i> New Skill
+                </button>
+                <button class="btn btn-secondary" onclick="simulateImport()" aria-label="Import SKILL.md file">
+                  <i data-lucide="upload" width="14" height="14"></i> Import SKILL.md
+                </button>
+                <span style="margin-left:auto;font-size:var(--text-caption);color:var(--text-tertiary);">4 authored skills</span>
+              </div>
+              <div class="skill-table-header" role="row">
+                <span role="columnheader">Skill ID</span>
+                <span role="columnheader">Storage Path</span>
+                <span role="columnheader">Actions</span>
+              </div>
+              <div id="skill-table-body">
+                <!-- injected by JS -->
+              </div>
+            </div>
+            <!-- Editor view -->
+            <div id="skill-editor-view" style="display:none;height:100%;flex-direction:column;">
+              <div class="skill-editor-header">
+                <button class="btn btn-sm btn-ghost" onclick="closeSkillEditor()" aria-label="Back to skill list">
+                  <i data-lucide="arrow-left" width="14" height="14"></i> Back
+                </button>
+                <div class="editor-toolbar-sep" aria-hidden="true"></div>
+                <div class="skill-id-field" aria-label="Skill ID">
+                  <span>ID:</span>
+                  <input type="text" id="skill-id-input" value="data-summariser"
+                    placeholder="my-skill" aria-label="Skill ID"
+                    oninput="validateSkillId(this.value)">
+                  <i data-lucide="check-circle" width="13" height="13" id="skill-id-ok" style="color:var(--state-progress);" aria-label="Valid ID"></i>
+                </div>
+                <span class="skill-id-error" id="skill-id-error" role="alert"></span>
+                <div style="margin-left:auto;display:flex;gap:var(--space-2);align-items:center;">
+                  <button class="btn btn-sm btn-ghost" onclick="validateSkillContent()" aria-label="Validate SKILL.md">
+                    <i data-lucide="check-square" width="13" height="13"></i> Validate
+                  </button>
+                  <button class="btn btn-sm btn-primary" id="save-skill-btn" onclick="saveSkill()">
+                    <i data-lucide="save" width="13" height="13"></i> Save
+                  </button>
+                  <button class="btn btn-sm btn-ghost" onclick="discardSkill()">
+                    <i data-lucide="rotate-ccw" width="13" height="13"></i> Discard
+                  </button>
+                  <button class="btn btn-sm btn-ghost" id="fork-skill-btn" onclick="forkSkill()" aria-label="Fork skill">
+                    <i data-lucide="git-branch" width="13" height="13"></i> Fork
+                  </button>
+                </div>
+              </div>
+              <!-- Validation panel (hidden until validate clicked) -->
+              <div id="validation-panel" style="display:none;"></div>
+              <!-- Editor -->
+              <div class="editor-wrap" style="margin:0;padding:var(--space-3) var(--space-5);flex:1;">
+                <div class="editor-shell">
+                  <div class="editor-body">
+                    <div class="editor-gutter" id="gutter-skills" aria-hidden="true"></div>
+                    <textarea class="editor-content" id="editor-skills"
+                      spellcheck="false" aria-label="SKILL.md content"
+                      oninput="updateGutter('skills')"
+                      onscroll="syncScroll('skills')"></textarea>
+                  </div>
+                  <div class="editor-status-bar">
+                    <span>Markdown · SKILL.md</span><span>·</span>
+                    <span id="chars-skills">0 chars</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /.ih-content -->
+      </div><!-- /.ih-body -->
+    </div><!-- /.ih-shell -->
+  </main>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- COMPACT MODAL                                                      -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="compact-modal" role="dialog" aria-modal="true" aria-labelledby="compact-title"
+  onclick="if(event.target===this)closeCompactModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="compact-title">Compact Working Memory</div>
+      <button class="btn btn-sm btn-ghost" onclick="closeCompactModal()" aria-label="Close dialog" style="padding:var(--space-1);">
+        <i data-lucide="x" width="16" height="16"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">The current working context will be archived to episodic memory. Replace it with a compact summary.</p>
+      <div class="form-group">
+        <label class="form-label" for="compact-label">Session label <span>(optional)</span></label>
+        <input class="form-input" id="compact-label" type="text" placeholder="e.g. research-phase-1" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="compact-summary">Compact summary <span style="color:var(--state-blocked);">*</span></label>
+        <textarea class="form-input form-textarea" id="compact-summary" rows="5"
+          placeholder="Summarise the key findings, decisions, and next steps from this session..."
+          oninput="onCompactInput()"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCompactModal()">Cancel</button>
+      <button class="btn btn-primary" id="compact-submit" disabled onclick="submitCompact()">
+        <i data-lucide="archive" width="14" height="14"></i> Compact &amp; Archive
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- DELETE CONFIRM MODAL                                               -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-title"
+  onclick="if(event.target===this)closeDeleteModal()">
+  <div class="modal confirm-modal">
+    <div class="modal-body" style="padding:var(--space-5);">
+      <div class="confirm-content">
+        <div class="confirm-icon" aria-hidden="true">
+          <i data-lucide="trash-2" width="20" height="20"></i>
+        </div>
+        <div>
+          <div class="modal-title" id="delete-title" style="margin-bottom:var(--space-2);">Delete entry?</div>
+          <p class="modal-desc" id="delete-desc">This cannot be undone.</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" id="delete-confirm-btn" onclick="confirmDelete()">
+        <i data-lucide="trash-2" width="14" height="14"></i> Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- EPISODIC SLIDE-OVER                                                -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="slideover-overlay" id="slideover-overlay" onclick="closeSlideOver()"></div>
+<div class="slideover-panel" id="slideover-panel" role="dialog" aria-modal="true" aria-labelledby="slideover-title">
+  <div class="slideover-header">
+    <button class="btn btn-sm btn-ghost" onclick="closeSlideOver()" aria-label="Close viewer" style="padding:var(--space-1);">
+      <i data-lucide="x" width="16" height="16"></i>
+    </button>
+    <div class="slideover-title" id="slideover-title">Entry</div>
+    <span id="slideover-meta" style="font-size:var(--text-caption);color:var(--text-tertiary);"></span>
+  </div>
+  <div class="slideover-body">
+    <div class="editor-shell" style="flex:1;border:none;border-radius:0;">
+      <div class="editor-body" style="flex:1;">
+        <div class="editor-gutter" id="gutter-slideover" aria-hidden="true" style="padding:12px 8px;"></div>
+        <textarea class="editor-content" id="editor-slideover"
+          readonly spellcheck="false" aria-label="Episodic entry content"
+          style="cursor:default;"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   FOCUS TRAP UTILITY
+═══════════════════════════════════════════════════════════════════ */
+var _preFocusEl = null;
+var _trapListener = null;
+function trapFocus(containerId) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  _preFocusEl = document.activeElement;
+  var focusable = container.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])');
+  if (!focusable.length) return;
+  focusable[0].focus();
+  _trapListener = function(e) {
+    if (e.key !== 'Tab') return;
+    var arr = Array.prototype.slice.call(focusable).filter(function(el) { return !el.disabled && el.offsetParent !== null; });
+    if (!arr.length) return;
+    var first = arr[0], last = arr[arr.length - 1];
+    if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
+    else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
+  };
+  document.addEventListener('keydown', _trapListener);
+}
+function releaseFocus() {
+  if (_trapListener) { document.removeEventListener('keydown', _trapListener); _trapListener = null; }
+  if (_preFocusEl) { try { _preFocusEl.focus(); } catch(e) {} _preFocusEl = null; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════════════════ */
+var EPISODIC_ENTRIES = [
+  { date: '2026-04-10', label: 'research-phase-1', name: '2026-04-10-compact-research-phase-1.md',
+    content: '# Session Summary: research-phase-1\n**Date:** 2026-04-10\n\n## Key Findings\n- Completed initial literature review on vector embedding models for task graph representation.\n- Identified three candidate libraries: pgvector, Weaviate, Qdrant.\n- pgvector selected for prototype given existing PostgreSQL infra.\n\n## Decisions Made\n- Embedding dimension set to 1536 (OpenAI ada-002 compatible).\n- Cosine similarity threshold: 0.82 for task deduplication.\n\n## Open Questions\n- How to handle stale embeddings after task state change?\n- Batch reindex cost estimate needed.\n\n## Next Steps\n1. Prototype pgvector integration in staging.\n2. Benchmark query latency at 50k vectors.\n3. Write migration plan for production rollout.' },
+  { date: '2026-04-07', label: 'k8s-incident-review', name: '2026-04-07-compact-k8s-incident-review.md',
+    content: '# Session Summary: k8s-incident-review\n**Date:** 2026-04-07\n\n## Incident Summary\nProd cluster experienced 40-minute degradation due to misconfigured HPA on the scoring worker.\n\n## Root Cause\nMin replicas set to 1 — single pod restart caused queue backup.\nHPA target CPU metric pointed to wrong deployment selector.\n\n## Resolution\n- Updated HPA to min replicas=3.\n- Fixed selector label mismatch.\n- Added PodDisruptionBudget with minAvailable=2.\n\n## Action Items\n- [ ] Add HPA smoke test to CI pipeline.\n- [ ] Document selector labelling convention in RUNBOOK.md.\n- [x] Alert threshold lowered to 70% CPU (was 90%).' },
+  { date: '2026-04-03', label: 'q2-okr-planning', name: '2026-04-03-compact-q2-okr-planning.md',
+    content: '# Session Summary: q2-okr-planning\n**Date:** 2026-04-03\n\n## OKR Framework Agreed\n- 3 Objectives, 9 Key Results for Q2 2026.\n- Scoring cadence: weekly auto-score via GraphClaw + monthly manual review.\n\n## Objectives\n1. Reduce mean task completion time by 20%.\n2. Ship Intelligence Hub (Phases G+H) by end of Q2.\n3. Achieve 99.5% API uptime across all services.\n\n## Stakeholder Alignment\nAll three objectives approved by Priya (Eng Lead) and Marcus (Product).\n\n## Risks\n- Phase H backend timeline tight — dependency on external API vendor SLA.' },
+  { date: '2026-03-28', label: 'scoring-calibration', name: '2026-03-28-compact-scoring-calibration.md',
+    content: '# Session Summary: scoring-calibration\n**Date:** 2026-03-28\n\n## Scoring Weight Review\nRecalibrated the 7-factor scoring algorithm after feedback from two product teams.\n\n## Changes Applied\n- W1 (Urgency): 0.30 → 0.28\n- W3 (Dependencies): 0.15 → 0.18\n- W6 (Business Value): 0.20 → 0.22\n- Remaining weights adjusted proportionally.\n\n## Validation\nRan recalibration on 200 historical tasks. Mean score delta: +0.04.\nTop-10 task ranking shift: 3 tasks moved up, 2 moved down — all directionally correct.' },
+  { date: '2026-03-20', label: 'onboarding-alice', name: '2026-03-20-compact-onboarding-alice.md',
+    content: '# Session Summary: onboarding-alice\n**Date:** 2026-03-20\n\n## Context\nOnboarding Alice Chen (new senior engineer) onto the GraphClaw codebase and workflows.\n\n## Completed\n- Walked through repository structure, key modules, and test conventions.\n- Assigned Alice to PR #398 (graph scoring refactor) as first code review.\n- Set up access to staging environment and Grafana dashboards.\n\n## Preferences Noted\n- Alice prefers async communication over Slack huddles.\n- Deep experience in Go; less familiar with Python async patterns.\n- Prefers detailed PR descriptions with context on *why* changes were made.' }
+];
+
+var SEMANTIC_TOPICS = {
+  'users': '# Users\n\nKey contacts, preferences, and working styles for the team.\n\n## Arjun Reyes — Product Lead\n- Communication: async Slack preferred, weekly 1:1 on Thursdays\n- Decision style: data-driven; always wants a written summary before a meeting\n- OOO: Apr 12–14, 2026\n\n## Alice Chen — Senior Engineer\n- Prefers detailed PR descriptions with *why* context\n- Go expert; Python async still building familiarity\n- Assigned to: PR #398, PR #441\n\n## Marcus Patel — Product Manager\n- Owns Q2 OKR process and stakeholder comms\n- Key contact for business value scoring calibration\n- Responds fastest via email (not Slack)\n\n## Priya Nair — Engineering Lead\n- Escalation contact for infra decisions when Arjun is OOO\n- Approver for Phase H budget\n- Slack: @priya-ops',
+  'patterns': '# Patterns\n\nRecurring architectural and workflow patterns used in GraphClaw.\n\n## State Machine Pattern\nAll task lifecycle transitions go through `TaskStateMachine`. Never write raw state SQL.\nValid transitions defined in `graphclaw/state_machine.py`.\nGuards enforced at transition time; side effects (events, notifications) triggered post-transition.\n\n## Scoring Pipeline\n7-factor weighted score computed lazily on read. Cache key: `score:{task_id}:{version}`.\nInvalidated on: task update, weight change, dependency state change.\nDo NOT call `recalculate_all()` in a hot path — use the async queue.\n\n## API Error Handling\nAll errors return `{error: str, code: str, details: {...}}`. Never expose raw exceptions.\nUse `APIError` subclasses defined in `graphclaw/errors.py`.\n\n## Test Conventions\nUse `FakeStorageClient` and `FakeSecretsClient` for unit tests.\nIntegration tests hit real DB — never mock at the DB layer.\nSee `tests/conftest.py` for shared fixtures.',
+  'projects': '# Projects\n\nActive projects and their current status.\n\n## Intelligence Hub (Phase G)\n- **Status:** In progress — wireframe build week\n- **Owner:** Arjun + Alice\n- **Target:** Complete wireframes by Apr 14, backend integration by Apr 25\n- **PRD:** docs/prd/15-intelligence-hub.md\n\n## K8s Stability Initiative\n- **Status:** Monitoring — post-incident improvements deployed\n- **Owner:** Priya\n- **Next review:** Apr 15 (weekly infra sync)\n- **Runbook:** RUNBOOK.md (needs update per action items from Apr 7 incident)\n\n## Scoring Algorithm Refactor (PR #441)\n- **Status:** In review — blocked on Alice\'s approval\n- **Author:** Backend team\n- **Context:** Calibration changes from Mar 28 session; W1/W3/W6 weight adjustments'
+};
+
+var SKILL_DATA = [
+  { id: 'data-summariser', path: 'users/main/skills/authored/data-summariser.md', tags: ['ON_DEMAND'] },
+  { id: 'code-review-assist', path: 'users/main/skills/authored/code-review-assist.md', tags: ['ON_DEMAND', 'REVIEW'] },
+  { id: 'standup-reporter', path: 'users/main/skills/authored/standup-reporter.md', tags: ['SCHEDULED'] },
+  { id: 'incident-triage', path: 'users/main/skills/authored/incident-triage.md', tags: ['EVENT'] }
+];
+
+var SKILL_TEMPLATE = '---\nname: my-skill\ndescription: What this skill does.\nversion: 0.1.0\nmodel: claude-sonnet-4-6\ntags: [ON_DEMAND]\ntimeout_seconds: 120\nmax_tokens: 4096\n---\n\n## System Prompt\n\nYou are a specialized assistant for...\n\n## Instructions\n\n1. Step one.\n2. Step two.\n3. Step three.\n\n## Output Format\n\nRespond in Markdown. Use headers for sections, bullet lists for items.';
+
+var SKILL_CONTENTS = {
+  'data-summariser': '---\nname: data-summariser\ndescription: Summarise structured data sources into concise Markdown reports.\nversion: 0.3.1\nmodel: claude-sonnet-4-6\ntags: [ON_DEMAND]\ntimeout_seconds: 90\nmax_tokens: 2048\n---\n\n## System Prompt\n\nYou are a precise data analyst. Your task is to summarise structured data into clear, concise Markdown reports. Focus on key trends, outliers, and actionable insights.\n\n## Instructions\n\n1. Identify the data schema and primary dimensions.\n2. Compute or note key statistics (min, max, mean, notable outliers).\n3. Highlight the top 3–5 insights relevant to the user\'s goal.\n4. Format output as a structured Markdown report with sections.\n\n## Output Format\n\nRespond in Markdown:\n- `## Summary` — 2–3 sentence executive summary\n- `## Key Findings` — bulleted list of insights\n- `## Recommendations` — actionable next steps',
+  'code-review-assist': '---\nname: code-review-assist\ndescription: Provide structured code review feedback for pull requests.\nversion: 0.2.0\nmodel: claude-sonnet-4-6\ntags: [ON_DEMAND, REVIEW]\ntimeout_seconds: 120\nmax_tokens: 4096\n---\n\n## System Prompt\n\nYou are an experienced senior software engineer. Review code changes for correctness, security, performance, and maintainability.\n\n## Instructions\n\n1. Check for logical errors and edge cases.\n2. Identify potential security vulnerabilities (injection, auth gaps, data exposure).\n3. Note performance issues in hot paths.\n4. Suggest idiomatic improvements without over-engineering.\n5. Acknowledge what is done well.\n\n## Output Format\n\nStructured review:\n- `## Summary` — overall assessment\n- `## Issues` — numbered list (CRITICAL / MAJOR / MINOR prefix)\n- `## Suggestions` — optional improvements\n- `## Positives` — what works well'
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════════ */
+var dirtyState = { profile: false, working: false, semantic: false, skills: false };
+var currentSection = 'profile';
+var currentTopic = 'users';
+var deleteTarget = null;
+var deleteType = null;
+var skillMode = 'new'; // 'new' | 'edit'
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION NAVIGATION
+═══════════════════════════════════════════════════════════════════ */
+var SECTION_LABELS = {
+  profile: 'Agent Profile', working: 'Working Memory',
+  episodic: 'Episodic Memory', semantic: 'Semantic Memory', skills: 'Skill Authoring'
+};
+
+function showSection(id) {
+  if (currentSection !== id) {
+    if (dirtyState[currentSection]) {
+      if (!confirm('You have unsaved changes. Leave without saving?')) return;
+      markClean(currentSection);
+    }
+  }
+  // Hide all panels
+  document.querySelectorAll('.ih-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.ih-nav-item').forEach(function(n) {
+    n.classList.remove('active'); n.removeAttribute('aria-current');
+  });
+  // Show target
+  document.getElementById('panel-' + id).classList.add('active');
+  var btn = document.querySelector('[data-section="' + id + '"]');
+  if (btn) { btn.classList.add('active'); btn.setAttribute('aria-current', 'page'); }
+  document.getElementById('active-section-label').textContent = SECTION_LABELS[id];
+  currentSection = id;
+  // Load content (simulate API)
+  loadSection(id);
+}
+
+function loadSection(id) {
+  if (id === 'profile') loadEditorSection('profile', null);
+  else if (id === 'working') loadEditorSection('working', null);
+  else if (id === 'episodic') renderEpisodicTable();
+  else if (id === 'semantic') renderSemanticTopics();
+  else if (id === 'skills') renderSkillList();
+}
+
+function loadEditorSection(key, content) {
+  var skeleton = document.getElementById('skeleton-' + key);
+  var contentEl = document.getElementById('content-' + key);
+  if (!skeleton || !contentEl) return;
+  skeleton.style.display = 'flex';
+  contentEl.style.display = 'none';
+  setTimeout(function() {
+    skeleton.style.display = 'none';
+    contentEl.style.display = 'flex';
+    updateCharCount(key);
+    updateGutter(key);
+  }, 350);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   EDITOR UTILITIES
+═══════════════════════════════════════════════════════════════════ */
+function updateGutter(key) {
+  var ta = document.getElementById('editor-' + key);
+  var gutter = document.getElementById('gutter-' + key);
+  if (!ta || !gutter) return;
+  var lines = ta.value.split('\n').length;
+  var html = '';
+  for (var i = 1; i <= lines; i++) html += i + '\n';
+  gutter.textContent = html;
+}
+
+function syncScroll(key) {
+  var ta = document.getElementById('editor-' + key);
+  var gutter = document.getElementById('gutter-' + key);
+  if (ta && gutter) gutter.scrollTop = ta.scrollTop;
+}
+
+function updateCharCount(key) {
+  var ta = document.getElementById('editor-' + key);
+  var el = document.getElementById('chars-' + key);
+  if (ta && el) el.textContent = ta.value.length.toLocaleString() + ' chars';
+}
+
+function onEditorInput(key) {
+  updateGutter(key);
+  updateCharCount(key);
+  markDirty(key);
+}
+
+function markDirty(key) {
+  dirtyState[key] = true;
+  var dot = document.getElementById('dirty-' + key);
+  if (dot) { dot.style.display = 'block'; dot.closest('.ih-nav-item').classList.add('dirty'); }
+  var savedEl = document.getElementById('saved-' + key);
+  if (savedEl) { savedEl.textContent = 'Unsaved'; savedEl.style.color = 'var(--state-delayed)'; }
+}
+
+function markClean(key) {
+  dirtyState[key] = false;
+  var dot = document.getElementById('dirty-' + key);
+  if (dot) { dot.style.display = 'none'; dot.closest('.ih-nav-item').classList.remove('dirty'); }
+  var savedEl = document.getElementById('saved-' + key);
+  if (savedEl) { savedEl.textContent = 'Saved'; savedEl.style.color = 'var(--state-progress)'; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   AGENT PROFILE
+═══════════════════════════════════════════════════════════════════ */
+function saveProfile() {
+  markClean('profile');
+  showToast('Profile saved.', 'success');
+}
+function discardProfile() {
+  if (dirtyState.profile && !confirm('Discard changes?')) return;
+  markClean('profile');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   WORKING MEMORY
+═══════════════════════════════════════════════════════════════════ */
+function saveWorking() {
+  markClean('working');
+  showToast('Working context saved.', 'success');
+}
+function discardWorking() {
+  if (dirtyState.working && !confirm('Discard changes?')) return;
+  markClean('working');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMPACT MODAL
+═══════════════════════════════════════════════════════════════════ */
+function openCompactModal() {
+  document.getElementById('compact-modal').classList.add('open');
+  trapFocus('compact-modal');
+}
+function closeCompactModal() {
+  document.getElementById('compact-modal').classList.remove('open');
+  document.getElementById('compact-summary').value = '';
+  document.getElementById('compact-label').value = '';
+  document.getElementById('compact-submit').disabled = true;
+  releaseFocus();
+}
+function onCompactInput() {
+  var val = document.getElementById('compact-summary').value;
+  document.getElementById('compact-submit').disabled = val.trim().length < 10;
+}
+function submitCompact() {
+  var label = document.getElementById('compact-label').value.trim() || 'session-' + Date.now();
+  var summary = document.getElementById('compact-summary').value;
+  var archivedAs = '2026-04-12-compact-' + (label || 'session') + '.md';
+  // Replace working editor content with summary
+  var ta = document.getElementById('editor-working');
+  ta.value = summary;
+  updateGutter('working');
+  updateCharCount('working');
+  markClean('working');
+  // Add to episodic entries
+  EPISODIC_ENTRIES.unshift({ date: '2026-04-12', label: label, name: archivedAs, content: '# Session Summary: ' + label + '\n\n' + summary });
+  closeCompactModal();
+  showToast('Compacted. Archived as ' + archivedAs, 'success');
+  document.getElementById('working-warn').style.display = 'none';
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   EPISODIC MEMORY
+═══════════════════════════════════════════════════════════════════ */
+function renderEpisodicTable() {
+  var body = document.getElementById('ep-table-body');
+  if (!body) return;
+  if (EPISODIC_ENTRIES.length === 0) {
+    body.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><i data-lucide="archive" width="24" height="24"></i></div>'
+      + '<div class="empty-state-title">No episodic memory entries yet.</div>'
+      + '<div class="empty-state-desc">Use the Compact operation in Working Memory to archive sessions here.</div></div>';
+    lucide.createIcons(); return;
+  }
+  var html = '';
+  EPISODIC_ENTRIES.forEach(function(e, idx) {
+    html += '<div class="ep-row" role="row" onclick="viewEntry(' + idx + ')">'
+      + '<div class="ep-date" role="cell">' + e.date + '</div>'
+      + '<div role="cell"><span class="ep-label">' + e.label + '</span></div>'
+      + '<div class="ep-name" role="cell">' + e.name + '</div>'
+      + '<div class="ep-actions" role="cell" onclick="event.stopPropagation()">'
+      + '<button class="ra-btn" onclick="viewEntry(' + idx + ')" title="View entry" aria-label="View entry">'
+      + '<i data-lucide="eye" width="13" height="13"></i></button>'
+      + '<button class="ra-btn danger" onclick="deleteEpisodicConfirm(' + idx + ')" title="Delete entry" aria-label="Delete entry">'
+      + '<i data-lucide="trash-2" width="13" height="13"></i></button>'
+      + '</div></div>';
+  });
+  body.innerHTML = html;
+  lucide.createIcons();
+}
+
+function viewEntry(idx) {
+  var e = EPISODIC_ENTRIES[idx];
+  document.getElementById('slideover-title').textContent = e.label;
+  document.getElementById('slideover-meta').textContent = e.date;
+  var ta = document.getElementById('editor-slideover');
+  ta.value = e.content;
+  updateGutter('slideover');
+  document.getElementById('slideover-overlay').style.display = 'block';
+  document.getElementById('slideover-panel').classList.add('open');
+  trapFocus('slideover-panel');
+}
+function closeSlideOver() {
+  document.getElementById('slideover-overlay').style.display = 'none';
+  document.getElementById('slideover-panel').classList.remove('open');
+  releaseFocus();
+}
+
+function deleteEpisodicConfirm(idx) {
+  deleteTarget = idx; deleteType = 'episodic';
+  document.getElementById('delete-title').textContent = 'Delete episodic entry?';
+  document.getElementById('delete-desc').textContent = 'Delete "' + EPISODIC_ENTRIES[idx].name + '"? This cannot be undone.';
+  document.getElementById('delete-modal').classList.add('open');
+  trapFocus('delete-modal');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SEMANTIC MEMORY
+═══════════════════════════════════════════════════════════════════ */
+function renderSemanticTopics() {
+  var list = document.getElementById('sem-topic-list');
+  if (!list) return;
+  var topics = Object.keys(SEMANTIC_TOPICS);
+  var html = '';
+  topics.forEach(function(t) {
+    var isActive = t === currentTopic;
+    html += '<button class="sem-topic-item' + (isActive ? ' active' : '') + '" onclick="selectTopic(\'' + t + '\')" aria-current="' + (isActive ? 'true' : 'false') + '">'
+      + '<i data-lucide="file-text" width="12" height="12" aria-hidden="true"></i>'
+      + t
+      + (isActive ? '<span class="active-dot" aria-hidden="true"></span>' : '')
+      + '</button>';
+  });
+  list.innerHTML = html;
+  lucide.createIcons();
+  loadSemanticTopic(currentTopic);
+}
+
+function selectTopic(slug) {
+  if (dirtyState.semantic && !confirm('You have unsaved changes. Switch topic?')) return;
+  markClean('semantic');
+  currentTopic = slug;
+  renderSemanticTopics();
+}
+
+function loadSemanticTopic(slug) {
+  var ta = document.getElementById('editor-semantic');
+  var label = document.getElementById('sem-editor-label');
+  if (!ta) return;
+  ta.value = SEMANTIC_TOPICS[slug] || '';
+  if (label) label.textContent = slug + '.md';
+  updateGutter('semantic');
+  updateCharCount('semantic');
+  markClean('semantic');
+}
+
+function saveSemantic() {
+  SEMANTIC_TOPICS[currentTopic] = document.getElementById('editor-semantic').value;
+  markClean('semantic');
+  showToast('Topic "' + currentTopic + '" saved.', 'success');
+}
+function discardSemantic() {
+  if (dirtyState.semantic && !confirm('Discard changes?')) return;
+  loadSemanticTopic(currentTopic);
+  markClean('semantic');
+}
+
+function showNewTopicInput() {
+  document.getElementById('sem-new-btn').style.display = 'none';
+  document.getElementById('sem-new-input-wrap').style.display = 'block';
+  document.getElementById('sem-new-input').value = '';
+  document.getElementById('sem-slug-error').textContent = '';
+  document.getElementById('sem-new-input').focus();
+}
+
+function validateTopicSlug(val) {
+  var errEl = document.getElementById('sem-slug-error');
+  if (!val) { errEl.textContent = ''; return false; }
+  if (!/^[a-z][a-z0-9-]*$/.test(val)) {
+    errEl.textContent = 'Lowercase letters, numbers, hyphens only. Must start with a letter.';
+    return false;
+  }
+  errEl.textContent = '';
+  return true;
+}
+
+function handleTopicKeydown(e) {
+  if (e.key === 'Enter') {
+    var val = document.getElementById('sem-new-input').value.trim();
+    if (!validateTopicSlug(val)) return;
+    SEMANTIC_TOPICS[val] = '# ' + val.charAt(0).toUpperCase() + val.slice(1) + '\n\n';
+    currentTopic = val;
+    document.getElementById('sem-new-btn').style.display = 'flex';
+    document.getElementById('sem-new-input-wrap').style.display = 'none';
+    renderSemanticTopics();
+    showToast('Topic "' + val + '" created.', 'success');
+  } else if (e.key === 'Escape') {
+    document.getElementById('sem-new-btn').style.display = 'flex';
+    document.getElementById('sem-new-input-wrap').style.display = 'none';
+  }
+}
+
+function deleteTopicConfirm() {
+  deleteTarget = currentTopic; deleteType = 'topic';
+  document.getElementById('delete-title').textContent = 'Delete topic?';
+  document.getElementById('delete-desc').textContent = 'Delete "' + currentTopic + '.md"? This cannot be undone.';
+  document.getElementById('delete-modal').classList.add('open');
+  trapFocus('delete-modal');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SKILL AUTHORING
+═══════════════════════════════════════════════════════════════════ */
+function renderSkillList() {
+  var body = document.getElementById('skill-table-body');
+  if (!body) return;
+  var TAGS_COLOR = { ON_DEMAND: 'var(--state-active)', SCHEDULED: 'var(--state-progress)', EVENT: 'var(--state-review)', REVIEW: 'var(--state-delayed)' };
+  var html = '';
+  SKILL_DATA.forEach(function(s) {
+    var tagHtml = s.tags.map(function(t) {
+      return '<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:var(--radius-full);background:rgba(59,130,246,0.1);color:' + (TAGS_COLOR[t] || 'var(--text-secondary)') + ';border:1px solid rgba(59,130,246,0.2);">' + t + '</span>';
+    }).join(' ');
+    html += '<div class="skill-row" role="row">'
+      + '<div class="skill-id" role="cell">'
+      + '<i data-lucide="file-code" width="14" height="14" style="color:var(--text-tertiary);" aria-hidden="true"></i>'
+      + s.id + '</div>'
+      + '<div class="skill-path" role="cell">' + s.path + '</div>'
+      + '<div class="ep-actions" role="cell" onclick="event.stopPropagation()">'
+      + '<button class="ra-btn" onclick="openSkillEditor(\'' + s.id + '\')" title="Edit" aria-label="Edit ' + s.id + '">'
+      + '<i data-lucide="pencil" width="13" height="13"></i></button>'
+      + '<button class="ra-btn" onclick="forkSkillFromList(\'' + s.id + '\')" title="Fork" aria-label="Fork ' + s.id + '">'
+      + '<i data-lucide="git-branch" width="13" height="13"></i></button>'
+      + '<button class="ra-btn danger" onclick="deleteSkillConfirm(\'' + s.id + '\')" title="Delete" aria-label="Delete ' + s.id + '">'
+      + '<i data-lucide="trash-2" width="13" height="13"></i></button>'
+      + '</div></div>';
+  });
+  body.innerHTML = html;
+  lucide.createIcons();
+}
+
+function openSkillEditor(id) {
+  skillMode = id === 'new' ? 'new' : 'edit';
+  var ta = document.getElementById('editor-skills');
+  var idInput = document.getElementById('skill-id-input');
+  if (id === 'new') {
+    ta.value = SKILL_TEMPLATE;
+    idInput.value = '';
+    document.getElementById('fork-skill-btn').style.display = 'none';
+  } else {
+    ta.value = SKILL_CONTENTS[id] || SKILL_TEMPLATE;
+    idInput.value = id;
+    document.getElementById('fork-skill-btn').style.display = 'inline-flex';
+    validateSkillId(id);
+  }
+  document.getElementById('validation-panel').style.display = 'none';
+  updateGutter('skills');
+  var el = document.getElementById('chars-skills');
+  if (el) el.textContent = ta.value.length.toLocaleString() + ' chars';
+  document.getElementById('skill-list-view').style.display = 'none';
+  var ev = document.getElementById('skill-editor-view');
+  ev.style.display = 'flex'; ev.style.flexDirection = 'column';
+}
+
+function closeSkillEditor() {
+  document.getElementById('skill-list-view').style.display = 'block';
+  document.getElementById('skill-editor-view').style.display = 'none';
+  document.getElementById('validation-panel').style.display = 'none';
+  renderSkillList();
+}
+
+function validateSkillId(val) {
+  var errEl = document.getElementById('skill-id-error');
+  var okEl = document.getElementById('skill-id-ok');
+  if (!val) { errEl.textContent = ''; okEl.style.display = 'none'; return false; }
+  if (!/^[a-z][a-z0-9-]+$/.test(val)) {
+    errEl.textContent = 'Lowercase letters, numbers, hyphens. Min 2 chars. Must start with a letter.';
+    okEl.style.display = 'none'; return false;
+  }
+  errEl.textContent = ''; okEl.style.display = 'inline'; return true;
+}
+
+function validateSkillContent() {
+  var content = document.getElementById('editor-skills').value;
+  var panel = document.getElementById('validation-panel');
+  panel.style.display = 'block';
+  // Parse frontmatter
+  var fm = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!fm) {
+    panel.className = 'validation-panel invalid';
+    panel.innerHTML = '<div class="vp-header"><i data-lucide="x-circle" width="14" height="14"></i> Invalid SKILL.md</div>'
+      + '<div class="vp-body"><div class="vp-error-item"><i data-lucide="x" width="12" height="12"></i> Missing YAML frontmatter block (expected --- delimiters)</div></div>';
+    lucide.createIcons(); return;
+  }
+  var fmText = fm[1];
+  var fields = {};
+  fmText.split('\n').forEach(function(line) {
+    var m = line.match(/^(\w+):\s*(.+)$/);
+    if (m) fields[m[1]] = m[2].trim();
+  });
+  var errors = [];
+  ['name','description','version','model'].forEach(function(f) { if (!fields[f]) errors.push('Missing required field: ' + f); });
+  if (errors.length) {
+    panel.className = 'validation-panel invalid';
+    panel.innerHTML = '<div class="vp-header"><i data-lucide="x-circle" width="14" height="14"></i> ' + errors.length + ' error' + (errors.length>1?'s':'') + ' found</div>'
+      + '<div class="vp-body">' + errors.map(function(e){ return '<div class="vp-error-item"><i data-lucide="x" width="12" height="12"></i> ' + e + '</div>'; }).join('') + '</div>';
+  } else {
+    panel.className = 'validation-panel valid';
+    var rows = ['name','description','version','model','tags','timeout_seconds','max_tokens'].map(function(k) {
+      return '<div class="vp-kv-row"><span class="vp-key">' + k + '</span><span class="vp-val">' + (fields[k] || '—') + '</span></div>';
+    }).join('');
+    panel.innerHTML = '<div class="vp-header"><i data-lucide="check-circle" width="14" height="14"></i> Valid SKILL.md</div>'
+      + '<div class="vp-body">' + rows + '</div>';
+  }
+  lucide.createIcons();
+}
+
+function saveSkill() {
+  var id = document.getElementById('skill-id-input').value;
+  if (!validateSkillId(id)) { showToast('Skill ID is invalid.', 'error'); return; }
+  var content = document.getElementById('editor-skills').value;
+  SKILL_CONTENTS[id] = content;
+  if (skillMode === 'new' && !SKILL_DATA.find(function(s){ return s.id === id; })) {
+    SKILL_DATA.push({ id: id, path: 'users/main/skills/authored/' + id + '.md', tags: ['ON_DEMAND'] });
+  }
+  showToast('Skill "' + id + '" saved.', 'success');
+}
+function discardSkill() { closeSkillEditor(); }
+
+function forkSkill() {
+  var id = document.getElementById('skill-id-input').value;
+  var forkId = id + '-fork';
+  SKILL_CONTENTS[forkId] = SKILL_CONTENTS[id] || document.getElementById('editor-skills').value;
+  SKILL_DATA.push({ id: forkId, path: 'users/main/skills/authored/' + forkId + '.md', tags: ['ON_DEMAND'] });
+  openSkillEditor(forkId);
+  showToast('Forked as "' + forkId + '".', 'success');
+}
+function forkSkillFromList(id) {
+  var forkId = id + '-fork';
+  SKILL_CONTENTS[forkId] = SKILL_CONTENTS[id] || SKILL_TEMPLATE;
+  SKILL_DATA.push({ id: forkId, path: 'users/main/skills/authored/' + forkId + '.md', tags: ['ON_DEMAND'] });
+  openSkillEditor(forkId);
+  showToast('Forked as "' + forkId + '".', 'success');
+}
+
+function deleteSkillConfirm(id) {
+  deleteTarget = id; deleteType = 'skill';
+  document.getElementById('delete-title').textContent = 'Delete skill?';
+  document.getElementById('delete-desc').textContent = 'Delete "' + id + '"? This cannot be undone.';
+  document.getElementById('delete-modal').classList.add('open');
+  trapFocus('delete-modal');
+}
+
+function simulateImport() {
+  // Simulate import flow with toast
+  var imported = 'imported-skill';
+  SKILL_DATA.push({ id: imported, path: 'users/main/skills/authored/' + imported + '.md', tags: ['ON_DEMAND'] });
+  SKILL_CONTENTS[imported] = SKILL_TEMPLATE.replace('my-skill', imported);
+  openSkillEditor(imported);
+  showToast('Imported as "' + imported + '". Review and save.', 'success');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DELETE MODAL (unified)
+═══════════════════════════════════════════════════════════════════ */
+function closeDeleteModal() {
+  document.getElementById('delete-modal').classList.remove('open');
+  deleteTarget = null; deleteType = null;
+  releaseFocus();
+}
+function confirmDelete() {
+  if (deleteType === 'episodic') {
+    var name = EPISODIC_ENTRIES[deleteTarget].name;
+    EPISODIC_ENTRIES.splice(deleteTarget, 1);
+    renderEpisodicTable();
+    showToast('Entry "' + name + '" deleted.', 'success');
+  } else if (deleteType === 'topic') {
+    var removed = deleteTarget;
+    delete SEMANTIC_TOPICS[removed];
+    currentTopic = Object.keys(SEMANTIC_TOPICS)[0] || '';
+    renderSemanticTopics();
+    showToast('Topic "' + removed + '" deleted.', 'success');
+  } else if (deleteType === 'skill') {
+    var sid = deleteTarget;
+    SKILL_DATA = SKILL_DATA.filter(function(s){ return s.id !== sid; });
+    delete SKILL_CONTENTS[sid];
+    renderSkillList();
+    showToast('Skill "' + sid + '" deleted.', 'success');
+  }
+  closeDeleteModal();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   AGENT SELECTOR
+═══════════════════════════════════════════════════════════════════ */
+function onAgentChange(val) {
+  try { localStorage.setItem('graphclaw.intelligence.agent_id', val); } catch(e) {}
+  // Reload all panels for new agent (simulation)
+  markClean('profile'); markClean('working'); markClean('semantic');
+  loadSection(currentSection);
+  showToast('Switched to agent "' + val + '".', 'success');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════════════ */
+var TOAST_ICONS = { success: 'check-circle', error: 'alert-circle', warning: 'alert-triangle', info: 'info' };
+function showToast(msg, type) {
+  type = type || 'info';
+  var container = document.getElementById('toast-container');
+  var t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = '<i data-lucide="' + (TOAST_ICONS[type]||'info') + '" width="16" height="16" class="toast-icon"></i>'
+    + '<span>' + msg + '</span>';
+  container.appendChild(t);
+  if (window.lucide) lucide.createIcons();
+  setTimeout(function() {
+    t.style.opacity = '0'; t.style.transform = 'translateY(8px)'; t.style.transition = '0.2s';
+    setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 220);
+  }, 3000);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GLOBAL KEYBOARD
+═══════════════════════════════════════════════════════════════════ */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    if (document.getElementById('compact-modal').classList.contains('open')) closeCompactModal();
+    else if (document.getElementById('delete-modal').classList.contains('open')) closeDeleteModal();
+    else if (document.getElementById('slideover-panel').classList.contains('open')) closeSlideOver();
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+  // Restore agent from localStorage
+  try {
+    var saved = localStorage.getItem('graphclaw.intelligence.agent_id');
+    if (saved) {
+      var sel = document.getElementById('agent-select');
+      for (var i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === saved) { sel.selectedIndex = i; break; }
+      }
+    }
+  } catch(e) {}
+  // Load initial section
+  showSection('profile');
+});
+</script>
+<script src="../assets/nav.js"></script>
+<script src="../assets/theme.js"></script>
+</body>
+</html>
