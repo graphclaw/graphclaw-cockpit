@@ -79,7 +79,7 @@ export function SemanticMemoryPage() {
     setTopics((prev) => prev.filter((t) => t.slug !== slug));
     if (selectedSlug === slug) {
       const remaining = topics.filter((t) => t.slug !== slug);
-      if (remaining.length > 0) {
+      if (remaining.length > 0 && remaining[0]) {
         selectTopic(remaining[0].slug);
       } else {
         setSelectedSlug('');

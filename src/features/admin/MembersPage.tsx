@@ -36,7 +36,7 @@ export function MembersPage() {
     if (!inviteEmail.trim()) return;
     const newMember: Member = {
       id: `m-${Date.now()}`,
-      name: inviteEmail.split('@')[0],
+      name: inviteEmail.split('@')[0] ?? 'User',
       email: inviteEmail,
       role: inviteRole,
       status: 'active',

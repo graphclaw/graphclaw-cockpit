@@ -42,7 +42,7 @@ export function ConnectorsPage() {
         </div>
         <div className="divide-y divide-[var(--border-subtle)]">
           {MOCK_CONNECTORS.map((conn) => {
-            const style = STATUS_STYLES[conn.status];
+            const style = STATUS_STYLES[conn.status] ?? { bg: '', text: '' };
             return (
               <div
                 key={conn.id}

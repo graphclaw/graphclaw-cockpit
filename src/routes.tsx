@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Route, Routes, Navigate } from 'react-router';
 import { AppShell } from '@/components/layout/AppShell';
 import { RequireAuth } from '@/features/auth';
-import { SkeletonPage } from '@/components/feedback/SkeletonPage';
+import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 
 // Lazy-loaded page components
 const DashboardPage = lazy(() =>
@@ -16,6 +16,15 @@ const GoalViewPage = lazy(() =>
 );
 const MyTasksPage = lazy(() =>
   import('@/features/tasks/MyTasksPage').then((m) => ({ default: m.MyTasksPage })),
+);
+const ProjectsPage = lazy(() =>
+  import('@/features/graph/ProjectsPage').then((m) => ({ default: m.ProjectsPage })),
+);
+const TimelinePage = lazy(() =>
+  import('@/features/graph/TimelinePage').then((m) => ({ default: m.TimelinePage })),
+);
+const PeoplePage = lazy(() =>
+  import('@/features/graph/PeoplePage').then((m) => ({ default: m.PeoplePage })),
 );
 const AgentMonitorPage = lazy(() =>
   import('@/features/agent/AgentMonitorPage').then((m) => ({ default: m.AgentMonitorPage })),
@@ -37,6 +46,9 @@ const TriggersPage = lazy(() =>
 );
 const A2aPage = lazy(() =>
   import('@/features/settings/A2aPage').then((m) => ({ default: m.A2aPage })),
+);
+const DangerZonePage = lazy(() =>
+  import('@/features/settings/DangerZonePage').then((m) => ({ default: m.DangerZonePage })),
 );
 const SkillsPage = lazy(() =>
   import('@/features/skills/SkillsPage').then((m) => ({ default: m.SkillsPage })),
@@ -111,11 +123,6 @@ const ConnectorsPage = lazy(() =>
   import('@/features/admin/ConnectorsPage').then((m) => ({ default: m.ConnectorsPage })),
 );
 
-// Skeleton page factory for unbuilt routes
-function skeleton(title: string) {
-  return <SkeletonPage title={title} />;
-}
-
 function SuspenseFallback() {
   return (
     <div className="flex items-center justify-center py-20">
@@ -126,78 +133,82 @@ function SuspenseFallback() {
 
 export function AppRoutes() {
   return (
-    <Suspense fallback={<SuspenseFallback />}>
-      <Routes>
-        <Route
-          element={
-            <RequireAuth>
-              <AppShell>
-                <Suspense fallback={<SuspenseFallback />}>
-                  <Routes>
-                    {/* Workspace */}
-                    <Route index element={<DashboardPage />} />
-                    <Route path="tasks" element={<MyTasksPage />} />
-                    <Route path="goals" element={<GoalViewPage />} />
-                    <Route path="projects" element={skeleton('Projects')} />
-                    <Route path="timeline" element={skeleton('Timeline')} />
-                    <Route path="people" element={skeleton('People')} />
+    <ErrorBoundary>
+      <Suspense fallback={<SuspenseFallback />}>
+        <Routes>
+          <Route
+            element={
+              <RequireAuth>
+                <AppShell>
+                  <ErrorBoundary>
+                    <Suspense fallback={<SuspenseFallback />}>
+                      <Routes>
+                        {/* Workspace */}
+                        <Route index element={<DashboardPage />} />
+                        <Route path="tasks" element={<MyTasksPage />} />
+                        <Route path="goals" element={<GoalViewPage />} />
+                        <Route path="projects" element={<ProjectsPage />} />
+                        <Route path="timeline" element={<TimelinePage />} />
+                        <Route path="people" element={<PeoplePage />} />
 
-                    {/* Intelligence */}
-                    <Route path="agent-monitor" element={<AgentMonitorPage />} />
-                    <Route path="chat" element={<ChatPage />} />
-                    <Route path="skills" element={<SkillsPage />} />
-                    <Route path="mcp" element={<McpRegistryPage />} />
-                    <Route path="canvas" element={<CanvasEditorPage />} />
-                    <Route path="intelligence" element={<IntelligenceLayout />}>
-                      <Route path="profile" element={<AgentProfilePage />} />
-                      <Route path="working-memory" element={<WorkingMemoryPage />} />
-                      <Route path="episodic-memory" element={<EpisodicMemoryPage />} />
-                      <Route path="semantic-memory" element={<SemanticMemoryPage />} />
-                      <Route path="skill-authoring" element={<SkillAuthoringPage />} />
-                    </Route>
+                        {/* Intelligence */}
+                        <Route path="agent-monitor" element={<AgentMonitorPage />} />
+                        <Route path="chat" element={<ChatPage />} />
+                        <Route path="skills" element={<SkillsPage />} />
+                        <Route path="mcp" element={<McpRegistryPage />} />
+                        <Route path="canvas" element={<CanvasEditorPage />} />
+                        <Route path="intelligence" element={<IntelligenceLayout />}>
+                          <Route path="profile" element={<AgentProfilePage />} />
+                          <Route path="working-memory" element={<WorkingMemoryPage />} />
+                          <Route path="episodic-memory" element={<EpisodicMemoryPage />} />
+                          <Route path="semantic-memory" element={<SemanticMemoryPage />} />
+                          <Route path="skill-authoring" element={<SkillAuthoringPage />} />
+                        </Route>
 
-                    {/* Settings */}
-                    <Route path="settings" element={<SettingsLayout />}>
-                      <Route index element={<Navigate to="channels" replace />} />
-                      <Route path="channels" element={<ChannelsPage />} />
-                      <Route path="llm" element={<LlmPage />} />
-                      <Route path="scoring" element={<ScoringPage />} />
-                      <Route path="briefing" element={<BriefingPage />} />
-                      <Route path="triggers" element={<TriggersPage />} />
-                      <Route path="a2a" element={<A2aPage />} />
-                      <Route path="danger" element={skeleton('Danger Zone')} />
-                    </Route>
+                        {/* Settings */}
+                        <Route path="settings" element={<SettingsLayout />}>
+                          <Route index element={<Navigate to="channels" replace />} />
+                          <Route path="channels" element={<ChannelsPage />} />
+                          <Route path="llm" element={<LlmPage />} />
+                          <Route path="scoring" element={<ScoringPage />} />
+                          <Route path="briefing" element={<BriefingPage />} />
+                          <Route path="triggers" element={<TriggersPage />} />
+                          <Route path="a2a" element={<A2aPage />} />
+                          <Route path="danger" element={<DangerZonePage />} />
+                        </Route>
 
-                    {/* Admin */}
-                    <Route
-                      path="admin"
-                      element={
-                        <RequireAuth requiredRole="ADMIN">
-                          <AdminLayout />
-                        </RequireAuth>
-                      }
-                    >
-                      <Route path="members" element={<MembersPage />} />
-                      <Route path="features" element={<FeaturesPage />} />
-                      <Route path="llm-config" element={<LlmConfigPage />} />
-                      <Route path="judge" element={<JudgePage />} />
-                      <Route path="guardrails" element={<GuardrailsPage />} />
-                      <Route path="sso" element={<SsoPage />} />
-                      <Route path="audit" element={<AuditPage />} />
-                      <Route path="infra" element={<InfraPage />} />
-                      <Route path="connectors" element={<ConnectorsPage />} />
-                    </Route>
+                        {/* Admin */}
+                        <Route
+                          path="admin"
+                          element={
+                            <RequireAuth requiredRole="ADMIN">
+                              <AdminLayout />
+                            </RequireAuth>
+                          }
+                        >
+                          <Route path="members" element={<MembersPage />} />
+                          <Route path="features" element={<FeaturesPage />} />
+                          <Route path="llm-config" element={<LlmConfigPage />} />
+                          <Route path="judge" element={<JudgePage />} />
+                          <Route path="guardrails" element={<GuardrailsPage />} />
+                          <Route path="sso" element={<SsoPage />} />
+                          <Route path="audit" element={<AuditPage />} />
+                          <Route path="infra" element={<InfraPage />} />
+                          <Route path="connectors" element={<ConnectorsPage />} />
+                        </Route>
 
-                    {/* Catch-all */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </Suspense>
-              </AppShell>
-            </RequireAuth>
-          }
-          path="/*"
-        />
-      </Routes>
-    </Suspense>
+                        {/* Catch-all */}
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                      </Routes>
+                    </Suspense>
+                  </ErrorBoundary>
+                </AppShell>
+              </RequireAuth>
+            }
+            path="/*"
+          />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
