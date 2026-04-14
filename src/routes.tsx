@@ -47,6 +47,36 @@ const McpRegistryPage = lazy(() =>
 const CanvasEditorPage = lazy(() =>
   import('@/features/canvas/CanvasEditorPage').then((m) => ({ default: m.CanvasEditorPage })),
 );
+const IntelligenceLayout = lazy(() =>
+  import('@/features/intelligence/IntelligenceLayout').then((m) => ({
+    default: m.IntelligenceLayout,
+  })),
+);
+const AgentProfilePage = lazy(() =>
+  import('@/features/intelligence/AgentProfilePage').then((m) => ({
+    default: m.AgentProfilePage,
+  })),
+);
+const WorkingMemoryPage = lazy(() =>
+  import('@/features/intelligence/WorkingMemoryPage').then((m) => ({
+    default: m.WorkingMemoryPage,
+  })),
+);
+const EpisodicMemoryPage = lazy(() =>
+  import('@/features/intelligence/EpisodicMemoryPage').then((m) => ({
+    default: m.EpisodicMemoryPage,
+  })),
+);
+const SemanticMemoryPage = lazy(() =>
+  import('@/features/intelligence/SemanticMemoryPage').then((m) => ({
+    default: m.SemanticMemoryPage,
+  })),
+);
+const SkillAuthoringPage = lazy(() =>
+  import('@/features/intelligence/SkillAuthoringPage').then((m) => ({
+    default: m.SkillAuthoringPage,
+  })),
+);
 
 // Skeleton page factory for unbuilt routes
 function skeleton(title: string) {
@@ -85,7 +115,13 @@ export function AppRoutes() {
                     <Route path="skills" element={<SkillsPage />} />
                     <Route path="mcp" element={<McpRegistryPage />} />
                     <Route path="canvas" element={<CanvasEditorPage />} />
-                    <Route path="intelligence/*" element={skeleton('Intelligence Hub')} />
+                    <Route path="intelligence" element={<IntelligenceLayout />}>
+                      <Route path="profile" element={<AgentProfilePage />} />
+                      <Route path="working-memory" element={<WorkingMemoryPage />} />
+                      <Route path="episodic-memory" element={<EpisodicMemoryPage />} />
+                      <Route path="semantic-memory" element={<SemanticMemoryPage />} />
+                      <Route path="skill-authoring" element={<SkillAuthoringPage />} />
+                    </Route>
 
                     {/* Settings */}
                     <Route path="settings" element={<SettingsLayout />}>
