@@ -11,6 +11,12 @@ const DashboardPage = lazy(() =>
 const SettingsLayout = lazy(() =>
   import('@/features/settings/SettingsLayout').then((m) => ({ default: m.SettingsLayout })),
 );
+const GoalViewPage = lazy(() =>
+  import('@/features/graph/GoalViewPage').then((m) => ({ default: m.GoalViewPage })),
+);
+const MyTasksPage = lazy(() =>
+  import('@/features/tasks/MyTasksPage').then((m) => ({ default: m.MyTasksPage })),
+);
 
 // Skeleton page factory for unbuilt routes
 function skeleton(title: string) {
@@ -37,8 +43,8 @@ export function AppRoutes() {
                   <Routes>
                     {/* Workspace */}
                     <Route index element={<DashboardPage />} />
-                    <Route path="tasks" element={skeleton('My Tasks')} />
-                    <Route path="goals" element={skeleton('Goals')} />
+                    <Route path="tasks" element={<MyTasksPage />} />
+                    <Route path="goals" element={<GoalViewPage />} />
                     <Route path="projects" element={skeleton('Projects')} />
                     <Route path="timeline" element={skeleton('Timeline')} />
                     <Route path="people" element={skeleton('People')} />
