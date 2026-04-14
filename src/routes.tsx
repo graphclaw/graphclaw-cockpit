@@ -80,6 +80,36 @@ const SkillAuthoringPage = lazy(() =>
 const ChatPage = lazy(() =>
   import('@/features/chat/ChatPage').then((m) => ({ default: m.ChatPage })),
 );
+const AdminLayout = lazy(() =>
+  import('@/features/admin/AdminLayout').then((m) => ({ default: m.AdminLayout })),
+);
+const MembersPage = lazy(() =>
+  import('@/features/admin/MembersPage').then((m) => ({ default: m.MembersPage })),
+);
+const FeaturesPage = lazy(() =>
+  import('@/features/admin/FeaturesPage').then((m) => ({ default: m.FeaturesPage })),
+);
+const LlmConfigPage = lazy(() =>
+  import('@/features/admin/LlmConfigPage').then((m) => ({ default: m.LlmConfigPage })),
+);
+const JudgePage = lazy(() =>
+  import('@/features/admin/JudgePage').then((m) => ({ default: m.JudgePage })),
+);
+const GuardrailsPage = lazy(() =>
+  import('@/features/admin/GuardrailsPage').then((m) => ({ default: m.GuardrailsPage })),
+);
+const SsoPage = lazy(() =>
+  import('@/features/admin/SsoPage').then((m) => ({ default: m.SsoPage })),
+);
+const AuditPage = lazy(() =>
+  import('@/features/admin/AuditPage').then((m) => ({ default: m.AuditPage })),
+);
+const InfraPage = lazy(() =>
+  import('@/features/admin/InfraPage').then((m) => ({ default: m.InfraPage })),
+);
+const ConnectorsPage = lazy(() =>
+  import('@/features/admin/ConnectorsPage').then((m) => ({ default: m.ConnectorsPage })),
+);
 
 // Skeleton page factory for unbuilt routes
 function skeleton(title: string) {
@@ -140,13 +170,23 @@ export function AppRoutes() {
 
                     {/* Admin */}
                     <Route
-                      path="admin/*"
+                      path="admin"
                       element={
                         <RequireAuth requiredRole="ADMIN">
-                          {skeleton('Admin Panel')}
+                          <AdminLayout />
                         </RequireAuth>
                       }
-                    />
+                    >
+                      <Route path="members" element={<MembersPage />} />
+                      <Route path="features" element={<FeaturesPage />} />
+                      <Route path="llm-config" element={<LlmConfigPage />} />
+                      <Route path="judge" element={<JudgePage />} />
+                      <Route path="guardrails" element={<GuardrailsPage />} />
+                      <Route path="sso" element={<SsoPage />} />
+                      <Route path="audit" element={<AuditPage />} />
+                      <Route path="infra" element={<InfraPage />} />
+                      <Route path="connectors" element={<ConnectorsPage />} />
+                    </Route>
 
                     {/* Catch-all */}
                     <Route path="*" element={<Navigate to="/" replace />} />
