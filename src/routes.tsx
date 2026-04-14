@@ -38,6 +38,12 @@ const TriggersPage = lazy(() =>
 const A2aPage = lazy(() =>
   import('@/features/settings/A2aPage').then((m) => ({ default: m.A2aPage })),
 );
+const SkillsPage = lazy(() =>
+  import('@/features/skills/SkillsPage').then((m) => ({ default: m.SkillsPage })),
+);
+const McpRegistryPage = lazy(() =>
+  import('@/features/mcp/McpRegistryPage').then((m) => ({ default: m.McpRegistryPage })),
+);
 
 // Skeleton page factory for unbuilt routes
 function skeleton(title: string) {
@@ -73,8 +79,8 @@ export function AppRoutes() {
                     {/* Intelligence */}
                     <Route path="agent-monitor" element={<AgentMonitorPage />} />
                     <Route path="chat" element={skeleton('Chat')} />
-                    <Route path="skills" element={skeleton('Skills')} />
-                    <Route path="mcp" element={skeleton('MCP Registry')} />
+                    <Route path="skills" element={<SkillsPage />} />
+                    <Route path="mcp" element={<McpRegistryPage />} />
                     <Route path="canvas" element={skeleton('Canvas Editor')} />
                     <Route path="intelligence/*" element={skeleton('Intelligence Hub')} />
 
