@@ -4,9 +4,9 @@ import { useAgentStatus } from './hooks/useAgentData';
 import { Activity, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 
 export function AgentMonitorPage() {
-  const { data: agent, isLoading } = useAgentStatus();
+  const { data: agent, isLoading, isError } = useAgentStatus();
 
-  if (isLoading) {
+  if (isLoading && !isError) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--brand-primary)] border-t-transparent" />

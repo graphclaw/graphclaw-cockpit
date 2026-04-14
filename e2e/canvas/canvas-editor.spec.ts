@@ -14,11 +14,12 @@ test.describe('Canvas Editor', () => {
     await expect(page.locator('text=Import')).toBeVisible();
   });
 
-  test('node palette is visible', async ({ page }) => {
+  test('node palette is visible on desktop', async ({ page }) => {
+    // NodePalette uses hidden lg:block so needs wide viewport (already Desktop Chrome = 1280px)
     await page.goto('/canvas');
-    await expect(page.locator('text=Node Palette')).toBeVisible();
-    await expect(page.locator('text=LLM Call')).toBeVisible();
-    await expect(page.locator('text=Tool Call')).toBeVisible();
+    await expect(page.locator('h3').filter({ hasText: 'Node Palette' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'LLM Call' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Tool Call' })).toBeVisible();
   });
 
   test('minimap and controls render', async ({ page }) => {

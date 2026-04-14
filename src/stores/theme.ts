@@ -46,11 +46,16 @@ export const useThemeStore = create<ThemeState>()(
       },
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
     }),
-    { name: 'gc-theme' },
+    {
+      name: 'gc-theme',
+      onRehydrateStorage: () => (state) => {
+        if (state) applyThemeToDOM(state.theme);
+      },
+    },
   ),
 );
 
-// Apply theme to DOM on store rehydration
+// Apply theme to DOM on store changes
 useThemeStore.subscribe((state) => {
   applyThemeToDOM(state.theme);
 });

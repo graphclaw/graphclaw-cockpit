@@ -30,13 +30,15 @@ export const test = base.extend({
     }
 
     // Fallback: set auth state in localStorage so RequireAuth passes
+    // Must match the Zustand auth store shape exactly (flat, not nested user object)
     await page.goto('/');
     await page.evaluate(() => {
       const authState = {
         state: {
           accessToken: 'e2e-test-token',
           refreshToken: 'e2e-refresh-token',
-          user: { id: 'test-user', email: 'test@e2e.local', name: 'E2E Tester', role: 'ADMIN' },
+          userId: 'test-user',
+          role: 'ADMIN',
           isAuthenticated: true,
         },
         version: 0,
