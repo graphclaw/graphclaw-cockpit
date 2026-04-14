@@ -211,3 +211,23 @@ All API work lives in `c:/Users/abhis/Projects/graphclaw/src/graphclaw/api/`.
 | 2026-04-12 | G | intelligence-hub.html | Post-eval fixes: mobile layout, dark mode tints, focus traps, role=table | ✅ |
 | 2026-04-12 | G | nav.js | Intelligence Hub nav item added | ✅ |
 | 2026-04-12 | G | index.html | Phase G card + stats 26 pages | ✅ |
+| 2026-04-14 | H | build-plan.md | React implementation plan created (12 waves) | ✅ |
+| 2026-04-14 | H | docs/prd/16-react-implementation.md | PRD 16 — React Implementation | ✅ |
+
+---
+
+### Phase H: React Implementation 🔲 NOT STARTED
+12-wave React build converting wireframes to production SPA.
+See `build-plan.md` for detailed wave plan and checklists.
+- [ ] Wave 1: Scaffold + Design System
+- [ ] Wave 2: API Client + Auth + MSW
+- [ ] Wave 3: App Shell + Navigation
+- [ ] Wave 4: Graph Views + Tasks
+- [ ] Wave 5: Agent Monitor + Scoring
+- [ ] Wave 6: Settings + Config
+- [ ] Wave 7: Skills + MCP + Approvals
+- [ ] Wave 8: Canvas Editor
+- [ ] Wave 9: Intelligence Hub
+- [ ] Wave 10: Chat + Real-Time
+- [ ] Wave 11: Admin Panel
+- [ ] Wave 12: Docker + E2E + Polish

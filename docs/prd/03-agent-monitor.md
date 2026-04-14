@@ -171,6 +171,56 @@ Distributed trace visualization for a single `session_id`:
 
 ---
 
+## 3.7a Sub-Agent Pool Monitor
+
+Dedicated panel showing the state of all running sub-agents delegated by the orchestrator.
+
+### Runner Pool Status
+
+| Widget | Data Source |
+|--------|------------|
+| **Pool Utilization** | Active / Total slots (e.g. 3 / 4). Progress bar turns amber at 75%, red at 100%. | `GET /app/v1/agents/pool/status` |
+| **Queue Depth** | Jobs waiting in `AGENT_JOBS` broker queue for a free runner slot | `GET /app/v1/agents/pool/status` |
+| **Per-Runner Status** | runner_id, state (IDLE/RUNNING/COMPLETED/FAILED), current agent_id, current task_id, elapsed time, last_heartbeat | `GET /app/v1/agents/pool/runners` |
+
+### Active Delegations Table
+
+| Column | Source |
+|--------|--------|
+| Agent ID | `AgentUpdateEvent.agent_id` |
+| Task ID | `AgentUpdateEvent.task_id` (clickable → graph node) |
+| Session | `AgentUpdateEvent.session_id` |
+| Batch ID | `AgentUpdateEvent.batch_id` (groups parallel tier) |
+| Status | RUNNING / COMPLETED / BLOCKED / QUEUED |
+| Started | `AgentTaskStartedEvent.emitted_at` |
+| Last Heartbeat | `AgentHeartbeatEvent.emitted_at` — red if stale > 300s |
+| Duration | Elapsed since started |
+| Progress | Latest `AgentTaskProgressEvent.message` |
+
+**Endpoint:** `GET /app/v1/agents/delegations`
+
+### Dispatch Plan Visualizer
+
+When multiple tasks are delegated in one orchestrator turn, shows the `AgentDispatchPlanner` output:
+- Tier 1 (parallel) → Tier 2 → Tier 3 shown as horizontal swim lanes
+- Dependencies rendered as arrows between tier boxes
+- Each box: task_id, agent_id, status badge
+- Completed tiers greyed out; active tier highlighted; pending tiers dimmed
+
+**Endpoint:** `GET /app/v1/agents/dispatch-plan/{session_id}`
+
+### Heartbeat Health Timeline
+
+Per-agent heartbeat signal over time (last 30 minutes):
+- Green = heartbeat received within 60s
+- Amber = 60–300s stale
+- Red = > 300s (BLOCKED escalation triggered)
+- Shows escalation events as markers on timeline
+
+**Endpoint:** SSE `agent.heartbeat` events on `/app/v1/events`
+
+---
+
 ## 3.9 LLM Cost Monitor
 
 | Metric | Granularity |

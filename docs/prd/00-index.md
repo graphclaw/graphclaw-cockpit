@@ -29,6 +29,7 @@
 | **13** | [Chat Interface](13-chat-interface.md) | Always-active web chat (default channel), WebSocket, agent response rendering, conversation history |
 | **14** | [Config & Secrets](14-config-and-secrets.md) | Single JSON config per user, AWS Secrets Manager from UI, channel enablement model |
 | **15** | [Intelligence Hub](15-intelligence-hub.md) | Agent profile editor, three-tier memory viewer (working/episodic/semantic), compact operation, skill authoring — Wave G |
+| **16** | [React Implementation](16-react-implementation.md) | Software stack, Docker deployment, Playwright E2E testing, 12-wave delivery plan |
 
 ---
 

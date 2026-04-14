@@ -65,6 +65,18 @@
 | 30 | GET | `/app/v1/agent/triggers/{trigger_id}` | — | `ScheduledTrigger` detail | User | **NEW** |
 | 31 | POST | `/app/v1/agent/triggers/{trigger_id}/fire` | — | `{ result, fired_at }` | User | **NEW** |
 
+### 11.4a Sub-Agent Pool API (Phase 5)
+
+| # | Method | Path | Request | Response | Auth | Status |
+|---|--------|------|---------|----------|------|--------|
+| 31a | GET | `/app/v1/agents/pool/status` | — | `{ active_runners, total_runners, queue_depth, max_concurrent }` | User | **NEW** |
+| 31b | GET | `/app/v1/agents/pool/runners` | — | `{ runners: RunnerStatus[] }` where RunnerStatus = `{ runner_id, state, agent_id, task_id, session_id, started_at, last_heartbeat, elapsed_ms }` | User | **NEW** |
+| 31c | GET | `/app/v1/agents/delegations` | query: `session_id?`, `batch_id?`, `cursor`, `limit` | `{ delegations: DelegationEntry[], next_cursor }` | User | **NEW** |
+| 31d | GET | `/app/v1/agents/dispatch-plan/{session_id}` | — | `{ tiers: DispatchTier[], completed_tiers: int, total_tiers: int }` where `DispatchTier = { batch_id, task_ids, agent_ids, status, started_at, completed_at }` | User | **NEW** |
+| 31e | GET | `/app/v1/agents/{agent_id}/heartbeats` | query: `since`, `limit` | `{ heartbeats: HeartbeatEntry[], health: HEALTHY\|STALE\|BLOCKED }` | User | **NEW** |
+| 31f | GET | `/app/v1/agents/config` | — | `{ max_concurrent_agents, subagent_worker_pool_size, heartbeat_interval_s, heartbeat_timeout_s }` | Admin | **NEW** |
+| 31g | PATCH | `/app/v1/agents/config` | `{ max_concurrent_agents?, subagent_worker_pool_size? }` | Updated config | Admin | **NEW** |
+
 ---
 
 ## 11.5 Scoring API
