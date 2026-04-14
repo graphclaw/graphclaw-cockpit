@@ -1,0 +1,82 @@
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuthStore, type UserRole } from '@/stores/auth';
+import { useNavigate, useLocation } from 'react-router';
+import { useState } from 'react';
+
+const PROVIDERS = [
+  { id: 'google', name: 'Google', color: '#4285F4' },
+  { id: 'github', name: 'GitHub', color: '#333333' },
+  { id: 'microsoft', name: 'Microsoft', color: '#00A4EF' },
+] as const;
+
+export function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [loading, setLoading] = useState(false);
+
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/';
+
+  function handleOAuthLogin(provider: string) {
+    window.location.href = `/auth/login?provider=${provider}`;
+  }
+
+  async function handleDevLogin() {
+    setLoading(true);
+    try {
+      const res = await fetch('/auth/dev-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      if (res.ok) {
+        const data = (await res.json()) as {
+          access_token: string;
+          refresh_token: string;
+          user_id: string;
+          role: string;
+        };
+        useAuthStore.getState().setTokens(data.access_token, data.refresh_token);
+        useAuthStore.getState().setUser(data.user_id, data.role as UserRole);
+        navigate(from, { replace: true });
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[var(--bg-page)] p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="items-center text-center">
+          <img src="/logo.png" alt="GraphClaw" className="mb-2 h-12 w-12 rounded-[var(--radius-lg)]" />
+          <CardTitle>GraphClaw Cockpit</CardTitle>
+          <CardDescription>Sign in to your workspace</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          {PROVIDERS.map((p) => (
+            <Button
+              key={p.id}
+              variant="outline"
+              className="w-full"
+              onClick={() => handleOAuthLogin(p.id)}
+            >
+              Sign in with {p.name}
+            </Button>
+          ))}
+
+          <div className="my-2 flex items-center gap-2">
+            <div className="h-px flex-1 bg-[var(--border-default)]" />
+            <span className="text-xs text-[var(--text-tertiary)]">OR</span>
+            <div className="h-px flex-1 bg-[var(--border-default)]" />
+          </div>
+
+          <Button variant="secondary" onClick={handleDevLogin} disabled={loading}>
+            {loading ? 'Signing in...' : 'Dev Token (Development)'}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
