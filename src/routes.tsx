@@ -20,6 +20,24 @@ const MyTasksPage = lazy(() =>
 const AgentMonitorPage = lazy(() =>
   import('@/features/agent/AgentMonitorPage').then((m) => ({ default: m.AgentMonitorPage })),
 );
+const ChannelsPage = lazy(() =>
+  import('@/features/settings/ChannelsPage').then((m) => ({ default: m.ChannelsPage })),
+);
+const LlmPage = lazy(() =>
+  import('@/features/settings/LlmPage').then((m) => ({ default: m.LlmPage })),
+);
+const ScoringPage = lazy(() =>
+  import('@/features/settings/ScoringPage').then((m) => ({ default: m.ScoringPage })),
+);
+const BriefingPage = lazy(() =>
+  import('@/features/settings/BriefingPage').then((m) => ({ default: m.BriefingPage })),
+);
+const TriggersPage = lazy(() =>
+  import('@/features/settings/TriggersPage').then((m) => ({ default: m.TriggersPage })),
+);
+const A2aPage = lazy(() =>
+  import('@/features/settings/A2aPage').then((m) => ({ default: m.A2aPage })),
+);
 
 // Skeleton page factory for unbuilt routes
 function skeleton(title: string) {
@@ -63,12 +81,12 @@ export function AppRoutes() {
                     {/* Settings */}
                     <Route path="settings" element={<SettingsLayout />}>
                       <Route index element={<Navigate to="channels" replace />} />
-                      <Route path="channels" element={skeleton('Channels')} />
-                      <Route path="llm" element={skeleton('LLM Providers')} />
-                      <Route path="scoring" element={skeleton('Scoring Weights')} />
-                      <Route path="briefing" element={skeleton('Briefing Schedule')} />
-                      <Route path="triggers" element={skeleton('Triggers')} />
-                      <Route path="a2a" element={skeleton('Agent-to-Agent Keys')} />
+                      <Route path="channels" element={<ChannelsPage />} />
+                      <Route path="llm" element={<LlmPage />} />
+                      <Route path="scoring" element={<ScoringPage />} />
+                      <Route path="briefing" element={<BriefingPage />} />
+                      <Route path="triggers" element={<TriggersPage />} />
+                      <Route path="a2a" element={<A2aPage />} />
                       <Route path="danger" element={skeleton('Danger Zone')} />
                     </Route>
 
