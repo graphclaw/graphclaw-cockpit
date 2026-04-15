@@ -1,79 +1,65 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
-interface LlmProvider {
-  id: string;
-  name: string;
-  models: string[];
-  enabled: boolean;
-  budgetLimit: number;
-  budgetUsed: number;
-}
-
-const MOCK_PROVIDERS: LlmProvider[] = [
-  { id: 'llm-1', name: 'Anthropic', models: ['claude-opus-4-6', 'claude-sonnet-4-6', 'claude-haiku-4-5'], enabled: true, budgetLimit: 5000, budgetUsed: 2340 },
-  { id: 'llm-2', name: 'OpenAI', models: ['gpt-4o', 'gpt-4o-mini'], enabled: true, budgetLimit: 3000, budgetUsed: 1200 },
-  { id: 'llm-3', name: 'Google', models: ['gemini-2.5-pro', 'gemini-2.5-flash'], enabled: false, budgetLimit: 2000, budgetUsed: 0 },
-];
+import { useAdminLlmProviders, useAdminLlmBudget } from '@/lib/api-hooks';
 
 export function LlmConfigPage() {
-  const [providers, setProviders] = useState(MOCK_PROVIDERS);
-
-  function toggleProvider(id: string) {
-    setProviders((prev) => prev.map((p) => (p.id === id ? { ...p, enabled: !p.enabled } : p)));
-  }
+  const { data: providersData, isLoading } = useAdminLlmProviders();
+  const { data: budget } = useAdminLlmBudget();
+  const providers = providersData?.providers ?? [];
 
   return (
     <div className="space-y-4">
       <h2 className="text-sm font-semibold text-[var(--text-primary)]">LLM Configuration</h2>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {providers.map((provider) => (
-          <div
-            key={provider.id}
-            className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4 space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-[var(--text-primary)]">{provider.name}</span>
-              <Badge variant={provider.enabled ? 'default' : 'outline'}>
-                {provider.enabled ? 'Active' : 'Disabled'}
-              </Badge>
-            </div>
-            <div className="space-y-1">
-              {provider.models.map((model) => (
-                <div key={model} className="text-xs text-[var(--text-secondary)] font-mono">
-                  {model}
-                </div>
-              ))}
-            </div>
-            <div>
-              <div className="mb-1 flex justify-between text-xs text-[var(--text-tertiary)]">
-                <span>Budget</span>
-                <span>
-                  ${provider.budgetUsed} / ${provider.budgetLimit}
-                </span>
-              </div>
-              <div className="h-1.5 rounded-full bg-[var(--bg-inset)]">
-                <div
-                  className="h-full rounded-full bg-[var(--brand-primary)]"
-                  style={{
-                    width: `${(provider.budgetUsed / provider.budgetLimit) * 100}%`,
-                  }}
-                />
-              </div>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full"
-              onClick={() => toggleProvider(provider.id)}
+      {budget && (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {[
+            { label: 'Daily Limit', val: `$${budget.daily_limit_usd}` },
+            { label: 'Daily Used', val: `$${budget.current_day_usd.toFixed(2)}` },
+            { label: 'Monthly Limit', val: `$${budget.monthly_limit_usd}` },
+            { label: 'Monthly Used', val: `$${budget.current_month_usd.toFixed(2)}` },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-2 text-center"
             >
-              {provider.enabled ? 'Disable' : 'Enable'}
-            </Button>
-          </div>
-        ))}
-      </div>
+              <div className="text-sm font-semibold text-[var(--text-primary)]">{item.val}</div>
+              <div className="text-xs text-[var(--text-tertiary)]">{item.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-10">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--brand-primary)] border-t-transparent" />
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-3">
+          {providers.map((provider) => (
+            <div
+              key={provider.provider}
+              className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4 space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-[var(--text-primary)]">{provider.provider}</span>
+                <Badge variant={provider.enabled ? 'default' : 'outline'}>
+                  {provider.enabled ? 'Active' : 'Disabled'}
+                </Badge>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-[var(--text-secondary)] font-mono">
+                  {provider.model}
+                </div>
+              </div>
+            </div>
+          ))}
+          {providers.length === 0 && (
+            <p className="col-span-3 text-center text-sm text-[var(--text-tertiary)] py-6">
+              No LLM providers configured.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

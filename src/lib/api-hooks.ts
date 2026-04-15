@@ -1,0 +1,1111 @@
+/**
+ * Central API hooks — every TanStack Query hook that talks to the backend.
+ * All calls use the raw fetch with the Bearer token from localStorage
+ * (same pattern as the existing useAgentData / useGraphData hooks).
+ */
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+// ---------------------------------------------------------------------------
+// helpers
+// ---------------------------------------------------------------------------
+
+function authHeaders(): HeadersInit {
+  const token = localStorage.getItem('gc-access-token');
+  return token
+    ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+    : { 'Content-Type': 'application/json' };
+}
+
+async function apiFetch<T>(path: string): Promise<T> {
+  const res = await fetch(path, { headers: authHeaders() });
+  if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+async function apiPost<T>(path: string, body?: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) throw new Error(`API POST ${path} → ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+async function apiPatch<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`API PATCH ${path} → ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+async function apiPut<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`API PUT ${path} → ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+async function apiDelete(path: string): Promise<void> {
+  const res = await fetch(path, { method: 'DELETE', headers: authHeaders() });
+  if (!res.ok) throw new Error(`API DELETE ${path} → ${res.status}`);
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+export interface AuthMe {
+  user_id: string;
+  token_type: string;
+}
+
+export function useAuthMe() {
+  return useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: () => apiFetch<AuthMe>('/auth/me'),
+    staleTime: 5 * 60_000,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Graph — Goals
+// ---------------------------------------------------------------------------
+
+export interface GoalItem {
+  id: string;
+  title: string;
+  state: string;
+  priority: string;
+}
+
+export interface GoalListResponse {
+  items: GoalItem[];
+  next_cursor: string | null;
+  total: number;
+}
+
+export function useGoals(cursor?: string) {
+  return useQuery({
+    queryKey: ['graph', 'goals', { cursor }],
+    queryFn: () =>
+      apiFetch<GoalListResponse>(
+        `/app/v1/graph/goals${cursor ? `?cursor=${cursor}` : ''}`,
+      ),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Graph — Tasks
+// ---------------------------------------------------------------------------
+
+export interface TaskItem {
+  id: string;
+  title: string;
+  state: string;
+  score: number;
+  priority?: string;
+  assignee?: string;
+  goal_id?: string;
+}
+
+export interface TaskListResponse {
+  items: TaskItem[];
+  next_cursor: string | null;
+  total: number;
+}
+
+export function useTasks(cursor?: string) {
+  return useQuery({
+    queryKey: ['graph', 'tasks', { cursor }],
+    queryFn: () =>
+      apiFetch<TaskListResponse>(
+        `/app/v1/graph/tasks${cursor ? `?cursor=${cursor}` : ''}`,
+      ),
+  });
+}
+
+export interface TaskDetail extends TaskItem {
+  description?: string;
+  deadline?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export function useTask(taskId: string) {
+  return useQuery({
+    queryKey: ['graph', 'tasks', taskId],
+    queryFn: () => apiFetch<TaskDetail>(`/app/v1/graph/tasks/${taskId}`),
+    enabled: !!taskId,
+  });
+}
+
+export interface ValidTransition {
+  from: string;
+  to: string;
+  guard?: string;
+}
+
+export function useValidTransitions(taskId: string) {
+  return useQuery({
+    queryKey: ['tasks', taskId, 'valid-transitions'],
+    queryFn: () =>
+      apiFetch<ValidTransition[]>(`/app/v1/tasks/${taskId}/valid-transitions`),
+    enabled: !!taskId,
+  });
+}
+
+export function useTransitionTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      taskId,
+      targetState,
+    }: {
+      taskId: string;
+      targetState: string;
+    }) => apiPost(`/app/v1/tasks/${taskId}/transition`, { target_state: targetState }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['graph', 'tasks'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Graph — Resources
+// ---------------------------------------------------------------------------
+
+export interface ResourceItem {
+  id: string;
+  name: string;
+  type: string;
+  capacity?: number;
+  allocated?: number;
+}
+
+export interface ResourceListResponse {
+  items: ResourceItem[];
+  next_cursor: string | null;
+  total: number;
+}
+
+export function useResources() {
+  return useQuery({
+    queryKey: ['graph', 'resources'],
+    queryFn: () => apiFetch<ResourceListResponse>('/app/v1/graph/resources'),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Graph — Edges
+// ---------------------------------------------------------------------------
+
+export interface GraphEdgeItem {
+  edge_id: string;
+  source_id: string;
+  target_id: string;
+  edge_type: string;
+}
+
+export interface EdgeListResponse {
+  items: GraphEdgeItem[];
+  next_cursor: string | null;
+}
+
+export function useGraphEdges(nodeId?: string) {
+  return useQuery({
+    queryKey: ['graph', 'edges', nodeId],
+    queryFn: () =>
+      apiFetch<EdgeListResponse>(
+        nodeId ? `/app/v1/graph/edges?node_id=${nodeId}` : '/app/v1/graph/edges',
+      ),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Agent Monitor
+// ---------------------------------------------------------------------------
+
+export interface AgentStatus {
+  running: boolean;
+  last_cycle_at: string | null;
+  queue_depth: number;
+  agent_version: string;
+}
+
+export function useAgentStatus() {
+  return useQuery({
+    queryKey: ['agent', 'status'],
+    queryFn: () => apiFetch<AgentStatus>('/app/v1/agent/status'),
+    refetchInterval: 10_000,
+  });
+}
+
+export interface BriefingSection {
+  title: string;
+  items: string[];
+  max_items: number;
+}
+
+export interface AgentBriefing {
+  generated_at: string;
+  session_id: string;
+  critical: BriefingSection;
+  inferences: BriefingSection;
+  completed: BriefingSection;
+  ahead_of_curve: BriefingSection;
+}
+
+export function useAgentBriefing() {
+  return useQuery({
+    queryKey: ['agent', 'briefing'],
+    queryFn: () => apiFetch<AgentBriefing>('/app/v1/agent/briefing'),
+    refetchInterval: 30_000,
+  });
+}
+
+export interface ActionQueueItem {
+  node_id: string;
+  final_score: number;
+  rank: number;
+  recommended_action: string;
+  autonomy_level: string;
+  explanation: {
+    node_id: string;
+    scored_at: string;
+    final_score: number;
+    rank: number;
+    factors: {
+      factor_name: string;
+      raw_score: number;
+      weight: number;
+      weighted_score: number;
+      plain_english: string;
+    }[];
+  };
+}
+
+export function useActionQueue() {
+  return useQuery({
+    queryKey: ['agent', 'action-queue'],
+    queryFn: () => apiFetch<ActionQueueItem[]>('/app/v1/agent/action-queue'),
+    refetchInterval: 15_000,
+  });
+}
+
+export interface AgentTrigger {
+  trigger_id: string;
+  name: string;
+  schedule: string;
+  enabled: boolean;
+  last_fired?: string;
+}
+
+export function useAgentTriggers() {
+  return useQuery({
+    queryKey: ['agent', 'triggers'],
+    queryFn: () => apiFetch<AgentTrigger[]>('/app/v1/agent/triggers/schedule'),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Agents (sub-agent pool)
+// ---------------------------------------------------------------------------
+
+export interface SubAgent {
+  agent_id: string;
+  name: string;
+  state: string;
+  skill?: string;
+  last_active?: string;
+}
+
+export function useAgents() {
+  return useQuery({
+    queryKey: ['agents'],
+    queryFn: () => apiFetch<SubAgent[]>('/app/v1/agents'),
+    refetchInterval: 15_000,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Scoring
+// ---------------------------------------------------------------------------
+
+export interface ScoringWeights {
+  W1_timeline: number;
+  W2_dependencies: number;
+  W3_critical_path: number;
+  W4_blocker: number;
+  W5_override: number;
+  W6_resource_risk: number;
+  W7_constraint: number;
+}
+
+export function useScoringWeights() {
+  return useQuery({
+    queryKey: ['settings', 'scoring-weights'],
+    queryFn: () => apiFetch<ScoringWeights>('/app/v1/settings/scoring-weights'),
+  });
+}
+
+export function useUpdateScoringWeights() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (weights: ScoringWeights) =>
+      apiPatch<ScoringWeights>('/app/v1/settings/scoring-weights', weights),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['settings', 'scoring-weights'] });
+    },
+  });
+}
+
+export interface TaskScore {
+  task_id: string;
+  final_score: number;
+  factors: {
+    factor_name: string;
+    raw_score: number;
+    weight: number;
+    weighted_score: number;
+    plain_english: string;
+  }[];
+  scored_at: string;
+}
+
+export function useTaskScore(taskId: string) {
+  return useQuery({
+    queryKey: ['scoring', 'tasks', taskId],
+    queryFn: () => apiFetch<TaskScore>(`/app/v1/scoring/tasks/${taskId}`),
+    enabled: !!taskId,
+  });
+}
+
+export function useTaskScoreHistory(taskId: string) {
+  return useQuery({
+    queryKey: ['scoring', 'tasks', taskId, 'history'],
+    queryFn: () =>
+      apiFetch<TaskScore[]>(`/app/v1/scoring/tasks/${taskId}/history`),
+    enabled: !!taskId,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Settings — Channels
+// ---------------------------------------------------------------------------
+
+export interface ChannelConfig {
+  channel: string;
+  active: boolean;
+  config?: Record<string, string>;
+}
+
+export function useChannels() {
+  return useQuery({
+    queryKey: ['settings', 'channels'],
+    queryFn: () => apiFetch<ChannelConfig[]>('/app/v1/settings/channels'),
+  });
+}
+
+export function useActivateChannel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ch, config }: { ch: string; config?: Record<string, string> }) =>
+      apiPost(`/app/v1/settings/channels/${ch}/activate`, config ?? {}),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['settings', 'channels'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Settings — LLM Keys (user-level BYOK)
+// ---------------------------------------------------------------------------
+
+export interface LlmKeyEntry {
+  provider: string;
+  configured: boolean;
+}
+
+export function useSettingsLlmKeys() {
+  return useQuery({
+    queryKey: ['settings', 'llm-keys'],
+    queryFn: () => apiFetch<LlmKeyEntry[]>('/app/v1/settings/llm-keys'),
+  });
+}
+
+export function useSaveLlmKey() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ provider, key }: { provider: string; key: string }) =>
+      apiPost(`/app/v1/settings/llm-keys`, { provider, key }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['settings', 'llm-keys'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Settings — A2A agents
+// ---------------------------------------------------------------------------
+
+export interface A2aAgent {
+  key_id: string;
+  name: string;
+  created_at: string;
+  active: boolean;
+}
+
+export function useA2aAgents() {
+  return useQuery({
+    queryKey: ['a2a', 'agents'],
+    queryFn: () => apiFetch<A2aAgent[]>('/app/v1/a2a/agents'),
+  });
+}
+
+export function useCreateA2aAgent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (label: string) =>
+      apiPost<{ key_id: string; secret: string }>('/app/v1/a2a/agents', {
+        name: label,
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['a2a', 'agents'] });
+    },
+  });
+}
+
+export function useRevokeA2aAgent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (keyId: string) => apiDelete(`/app/v1/a2a/agents/${keyId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['a2a', 'agents'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Admin — Members
+// ---------------------------------------------------------------------------
+
+export interface AdminMember {
+  user_id: string;
+  email: string;
+  role: string;
+  status: string;
+  joined_at: string;
+}
+
+export function useAdminMembers() {
+  return useQuery({
+    queryKey: ['admin', 'members'],
+    queryFn: () => apiFetch<AdminMember[]>('/app/v1/admin/members'),
+  });
+}
+
+export function useInviteMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ email, role }: { email: string; role: string }) =>
+      apiPost('/app/v1/admin/members/invite', { email, role }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'members'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Admin — Features
+// ---------------------------------------------------------------------------
+
+export interface FeatureFlags {
+  enable_agent_canvas: boolean;
+  enable_mcp_integration: boolean;
+  enable_skill_marketplace: boolean;
+  enable_multi_channel: boolean;
+  enable_a2a: boolean;
+  extra: Record<string, boolean>;
+}
+
+export function useAdminFeatures() {
+  return useQuery({
+    queryKey: ['admin', 'features'],
+    queryFn: () => apiFetch<FeatureFlags>('/app/v1/admin/features'),
+  });
+}
+
+export function useUpdateAdminFeatures() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (flags: Partial<FeatureFlags>) =>
+      apiPatch<FeatureFlags>('/app/v1/admin/features', flags),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'features'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Admin — LLM
+// ---------------------------------------------------------------------------
+
+export interface LlmProvider {
+  provider: string;
+  model: string;
+  enabled: boolean;
+  priority: number;
+}
+
+export interface LlmProvidersResponse {
+  providers: LlmProvider[];
+  default_provider: string;
+}
+
+export function useAdminLlmProviders() {
+  return useQuery({
+    queryKey: ['admin', 'llm', 'providers'],
+    queryFn: () => apiFetch<LlmProvidersResponse>('/app/v1/admin/llm/providers'),
+  });
+}
+
+export interface LlmBudget {
+  daily_limit_usd: number;
+  monthly_limit_usd: number;
+  alert_threshold_pct: number;
+}
+
+export function useAdminLlmBudget() {
+  return useQuery({
+    queryKey: ['admin', 'llm', 'budget'],
+    queryFn: () => apiFetch<LlmBudget>('/app/v1/admin/llm/budget'),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Admin — Guardrails
+// ---------------------------------------------------------------------------
+
+export interface GuardrailRule {
+  rule_id: string;
+  name: string;
+  pattern: string;
+  action: string;
+  enabled: boolean;
+  description: string;
+}
+
+export interface GuardrailsConfig {
+  version: string;
+  rules: GuardrailRule[];
+}
+
+export function useAdminGuardrails() {
+  return useQuery({
+    queryKey: ['admin', 'guardrails'],
+    queryFn: () => apiFetch<GuardrailsConfig>('/app/v1/admin/guardrails'),
+  });
+}
+
+export function useUpdateAdminGuardrails() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (config: GuardrailsConfig) =>
+      apiPut<GuardrailsConfig>('/app/v1/admin/guardrails', config),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'guardrails'] });
+    },
+  });
+}
+
+export function useValidateGuardrails() {
+  return useMutation({
+    mutationFn: (config: GuardrailsConfig) =>
+      apiPost<{ valid: boolean; errors: string[]; rule_count: number }>('/app/v1/admin/guardrails/validate', config),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Admin — SSO
+// ---------------------------------------------------------------------------
+
+export interface SsoConfig {
+  provider: string;
+  enabled: boolean;
+  enforced: boolean;
+  client_id: string;
+  issuer_url: string;
+  metadata_url: string;
+  allowed_domains: string[];
+  extra: Record<string, string>;
+}
+
+export function useAdminSso() {
+  return useQuery({
+    queryKey: ['admin', 'sso'],
+    queryFn: () => apiFetch<SsoConfig>('/app/v1/admin/sso'),
+  });
+}
+
+export function useUpdateAdminSso() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (config: Partial<SsoConfig>) =>
+      apiPatch<SsoConfig>('/app/v1/admin/sso', config),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'sso'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Admin — Audit Log
+// ---------------------------------------------------------------------------
+
+export interface AuditEntry {
+  timestamp: string;
+  actor: string;
+  action: string;
+  resource: string;
+  result: string;
+  detail?: string;
+}
+
+export function useAdminAuditLog(limit = 50) {
+  return useQuery({
+    queryKey: ['admin', 'audit-log', { limit }],
+    queryFn: () =>
+      apiFetch<AuditEntry[]>(`/app/v1/admin/audit-log?limit=${limit}`),
+    refetchInterval: 30_000,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Admin — Infrastructure / Deployment
+// ---------------------------------------------------------------------------
+
+export interface ServiceHealth {
+  name: string;
+  replicas?: number;
+  desired?: number;
+  health?: string;
+  last_deployed?: string;
+}
+
+export interface DeploymentStatus {
+  overall: string;
+  version: string;
+  environment: string;
+  services: ServiceHealth[];
+}
+
+export function useAdminDeploymentStatus() {
+  return useQuery({
+    queryKey: ['admin', 'deployment', 'status'],
+    queryFn: () => apiFetch<DeploymentStatus>('/app/v1/admin/deployment/status'),
+    refetchInterval: 30_000,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Admin — Connectors
+// ---------------------------------------------------------------------------
+
+export interface ConnectorItem {
+  connector_id: string;
+  name: string;
+  type: string;
+  status: string;
+  last_sync?: string;
+}
+
+export function useAdminConnectors() {
+  return useQuery({
+    queryKey: ['admin', 'connectors'],
+    queryFn: () => apiFetch<ConnectorItem[]>('/app/v1/admin/connectors'),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Admin — Judge
+// ---------------------------------------------------------------------------
+
+export interface JudgeResult {
+  id: string;
+  skill: string;
+  score: number;
+  verdict: 'PASS' | 'FAIL';
+  timestamp: string;
+}
+
+export interface JudgeStats {
+  pass_rate: number;
+  avg_score: number;
+  total_evaluations: number;
+}
+
+export function useAdminJudgeResults() {
+  return useQuery({
+    queryKey: ['admin', 'judge', 'results'],
+    queryFn: () => apiFetch<JudgeResult[]>('/app/v1/admin/llm-judge/results'),
+    refetchInterval: 30_000,
+  });
+}
+
+export function useAdminJudgeStats() {
+  return useQuery({
+    queryKey: ['admin', 'judge', 'stats'],
+    queryFn: () => apiFetch<JudgeStats>('/app/v1/admin/llm-judge/stats'),
+    refetchInterval: 30_000,
+  });
+}
+
+export function useSyncConnector() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (connectorId: string) =>
+      apiPost(`/app/v1/admin/connectors/${connectorId}/sync`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'connectors'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Skills Marketplace
+// ---------------------------------------------------------------------------
+
+export interface SkillItem {
+  skill_id: string;
+  name: string;
+  version: string;
+  enabled: boolean;
+  source_uri?: string;
+  description?: string;
+}
+
+export function useSkills() {
+  return useQuery({
+    queryKey: ['skills'],
+    queryFn: () => apiFetch<SkillItem[]>('/app/v1/skills'),
+  });
+}
+
+export function useInstallSkill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (source_uri: string) =>
+      apiPost('/app/v1/skills/install', { source_uri }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['skills'] });
+    },
+  });
+}
+
+export function useUninstallSkill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (skillId: string) => apiDelete(`/app/v1/skills/${skillId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['skills'] });
+    },
+  });
+}
+
+export function useSearchSkills(query: string) {
+  return useQuery({
+    queryKey: ['skills', 'search', query],
+    queryFn: () =>
+      apiFetch<SkillItem[]>(`/app/v1/skills/search?q=${encodeURIComponent(query)}`),
+    enabled: query.length > 1,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// MCP Registry
+// ---------------------------------------------------------------------------
+
+export interface McpServer {
+  server_id: string;
+  name: string;
+  endpoint: string;
+  trust_tier: 'AUTO' | 'GATED' | 'BLOCKED';
+  tool_count: number;
+  status: 'connected' | 'disconnected' | 'error';
+}
+
+export function useMcpServers() {
+  return useQuery({
+    queryKey: ['mcp-servers'],
+    queryFn: () => apiFetch<McpServer[]>('/app/v1/mcp-servers'),
+  });
+}
+
+export function useRegisterMcpServer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (server: { name: string; endpoint: string; trust_tier: string }) =>
+      apiPost<McpServer>('/app/v1/mcp-servers', server),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['mcp-servers'] });
+    },
+  });
+}
+
+export function useDeleteMcpServer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (serverId: string) => apiDelete(`/app/v1/mcp-servers/${serverId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['mcp-servers'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Intelligence Hub — Profile
+// ---------------------------------------------------------------------------
+
+export interface AgentProfile {
+  agent_id: string;
+  content: string;
+  updated_at: string | null;
+}
+
+export function useAgentProfile(agentId: string) {
+  return useQuery({
+    queryKey: ['intelligence', agentId, 'profile'],
+    queryFn: () =>
+      apiFetch<AgentProfile>(`/app/v1/intelligence/agents/${agentId}/profile`),
+    enabled: !!agentId,
+  });
+}
+
+export function useUpdateAgentProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ agentId, content }: { agentId: string; content: string }) =>
+      apiPatch<AgentProfile>(`/app/v1/intelligence/agents/${agentId}/profile`, {
+        content,
+      }),
+    onSuccess: (_data, { agentId }) => {
+      void qc.invalidateQueries({ queryKey: ['intelligence', agentId, 'profile'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Intelligence Hub — Working Memory
+// ---------------------------------------------------------------------------
+
+export interface WorkingMemory {
+  agent_id: string;
+  memory_type: string;
+  key: string;
+  content: string;
+}
+
+export function useWorkingMemory(agentId: string) {
+  return useQuery({
+    queryKey: ['intelligence', agentId, 'memory', 'working'],
+    queryFn: () =>
+      apiFetch<WorkingMemory>(
+        `/app/v1/intelligence/agents/${agentId}/memory/working`,
+      ),
+    enabled: !!agentId,
+  });
+}
+
+export function useCompactWorkingMemory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (agentId: string) =>
+      apiPost(`/app/v1/intelligence/agents/${agentId}/memory/compact`),
+    onSuccess: (_data, agentId) => {
+      void qc.invalidateQueries({ queryKey: ['intelligence', agentId, 'memory'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Intelligence Hub — Episodic Memory
+// ---------------------------------------------------------------------------
+
+export interface EpisodicMemoryEntry {
+  name: string;
+  content: string;
+  created_at: string;
+}
+
+export interface EpisodicMemory {
+  agent_id: string;
+  memory_type: string;
+  entries: EpisodicMemoryEntry[];
+}
+
+export function useEpisodicMemory(agentId: string) {
+  return useQuery({
+    queryKey: ['intelligence', agentId, 'memory', 'episodic'],
+    queryFn: () =>
+      apiFetch<EpisodicMemory>(
+        `/app/v1/intelligence/agents/${agentId}/memory/episodic`,
+      ),
+    enabled: !!agentId,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Intelligence Hub — Semantic Memory
+// ---------------------------------------------------------------------------
+
+export interface SemanticMemoryEntry {
+  topic: string;
+  content: string;
+  updated_at: string;
+}
+
+export interface SemanticMemory {
+  agent_id: string;
+  memory_type: string;
+  entries: SemanticMemoryEntry[];
+}
+
+export function useSemanticMemory(agentId: string) {
+  return useQuery({
+    queryKey: ['intelligence', agentId, 'memory', 'semantic'],
+    queryFn: () =>
+      apiFetch<SemanticMemory>(
+        `/app/v1/intelligence/agents/${agentId}/memory/semantic`,
+      ),
+    enabled: !!agentId,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Intelligence Hub — Authored Skills
+// ---------------------------------------------------------------------------
+
+export interface AuthoredSkill {
+  skill_id: string;
+  name: string;
+  version: string;
+  description?: string;
+  created_at: string;
+}
+
+export function useAuthoredSkills() {
+  return useQuery({
+    queryKey: ['intelligence', 'skills', 'authored'],
+    queryFn: () =>
+      apiFetch<AuthoredSkill[]>('/app/v1/intelligence/skills/authored'),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Approvals
+// ---------------------------------------------------------------------------
+
+export interface Approval {
+  task_id: string;
+  title: string;
+  reason: string;
+  requested_at: string;
+}
+
+export function useApprovals() {
+  return useQuery({
+    queryKey: ['approvals'],
+    queryFn: () => apiFetch<Approval[]>('/app/v1/approvals'),
+    refetchInterval: 15_000,
+  });
+}
+
+export function useApproveTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (taskId: string) =>
+      apiPost(`/app/v1/approvals/${taskId}/approve`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['approvals'] });
+    },
+  });
+}
+
+export function useDenyTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (taskId: string) =>
+      apiPost(`/app/v1/approvals/${taskId}/deny`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['approvals'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Chat
+// ---------------------------------------------------------------------------
+
+export interface ChatMessage {
+  message_id: string;
+  role: 'user' | 'assistant' | 'agent' | 'system';
+  content: string;
+  timestamp: string;
+}
+
+export interface ChatHistoryResponse {
+  messages: ChatMessage[];
+  next_cursor: string | null;
+}
+
+export interface ChatResponse {
+  user_message: ChatMessage;
+  agent_message: ChatMessage;
+}
+
+export function useChatMessages() {
+  return useQuery({
+    queryKey: ['chat', 'messages'],
+    queryFn: async () => {
+      const res = await apiFetch<ChatHistoryResponse>('/app/v1/chat/messages');
+      return res.messages;
+    },
+    refetchInterval: 5_000,
+  });
+}
+
+export function useSendChatMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (text: string) =>
+      apiPost<ChatResponse>('/app/v1/chat/messages', { content: text }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['chat', 'messages'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// App Config
+// ---------------------------------------------------------------------------
+
+export interface AppConfig {
+  app_name: string;
+  version: string;
+  features: Record<string, boolean>;
+}
+
+export function useAppConfig() {
+  return useQuery({
+    queryKey: ['app', 'config'],
+    queryFn: () => apiFetch<AppConfig>('/app/v1/config'),
+    staleTime: 10 * 60_000,
+  });
+}

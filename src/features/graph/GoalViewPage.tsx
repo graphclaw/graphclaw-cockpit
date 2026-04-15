@@ -3,6 +3,7 @@ import { CytoscapeGraph, type GraphNode, type GraphEdge } from './components/Cyt
 import { ViewSwitcher } from './components/ViewSwitcher';
 import { TaskTable } from '@/features/tasks/components/TaskTable';
 import { useGoals } from './hooks/useGraphData';
+import { useGraphEdges } from '@/lib/api-hooks';
 import { Badge } from '@/components/ui/badge';
 
 type ViewMode = 'graph' | 'table' | 'dependencies';
@@ -11,6 +12,7 @@ export function GoalViewPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('graph');
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const { data: goalsData, isLoading } = useGoals();
+  const { data: edgesData } = useGraphEdges();
 
   const goals = goalsData?.items ?? [];
 
@@ -22,18 +24,13 @@ export function GoalViewPage() {
     priority: g.priority,
   }));
 
-  // Mock edges for demo (real data will come from API)
-  const graphEdges: GraphEdge[] =
-    goals.length > 1
-      ? [
-          {
-            id: `edge-${goals[0]?.id}-${goals[1]?.id}`,
-            source: goals[0]?.id ?? '',
-            target: goals[1]?.id ?? '',
-            edgeType: 'subtask',
-          },
-        ]
-      : [];
+  // Real edges from API
+  const graphEdges: GraphEdge[] = (edgesData?.items ?? []).map((e) => ({
+    id: e.edge_id,
+    source: e.source_id,
+    target: e.target_id,
+    edgeType: e.edge_type,
+  }));
 
   const selectedGoal = goals.find((g) => g.id === selectedNodeId);
 

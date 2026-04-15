@@ -2,51 +2,63 @@ import { test as base, expect } from '@playwright/test';
 
 /**
  * Authenticated page fixture.
- * In dev mode, the app auto-authenticates via dev-token shortcut.
- * For E2E against Docker stack, POST /auth/dev-token to get a session.
+ * POSTs to /auth/dev-token, stores the real JWT in both:
+ *   - localStorage['gc-access-token']  (read by api-client.ts middleware)
+ *   - localStorage['gc-auth']          (read by Zustand useAuthStore / RequireAuth)
+ * so every API call in a test goes through with a valid bearer token.
  */
 export const test = base.extend({
   page: async ({ page }, use) => {
-    // Try dev-token auth against the backend
+    await page.goto('/');
+
+    // Get a real dev-token from the backend (proxied via Vite /auth/dev-token)
+    let accessToken = '';
+    let refreshToken = '';
     try {
       const res = await page.request.post('/auth/dev-token', {
-        data: { user_id: 'test-user' },
+        data: {},
+        headers: { 'Content-Type': 'application/json' },
       });
       if (res.ok()) {
-        const body = await res.json();
-        if (body.access_token) {
-          await page.context().addCookies([
-            {
-              name: 'access_token',
-              value: body.access_token,
-              domain: new URL(page.url() || 'http://localhost:3000').hostname,
-              path: '/',
-            },
-          ]);
-        }
+        const body = (await res.json()) as {
+          access_token: string;
+          refresh_token: string;
+        };
+        accessToken = body.access_token ?? '';
+        refreshToken = body.refresh_token ?? '';
       }
     } catch {
-      // Backend may not be available — fall back to localStorage auth
+      // backend unreachable — fall through to fake token
     }
 
-    // Fallback: set auth state in localStorage so RequireAuth passes
-    // Must match the Zustand auth store shape exactly (flat, not nested user object)
-    await page.goto('/');
-    await page.evaluate(() => {
-      const authState = {
-        state: {
-          accessToken: 'e2e-test-token',
-          refreshToken: 'e2e-refresh-token',
-          userId: 'test-user',
-          role: 'ADMIN',
-          isAuthenticated: true,
-        },
-        version: 0,
-      };
-      localStorage.setItem('gc-auth', JSON.stringify(authState));
-    });
-    await page.reload();
+    // Inject auth into localStorage so both the API middleware and
+    // Zustand RequireAuth guard treat the user as authenticated.
+    await page.evaluate(
+      ({ access, refresh }) => {
+        const finalAccess = access || 'e2e-test-token';
+        const finalRefresh = refresh || 'e2e-refresh-token';
 
+        // api-client.ts reads this key for the Bearer header
+        localStorage.setItem('gc-access-token', finalAccess);
+        localStorage.setItem('gc-refresh-token', finalRefresh);
+
+        // Zustand persisted store (key = 'gc-auth')
+        const authState = {
+          state: {
+            accessToken: finalAccess,
+            refreshToken: finalRefresh,
+            userId: 'test-user',
+            role: 'ADMIN',
+            isAuthenticated: true,
+          },
+          version: 0,
+        };
+        localStorage.setItem('gc-auth', JSON.stringify(authState));
+      },
+      { access: accessToken, refresh: refreshToken },
+    );
+
+    await page.reload();
     await use(page);
   },
 });

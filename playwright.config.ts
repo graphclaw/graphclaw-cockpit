@@ -10,8 +10,19 @@ export default defineConfig({
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // Bypass HTTP cache so the browser always fetches fresh JS from Vite dev server
+    bypassCSP: true,
+    serviceWorkers: 'block',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: ['--disable-cache', '--disable-application-cache'],
+        },
+      },
+    },
   ],
 });

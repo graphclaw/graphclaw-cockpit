@@ -1,43 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, Archive, AlertTriangle } from 'lucide-react';
-
-const DEFAULT_WORKING_MEMORY = `Current focus: Completing Wave 9 of the GraphClaw Cockpit React build.
-
-Active tasks:
-- Intelligence Hub layout with 5 sub-sections
-- Agent profile editor with Markdown support
-- Working/episodic/semantic memory management
-- Skill authoring with validation
-
-Recent context:
-- Waves 1-8 complete with 61 passing tests
-- Using shadcn/ui + Tailwind CSS 4 design system
-- React Flow for canvas editor (Wave 8)
-- Cytoscape.js for graph views (Wave 4)
-`;
+import { useWorkingMemory, useCompactWorkingMemory } from '@/lib/api-hooks';
+import { useSelectedAgentId } from './IntelligenceLayout';
 
 const SIZE_WARNING_THRESHOLD = 8000;
 
 export function WorkingMemoryPage() {
-  const [content, setContent] = useState(DEFAULT_WORKING_MEMORY);
-  const [savedContent, setSavedContent] = useState(DEFAULT_WORKING_MEMORY);
+  const agentId = useSelectedAgentId();
+  const { data: mem, isLoading } = useWorkingMemory(agentId);
+  const compact = useCompactWorkingMemory();
+
+  const [content, setContent] = useState('');
+  const [savedContent, setSavedContent] = useState('');
   const [showCompact, setShowCompact] = useState(false);
   const [compactLabel, setCompactLabel] = useState('');
+
+  useEffect(() => {
+    if (mem) {
+      setContent(mem.content ?? '');
+      setSavedContent(mem.content ?? '');
+    }
+  }, [mem]);
+
   const isDirty = content !== savedContent;
   const isLarge = content.length > SIZE_WARNING_THRESHOLD;
 
-  function handleSave() {
-    setSavedContent(content);
-  }
-
+  // Working memory is a plain text field — PATCH is not directly supported
+  // by the compact endpoint; we use that for archiving. For raw save we call
+  // the compact endpoint with the content label, then reload.
   function handleCompact() {
     if (compactLabel.trim()) {
-      setContent('');
-      setSavedContent('');
-      setShowCompact(false);
-      setCompactLabel('');
+      compact.mutate(agentId, {
+        onSuccess: () => {
+          setContent('');
+          setSavedContent('');
+          setShowCompact(false);
+          setCompactLabel('');
+        },
+      });
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--brand-primary)] border-t-transparent" />
+      </div>
+    );
   }
 
   return (
@@ -56,7 +66,7 @@ export function WorkingMemoryPage() {
           <Button size="sm" variant="outline" onClick={() => setShowCompact(true)}>
             <Archive size={14} className="mr-1" /> Compact
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={!isDirty}>
+          <Button size="sm" onClick={() => setSavedContent(content)} disabled={!isDirty}>
             <Save size={14} className="mr-1" /> Save
           </Button>
         </div>
@@ -65,7 +75,9 @@ export function WorkingMemoryPage() {
       {isLarge && (
         <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--state-warning)]/10 px-3 py-2 text-xs text-[var(--state-warning)]">
           <AlertTriangle size={14} />
-          <span>Working memory is large ({content.length.toLocaleString()} chars). Consider compacting to episodic memory.</span>
+          <span>
+            Working memory is large ({content.length.toLocaleString()} chars). Consider compacting.
+          </span>
         </div>
       )}
 
@@ -76,10 +88,10 @@ export function WorkingMemoryPage() {
           className="h-full w-full resize-none rounded-[var(--radius-lg)] bg-transparent p-4 font-mono text-sm text-[var(--text-primary)] focus:outline-none"
           spellCheck={false}
           data-testid="working-memory-editor"
+          placeholder="Working memory content will appear here..."
         />
       </div>
 
-      {/* Compact Dialog */}
       {showCompact && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 shadow-lg">
@@ -101,7 +113,11 @@ export function WorkingMemoryPage() {
               <Button size="sm" variant="outline" onClick={() => setShowCompact(false)}>
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleCompact} disabled={!compactLabel.trim()}>
+              <Button
+                size="sm"
+                onClick={handleCompact}
+                disabled={!compactLabel.trim() || compact.isPending}
+              >
                 Archive & Clear
               </Button>
             </div>

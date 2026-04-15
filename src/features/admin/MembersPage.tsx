@@ -2,60 +2,27 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { UserPlus, MoreHorizontal } from 'lucide-react';
-
-interface Member {
-  id: string;
-  name: string;
-  email: string;
-  role: 'ADMIN' | 'MEMBER' | 'VIEWER';
-  status: 'active' | 'suspended';
-  joinedAt: string;
-}
-
-const MOCK_MEMBERS: Member[] = [
-  { id: 'm-1', name: 'Alice Chen', email: 'alice@example.com', role: 'ADMIN', status: 'active', joinedAt: '2026-01-15' },
-  { id: 'm-2', name: 'Bob Kumar', email: 'bob@example.com', role: 'MEMBER', status: 'active', joinedAt: '2026-02-01' },
-  { id: 'm-3', name: 'Carol Park', email: 'carol@example.com', role: 'MEMBER', status: 'active', joinedAt: '2026-02-20' },
-  { id: 'm-4', name: 'Dave Smith', email: 'dave@example.com', role: 'VIEWER', status: 'suspended', joinedAt: '2026-03-01' },
-  { id: 'm-5', name: 'Eve Johnson', email: 'eve@example.com', role: 'MEMBER', status: 'active', joinedAt: '2026-03-15' },
-];
+import { useAdminMembers, useInviteMember } from '@/lib/api-hooks';
 
 const ROLE_COLORS: Record<string, string> = {
   ADMIN: 'var(--state-error)',
+  OWNER: 'var(--state-error)',
   MEMBER: 'var(--brand-primary)',
   VIEWER: 'var(--text-tertiary)',
 };
 
 export function MembersPage() {
-  const [members, setMembers] = useState(MOCK_MEMBERS);
+  const { data: members = [], isLoading } = useAdminMembers();
+  const invite = useInviteMember();
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'MEMBER' | 'VIEWER'>('MEMBER');
 
   function handleInvite() {
     if (!inviteEmail.trim()) return;
-    const newMember: Member = {
-      id: `m-${Date.now()}`,
-      name: inviteEmail.split('@')[0] ?? 'User',
-      email: inviteEmail,
-      role: inviteRole,
-      status: 'active',
-      joinedAt: new Date().toISOString().slice(0, 10),
-    };
-    setMembers((prev) => [...prev, newMember]);
-    setInviteEmail('');
-    setShowInvite(false);
-  }
-
-  function changeRole(id: string, role: Member['role']) {
-    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, role } : m)));
-  }
-
-  function toggleSuspend(id: string) {
-    setMembers((prev) =>
-      prev.map((m) =>
-        m.id === id ? { ...m, status: m.status === 'active' ? 'suspended' : 'active' } : m,
-      ),
+    invite.mutate(
+      { email: inviteEmail, role: inviteRole },
+      { onSuccess: () => { setInviteEmail(''); setShowInvite(false); } },
     );
   }
 
@@ -88,7 +55,7 @@ export function MembersPage() {
             <option value="MEMBER">Member</option>
             <option value="VIEWER">Viewer</option>
           </select>
-          <Button size="sm" onClick={handleInvite}>
+          <Button size="sm" onClick={handleInvite} disabled={invite.isPending}>
             Send
           </Button>
           <Button size="sm" variant="outline" onClick={() => setShowInvite(false)}>
@@ -97,49 +64,48 @@ export function MembersPage() {
         </div>
       )}
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)]">
-        <div className="grid grid-cols-[1fr_180px_100px_100px_80px] gap-4 border-b border-[var(--border-default)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-          <span>Name</span>
-          <span>Email</span>
-          <span>Role</span>
-          <span>Status</span>
-          <span className="text-right">Actions</span>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--brand-primary)] border-t-transparent" />
         </div>
-        <div className="divide-y divide-[var(--border-subtle)]">
-          {members.map((member) => (
-            <div
-              key={member.id}
-              className="grid grid-cols-[1fr_180px_100px_100px_80px] items-center gap-4 px-4 py-3 text-sm"
-            >
-              <span className="font-medium text-[var(--text-primary)]">{member.name}</span>
-              <span className="text-xs text-[var(--text-tertiary)]">{member.email}</span>
-              <select
-                value={member.role}
-                onChange={(e) => changeRole(member.id, e.target.value as Member['role'])}
-                className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-transparent px-1 py-0.5 text-xs"
-                style={{ color: ROLE_COLORS[member.role] }}
+      ) : members.length === 0 ? (
+        <p className="text-sm text-[var(--text-tertiary)] py-8 text-center">No members yet.</p>
+      ) : (
+        <div className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)]" data-testid="members-table">
+          <div className="grid grid-cols-[1fr_180px_100px_100px_80px] gap-4 border-b border-[var(--border-default)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+            <span>User</span>
+            <span>Email</span>
+            <span>Role</span>
+            <span>Status</span>
+            <span className="text-right">Actions</span>
+          </div>
+          <div className="divide-y divide-[var(--border-subtle)]">
+            {members.map((member) => (
+              <div
+                key={member.user_id}
+                className="grid grid-cols-[1fr_180px_100px_100px_80px] items-center gap-4 px-4 py-3 text-sm"
               >
-                <option value="ADMIN">Admin</option>
-                <option value="MEMBER">Member</option>
-                <option value="VIEWER">Viewer</option>
-              </select>
-              <Badge variant={member.status === 'active' ? 'default' : 'outline'}>
-                {member.status}
-              </Badge>
-              <div className="flex justify-end">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => toggleSuspend(member.id)}
-                  title={member.status === 'active' ? 'Suspend' : 'Reactivate'}
+                <span className="font-medium text-[var(--text-primary)]">{member.user_id}</span>
+                <span className="text-xs text-[var(--text-tertiary)]">{member.email}</span>
+                <span
+                  className="text-xs font-semibold"
+                  style={{ color: ROLE_COLORS[member.role] ?? 'var(--text-primary)' }}
                 >
-                  <MoreHorizontal size={14} />
-                </Button>
+                  {member.role}
+                </span>
+                <Badge variant={member.status === 'active' ? 'default' : 'outline'}>
+                  {member.status}
+                </Badge>
+                <div className="flex justify-end">
+                  <Button size="sm" variant="ghost" title="Actions">
+                    <MoreHorizontal size={14} />
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

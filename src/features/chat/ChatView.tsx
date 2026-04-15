@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Send, Bot, User, ExternalLink } from 'lucide-react';
+import { useChatMessages, useSendChatMessage } from '@/lib/api-hooks';
 
 interface ChatMessage {
   id: string;
@@ -16,38 +17,6 @@ interface InlineCard {
   title: string;
   detail: string;
 }
-
-const MOCK_MESSAGES: ChatMessage[] = [
-  {
-    id: 'msg-1',
-    role: 'user',
-    content: 'What are the top priority tasks right now?',
-    timestamp: '2026-04-14T10:30:00Z',
-  },
-  {
-    id: 'msg-2',
-    role: 'assistant',
-    content: 'Here are the top 3 tasks by priority score:',
-    timestamp: '2026-04-14T10:30:05Z',
-    cards: [
-      { type: 'task', title: 'Deploy API v2.1', detail: 'Score: 0.92 · IN_PROGRESS' },
-      { type: 'task', title: 'Fix auth token refresh', detail: 'Score: 0.87 · BLOCKED' },
-      { type: 'task', title: 'Update scoring weights', detail: 'Score: 0.81 · OPEN' },
-    ],
-  },
-  {
-    id: 'msg-3',
-    role: 'user',
-    content: 'Why is the auth token refresh task blocked?',
-    timestamp: '2026-04-14T10:31:00Z',
-  },
-  {
-    id: 'msg-4',
-    role: 'assistant',
-    content: 'The **auth token refresh** task is blocked because it depends on "Upgrade Redis to v7" which is still in progress. The dependency chain is:\n\n1. Upgrade Redis to v7 (IN_PROGRESS)\n2. Fix auth token refresh (BLOCKED)\n3. Deploy API v2.1 (waiting)',
-    timestamp: '2026-04-14T10:31:03Z',
-  },
-];
 
 const SUGGESTIONS = [
   'Show my tasks for today',
@@ -83,9 +52,16 @@ interface ChatViewProps {
 }
 
 export function ChatView({ fullpage = false }: ChatViewProps) {
-  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const { data: remoteMessages = [] } = useChatMessages();
+  const sendMessage = useSendChatMessage();
+  const messages: ChatMessage[] = remoteMessages.map((m) => ({
+    id: m.message_id,
+    role: (m.role === 'agent' ? 'assistant' : m.role) as 'user' | 'assistant',
+    content: m.content,
+    timestamp: m.timestamp,
+  }));
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const isTyping = sendMessage.isPending;
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -93,29 +69,10 @@ export function ChatView({ fullpage = false }: ChatViewProps) {
   }, [messages, isTyping]);
 
   function handleSend() {
-    if (!input.trim()) return;
-
-    const userMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      role: 'user',
-      content: input.trim(),
-      timestamp: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
+    if (!input.trim() || sendMessage.isPending) return;
+    const text = input.trim();
     setInput('');
-    setIsTyping(true);
-
-    // Simulate assistant response
-    setTimeout(() => {
-      const botMsg: ChatMessage = {
-        id: `msg-${Date.now() + 1}`,
-        role: 'assistant',
-        content: `I understand your request about "${userMsg.content}". Let me look into that for you.`,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, botMsg]);
-      setIsTyping(false);
-    }, 1500);
+    sendMessage.mutate(text);
   }
 
   return (

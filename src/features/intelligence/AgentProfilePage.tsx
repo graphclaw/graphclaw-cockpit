@@ -1,40 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, RotateCcw } from 'lucide-react';
-
-const DEFAULT_PROFILE = `# Main Agent
-
-## Role
-You are a task orchestration agent responsible for managing and prioritizing work items in the GraphClaw system.
-
-## Capabilities
-- Task creation, scoring, and state management
-- Goal decomposition into actionable tasks
-- Dependency graph analysis
-- Resource allocation recommendations
-
-## Personality
-- Professional and concise
-- Data-driven decision making
-- Proactive about blockers and risks
-
-## Constraints
-- Never modify tasks in DONE or CANCELLED state without explicit user approval
-- Always explain scoring decisions when asked
-- Escalate to human when confidence drops below 0.3
-`;
+import { useAgentProfile, useUpdateAgentProfile } from '@/lib/api-hooks';
+import { useSelectedAgentId } from './IntelligenceLayout';
 
 export function AgentProfilePage() {
-  const [content, setContent] = useState(DEFAULT_PROFILE);
-  const [savedContent, setSavedContent] = useState(DEFAULT_PROFILE);
+  const agentId = useSelectedAgentId();
+  const { data: profile, isLoading } = useAgentProfile(agentId);
+  const update = useUpdateAgentProfile();
+
+  const [content, setContent] = useState('');
+  const [savedContent, setSavedContent] = useState('');
+
+  useEffect(() => {
+    if (profile) {
+      setContent(profile.content);
+      setSavedContent(profile.content);
+    }
+  }, [profile]);
+
   const isDirty = content !== savedContent;
 
   function handleSave() {
-    setSavedContent(content);
+    update.mutate(
+      { agentId, content },
+      { onSuccess: () => setSavedContent(content) },
+    );
   }
 
   function handleDiscard() {
     setContent(savedContent);
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--brand-primary)] border-t-transparent" />
+      </div>
+    );
   }
 
   return (
@@ -53,8 +56,9 @@ export function AgentProfilePage() {
           <Button size="sm" variant="outline" onClick={handleDiscard} disabled={!isDirty}>
             <RotateCcw size={14} className="mr-1" /> Discard
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={!isDirty}>
-            <Save size={14} className="mr-1" /> Save
+          <Button size="sm" onClick={handleSave} disabled={!isDirty || update.isPending}>
+            <Save size={14} className="mr-1" />
+            {update.isPending ? 'Saving…' : 'Save'}
           </Button>
         </div>
       </div>
@@ -66,6 +70,7 @@ export function AgentProfilePage() {
           className="h-full w-full resize-none rounded-[var(--radius-lg)] bg-transparent p-4 font-mono text-sm text-[var(--text-primary)] focus:outline-none"
           spellCheck={false}
           data-testid="profile-editor"
+          placeholder="# Agent Profile&#10;&#10;## Role&#10;..."
         />
       </div>
     </div>

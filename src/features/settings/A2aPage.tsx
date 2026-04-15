@@ -3,37 +3,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Copy, RotateCw, Trash2 } from 'lucide-react';
-
-interface A2aKey {
-  id: string;
-  label: string;
-  prefix: string;
-  created: string;
-  status: 'active' | 'revoked';
-}
-
-const MOCK_KEYS: A2aKey[] = [
-  { id: '1', label: 'Production Key', prefix: 'gc_a2a_prod_****', created: '2026-03-01', status: 'active' },
-  { id: '2', label: 'Staging Key', prefix: 'gc_a2a_stg_****', created: '2026-02-15', status: 'active' },
-];
+import { useA2aAgents, useCreateA2aAgent, useRevokeA2aAgent } from '@/lib/api-hooks';
 
 export function A2aPage() {
-  const [keys, setKeys] = useState(MOCK_KEYS);
-  const [newKeyShown, setNewKeyShown] = useState<string | null>(null);
+  const { data: agents = [], isLoading } = useA2aAgents();
+  const create = useCreateA2aAgent();
+  const revoke = useRevokeA2aAgent();
+  const [newSecret, setNewSecret] = useState<string | null>(null);
 
   function handleGenerate() {
-    const fakeKey = `gc_a2a_${Math.random().toString(36).slice(2, 14)}`;
-    setNewKeyShown(fakeKey);
-    setKeys((prev) => [
-      ...prev,
-      {
-        id: String(prev.length + 1),
-        label: 'New Key',
-        prefix: fakeKey.slice(0, 12) + '****',
-        created: new Date().toISOString().split('T')[0] ?? '',
-        status: 'active',
+    create.mutate('New Key', {
+      onSuccess: (data) => {
+        if ('secret' in data) {
+          setNewSecret((data as { key_id: string; secret: string }).secret);
+        }
       },
-    ]);
+    });
   }
 
   return (
@@ -45,58 +30,76 @@ export function A2aPage() {
             Manage keys for agent-to-agent authentication.
           </p>
         </div>
-        <Button size="sm" onClick={handleGenerate}>Generate Key</Button>
+        <Button size="sm" onClick={handleGenerate} disabled={create.isPending}>
+          Generate Key
+        </Button>
       </div>
 
-      {newKeyShown && (
+      {newSecret && (
         <Card className="border-[var(--state-delayed)]">
           <CardContent className="flex items-center gap-3 py-3">
             <span className="text-sm text-[var(--state-delayed)] font-medium">
               New key (shown once):
             </span>
             <code className="flex-1 rounded bg-[var(--bg-inset)] px-2 py-1 font-mono text-sm text-[var(--text-primary)]">
-              {newKeyShown}
+              {newSecret}
             </code>
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => navigator.clipboard.writeText(newKeyShown)}
+              onClick={() => void navigator.clipboard.writeText(newSecret)}
             >
               <Copy size={14} />
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setNewKeyShown(null)}>
+            <Button size="sm" variant="ghost" onClick={() => setNewSecret(null)}>
               Dismiss
             </Button>
           </CardContent>
         </Card>
       )}
 
-      <div className="space-y-3">
-        {keys.map((key) => (
-          <Card key={key.id}>
-            <CardContent className="flex items-center justify-between py-3">
-              <div className="flex items-center gap-3">
-                <div>
-                  <div className="text-sm font-medium text-[var(--text-primary)]">{key.label}</div>
-                  <code className="text-xs text-[var(--text-tertiary)]">{key.prefix}</code>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--brand-primary)] border-t-transparent" />
+        </div>
+      ) : agents.length === 0 ? (
+        <p className="text-sm text-[var(--text-tertiary)]">No A2A keys registered yet.</p>
+      ) : (
+        <div className="space-y-3" data-testid="a2a-keys-list">
+          {agents.map((agent) => (
+            <Card key={agent.key_id}>
+              <CardContent className="flex items-center justify-between py-3">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <div className="text-sm font-medium text-[var(--text-primary)]">{agent.name}</div>
+                    <code className="text-xs text-[var(--text-tertiary)]">{agent.key_id}</code>
+                  </div>
+                  <Badge variant={agent.active ? 'active' : 'blocked'}>
+                    {agent.active ? 'active' : 'revoked'}
+                  </Badge>
                 </div>
-                <Badge variant={key.status === 'active' ? 'active' : 'blocked'}>
-                  {key.status}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-[var(--text-tertiary)]">{key.created}</span>
-                <Button size="sm" variant="ghost" title="Rotate">
-                  <RotateCw size={14} />
-                </Button>
-                <Button size="sm" variant="ghost" title="Revoke">
-                  <Trash2 size={14} />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-[var(--text-tertiary)]">
+                    {agent.created_at.slice(0, 10)}
+                  </span>
+                  <Button size="sm" variant="ghost" title="Rotate">
+                    <RotateCw size={14} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    title="Revoke"
+                    disabled={revoke.isPending}
+                    onClick={() => revoke.mutate(agent.key_id)}
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
