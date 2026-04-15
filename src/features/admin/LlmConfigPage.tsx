@@ -11,12 +11,11 @@ export function LlmConfigPage() {
       <h2 className="text-sm font-semibold text-[var(--text-primary)]">LLM Configuration</h2>
 
       {budget && (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
           {[
             { label: 'Daily Limit', val: `$${budget.daily_limit_usd}` },
-            { label: 'Daily Used', val: `$${budget.current_day_usd.toFixed(2)}` },
             { label: 'Monthly Limit', val: `$${budget.monthly_limit_usd}` },
-            { label: 'Monthly Used', val: `$${budget.current_month_usd.toFixed(2)}` },
+            { label: 'Alert Threshold', val: `${budget.alert_threshold_pct}%` },
           ].map((item) => (
             <div
               key={item.label}
