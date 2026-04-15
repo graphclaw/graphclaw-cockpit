@@ -107,7 +107,7 @@ services:
     ports:
       - "3000:3000"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      test: ["CMD", "curl", "-sf", "http://localhost:3000/health"]
       interval: 10s
       timeout: 3s
       retries: 3
