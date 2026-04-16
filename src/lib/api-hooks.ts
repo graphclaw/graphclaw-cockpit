@@ -457,9 +457,9 @@ export function useSaveLlmKey() {
 
 export interface A2aAgent {
   key_id: string;
-  name: string;
-  created_at: string;
-  active: boolean;
+  agent_name: string;
+  description: string;
+  revoked: boolean;
 }
 
 export function useA2aAgents() {
@@ -473,8 +473,8 @@ export function useCreateA2aAgent() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (label: string) =>
-      apiPost<{ key_id: string; secret: string }>('/app/v1/a2a/agents', {
-        name: label,
+      apiPost<{ key_id: string; agent_name: string; api_key: string }>('/app/v1/a2a/agents', {
+        agent_name: label,
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['a2a', 'agents'] });
@@ -892,7 +892,7 @@ export function useUpdateAgentProfile() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ agentId, content }: { agentId: string; content: string }) =>
-      apiPatch<AgentProfile>(`/app/v1/intelligence/agents/${agentId}/profile`, {
+      apiPut<AgentProfile>(`/app/v1/intelligence/agents/${agentId}/profile`, {
         content,
       }),
     onSuccess: (_data, { agentId }) => {

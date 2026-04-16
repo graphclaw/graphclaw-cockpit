@@ -37,6 +37,7 @@ services:
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
+      - "9001:9001"
     environment:
       MINIO_ROOT_USER: graphclaw
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-graphclaw_dev}
@@ -131,6 +132,48 @@ services:
       CI: "true"
     command: ["npx", "playwright", "test", "--reporter=html"]
 
+  # ─── Puppeteer + Data-level E2E Runner (on-demand) ───────────────────────
+  # Run: docker compose --profile test-puppeteer run --rm e2e-puppeteer
+  e2e-puppeteer:
+    image: node:22-bookworm-slim
+    profiles:
+      - test-puppeteer
+    depends_on:
+      cockpit:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    working_dir: /app
+    volumes:
+      - .:/app
+      - puppeteer_modules:/app/node_modules
+    environment:
+      BASE_URL: http://cockpit:3000
+      API_URL: http://gateway:8000
+      # Direct DB access for AGE graph verification
+      TEST_DATABASE_URL: postgresql://graphclaw:${DB_PASSWORD:-graphclaw_dev}@db:5432/graphclaw
+      # MinIO access for object storage verification
+      MINIO_ENDPOINT: http://minio:9000
+      STORAGE_BUCKET: graphclaw
+      AWS_ACCESS_KEY_ID: graphclaw
+      AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD:-graphclaw_dev}
+      CI: "true"
+    command: >
+      sh -c "
+        apt-get update -qq &&
+        apt-get install -y --no-install-recommends
+          chromium libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2
+          libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2
+          libgbm1 libasound2 libpangocairo-1.0-0 libgtk-3-0 ca-certificates &&
+        npm ci &&
+        npm run test:e2e:puppeteer:ci
+      "
+
 volumes:
   pgdata:
   miniodata:
+  puppeteer_modules:

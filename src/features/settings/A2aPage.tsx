@@ -14,8 +14,8 @@ export function A2aPage() {
   function handleGenerate() {
     create.mutate('New Key', {
       onSuccess: (data) => {
-        if ('secret' in data) {
-          setNewSecret((data as { key_id: string; secret: string }).secret);
+        if ('api_key' in data) {
+          setNewSecret((data as { key_id: string; api_key: string }).api_key);
         }
       },
     });
@@ -71,16 +71,16 @@ export function A2aPage() {
               <CardContent className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3">
                   <div>
-                    <div className="text-sm font-medium text-[var(--text-primary)]">{agent.name}</div>
+                    <div className="text-sm font-medium text-[var(--text-primary)]">{agent.agent_name}</div>
                     <code className="text-xs text-[var(--text-tertiary)]">{agent.key_id}</code>
                   </div>
-                  <Badge variant={agent.active ? 'active' : 'blocked'}>
-                    {agent.active ? 'active' : 'revoked'}
+                  <Badge variant={agent.revoked ? 'blocked' : 'active'}>
+                    {agent.revoked ? 'revoked' : 'active'}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-[var(--text-tertiary)]">
-                    {agent.created_at.slice(0, 10)}
+                    {agent.description || agent.key_id.slice(-8)}
                   </span>
                   <Button size="sm" variant="ghost" title="Rotate">
                     <RotateCw size={14} />

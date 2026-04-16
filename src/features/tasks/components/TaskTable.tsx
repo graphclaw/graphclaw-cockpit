@@ -76,7 +76,7 @@ export function TaskTable() {
                 <span className="truncate text-[var(--text-primary)]">{task.title}</span>
                 <Badge variant={getStateVariant(task.state)}>{task.state}</Badge>
                 <span className="text-right font-mono text-xs text-[var(--text-secondary)]">
-                  {task.score.toFixed(2)}
+                  {(task.score ?? 0).toFixed(2)}
                 </span>
                 <span className="text-right font-mono text-xs text-[var(--text-tertiary)]">
                   {task.id}
