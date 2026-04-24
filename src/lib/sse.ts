@@ -1,4 +1,5 @@
 import { queryClient } from './query-client';
+import { logger } from './logger';
 
 type EventType =
   | 'task.state_changed'
@@ -33,14 +34,17 @@ export function connectSSE(url: string = '/app/v1/events') {
 
   eventSource = new EventSource(url);
   reconnectAttempts = 0;
+  logger.info('sse.connecting', { url });
 
   eventSource.onopen = () => {
     reconnectAttempts = 0;
+    logger.info('sse.connected', { url });
   };
 
   eventSource.onmessage = (event) => {
     try {
       const parsed: SSEEvent = JSON.parse(event.data);
+      logger.debug('sse.event', { event_name: parsed.type });
       const keys = INVALIDATION_MAP[parsed.type];
       if (keys) {
         for (const key of keys) {
@@ -59,6 +63,7 @@ export function connectSSE(url: string = '/app/v1/events') {
     // Exponential backoff reconnect
     const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
     reconnectAttempts++;
+    logger.warn('sse.reconnecting', { attempt: reconnectAttempts, delay_ms: delay, url });
     reconnectTimer = setTimeout(() => connectSSE(url), delay);
   };
 }
@@ -71,6 +76,7 @@ export function disconnectSSE() {
   if (eventSource) {
     eventSource.close();
     eventSource = null;
+    logger.info('sse.disconnected');
   }
   reconnectAttempts = 0;
 }

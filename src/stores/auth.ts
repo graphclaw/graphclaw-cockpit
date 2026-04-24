@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { logger } from '../lib/logger';
+
 export type UserRole = 'USER' | 'ADMIN' | 'OWNER';
 
 interface AuthState {
@@ -23,12 +25,14 @@ export const useAuthStore = create<AuthState>()(
       role: null,
       isAuthenticated: false,
       setTokens: (access, refresh) => {
+        logger.info('auth.login');
         localStorage.setItem('gc-access-token', access);
         localStorage.setItem('gc-refresh-token', refresh);
         set({ accessToken: access, refreshToken: refresh, isAuthenticated: true });
       },
       setUser: (userId, role) => set({ userId, role }),
       logout: () => {
+        logger.info('auth.logout');
         localStorage.removeItem('gc-access-token');
         localStorage.removeItem('gc-refresh-token');
         set({

@@ -1,20 +1,28 @@
 import createClient, { type Middleware } from 'openapi-fetch';
 
+import { logger } from './logger';
+
 const authMiddleware: Middleware = {
   async onRequest({ request }) {
     const token = localStorage.getItem('gc-access-token');
     if (token) {
       request.headers.set('Authorization', `Bearer ${token}`);
     }
+    logger.debug('api.request', { method: request.method, url: request.url });
     return request;
   },
-  async onResponse({ response }) {
+  async onResponse({ response, request }) {
+    logger.debug('api.response', { method: request.method, url: request.url, status: response.status });
     if (response.status === 401) {
+      logger.warn('api.auth.expired', { url: request.url });
       const refreshed = await tryRefreshToken();
       if (!refreshed) {
+        logger.warn('api.auth.refresh_failed', { url: request.url });
         localStorage.removeItem('gc-access-token');
         localStorage.removeItem('gc-refresh-token');
         window.location.href = '/login';
+      } else {
+        logger.info('api.auth.refreshed');
       }
     }
     return response;
