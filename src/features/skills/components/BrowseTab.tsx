@@ -7,10 +7,14 @@ import { useSearchSkills, useInstallSkill, type SkillSource, type SkillItem } fr
 
 interface BrowseTabProps {
   sources: SkillSource[];
-  installedIds: string[];
+  installedSkills: SkillItem[];
 }
 
-export function BrowseTab({ sources, installedIds }: BrowseTabProps) {
+function installKey(skillName: string, sourceUri?: string) {
+  return `${skillName.toLowerCase()}::${(sourceUri ?? '').toLowerCase()}`;
+}
+
+export function BrowseTab({ sources, installedSkills }: BrowseTabProps) {
   const [query, setQuery] = useState('');
   const [selectedSource, setSelectedSource] = useState<string>('all');
   const { data: results = [], isLoading } = useSearchSkills(query);
@@ -20,7 +24,7 @@ export function BrowseTab({ sources, installedIds }: BrowseTabProps) {
     ? results
     : results.filter((r) => r.source_uri === selectedSource);
 
-  const installedSet = new Set(installedIds);
+  const installedSet = new Set(installedSkills.map((s) => installKey(s.name, s.source_uri)));
 
   function handleInstall(skill: SkillItem) {
     install.mutate({
@@ -109,7 +113,7 @@ export function BrowseTab({ sources, installedIds }: BrowseTabProps) {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((skill) => {
-                const isInstalled = installedSet.has(skill.skill_id);
+                const isInstalled = installedSet.has(installKey(skill.name, skill.source_uri));
                 return (
                   <SkillCard
                     key={skill.skill_id}

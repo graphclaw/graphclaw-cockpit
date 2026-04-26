@@ -9,7 +9,9 @@ import {
 import {
   useSkills, useUninstallSkill, useToggleSkill,
   useSkillSources,
+  useAuthoredSkills,
   type SkillItem,
+  type AuthoredSkill,
 } from '@/lib/api-hooks';
 import { SkillDetailDrawer } from './components/SkillDetailDrawer';
 import { SourcesTab } from './components/SourcesTab';
@@ -29,6 +31,7 @@ const SOURCE_BADGE: Record<string, string> = {
 export function SkillsPage() {
   const { data: skills = [], isLoading } = useSkills();
   const { data: sources = [] } = useSkillSources();
+  const { data: authoredSkills = [], isLoading: isAuthoredLoading } = useAuthoredSkills();
   const uninstall = useUninstallSkill();
   const toggle = useToggleSkill();
 
@@ -136,8 +139,8 @@ export function SkillsPage() {
           uninstallPending={uninstall.isPending}
         />
       )}
-      {tab === 'browse' && <BrowseTab sources={sources} installedIds={skills.map((s) => s.skill_id)} />}
-      {tab === 'my-skills' && <MySkillsTab />}
+      {tab === 'browse' && <BrowseTab sources={sources} installedSkills={skills} />}
+      {tab === 'my-skills' && <MySkillsTab skills={authoredSkills} isLoading={isAuthoredLoading} />}
       {tab === 'sources' && <SourcesTab sources={sources} />}
 
       {/* Detail Drawer */}
@@ -268,7 +271,20 @@ function InstalledTab({
 // My Skills Tab (link to SkillAuthoringPage)
 // ---------------------------------------------------------------------------
 
-function MySkillsTab() {
+interface MySkillsTabProps {
+  skills: AuthoredSkill[];
+  isLoading: boolean;
+}
+
+function MySkillsTab({ skills, isLoading }: MySkillsTabProps) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--brand-primary)] border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -282,19 +298,46 @@ function MySkillsTab() {
         </Link>
       </div>
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-8 text-center">
-        <Puzzle size={32} className="mx-auto mb-3 text-[var(--text-tertiary)]" />
-        <p className="text-sm font-medium text-[var(--text-primary)]">Create your own skills</p>
-        <p className="mt-1 text-xs text-[var(--text-tertiary)] max-w-sm mx-auto">
-          Use the Skill Editor to write SKILL.md definitions. Your skills are stored privately
-          and can be installed, forked, and shared.
-        </p>
-        <Link to="/intelligence/skill-authoring">
-          <Button size="sm" className="mt-4">
-            Open Skill Editor
-          </Button>
-        </Link>
-      </div>
+      {skills.length === 0 ? (
+        <div className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-8 text-center">
+          <Puzzle size={32} className="mx-auto mb-3 text-[var(--text-tertiary)]" />
+          <p className="text-sm font-medium text-[var(--text-primary)]">Create your own skills</p>
+          <p className="mt-1 text-xs text-[var(--text-tertiary)] max-w-sm mx-auto">
+            Use the Skill Editor to write SKILL.md definitions. Your skills are stored privately
+            and can be installed, forked, and shared.
+          </p>
+          <Link to="/intelligence/skill-authoring">
+            <Button size="sm" className="mt-4">
+              Open Skill Editor
+            </Button>
+          </Link>
+        </div>
+      ) : (
+        <div className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)]">
+          <div className="grid grid-cols-[1fr_100px_140px] gap-3 border-b border-[var(--border-default)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+            <span>Skill</span>
+            <span>Version</span>
+            <span>Updated</span>
+          </div>
+
+          <div className="divide-y divide-[var(--border-subtle)]" data-testid="authored-skills-list">
+            {skills.map((skill) => (
+              <div key={skill.skill_id} className="grid grid-cols-[1fr_100px_140px] items-center gap-3 px-4 py-3 text-sm">
+                <div className="min-w-0">
+                  <div className="font-medium text-[var(--text-primary)] truncate">{skill.name ?? skill.skill_id}</div>
+                  {skill.description && (
+                    <div className="text-xs text-[var(--text-tertiary)] truncate max-w-lg">{skill.description}</div>
+                  )}
+                </div>
+                <span className="font-mono text-xs text-[var(--text-secondary)]">{skill.version ?? '0.1.0'}</span>
+                <span className="text-xs text-[var(--text-tertiary)]">
+                  {skill.updated_at ? new Date(skill.updated_at).toLocaleDateString() : '—'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

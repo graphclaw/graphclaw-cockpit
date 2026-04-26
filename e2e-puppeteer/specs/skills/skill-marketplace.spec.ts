@@ -226,13 +226,10 @@ describe('Skills — Marketplace', () => {
         { timeout: 10000 },
       );
 
-      // At least 3 of the 4 tab buttons visible
-      const buttons = await page.$$eval('button', (els) =>
-        els.map((b) => b.textContent?.trim() ?? '').filter(Boolean),
-      );
-      const tabLabels = ['Installed', 'Browse Remote', 'My Skills', 'Sources'];
-      const found = tabLabels.filter((t) => buttons.some((b) => b.includes(t)));
-      expect(found.length).toBeGreaterThanOrEqual(3);
+      await page.waitForSelector('[data-testid="skills-tab-installed"]', { timeout: 10000 });
+      await page.waitForSelector('[data-testid="skills-tab-browse"]', { timeout: 10000 });
+      await page.waitForSelector('[data-testid="skills-tab-my-skills"]', { timeout: 10000 });
+      await page.waitForSelector('[data-testid="skills-tab-sources"]', { timeout: 10000 });
     } finally {
       await page.close();
     }
@@ -333,21 +330,8 @@ describe('Skills — Marketplace', () => {
       await gotoAndWaitForApi(page, '/skills', '/app/v1/skills');
       await page.waitForSelector('main', { timeout: 10000 });
 
-      // Click Browse Remote tab
-      const tabs = await page.$$('button');
-      let browseTab: typeof tabs[number] | undefined;
-      for (const btn of tabs) {
-        const text = await btn.evaluate((el) => el.textContent?.trim() ?? '');
-        if (text.includes('Browse Remote')) {
-          browseTab = btn;
-          break;
-        }
-      }
-      if (!browseTab) {
-        console.warn('Browse Remote tab not found — skipping');
-        return;
-      }
-      await browseTab.click();
+      await page.waitForSelector('[data-testid="skills-tab-browse"]', { timeout: 10000 });
+      await page.click('[data-testid="skills-tab-browse"]');
       await new Promise((r) => setTimeout(r, 500));
 
       // Search input should be present
@@ -386,21 +370,8 @@ describe('Skills — Marketplace', () => {
       await gotoAndWaitForApi(page, '/skills', '/app/v1/skills');
       await page.waitForSelector('main', { timeout: 10000 });
 
-      // Click Sources tab
-      const tabs = await page.$$('button');
-      let sourcesTab: typeof tabs[number] | undefined;
-      for (const btn of tabs) {
-        const text = await btn.evaluate((el) => el.textContent?.trim() ?? '');
-        if (text.startsWith('Sources')) {
-          sourcesTab = btn;
-          break;
-        }
-      }
-      if (!sourcesTab) {
-        console.warn('Sources tab not found — skipping');
-        return;
-      }
-      await sourcesTab.click();
+      await page.waitForSelector('[data-testid="skills-tab-sources"]', { timeout: 10000 });
+      await page.click('[data-testid="skills-tab-sources"]');
       await new Promise((r) => setTimeout(r, 500));
 
       // Click Add Source button
@@ -574,4 +545,5 @@ describe('Skills — Marketplace', () => {
       await page.close();
     }
   });
+
 });

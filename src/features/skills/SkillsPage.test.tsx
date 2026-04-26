@@ -56,7 +56,17 @@ describe('SkillsPage', () => {
   it('switches to My Skills tab', () => {
     renderWithProviders(<SkillsPage />);
     fireEvent.click(screen.getByRole('button', { name: 'My Skills' }));
-    expect(screen.getAllByText('Open Skill Editor').length).toBeGreaterThan(0);
+    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+  });
+
+  it('shows authored skills in My Skills tab', async () => {
+    renderWithProviders(<SkillsPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'My Skills' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('authored-skills-list')).toBeInTheDocument();
+      expect(screen.getByText('my-custom-skill')).toBeInTheDocument();
+    });
   });
 
   it('switches to Sources tab', () => {
