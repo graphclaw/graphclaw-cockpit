@@ -47,10 +47,23 @@ function getBreadcrumbs(pathname: string): Array<{ label: string; path?: string 
 export function Topbar() {
   const location = useLocation();
   const userId = useAuthStore((s) => s.userId);
+  const displayName = useAuthStore((s) => s.displayName);
+  const email = useAuthStore((s) => s.email);
   const logout = useAuthStore((s) => s.logout);
   const breadcrumbs = getBreadcrumbs(location.pathname);
 
-  const initials = userId ? userId.slice(0, 2).toUpperCase() : 'GC';
+  const initials = (() => {
+    if (displayName) {
+      const parts = displayName.trim().split(/\s+/).filter(Boolean);
+      const first = parts[0] ?? '';
+      const last = parts[parts.length - 1] ?? '';
+      if (parts.length >= 2) return (first.charAt(0) + last.charAt(0)).toUpperCase();
+      return first.slice(0, 2).toUpperCase();
+    }
+    if (email) return email.slice(0, 2).toUpperCase();
+    if (userId) return userId.slice(0, 2).toUpperCase();
+    return 'GC';
+  })();
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-4 border-b border-[var(--border-default)] bg-[var(--bg-surface)] px-4">

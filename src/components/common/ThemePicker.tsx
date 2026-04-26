@@ -79,7 +79,7 @@ export function ThemePicker() {
                 setOpen(false);
               }}
               className={cn(
-                'flex w-full items-center gap-2.5 rounded-[var(--radius-md)] px-2.5 py-[7px] text-[var(--text-body-sm)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-inset)] hover:text-[var(--text-primary)]',
+                'flex w-full items-center gap-2.5 rounded-[var(--radius-md)] px-2.5 py-[7px] text-xs text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-inset)] hover:text-[var(--text-primary)]',
                 t.id === theme && 'bg-[var(--brand-primary-light)] text-[var(--text-brand)] font-semibold',
               )}
             >
