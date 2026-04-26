@@ -76,6 +76,11 @@ export function SourcesTab({ sources }: SourcesTabProps) {
               <option value="local">Local Path</option>
             </select>
           </div>
+          {addSource.isError && (
+            <p className="text-xs text-[var(--state-error)]">
+              {(addSource.error as Error)?.message ?? 'Failed to add source. Check the URL and try again.'}
+            </p>
+          )}
           <div className="flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowAdd(false)}>
               Cancel
