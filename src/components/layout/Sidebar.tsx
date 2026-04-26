@@ -1,6 +1,7 @@
 import { useLocation, Link } from 'react-router';
 import { useThemeStore } from '@/stores/theme';
 import { useAuthStore } from '@/stores/auth';
+import { useSkills } from '@/lib/api-hooks';
 import {
   LayoutDashboard,
   CheckSquare,
@@ -45,7 +46,7 @@ const WORKSPACE_NAV: NavItem[] = [
 const INTELLIGENCE_NAV: NavItem[] = [
   { label: 'Agent Monitor', icon: Cpu, path: '/agent-monitor', badge: { count: 7, color: 'var(--state-progress)' } },
   { label: 'Chat', icon: MessageCircle, path: '/chat' },
-  { label: 'Skills', icon: Puzzle, path: '/skills', badge: { count: 2, color: 'var(--state-delayed)' } },
+  { label: 'Skills', icon: Puzzle, path: '/skills' },
   { label: 'MCP Registry', icon: Plug, path: '/mcp' },
   { label: 'Canvas', icon: GitFork, path: '/canvas' },
   { label: 'Intelligence', icon: Brain, path: '/intelligence' },
@@ -77,6 +78,8 @@ export function Sidebar() {
   const collapsed = useThemeStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useThemeStore((s) => s.toggleSidebar);
   const role = useAuthStore((s) => s.role);
+  const { data: skills = [] } = useSkills();
+  const disabledSkillCount = skills.filter((s) => !s.enabled).length;
 
   return (
     <div className="flex h-full flex-col">
@@ -133,6 +136,14 @@ export function Sidebar() {
                             style={{ backgroundColor: item.badge.color }}
                           >
                             {item.badge.count}
+                          </span>
+                        )}
+                        {item.path === '/skills' && disabledSkillCount > 0 && (
+                          <span
+                            className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white"
+                            style={{ backgroundColor: 'var(--state-delayed)' }}
+                          >
+                            {disabledSkillCount}
                           </span>
                         )}
                       </>

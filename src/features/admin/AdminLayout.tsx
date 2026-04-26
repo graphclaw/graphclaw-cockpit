@@ -9,11 +9,13 @@ import {
   ScrollText,
   Server,
   Plug,
+  Puzzle,
 } from 'lucide-react';
 
 const ADMIN_TABS = [
   { label: 'Members', path: 'members', icon: Users },
   { label: 'Feature Gates', path: 'features', icon: ToggleLeft },
+  { label: 'Marketplace', path: 'marketplace', icon: Puzzle },
   { label: 'LLM Config', path: 'llm-config', icon: Cpu },
   { label: 'LLM-as-Judge', path: 'judge', icon: Scale },
   { label: 'Guardrails', path: 'guardrails', icon: Shield },

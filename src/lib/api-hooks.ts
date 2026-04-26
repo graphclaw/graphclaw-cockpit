@@ -788,21 +788,89 @@ export interface SkillItem {
   version: string;
   enabled: boolean;
   source_uri?: string;
+  source_type?: string;
   description?: string;
+  tags?: string[];
+  usage_count?: number;
+  avg_quality_score?: number;
+}
+
+export interface SkillConfig {
+  skill_id: string;
+  llm_override?: string;
+  model_override?: string;
+  output_type: 'DRAFT_FOR_REVIEW' | 'AUTO_COMPLETE';
+  requires_approval: boolean;
+}
+
+export interface SkillSource {
+  source_uri: string;
+  source_type: string;
+  name: string;
+  last_fetched_at?: string;
+}
+
+export interface MarketplacePolicy {
+  enabled: boolean;
+  allow_external_sources: boolean;
+  require_approval_for_install: boolean;
+  approved_sources: string[];
+}
+
+type RawSkillEntry = Omit<SkillItem, 'name'> & { skill_name?: string; name?: string };
+
+function normalizeSkill(raw: RawSkillEntry): SkillItem {
+  return { ...raw, name: raw.skill_name ?? raw.name ?? '' } as SkillItem;
 }
 
 export function useSkills() {
   return useQuery({
     queryKey: ['skills'],
-    queryFn: () => apiFetch<SkillItem[]>('/app/v1/skills'),
+    queryFn: async () => {
+      const data = await apiFetch<RawSkillEntry[]>('/app/v1/skills');
+      return data.map(normalizeSkill);
+    },
+  });
+}
+
+export function useSkillDetail(skillId: string) {
+  return useQuery({
+    queryKey: ['skills', skillId],
+    queryFn: async () => {
+      const raw = await apiFetch<RawSkillEntry & { config?: SkillConfig }>(`/app/v1/skills/${skillId}`);
+      return { ...normalizeSkill(raw), config: raw.config };
+    },
+    enabled: !!skillId,
+  });
+}
+
+export function useToggleSkill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ skillId, enabled }: { skillId: string; enabled: boolean }) =>
+      apiPatch<SkillItem>(`/app/v1/skills/${skillId}`, { enabled }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['skills'] });
+    },
+  });
+}
+
+export function useUpdateSkillConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ skillId, config }: { skillId: string; config: Omit<SkillConfig, 'skill_id'> }) =>
+      apiPatch<SkillConfig>(`/app/v1/skills/${skillId}/config`, config),
+    onSuccess: (_data, { skillId }) => {
+      void qc.invalidateQueries({ queryKey: ['skills', skillId] });
+    },
   });
 }
 
 export function useInstallSkill() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (source_uri: string) =>
-      apiPost('/app/v1/skills/install', { source_uri }),
+    mutationFn: ({ skill_name, source_uri, version }: { skill_name: string; source_uri: string; version?: string }) =>
+      apiPost('/app/v1/skills/install', { skill_name, source_uri, version }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['skills'] });
     },
@@ -822,9 +890,58 @@ export function useUninstallSkill() {
 export function useSearchSkills(query: string) {
   return useQuery({
     queryKey: ['skills', 'search', query],
-    queryFn: () =>
-      apiFetch<SkillItem[]>(`/app/v1/skills/search?q=${encodeURIComponent(query)}`),
+    queryFn: async () => {
+      const data = await apiFetch<RawSkillEntry[]>(`/app/v1/skills/search?q=${encodeURIComponent(query)}`);
+      return data.map(normalizeSkill);
+    },
     enabled: query.length > 1,
+  });
+}
+
+export function useSkillSources() {
+  return useQuery({
+    queryKey: ['skills', 'sources'],
+    queryFn: () => apiFetch<SkillSource[]>('/app/v1/skills/sources'),
+  });
+}
+
+export function useAddSkillSource() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { uri: string; name: string; source_type: string }) =>
+      apiPost<SkillSource>('/app/v1/skills/sources', body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['skills', 'sources'] });
+    },
+  });
+}
+
+export function useRemoveSkillSource() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (sourceUri: string) =>
+      apiDelete(`/app/v1/skills/sources/${encodeURIComponent(sourceUri)}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['skills', 'sources'] });
+    },
+  });
+}
+
+export function useMarketplacePolicy() {
+  return useQuery({
+    queryKey: ['admin', 'marketplace'],
+    queryFn: () => apiFetch<MarketplacePolicy>('/app/v1/admin/features/marketplace'),
+  });
+}
+
+export function useUpdateMarketplacePolicy() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (policy: MarketplacePolicy) =>
+      apiPut<MarketplacePolicy>('/app/v1/admin/features/marketplace', policy),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'marketplace'] });
+    },
   });
 }
 
@@ -998,6 +1115,7 @@ export interface AuthoredSkill {
   version: string;
   description?: string;
   created_at: string;
+  content?: string;
 }
 
 export function useAuthoredSkills() {
@@ -1005,6 +1123,66 @@ export function useAuthoredSkills() {
     queryKey: ['intelligence', 'skills', 'authored'],
     queryFn: () =>
       apiFetch<AuthoredSkill[]>('/app/v1/intelligence/skills/authored'),
+  });
+}
+
+export function useAuthoredSkillDetail(skillId: string) {
+  return useQuery({
+    queryKey: ['intelligence', 'skills', 'authored', skillId],
+    queryFn: () =>
+      apiFetch<AuthoredSkill>(`/app/v1/intelligence/skills/authored/${skillId}`),
+    enabled: !!skillId,
+  });
+}
+
+export function useCreateSkill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { name: string; description?: string; version?: string; content: string }) =>
+      apiPost<AuthoredSkill>('/app/v1/intelligence/skills/authored', body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['intelligence', 'skills', 'authored'] });
+    },
+  });
+}
+
+export function useUpdateSkill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ skillId, content, name, description, version }: { skillId: string; content: string; name?: string; description?: string; version?: string }) =>
+      apiPut<AuthoredSkill>(`/app/v1/intelligence/skills/authored/${skillId}`, { content, name, description, version }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['intelligence', 'skills', 'authored'] });
+    },
+  });
+}
+
+export function useDeleteAuthoredSkill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (skillId: string) =>
+      apiDelete(`/app/v1/intelligence/skills/authored/${skillId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['intelligence', 'skills', 'authored'] });
+    },
+  });
+}
+
+export function useValidateSkill() {
+  return useMutation({
+    mutationFn: (content: string) =>
+      apiPost<{ valid: boolean; errors: string[] }>('/app/v1/intelligence/skills/validate', { content }),
+  });
+}
+
+export function useForkSkill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ skillId, name }: { skillId: string; name?: string }) =>
+      apiPost<AuthoredSkill>(`/app/v1/intelligence/skills/authored/${skillId}/fork`, { name }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['intelligence', 'skills', 'authored'] });
+    },
   });
 }
 

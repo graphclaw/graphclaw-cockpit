@@ -122,6 +122,9 @@ const InfraPage = lazy(() =>
 const ConnectorsPage = lazy(() =>
   import('@/features/admin/ConnectorsPage').then((m) => ({ default: m.ConnectorsPage })),
 );
+const MarketplacePolicyPage = lazy(() =>
+  import('@/features/admin/MarketplacePolicyPage').then((m) => ({ default: m.MarketplacePolicyPage })),
+);
 
 function SuspenseFallback() {
   return (
@@ -195,6 +198,7 @@ export function AppRoutes() {
                           <Route path="audit" element={<AuditPage />} />
                           <Route path="infra" element={<InfraPage />} />
                           <Route path="connectors" element={<ConnectorsPage />} />
+                          <Route path="marketplace" element={<MarketplacePolicyPage />} />
                         </Route>
 
                         {/* Catch-all */}

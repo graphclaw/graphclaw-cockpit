@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Save, Plus, GitFork, CheckCircle, XCircle } from 'lucide-react';
-import { useAuthoredSkills } from '@/lib/api-hooks';
+import { useAuthoredSkills, useCreateSkill, useUpdateSkill, useForkSkill, useValidateSkill } from '@/lib/api-hooks';
 
 interface LocalSkill {
   skill_id: string;
@@ -25,6 +25,10 @@ Describe the skill behavior here.`;
 
 export function SkillAuthoringPage() {
   const { data: remoteSkills = [], isLoading } = useAuthoredSkills();
+  const createSkill = useCreateSkill();
+  const updateSkill = useUpdateSkill();
+  const forkSkill = useForkSkill();
+  const validateSkill = useValidateSkill();
   const [localSkills, setLocalSkills] = useState<LocalSkill[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState('');
@@ -69,12 +73,57 @@ export function SkillAuthoringPage() {
   }
 
   function handleValidate() {
-    const hasFrontmatter = editedContent.startsWith('---') && editedContent.indexOf('---', 3) > 3;
-    const hasName = editedContent.includes('name:');
-    const hasDescription = editedContent.includes('description:');
-    const isValid = hasFrontmatter && hasName && hasDescription;
-    setLocalSkills((prev) =>
-      prev.map((s) => (s.skill_id === selectedId ? { ...s, valid: isValid } : s)),
+    // Use API validation if available, fall back to client-side heuristic
+    validateSkill.mutate(editedContent, {
+      onSuccess: (result) => {
+        setLocalSkills((prev) =>
+          prev.map((s) => (s.skill_id === selectedId ? { ...s, valid: result.valid } : s)),
+        );
+      },
+      onError: () => {
+        // Client-side fallback
+        const hasFrontmatter = editedContent.startsWith('---') && editedContent.indexOf('---', 3) > 3;
+        const hasName = editedContent.includes('name:');
+        const hasDescription = editedContent.includes('description:');
+        const isValid = hasFrontmatter && hasName && hasDescription;
+        setLocalSkills((prev) =>
+          prev.map((s) => (s.skill_id === selectedId ? { ...s, valid: isValid } : s)),
+        );
+      },
+    });
+  }
+
+  function handleSave() {
+    if (!selectedId || !editedContent) return;
+    const isLocal = localSkills.some((s) => s.skill_id === selectedId);
+    const skill = allSkills.find((s) => s.skill_id === selectedId);
+    if (!skill) return;
+
+    if (isLocal) {
+      // New skill — create via API
+      createSkill.mutate(
+        { name: skill.name, description: skill.description, version: skill.version, content: editedContent },
+        {
+          onSuccess: (created) => {
+            // Remove from local list, it now lives remotely
+            setLocalSkills((prev) => prev.filter((s) => s.skill_id !== selectedId));
+            setSelectedId(created.skill_id);
+          },
+        },
+      );
+    } else {
+      // Existing remote skill — update
+      updateSkill.mutate({ skillId: selectedId, content: editedContent });
+    }
+  }
+
+  function handleFork() {
+    if (!selectedId) return;
+    const skill = allSkills.find((s) => s.skill_id === selectedId);
+    if (!skill) return;
+    forkSkill.mutate(
+      { skillId: selectedId, name: `${skill.name}-fork` },
+      { onSuccess: (forked) => setSelectedId(forked.skill_id) },
     );
   }
 
@@ -138,14 +187,15 @@ export function SkillAuthoringPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" title="Fork">
+                <Button size="sm" variant="outline" title="Fork" onClick={handleFork} disabled={forkSkill.isPending}>
                   <GitFork size={14} className="mr-1" /> Fork
                 </Button>
-                <Button size="sm" variant="outline" onClick={handleValidate}>
-                  Validate
+                <Button size="sm" variant="outline" onClick={handleValidate} disabled={validateSkill.isPending}>
+                  {validateSkill.isPending ? 'Validating…' : 'Validate'}
                 </Button>
-                <Button size="sm" onClick={() => {}} disabled={!isDirty}>
-                  <Save size={14} className="mr-1" /> Save
+                <Button size="sm" onClick={handleSave} disabled={!isDirty || createSkill.isPending || updateSkill.isPending}>
+                  <Save size={14} className="mr-1" />
+                  {createSkill.isPending || updateSkill.isPending ? 'Saving…' : 'Save'}
                 </Button>
               </div>
             </div>
