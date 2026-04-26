@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Save, Plus, GitFork, CheckCircle, XCircle } from 'lucide-react';
@@ -37,17 +37,25 @@ export function SkillAuthoringPage() {
   const allSkills: LocalSkill[] = [
     ...remoteSkills.map((s) => ({
       skill_id: s.skill_id,
-      name: s.name,
-      version: s.version,
+      name: s.name ?? s.skill_id,
+      version: s.version ?? '0.1.0',
       description: s.description ?? '',
       valid: true as boolean | null,
-      content: BLANK_TEMPLATE,
+      content: s.content ?? BLANK_TEMPLATE,
     })),
     ...localSkills,
   ];
 
   const selected = allSkills.find((s) => s.skill_id === selectedId);
   const isDirty = selected ? editedContent !== selected.content : false;
+
+  useEffect(() => {
+    const firstSkill = allSkills[0];
+    if (!firstSkill) return;
+    if (selectedId && allSkills.some((skill) => skill.skill_id === selectedId)) return;
+    setSelectedId(firstSkill.skill_id);
+    setEditedContent(firstSkill.content);
+  }, [allSkills, selectedId]);
 
   function selectSkill(id: string) {
     const skill = allSkills.find((s) => s.skill_id === id);
@@ -113,7 +121,13 @@ export function SkillAuthoringPage() {
       );
     } else {
       // Existing remote skill — update
-      updateSkill.mutate({ skillId: selectedId, content: editedContent });
+      updateSkill.mutate({
+        skillId: selectedId,
+        content: editedContent,
+        name: skill.name,
+        description: skill.description,
+        version: skill.version,
+      });
     }
   }
 
@@ -123,7 +137,11 @@ export function SkillAuthoringPage() {
     if (!skill) return;
     forkSkill.mutate(
       { skillId: selectedId, name: `${skill.name}-fork` },
-      { onSuccess: (forked) => setSelectedId(forked.skill_id) },
+      {
+        onSuccess: (forked) => {
+          setSelectedId(forked.skill_id ?? forked.forked_skill_id ?? null);
+        },
+      },
     );
   }
 
@@ -142,7 +160,7 @@ export function SkillAuthoringPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">Skills</h2>
           <div className="flex gap-1">
-            <Button size="sm" variant="ghost" title="New" onClick={handleCreate}>
+            <Button size="sm" variant="ghost" title="New" onClick={handleCreate} data-testid="create-skill-button">
               <Plus size={14} />
             </Button>
           </div>
@@ -193,7 +211,12 @@ export function SkillAuthoringPage() {
                 <Button size="sm" variant="outline" onClick={handleValidate} disabled={validateSkill.isPending}>
                   {validateSkill.isPending ? 'Validating…' : 'Validate'}
                 </Button>
-                <Button size="sm" onClick={handleSave} disabled={!isDirty || createSkill.isPending || updateSkill.isPending}>
+                <Button
+                  size="sm"
+                  data-testid="save-skill-button"
+                  onClick={handleSave}
+                  disabled={!isDirty || createSkill.isPending || updateSkill.isPending}
+                >
                   <Save size={14} className="mr-1" />
                   {createSkill.isPending || updateSkill.isPending ? 'Saving…' : 'Save'}
                 </Button>
@@ -214,6 +237,15 @@ export function SkillAuthoringPage() {
                 ) : (
                   <><XCircle size={14} /> Invalid — missing required frontmatter fields</>
                 )}
+              </div>
+            )}
+
+            {(createSkill.isError || updateSkill.isError || forkSkill.isError) && (
+              <div className="rounded-[var(--radius-md)] bg-[var(--state-error)]/10 px-3 py-2 text-xs text-[var(--state-error)]">
+                {(createSkill.error as Error | null)?.message ||
+                  (updateSkill.error as Error | null)?.message ||
+                  (forkSkill.error as Error | null)?.message ||
+                  'Skill operation failed. Please retry.'}
               </div>
             )}
 

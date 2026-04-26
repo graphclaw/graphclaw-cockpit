@@ -10,9 +10,11 @@ interface AuthState {
   refreshToken: string | null;
   userId: string | null;
   role: UserRole | null;
+  displayName: string | null;
+  email: string | null;
   isAuthenticated: boolean;
   setTokens: (access: string, refresh: string) => void;
-  setUser: (userId: string, role: UserRole) => void;
+  setUser: (userId: string, role: UserRole, displayName?: string, email?: string) => void;
   logout: () => void;
 }
 
@@ -23,6 +25,8 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       userId: null,
       role: null,
+      displayName: null,
+      email: null,
       isAuthenticated: false,
       setTokens: (access, refresh) => {
         logger.info('auth.login');
@@ -30,7 +34,8 @@ export const useAuthStore = create<AuthState>()(
         localStorage.setItem('gc-refresh-token', refresh);
         set({ accessToken: access, refreshToken: refresh, isAuthenticated: true });
       },
-      setUser: (userId, role) => set({ userId, role }),
+      setUser: (userId, role, displayName, email) =>
+        set({ userId, role, displayName: displayName ?? null, email: email ?? null }),
       logout: () => {
         logger.info('auth.logout');
         localStorage.removeItem('gc-access-token');
@@ -40,6 +45,8 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
           userId: null,
           role: null,
+          displayName: null,
+          email: null,
           isAuthenticated: false,
         });
       },

@@ -9,6 +9,7 @@ export const APP_BASE = process.env.BASE_URL ?? 'http://localhost:3000';
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface DevTokenResult {
   access_token: string;
+  refresh_token: string;
 }
 
 // ── Token fetch ───────────────────────────────────────────────────────────────
@@ -38,27 +39,30 @@ export async function getDevToken(): Promise<DevTokenResult> {
  */
 export async function injectLocalStorage(
   page: Page,
-  token: string,
+  accessToken: string,
+  refreshToken: string,
 ): Promise<void> {
   await page.evaluate(
-    ({ access, userId }: { access: string; userId: string }) => {
+    ({ access, refresh, userId }: { access: string; refresh: string; userId: string }) => {
       localStorage.setItem('gc-access-token', access);
-      localStorage.setItem('gc-refresh-token', access);
+      localStorage.setItem('gc-refresh-token', refresh);
       localStorage.setItem(
         'gc-auth',
         JSON.stringify({
           state: {
             accessToken: access,
-            refreshToken: access,
+            refreshToken: refresh,
             userId,
             role: 'ADMIN',
+            displayName: null,
+            email: null,
             isAuthenticated: true,
           },
           version: 0,
         }),
       );
     },
-    { access: token, userId: TEST_USER_ID },
+    { access: accessToken, refresh: refreshToken, userId: TEST_USER_ID },
   );
   await page.reload({ waitUntil: 'networkidle0' });
 }

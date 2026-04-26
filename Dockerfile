@@ -10,7 +10,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ARG VITE_API_URL=/api
+ARG VITE_ENABLE_DEV_AUTH=false
+ARG VITE_LOG_LEVEL=info
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_ENABLE_DEV_AUTH=$VITE_ENABLE_DEV_AUTH
+ENV VITE_LOG_LEVEL=$VITE_LOG_LEVEL
 RUN npm run build
 
 # Stage 3 — Serve with nginx

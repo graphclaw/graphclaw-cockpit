@@ -29,13 +29,14 @@ export async function launchBrowser(): Promise<Browser> {
  */
 export async function newAuthenticatedPage(
   browser: Browser,
-  token: string,
+  accessToken: string,
+  refreshToken: string,
 ): Promise<Page> {
   const page = await browser.newPage();
   // Disable cache headers to always get fresh assets from Vite
   await page.setCacheEnabled(false);
   await page.goto(APP_BASE, { waitUntil: 'networkidle0', timeout: 30000 });
-  await injectLocalStorage(page, token);
+  await injectLocalStorage(page, accessToken, refreshToken);
   return page;
 }
 

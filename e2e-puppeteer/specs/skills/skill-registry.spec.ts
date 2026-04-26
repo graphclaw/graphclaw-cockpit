@@ -88,6 +88,44 @@ describe('Skills — Registry', () => {
     }
   });
 
+  // ── Add source through UI ─────────────────────────────────────────────────
+  test('skills UI Add Source submits and persists source', async () => {
+    const page = await ctx.newPage();
+    const sourceUri = `graphclaw://e2e-ui-source/${Date.now()}`;
+    const sourceName = `E2E UI Source ${Date.now()}`;
+    addedSourceUris.push(sourceUri);
+
+    try {
+      await gotoAndWaitForApi(page, '/skills', '/app/v1/skills/sources');
+      await page.waitForSelector('[data-testid="skills-tab-sources"]', { timeout: 10000 });
+      await page.click('[data-testid="skills-tab-sources"]');
+
+      await page.waitForSelector('[data-testid="toggle-add-source"]', { timeout: 10000 });
+      await page.click('[data-testid="toggle-add-source"]');
+
+      await page.type('[data-testid="source-uri-input"]', sourceUri);
+      await page.type('[data-testid="source-name-input"]', sourceName);
+
+      const [addRes] = await Promise.all([
+        page.waitForResponse(
+          (res) =>
+            res.url().includes('/app/v1/skills/sources') &&
+            res.request().method() === 'POST',
+          { timeout: 15000 },
+        ),
+        page.click('[data-testid="submit-add-source"]'),
+      ]);
+
+      expect([200, 201]).toContain(addRes.status());
+
+      const { body: sources, status } = await ctx.api.get<Array<{ source_uri?: string }>>('/skills/sources');
+      expect(status).toBe(200);
+      expect(sources.some((s) => s.source_uri === sourceUri)).toBe(true);
+    } finally {
+      await page.close();
+    }
+  });
+
   // ── Install skill ──────────────────────────────────────────────────────────
   test('POST /skills/install → skill in GET /skills list', async () => {
     const skillName = `e2e-test-skill-${Date.now()}`;

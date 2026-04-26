@@ -24,7 +24,7 @@ export const StoragePaths = {
   semanticTopic: (userId: string, topic: string) =>
     `${userId}/memory/semantic/${topic}.md`,
   authoredSkill: (userId: string, skillId: string) =>
-    `${userId}/skills/authored/${skillId}.md`,
+    `${userId}/skills/authored/${skillId}/SKILL.md`,
 };
 
 // ── MinioClient ───────────────────────────────────────────────────────────────

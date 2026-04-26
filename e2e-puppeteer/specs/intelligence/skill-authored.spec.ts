@@ -98,14 +98,10 @@ describe('Intelligence — Skill Authoring', () => {
 
     // MinIO: object exists
     const key = StoragePaths.authoredSkill(ctx.userId, skillId);
-    try {
-      const exists = await ctx.minio.objectExists(key);
-      expect(exists).toBe(true);
-      const content = await ctx.minio.readObject(key);
-      expect(content).toContain(skillId);
-    } catch {
-      console.warn('MinIO check skipped');
-    }
+    const exists = await ctx.minio.objectExists(key);
+    expect(exists).toBe(true);
+    const content = await ctx.minio.readObject(key);
+    expect(content).toContain(skillId);
   });
 
   // ── Update authored skill ──────────────────────────────────────────────────
@@ -131,12 +127,8 @@ describe('Intelligence — Skill Authoring', () => {
 
     // MinIO: updated
     const key = StoragePaths.authoredSkill(ctx.userId, skillId);
-    try {
-      const minioContent = await ctx.minio.readObject(key);
-      expect(minioContent).toContain('UPDATED');
-    } catch {
-      console.warn('MinIO read skipped');
-    }
+    const minioContent = await ctx.minio.readObject(key);
+    expect(minioContent).toContain('UPDATED');
   });
 
   // ── Fork authored skill ────────────────────────────────────────────────────
@@ -176,11 +168,63 @@ describe('Intelligence — Skill Authoring', () => {
     expect([404, 422]).toContain(getStatus);
 
     const key = StoragePaths.authoredSkill(ctx.userId, skillId);
+    const exists = await ctx.minio.objectExists(key);
+    expect(exists).toBe(false);
+  });
+
+  // ── UI create + save flow ─────────────────────────────────────────────────
+  test('skill authoring UI can create and persist a skill to MinIO', async () => {
+    const page = await ctx.newPage();
+    const uiSkillId = `e2e-ui-skill-${Date.now()}`;
     try {
+      await gotoAndWaitForApi(
+        page,
+        '/intelligence/skill-authoring',
+        '/app/v1/intelligence/skills/authored',
+      );
+      await page.waitForSelector('[data-testid="create-skill-button"]', { timeout: 10000 });
+      await page.click('[data-testid="create-skill-button"]');
+      await page.waitForSelector('[data-testid="skill-editor"]', { timeout: 10000 });
+
+      const content = SKILL_TEMPLATE(uiSkillId);
+      await page.click('[data-testid="skill-editor"]');
+      await page.keyboard.down('Control');
+      await page.keyboard.press('KeyA');
+      await page.keyboard.up('Control');
+      await page.keyboard.type(content);
+
+      await page.waitForFunction(
+        () => {
+          const btn = document.querySelector('[data-testid="save-skill-button"]') as HTMLButtonElement | null;
+          return btn ? !btn.disabled : false;
+        },
+        { timeout: 10000 },
+      );
+
+      const [saveRes] = await Promise.all([
+        page.waitForResponse(
+          (res) =>
+            res.url().includes('/app/v1/intelligence/skills/authored') &&
+            res.request().method() === 'POST',
+          { timeout: 15000 },
+        ),
+        page.click('[data-testid="save-skill-button"]'),
+      ]);
+
+      expect([200, 201]).toContain(saveRes.status());
+      const created = (await saveRes.json()) as { skill_id?: string };
+      expect(created.skill_id).toBeTruthy();
+
+      const createdSkillId = created.skill_id as string;
+      createdSkillIds.push(createdSkillId);
+
+      const key = StoragePaths.authoredSkill(ctx.userId, createdSkillId);
       const exists = await ctx.minio.objectExists(key);
-      expect(exists).toBe(false);
-    } catch {
-      console.warn('MinIO check skipped');
+      expect(exists).toBe(true);
+      const stored = await ctx.minio.readObject(key);
+      expect(stored).toContain(uiSkillId);
+    } finally {
+      await page.close();
     }
   });
 
@@ -191,7 +235,7 @@ describe('Intelligence — Skill Authoring', () => {
       await gotoAndWaitForApi(
         page,
         '/intelligence/skill-authoring',
-        '/app/v1/intelligence/skills',
+        '/app/v1/intelligence/skills/authored',
       );
       await page.waitForSelector('main', { timeout: 10000 });
     } finally {

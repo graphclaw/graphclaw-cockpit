@@ -37,7 +37,7 @@ export function SourcesTab({ sources }: SourcesTabProps) {
         <p className="text-sm text-[var(--text-secondary)]">
           Manage skill sources — GitHub repos and websites that publish skill indexes.
         </p>
-        <Button size="sm" onClick={() => setShowAdd((v) => !v)}>
+        <Button size="sm" onClick={() => setShowAdd((v) => !v)} data-testid="toggle-add-source">
           <Plus size={14} className="mr-1" /> Add Source
         </Button>
       </div>
@@ -53,6 +53,7 @@ export function SourcesTab({ sources }: SourcesTabProps) {
                 value={newUri}
                 onChange={(e) => setNewUri(e.target.value)}
                 placeholder="https://github.com/org/skills-repo"
+                data-testid="source-uri-input"
               />
             </div>
             <div>
@@ -61,6 +62,7 @@ export function SourcesTab({ sources }: SourcesTabProps) {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="My Skills Repo"
+                data-testid="source-name-input"
               />
             </div>
           </div>
@@ -85,7 +87,12 @@ export function SourcesTab({ sources }: SourcesTabProps) {
             <Button variant="outline" size="sm" onClick={() => setShowAdd(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleAdd} disabled={!newUri.trim() || addSource.isPending}>
+            <Button
+              size="sm"
+              onClick={handleAdd}
+              disabled={!newUri.trim() || addSource.isPending}
+              data-testid="submit-add-source"
+            >
               {addSource.isPending ? 'Adding…' : 'Add Source'}
             </Button>
           </div>
@@ -125,7 +132,10 @@ interface SourceCardProps {
 
 function SourceCard({ source, onRemove, removePending }: SourceCardProps) {
   return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4 space-y-3">
+    <div
+      className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4 space-y-3"
+      data-testid="skill-source-card"
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="font-medium text-sm text-[var(--text-primary)] truncate">{source.name}</div>

@@ -1,4 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+
+import { recoverAuthSession } from '@/lib/auth-session';
 import { useAuthStore } from '@/stores/auth';
 
 const REFRESH_INTERVAL = 14 * 60 * 1000; // 14 minutes (tokens expire in 15 min)
@@ -15,29 +17,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (!isAuthenticated || !refreshToken) return;
 
     async function refreshTokens() {
-      const currentRefresh = useAuthStore.getState().refreshToken;
-      if (!currentRefresh) return;
-
-      try {
-        const res = await fetch('/auth/refresh', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh_token: currentRefresh }),
-        });
-
-        if (res.ok) {
-          const data = (await res.json()) as {
-            access_token: string;
-            refresh_token: string;
-          };
-          useAuthStore.getState().setTokens(data.access_token, data.refresh_token);
-        } else {
-          useAuthStore.getState().logout();
-        }
-      } catch {
-        // Network error — stay logged in, retry next interval
+      const recovered = await recoverAuthSession();
+      if (!recovered) {
+        // Keep the current session on transient refresh failures (e.g. 429/network).
+        // Request-level 401 handlers still recover or force logout if tokens are truly invalid.
+        return;
       }
     }
+
+    // Validate persisted credentials right away so stale tokens after
+    // backend restarts do not leave the UI in a broken half-authenticated state.
+    void refreshTokens();
 
     intervalRef.current = setInterval(refreshTokens, REFRESH_INTERVAL);
 

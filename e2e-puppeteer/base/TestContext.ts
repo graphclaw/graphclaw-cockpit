@@ -23,7 +23,8 @@ import { launchBrowser, newAuthenticatedPage } from '../helpers/browser.helper';
  *   });
  */
 export class TestContext {
-  readonly token: string;
+  readonly accessToken: string;
+  readonly refreshToken: string;
   readonly userId: string;
   readonly api: ApiClient;
   readonly db: DbClient;
@@ -31,13 +32,15 @@ export class TestContext {
   readonly browser: Browser;
 
   private constructor(
-    token: string,
+    accessToken: string,
+    refreshToken: string,
     api: ApiClient,
     db: DbClient,
     minio: MinioClient,
     browser: Browser,
   ) {
-    this.token = token;
+    this.accessToken = accessToken;
+    this.refreshToken = refreshToken;
     this.userId = TEST_USER_ID;
     this.api = api;
     this.db = db;
@@ -58,7 +61,7 @@ export class TestContext {
     await db.connect();
     const minio = new MinioClient();
     const browser = await launchBrowser();
-    return new TestContext(tokens.access_token, api, db, minio, browser);
+    return new TestContext(tokens.access_token, tokens.refresh_token, api, db, minio, browser);
   }
 
   /**
@@ -66,7 +69,7 @@ export class TestContext {
    * Each test should call this and close the page in a finally block.
    */
   async newPage(): Promise<Page> {
-    return newAuthenticatedPage(this.browser, this.token);
+    return newAuthenticatedPage(this.browser, this.accessToken, this.refreshToken);
   }
 
   /**

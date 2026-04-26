@@ -5,56 +5,91 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { logoutAndRedirectToLogin, recoverAuthSession } from '@/lib/auth-session';
+
 // ---------------------------------------------------------------------------
 // helpers
 // ---------------------------------------------------------------------------
 
-function authHeaders(): HeadersInit {
+function authHeaders(extra?: HeadersInit): Headers {
+  const headers = new Headers(extra);
   const token = localStorage.getItem('gc-access-token');
-  return token
-    ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-    : { 'Content-Type': 'application/json' };
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+  return headers;
+}
+
+function parseApiError(path: string, method: string, status: number): Error {
+  if (status === 401) {
+    return new Error(`Unauthorized request for ${method} ${path}. Please sign in again.`);
+  }
+  return new Error(`API ${method} ${path} → ${status}`);
+}
+
+async function parseJsonResponse<T>(res: Response): Promise<T> {
+  if (res.status === 204) {
+    return undefined as T;
+  }
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
+async function apiRequest<T>(
+  path: string,
+  method = 'GET',
+  body?: unknown,
+): Promise<T> {
+  const send = async (): Promise<Response> => {
+    return fetch(path, {
+      method,
+      headers: authHeaders(),
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  };
+
+  let res = await send();
+  if (res.status === 401) {
+    const recovered = await recoverAuthSession();
+    if (!recovered) {
+      logoutAndRedirectToLogin();
+      throw parseApiError(path, method, res.status);
+    }
+    res = await send();
+    if (res.status === 401) {
+      logoutAndRedirectToLogin();
+      throw parseApiError(path, method, res.status);
+    }
+  }
+
+  if (!res.ok) {
+    throw parseApiError(path, method, res.status);
+  }
+
+  return parseJsonResponse<T>(res);
 }
 
 async function apiFetch<T>(path: string): Promise<T> {
-  const res = await fetch(path, { headers: authHeaders() });
-  if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
-  return res.json() as Promise<T>;
+  return apiRequest<T>(path, 'GET');
 }
 
 async function apiPost<T>(path: string, body?: unknown): Promise<T> {
-  const res = await fetch(path, {
-    method: 'POST',
-    headers: authHeaders(),
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) throw new Error(`API POST ${path} → ${res.status}`);
-  return res.json() as Promise<T>;
+  return apiRequest<T>(path, 'POST', body);
 }
 
 async function apiPatch<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(path, {
-    method: 'PATCH',
-    headers: authHeaders(),
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`API PATCH ${path} → ${res.status}`);
-  return res.json() as Promise<T>;
+  return apiRequest<T>(path, 'PATCH', body);
 }
 
 async function apiPut<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(path, {
-    method: 'PUT',
-    headers: authHeaders(),
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`API PUT ${path} → ${res.status}`);
-  return res.json() as Promise<T>;
+  return apiRequest<T>(path, 'PUT', body);
 }
 
 async function apiDelete(path: string): Promise<void> {
-  const res = await fetch(path, { method: 'DELETE', headers: authHeaders() });
-  if (!res.ok) throw new Error(`API DELETE ${path} → ${res.status}`);
+  await apiRequest<void>(path, 'DELETE');
 }
 
 // ---------------------------------------------------------------------------
@@ -1111,10 +1146,14 @@ export function useSemanticMemory(agentId: string) {
 
 export interface AuthoredSkill {
   skill_id: string;
-  name: string;
-  version: string;
+  forked_skill_id?: string;
+  original_skill_id?: string;
+  name?: string;
+  version?: string;
   description?: string;
-  created_at: string;
+  created_at?: string;
+  updated_at?: string;
+  path?: string;
   content?: string;
 }
 

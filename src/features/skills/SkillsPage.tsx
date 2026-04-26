@@ -99,6 +99,7 @@ export function SkillsPage() {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
+              data-testid={`skills-tab-${t.id}`}
               className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
                 tab === t.id
                   ? 'border-[var(--brand-primary)] text-[var(--brand-primary)]'

@@ -7,24 +7,40 @@ export function CallbackPage() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
+    const code = searchParams.get('code');
 
-    if (accessToken && refreshToken) {
-      useAuthStore.getState().setTokens(accessToken, refreshToken);
-
-      // Fetch user info
-      fetch('/auth/me', {
-        headers: { Authorization: `Bearer ${accessToken}` },
+    // OTC exchange path (normal OAuth flow)
+    if (code) {
+      fetch('/auth/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
       })
-        .then((res) => res.json())
-        .then((data: { user_id: string }) => {
-          useAuthStore.getState().setUser(data.user_id, 'USER' as UserRole);
+        .then((res) => {
+          if (!res.ok) throw new Error('Exchange failed');
+          return res.json();
+        })
+        .then((data: { access_token: string; refresh_token: string; user_id: string; role: string; display_name?: string; email?: string }) => {
+          useAuthStore.getState().setTokens(data.access_token, data.refresh_token);
+          useAuthStore.getState().setUser(data.user_id, data.role as UserRole, data.display_name, data.email);
           navigate('/', { replace: true });
         })
-        .catch(() => {
-          navigate('/', { replace: true });
-        });
+        .catch(() => navigate('/login', { replace: true }));
+      return;
+    }
+
+    // Fallback path — Redis unavailable, tokens delivered as query params (dev only)
+    const accessToken = searchParams.get('access_token');
+    const refreshToken = searchParams.get('refresh_token');
+    const userId = searchParams.get('user_id');
+    const role = searchParams.get('role');
+    const displayName = searchParams.get('display_name') ?? undefined;
+    const email = searchParams.get('email') ?? undefined;
+
+    if (accessToken && refreshToken && userId) {
+      useAuthStore.getState().setTokens(accessToken, refreshToken);
+      useAuthStore.getState().setUser(userId, (role ?? 'USER') as UserRole, displayName, email);
+      navigate('/', { replace: true });
     } else {
       navigate('/login', { replace: true });
     }
