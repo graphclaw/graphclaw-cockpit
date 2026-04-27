@@ -1,5 +1,38 @@
 import { http, HttpResponse } from 'msw';
 
+const mcpServers = [
+  {
+    server_id: 'MCP-mock-gh',
+    name: 'GitHub Actions',
+    transport: 'http',
+    endpoint_url: 'https://api.github.com/mcp',
+    command: null,
+    trust_tier: 'AUTO',
+    scope: ['read_issues'],
+    enabled: true,
+  },
+  {
+    server_id: 'MCP-mock-jira',
+    name: 'Jira Cloud',
+    transport: 'sse',
+    endpoint_url: 'https://jira.example.com/mcp',
+    command: null,
+    trust_tier: 'GATED',
+    scope: ['read_tickets'],
+    enabled: true,
+  },
+  {
+    server_id: 'MCP-mock-legacy',
+    name: 'Legacy Connector',
+    transport: 'http',
+    endpoint_url: 'https://legacy.example.com/mcp',
+    command: null,
+    trust_tier: 'BLOCKED',
+    scope: ['read_legacy'],
+    enabled: false,
+  },
+];
+
 export const handlers = [
   // Auth: dev-token
   http.post('/auth/dev-token', () => {
@@ -90,6 +123,34 @@ export const handlers = [
   // Health check
   http.get('/health', () => {
     return HttpResponse.json({ status: 'ok' });
+  }),
+
+  // MCP Registry: list
+  http.get('/app/v1/mcp-servers', () => {
+    return HttpResponse.json(mcpServers);
+  }),
+
+  // MCP Registry: register
+  http.post('/app/v1/mcp-servers', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    return HttpResponse.json(
+      {
+        server_id: `MCP-mock-${Date.now()}`,
+        name: String(body.name ?? 'New MCP Server'),
+        transport: String(body.transport ?? 'http'),
+        endpoint_url: body.endpoint_url ?? null,
+        command: body.command ?? null,
+        trust_tier: String(body.trust_tier ?? 'GATED'),
+        scope: Array.isArray(body.scope) ? body.scope : [],
+        enabled: true,
+      },
+      { status: 201 },
+    );
+  }),
+
+  // MCP Registry: delete
+  http.delete('/app/v1/mcp-servers/:serverId', () => {
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // Skills: list installed

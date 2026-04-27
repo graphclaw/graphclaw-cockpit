@@ -987,10 +987,25 @@ export function useUpdateMarketplacePolicy() {
 export interface McpServer {
   server_id: string;
   name: string;
-  endpoint: string;
+  transport: 'stdio' | 'sse' | 'http';
+  endpoint_url: string | null;
+  command: string | null;
   trust_tier: 'AUTO' | 'GATED' | 'BLOCKED';
-  tool_count: number;
-  status: 'connected' | 'disconnected' | 'error';
+  scope: string[];
+  enabled: boolean;
+  // Backward-compatible optional fields used by older UI rendering.
+  tool_count?: number;
+  status?: 'connected' | 'disconnected' | 'error';
+  endpoint?: string;
+}
+
+export interface RegisterMcpServerInput {
+  name: string;
+  transport: 'stdio' | 'sse' | 'http';
+  endpoint_url?: string;
+  command?: string;
+  trust_tier: 'AUTO' | 'GATED' | 'BLOCKED';
+  scope?: string[];
 }
 
 export function useMcpServers() {
@@ -1003,7 +1018,7 @@ export function useMcpServers() {
 export function useRegisterMcpServer() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (server: { name: string; endpoint: string; trust_tier: string }) =>
+    mutationFn: (server: RegisterMcpServerInput) =>
       apiPost<McpServer>('/app/v1/mcp-servers', server),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['mcp-servers'] });
