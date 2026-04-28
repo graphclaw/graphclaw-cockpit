@@ -1156,6 +1156,26 @@ export function useUpdateWorkingMemory() {
   });
 }
 
+export interface ContextUsage {
+  agent_id: string;
+  working_chars: number;
+  episodic_chars: number;
+  semantic_chars: number;
+  total_chars: number;
+  budget_chars: number;
+  utilization_pct: number;
+}
+
+export function useContextUsage(agentId: string) {
+  return useQuery({
+    queryKey: ['intelligence', agentId, 'memory', 'estimate'],
+    queryFn: () =>
+      apiFetch<ContextUsage>(`/app/v1/intelligence/agents/${agentId}/memory/estimate`),
+    enabled: !!agentId,
+    staleTime: 30_000,
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Intelligence Hub — Episodic Memory
 // ---------------------------------------------------------------------------

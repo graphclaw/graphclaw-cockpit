@@ -163,4 +163,25 @@ describe('Intelligence — Working Memory', () => {
       console.warn('MinIO check skipped');
     }
   });
+
+  // ── Context usage estimate ────────────────────────────────────────────────
+  test('GET /memory/estimate — returns utilization breakdown', async () => {
+    // Write a known amount of working context
+    const content = 'A'.repeat(200);
+    await ctx.api.put(`/intelligence/agents/${ctx.userId}/memory/working`, { content });
+
+    const { body, status } = await ctx.api.get<{
+      working_chars?: number;
+      total_chars?: number;
+      budget_chars?: number;
+      utilization_pct?: number;
+    }>(`/intelligence/agents/${ctx.userId}/memory/estimate`);
+
+    expect(status).toBe(200);
+    expect(typeof body.working_chars).toBe('number');
+    expect(body.working_chars).toBeGreaterThanOrEqual(200);
+    expect(body.budget_chars).toBe(80000);
+    expect(typeof body.utilization_pct).toBe('number');
+    expect(body.utilization_pct).toBeGreaterThan(0);
+  });
 });
