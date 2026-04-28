@@ -36,6 +36,7 @@ import { SubAgentNode } from './nodes/SubAgentNode';
 import { SkillNode } from './nodes/SkillNode';
 import { MCPServerNode } from './nodes/MCPServerNode';
 import { ToolSetNode } from './nodes/ToolSetNode';
+import { SystemAgentNode } from './nodes/SystemAgentNode';
 import { DelegationEdge } from './edges/DelegationEdge';
 import { WiringEdge } from './edges/WiringEdge';
 import { useCanvasStore } from './hooks/useCanvasStore';
@@ -43,6 +44,8 @@ import {
   useCanvasLayout,
   useSaveCanvasLayout,
   useAgentConfig,
+  useSaveAgentConfig,
+  type AgentConfig,
 } from './hooks/useCanvasApi';
 import { useIntelligenceAgents } from '@/lib/api-hooks';
 import { useAuthStore } from '@/stores/auth';
@@ -57,6 +60,7 @@ const nodeTypes = {
   skill: SkillNode,
   mcp_server: MCPServerNode,
   tool_set: ToolSetNode,
+  system_agent: SystemAgentNode,
 };
 
 const edgeTypes = {
@@ -77,9 +81,11 @@ function CanvasEditorInner() {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [toolbarMode, setToolbarMode] = useState<'select' | 'pan'>('select');
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
   const [addAgentOpen, setAddAgentOpen] = useState(false);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   // ---------------------------------------------------------------------------
   // Data fetching
@@ -91,6 +97,14 @@ function CanvasEditorInner() {
 
   // Load orchestrator config for wiring summary
   const { data: orchestratorConfig } = useAgentConfig(userId);
+  // Load selected agent config for palette checkmarks (F22)
+  const { data: selectedAgentConfig } = useAgentConfig(selectedAgentId ?? '');
+  const saveAgentConfig = useSaveAgentConfig();
+
+  // Effective wiring shown in palette: selected agent if one is chosen, else orchestrator
+  // (only when selected node is an agent type, not a resource node)
+  const isAgentNode = selectedNodeType === 'orchestrator' || selectedNodeType === 'sub_agent';
+  const paletteConfig = (selectedAgentId && isAgentNode) ? selectedAgentConfig : orchestratorConfig;
 
   // ---------------------------------------------------------------------------
   // Build canvas nodes from agents list
@@ -179,15 +193,70 @@ function CanvasEditorInner() {
   }, [agentsData, userId]);
 
   // ---------------------------------------------------------------------------
-  // Connection handler
+  // Connection handler (F21: detect wiring edges, sync config)
   // ---------------------------------------------------------------------------
 
   const onConnect = useCallback(
     (connection: Connection) => {
+      const sourceNode = nodes.find((n) => n.id === connection.source);
+      const targetNode = nodes.find((n) => n.id === connection.target);
+
+      // Detect wiring: resource node → agent node
+      const resourceTypes = ['skill', 'mcp_server', 'tool_set'] as const;
+      type ResourceType = typeof resourceTypes[number];
+      const isWiring =
+        sourceNode &&
+        targetNode &&
+        resourceTypes.includes(sourceNode.type as ResourceType) &&
+        (targetNode.type === 'orchestrator' || targetNode.type === 'sub_agent');
+
+      if (isWiring && sourceNode && targetNode) {
+        const agentId = targetNode.id;
+        const fieldMap: Record<string, keyof AgentConfig> = {
+          skill: 'skills',
+          mcp_server: 'mcp_servers',
+          tool_set: 'tool_sets',
+        };
+        const field = fieldMap[sourceNode.type!];
+        const resourceId = (sourceNode.data as Record<string, unknown>)[
+          sourceNode.type === 'skill' ? 'skillId' :
+          sourceNode.type === 'mcp_server' ? 'serverId' : 'toolSetId'
+        ] as string;
+
+        if (field && resourceId) {
+          const existingConfig =
+            agentId === userId ? orchestratorConfig : selectedAgentConfig;
+          if (existingConfig) {
+            const currentArr = (existingConfig[field] as string[] | null) ?? [];
+            if (!currentArr.includes(resourceId)) {
+              saveAgentConfig.mutate({
+                agentId,
+                config: { ...existingConfig, [field]: [...currentArr, resourceId] },
+              });
+            }
+          }
+          // Add as wiring edge
+          setEdges((eds) =>
+            addEdge(
+              {
+                ...connection,
+                type: 'wiring',
+                data: { wiringType: sourceNode.type },
+                animated: false,
+              },
+              eds,
+            ),
+          );
+          markDirty();
+          return;
+        }
+      }
+
+      // Default: delegation edge
       setEdges((eds) => addEdge({ ...connection, type: 'delegation', animated: true }, eds));
       markDirty();
     },
-    [setEdges, markDirty],
+    [nodes, setEdges, markDirty, orchestratorConfig, selectedAgentConfig, saveAgentConfig, userId],
   );
 
   // ---------------------------------------------------------------------------
@@ -265,6 +334,49 @@ function CanvasEditorInner() {
   }, [nodes, edges, setNodes, markDirty]);
 
   // ---------------------------------------------------------------------------
+  // Export / Import JSON (F32)
+  // ---------------------------------------------------------------------------
+
+  const handleExport = useCallback(() => {
+    const payload = JSON.stringify({ nodes, edges }, null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'canvas-export.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [nodes, edges]);
+
+  const handleImport = useCallback(() => {
+    importInputRef.current?.click();
+  }, []);
+
+  const handleImportFile = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target?.result as string) as {
+            nodes?: Node[];
+            edges?: Edge[];
+          };
+          if (Array.isArray(data.nodes)) setNodes(data.nodes);
+          if (Array.isArray(data.edges)) setEdges(data.edges);
+          markDirty();
+        } catch {
+          // ignore invalid JSON
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    },
+    [setNodes, setEdges, markDirty],
+  );
+
+  // ---------------------------------------------------------------------------
   // Agent created callback
   // ---------------------------------------------------------------------------
 
@@ -285,9 +397,9 @@ function CanvasEditorInner() {
       <NodePalette
         agents={paletteAgents}
         selectedAgentId={selectedAgentId}
-        wiredSkills={orchestratorConfig?.skills ?? []}
-        wiredMcpServers={orchestratorConfig?.mcp_servers ?? []}
-        wiredToolSets={orchestratorConfig?.tool_sets ?? []}
+        wiredSkills={paletteConfig?.skills ?? []}
+        wiredMcpServers={paletteConfig?.mcp_servers ?? []}
+        wiredToolSets={paletteConfig?.tool_sets ?? []}
         onAgentClick={setSelectedAgentId}
         onAddAgent={() => setAddAgentOpen(true)}
       />
@@ -307,6 +419,8 @@ function CanvasEditorInner() {
             onRedo={redo}
             onAutoLayout={handleAutoLayout}
             onSave={doSave}
+            onExport={handleExport}
+            onImport={handleImport}
           />
         </div>
 
@@ -327,8 +441,14 @@ function CanvasEditorInner() {
             }}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            onNodeClick={(_evt, node) => setSelectedAgentId(node.id)}
-            onPaneClick={() => setSelectedAgentId(null)}
+            onNodeClick={(_evt, node) => {
+              setSelectedAgentId(node.id);
+              setSelectedNodeType(node.type ?? null);
+            }}
+            onPaneClick={() => {
+              setSelectedAgentId(null);
+              setSelectedNodeType(null);
+            }}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             panOnDrag={toolbarMode === 'pan'}
@@ -348,8 +468,13 @@ function CanvasEditorInner() {
       {selectedAgentId && (
         <PropertyInspector
           agentId={selectedAgentId}
-          agentName={selectedAgent?.name ?? selectedAgentId}
-          onClose={() => setSelectedAgentId(null)}
+          agentName={
+            selectedNodeType === 'skill' || selectedNodeType === 'mcp_server' || selectedNodeType === 'tool_set'
+              ? ((nodes.find((n) => n.id === selectedAgentId)?.data as Record<string, unknown>)?.label as string) ?? selectedAgentId
+              : selectedAgent?.name ?? selectedAgentId
+          }
+          nodeType={selectedNodeType ?? undefined}
+          onClose={() => { setSelectedAgentId(null); setSelectedNodeType(null); }}
         />
       )}
 
@@ -358,6 +483,16 @@ function CanvasEditorInner() {
         open={addAgentOpen}
         onOpenChange={setAddAgentOpen}
         onCreated={handleAgentCreated}
+      />
+
+      {/* Hidden file input for canvas import (F32) */}
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".json,application/json"
+        className="hidden"
+        onChange={handleImportFile}
+        data-testid="canvas-import-input"
       />
     </div>
   );

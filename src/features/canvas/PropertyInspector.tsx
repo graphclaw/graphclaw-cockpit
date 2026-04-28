@@ -9,7 +9,7 @@
  */
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, RotateCcw, ExternalLink, Brain, Loader2 } from 'lucide-react';
+import { Save, RotateCcw, ExternalLink, Brain, Loader2, Wand2, Plug } from 'lucide-react';
 import {
   useAgentProfile,
   useUpdateAgentProfile,
@@ -20,6 +20,7 @@ import {
   useSaveAgentConfig,
   useInstalledSkills,
   useMCPServers,
+  useMCPServerTools,
   type AgentConfig,
 } from '@/features/canvas/hooks/useCanvasApi';
 import { MemoryEditor } from '@/features/intelligence/MemoryEditor';
@@ -34,6 +35,7 @@ import { cn } from '@/lib/utils';
 export interface PropertyInspectorProps {
   agentId: string;
   agentName: string;
+  nodeType?: string; // 'orchestrator' | 'sub_agent' | 'skill' | 'mcp_server' | 'tool_set'
   onClose?: () => void;
 }
 
@@ -426,6 +428,107 @@ function PanelLoader() {
 }
 
 // ---------------------------------------------------------------------------
+// F24 — Skill detail panel
+// ---------------------------------------------------------------------------
+
+function SkillDetailPanel({ skillId }: { skillId: string }) {
+  const { data: skills, isLoading } = useInstalledSkills();
+  if (isLoading) return <PanelLoader />;
+  const skill = (skills ?? []).find((s) => s.skill_id === skillId);
+  if (!skill) return <p className="p-4 text-xs text-[var(--text-muted)]">Skill not found.</p>;
+  return (
+    <div className="flex flex-col gap-3 p-4">
+      <div>
+        <p className="text-[10px] uppercase text-[var(--text-muted)]">Skill ID</p>
+        <p className="text-xs font-mono text-[var(--text-secondary)]">{skill.skill_id}</p>
+      </div>
+      {skill.description && (
+        <div>
+          <p className="text-[10px] uppercase text-[var(--text-muted)]">Description</p>
+          <p className="text-xs text-[var(--text-primary)]">{skill.description}</p>
+        </div>
+      )}
+      <div className="flex gap-3">
+        {skill.version && (
+          <div>
+            <p className="text-[10px] uppercase text-[var(--text-muted)]">Version</p>
+            <p className="text-xs text-[var(--text-secondary)]">{skill.version}</p>
+          </div>
+        )}
+        {skill.output_type && (
+          <div>
+            <p className="text-[10px] uppercase text-[var(--text-muted)]">Output</p>
+            <span className="inline-block rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] text-amber-400">
+              {skill.output_type}
+            </span>
+          </div>
+        )}
+        {skill.source && (
+          <div>
+            <p className="text-[10px] uppercase text-[var(--text-muted)]">Source</p>
+            <p className="text-xs text-[var(--text-secondary)]">{skill.source}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// F25 — MCP server detail panel
+// ---------------------------------------------------------------------------
+
+function MCPDetailPanel({ serverId }: { serverId: string }) {
+  const { data: servers, isLoading: serversLoading } = useMCPServers();
+  const { data: tools, isLoading: toolsLoading } = useMCPServerTools(serverId);
+  const server = (servers ?? []).find((s) => s.server_id === serverId);
+  const loading = serversLoading || toolsLoading;
+  if (loading) return <PanelLoader />;
+  if (!server) return <p className="p-4 text-xs text-[var(--text-muted)]">Server not found.</p>;
+  return (
+    <div className="flex flex-col gap-3 p-4">
+      <div className="flex gap-3">
+        {server.transport && (
+          <div>
+            <p className="text-[10px] uppercase text-[var(--text-muted)]">Transport</p>
+            <span className="inline-block rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] text-red-400">
+              {server.transport.toUpperCase()}
+            </span>
+          </div>
+        )}
+        {server.trust_tier && (
+          <div>
+            <p className="text-[10px] uppercase text-[var(--text-muted)]">Trust</p>
+            <span className="inline-block rounded bg-orange-500/20 px-1.5 py-0.5 text-[10px] text-orange-400">
+              {server.trust_tier}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Tools list */}
+      <div>
+        <p className="mb-1.5 text-[10px] uppercase text-[var(--text-muted)]">Tools ({(tools ?? []).length})</p>
+        {(tools ?? []).length === 0 ? (
+          <p className="text-xs text-[var(--text-muted)] italic">No tools exposed.</p>
+        ) : (
+          <div className="flex flex-col gap-1">
+            {(tools ?? []).map((t) => (
+              <div key={t.name} className="rounded-md bg-[var(--bg-inset)] px-2 py-1.5">
+                <p className="text-xs font-medium text-[var(--text-primary)]">{t.name}</p>
+                {t.description && (
+                  <p className="text-[10px] text-[var(--text-muted)]">{t.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // PropertyInspector — main component (F16)
 // ---------------------------------------------------------------------------
 
@@ -436,8 +539,21 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'memory', label: 'Memory' },
 ];
 
-export function PropertyInspector({ agentId, agentName, onClose }: PropertyInspectorProps) {
+export function PropertyInspector({ agentId, agentName, nodeType, onClose }: PropertyInspectorProps) {
   const [activeTab, setActiveTab] = useState<TabId>('config');
+
+  // F24/F25: if a resource node is selected, show detail view instead of agent tabs
+  const isSkillNode = nodeType === 'skill';
+  const isMCPNode = nodeType === 'mcp_server';
+  const isResourceNode = isSkillNode || isMCPNode;
+
+  const headerIcon = isSkillNode ? (
+    <Wand2 size={14} className="shrink-0 text-amber-400" />
+  ) : isMCPNode ? (
+    <Plug size={14} className="shrink-0 text-red-400" />
+  ) : (
+    <Brain size={14} className="shrink-0 text-sky-400" />
+  );
 
   return (
     <aside
@@ -447,7 +563,7 @@ export function PropertyInspector({ agentId, agentName, onClose }: PropertyInspe
     >
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-[var(--border-default)] px-3 py-2">
-        <Brain size={14} className="shrink-0 text-sky-400" />
+        {headerIcon}
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-semibold text-[var(--text-primary)]">{agentName}</p>
           <p className="truncate text-[10px] text-[var(--text-muted)]">{agentId}</p>
@@ -464,32 +580,42 @@ export function PropertyInspector({ agentId, agentName, onClose }: PropertyInspe
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-[var(--border-default)]">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              'flex-1 py-2 text-[11px] font-medium transition-colors',
-              activeTab === tab.id
-                ? 'border-b-2 border-sky-400 text-sky-400'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
-            )}
-            data-testid={`inspector-tab-${tab.id}`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Resource detail (no tabs) */}
+      {isResourceNode ? (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {isSkillNode && <SkillDetailPanel skillId={agentId} />}
+          {isMCPNode && <MCPDetailPanel serverId={agentId} />}
+        </div>
+      ) : (
+        <>
+          {/* Tabs */}
+          <div className="flex border-b border-[var(--border-default)]">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'flex-1 py-2 text-[11px] font-medium transition-colors',
+                  activeTab === tab.id
+                    ? 'border-b-2 border-sky-400 text-sky-400'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
+                )}
+                data-testid={`inspector-tab-${tab.id}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-      {/* Tab content */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {activeTab === 'profile' && <ProfilePanel agentId={agentId} />}
-        {activeTab === 'config' && <ConfigPanel agentId={agentId} />}
-        {activeTab === 'wiring' && <WiringPanel agentId={agentId} />}
-        {activeTab === 'memory' && <MemoryPanelContent agentId={agentId} />}
-      </div>
+          {/* Tab content */}
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {activeTab === 'profile' && <ProfilePanel agentId={agentId} />}
+            {activeTab === 'config' && <ConfigPanel agentId={agentId} />}
+            {activeTab === 'wiring' && <WiringPanel agentId={agentId} />}
+            {activeTab === 'memory' && <MemoryPanelContent agentId={agentId} />}
+          </div>
+        </>
+      )}
     </aside>
   );
 }

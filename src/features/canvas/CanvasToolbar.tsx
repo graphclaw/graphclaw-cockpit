@@ -3,7 +3,7 @@
  *
  * Select | Pan | Undo | Redo | Auto-layout (placeholder) | Save
  */
-import { MousePointer2, Hand, Undo2, Redo2, LayoutGrid, Save, Loader2 } from 'lucide-react';
+import { MousePointer2, Hand, Undo2, Redo2, LayoutGrid, Save, Loader2, Download, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CanvasToolbarProps {
@@ -17,6 +17,8 @@ interface CanvasToolbarProps {
   onRedo: () => void;
   onAutoLayout: () => void;
   onSave: () => void;
+  onExport: () => void;
+  onImport: () => void;
 }
 
 export function CanvasToolbar({
@@ -30,6 +32,8 @@ export function CanvasToolbar({
   onRedo,
   onAutoLayout,
   onSave,
+  onExport,
+  onImport,
 }: CanvasToolbarProps) {
   return (
     <div
@@ -79,6 +83,16 @@ export function CanvasToolbar({
       {/* Auto-layout */}
       <ToolbarButton onClick={onAutoLayout} title="Auto-layout" data-testid="toolbar-auto-layout">
         <LayoutGrid size={14} />
+      </ToolbarButton>
+
+      <Separator />
+
+      {/* Export / Import */}
+      <ToolbarButton onClick={onExport} title="Export canvas JSON" data-testid="toolbar-export">
+        <Download size={14} />
+      </ToolbarButton>
+      <ToolbarButton onClick={onImport} title="Import canvas JSON" data-testid="toolbar-import">
+        <Upload size={14} />
       </ToolbarButton>
 
       <Separator />
