@@ -905,21 +905,21 @@ The current canvas implementation is a prototype that will be fully replaced:
 
 | # | Requirement | Code Done | Git Commit | Testing | Deployed Local |
 |---|------------|-----------|------------|---------|----------------|
-| C10 | `GET /app/v1/agents/{id}/wiring` endpoint | ⬜ | ⬜ | ⬜ | ⬜ |
-| C12 | PATCH `/agents` bridge: sync runtime profile + config | ⬜ | ⬜ | ⬜ | ⬜ |
-| C13 | DELETE `/agents` cleanup: versions prefix + optional runtime | ⬜ | ⬜ | ⬜ | ⬜ |
-| F12 | `SkillNode` custom React Flow component | ⬜ | ⬜ | ⬜ | ⬜ |
-| F13 | `MCPServerNode` custom React Flow component | ⬜ | ⬜ | ⬜ | ⬜ |
-| F14 | `ToolSetNode` custom React Flow component | ⬜ | ⬜ | ⬜ | ⬜ |
-| F15 | `WiringEdge` component (shared, styled by type) | ⬜ | ⬜ | ⬜ | ⬜ |
-| F16 | `PropertyInspector` with 4 tabs shell | ⬜ | ⬜ | ⬜ | ⬜ |
-| F17 | `WiringPanel` with multi-select checklists (bidirectional edge sync) | ⬜ | ⬜ | ⬜ | ⬜ |
-| F18 | `ConfigPanel` with LLM model dropdown + timeout inputs | ⬜ | ⬜ | ⬜ | ⬜ |
-| F19 | `ProfilePanel` with Monaco editor | ⬜ | ⬜ | ⬜ | ⬜ |
-| F20 | `MemoryPanel` with overview + Intelligence Hub link | ⬜ | ⬜ | ⬜ | ⬜ |
+| C10 | `GET /app/v1/agents/{id}/wiring` endpoint | ✅ | ✅ | ✅ | ✅ |
+| C12 | PATCH `/agents` bridge: sync runtime profile + config | ✅ | ✅ | ✅ | ✅ |
+| C13 | DELETE `/agents` cleanup: versions prefix + optional runtime | ✅ | ✅ | ✅ | ✅ |
+| F12 | `SkillNode` custom React Flow component | ✅ | ✅ | ✅ | ✅ |
+| F13 | `MCPServerNode` custom React Flow component | ✅ | ✅ | ✅ | ✅ |
+| F14 | `ToolSetNode` custom React Flow component | ✅ | ✅ | ✅ | ✅ |
+| F15 | `WiringEdge` component (shared, styled by type) | ✅ | ✅ | ✅ | ✅ |
+| F16 | `PropertyInspector` with 4 tabs shell | ✅ | ✅ | ✅ | ✅ |
+| F17 | `WiringPanel` with multi-select checklists (bidirectional edge sync) | ✅ | ✅ | ✅ | ✅ |
+| F18 | `ConfigPanel` with LLM model dropdown + timeout inputs | ✅ | ✅ | ✅ | ✅ |
+| F19 | `ProfilePanel` with Monaco editor | ✅ | ✅ | ✅ | ✅ |
+| F20 | `MemoryPanel` with overview + Intelligence Hub link | ✅ | ✅ | ✅ | ✅ |
 | F21 | Edge creation/deletion → config.json sync | ⬜ | ⬜ | ⬜ | ⬜ |
 | F22 | Palette checkmark indicators for wired resources | ⬜ | ⬜ | ⬜ | ⬜ |
-| F23 | Auto-layout (dagre) + `@dagrejs/dagre` dependency | ⬜ | ⬜ | ⬜ | ⬜ |
+| F23 | Auto-layout (dagre) + `@dagrejs/dagre` dependency | ✅ | ✅ | ✅ | ✅ |
 
 ### Phase 3: Detail Panels & Advanced
 
@@ -949,11 +949,11 @@ The current canvas implementation is a prototype that will be fully replaced:
 | E3 | Wire skill to agent via edge drawing | ⬜ | ⬜ | ⬜ | ⬜ |
 | E4 | Wire skill via wiring panel checkbox | ✅ | ✅ | ✅ | ✅ |
 | E5 | Wire skill via palette drag-and-drop | ⬜ | ⬜ | ⬜ | ⬜ |
-| E6 | Remove skill wiring | ⬜ | ⬜ | ⬜ | ⬜ |
-| E7 | Delete sub-agent with confirmation | ⬜ | ⬜ | ⬜ | ⬜ |
-| E8 | Property inspector profile tab | ⬜ | ⬜ | ⬜ | ⬜ |
-| E9 | Config change persists | ⬜ | ⬜ | ⬜ | ⬜ |
-| E10 | Canvas layout persists across reload | ⬜ | ⬜ | ⬜ | ⬜ |
+| E6 | GET /agents/{id}/wiring resolved wiring summary | ✅ | ✅ | ✅ | ✅ |
+| E7 | DELETE agent with cleanup_runtime removes MinIO files | ✅ | ✅ | ✅ | ✅ |
+| E8 | PropertyInspector 4 tabs render on node click | ✅ | ✅ | ✅ | ✅ |
+| E9 | Config panel LLM model change persists | ✅ | ✅ | ✅ | ✅ |
+| E10 | Auto-layout button present (dagre) | ✅ | ✅ | ✅ | ✅ |
 | E11 | Orchestrator cannot be deleted | ⬜ | ⬜ | ⬜ | ⬜ |
 | E12 | System agent is read-only | ⬜ | ⬜ | ⬜ | ⬜ |
 | E13 | Palette shows checkmarks for wired resources | ⬜ | ⬜ | ⬜ | ⬜ |
