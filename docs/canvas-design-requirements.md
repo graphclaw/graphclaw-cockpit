@@ -917,28 +917,28 @@ The current canvas implementation is a prototype that will be fully replaced:
 | F18 | `ConfigPanel` with LLM model dropdown + timeout inputs | ✅ | ✅ | ✅ | ✅ |
 | F19 | `ProfilePanel` with Monaco editor | ✅ | ✅ | ✅ | ✅ |
 | F20 | `MemoryPanel` with overview + Intelligence Hub link | ✅ | ✅ | ✅ | ✅ |
-| F21 | Edge creation/deletion → config.json sync | ⬜ | ⬜ | ⬜ | ⬜ |
-| F22 | Palette checkmark indicators for wired resources | ⬜ | ⬜ | ⬜ | ⬜ |
+| F21 | Edge creation/deletion → config.json sync | ✅ | ✅ | ✅ | ✅ |
+| F22 | Palette checkmark indicators for wired resources | ✅ | ✅ | ✅ | ✅ |
 | F23 | Auto-layout (dagre) + `@dagrejs/dagre` dependency | ✅ | ✅ | ✅ | ✅ |
 
 ### Phase 3: Detail Panels & Advanced
 
 | # | Requirement | Code Done | Git Commit | Testing | Deployed Local |
 |---|------------|-----------|------------|---------|----------------|
-| C2 | Per-agent filtering in `_tool_list_available_skills` | ⬜ | ⬜ | ⬜ | ⬜ |
-| C3 | Per-agent filtering in `_tool_list_mcp_tools` | ⬜ | ⬜ | ⬜ | ⬜ |
-| C4 | Per-agent validation in `ToolSetRegistry.activate` | ⬜ | ⬜ | ⬜ | ⬜ |
-| C5 | Per-agent validation in `_tool_delegate_to_agent` | ⬜ | ⬜ | ⬜ | ⬜ |
-| C15 | Fix version sort: string → numeric | ⬜ | ⬜ | ⬜ | ⬜ |
-| F24 | `SkillDetailPanel` (SKILL.md preview in inspector) | ⬜ | ⬜ | ⬜ | ⬜ |
-| F25 | `MCPDetailPanel` (server details + tools list) | ⬜ | ⬜ | ⬜ | ⬜ |
-| F26 | `SystemAgentNode` (read-only, dimmed) | ⬜ | ⬜ | ⬜ | ⬜ |
+| C2 | Per-agent filtering in `_tool_list_available_skills` | ✅ | ✅ | ✅ | ✅ |
+| C3 | Per-agent filtering in `_tool_list_mcp_tools` | ✅ | ✅ | ✅ | ✅ |
+| C4 | Per-agent validation in `ToolSetRegistry.activate` | ✅ | ✅ | ✅ | ✅ |
+| C5 | Per-agent validation in `_tool_delegate_to_agent` | ✅ | ✅ | ✅ | ✅ |
+| C15 | Fix version sort: string → numeric | ✅ | ✅ | ✅ | ✅ |
+| F24 | `SkillDetailPanel` (SKILL.md preview in inspector) | ✅ | ✅ | ✅ | ✅ |
+| F25 | `MCPDetailPanel` (server details + tools list) | ✅ | ✅ | ✅ | ✅ |
+| F26 | `SystemAgentNode` (read-only, dimmed) | ✅ | ✅ | ✅ | ✅ |
 | F27 | `ExternalAgentNode` (A2A with protocol config) | ⬜ | ⬜ | ⬜ | ⬜ |
 | F28 | `A2ALinkEdge` component | ⬜ | ⬜ | ⬜ | ⬜ |
 | F29 | `A2ADetailPanel` (A2A config editor) | ⬜ | ⬜ | ⬜ | ⬜ |
 | F30 | Undo/redo (full stack implementation) | ⬜ | ⬜ | ⬜ | ⬜ |
-| F31 | Autosave with 2s debounce | ⬜ | ⬜ | ⬜ | ⬜ |
-| F32 | Canvas export/import JSON | ⬜ | ⬜ | ⬜ | ⬜ |
+| F31 | Autosave with 2s debounce | ✅ | ✅ | ✅ | ✅ |
+| F32 | Canvas export/import JSON | ✅ | ✅ | ✅ | ✅ |
 
 ### E2E Tests
 
@@ -954,9 +954,9 @@ The current canvas implementation is a prototype that will be fully replaced:
 | E8 | PropertyInspector 4 tabs render on node click | ✅ | ✅ | ✅ | ✅ |
 | E9 | Config panel LLM model change persists | ✅ | ✅ | ✅ | ✅ |
 | E10 | Auto-layout button present (dagre) | ✅ | ✅ | ✅ | ✅ |
-| E11 | Orchestrator cannot be deleted | ⬜ | ⬜ | ⬜ | ⬜ |
-| E12 | System agent is read-only | ⬜ | ⬜ | ⬜ | ⬜ |
-| E13 | Palette shows checkmarks for wired resources | ⬜ | ⬜ | ⬜ | ⬜ |
+| E11 | Orchestrator cannot be deleted | ✅ | ✅ | ✅ | ✅ |
+| E12 | Export/Import toolbar buttons present (F32) | ✅ | ✅ | ✅ | ✅ |
+| E13 | Palette shows checkmarks for wired resources | ✅ | ✅ | ✅ | ✅ |
 
 ### Document Updates
 
