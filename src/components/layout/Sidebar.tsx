@@ -13,7 +13,6 @@ import {
   MessageCircle,
   Puzzle,
   Plug,
-  GitFork,
   Brain,
   Shield,
   Settings,
@@ -48,7 +47,7 @@ const INTELLIGENCE_NAV: NavItem[] = [
   { label: 'Chat', icon: MessageCircle, path: '/chat' },
   { label: 'Skills', icon: Puzzle, path: '/skills' },
   { label: 'MCP Registry', icon: Plug, path: '/mcp' },
-  { label: 'Canvas', icon: GitFork, path: '/canvas' },
+  { label: 'Agent Canvas', icon: Brain, path: '/canvas' },
   { label: 'Intelligence', icon: Brain, path: '/intelligence' },
 ];
 

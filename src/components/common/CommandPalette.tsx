@@ -19,7 +19,7 @@ const COMMANDS: CommandItem[] = [
   { label: 'Chat', path: '/chat', section: 'Intelligence' },
   { label: 'Skills', path: '/skills', section: 'Intelligence' },
   { label: 'MCP Registry', path: '/mcp', section: 'Intelligence' },
-  { label: 'Canvas', path: '/canvas', section: 'Intelligence' },
+  { label: 'Agent Canvas', path: '/canvas', section: 'Intelligence' },
   { label: 'Intelligence Hub', path: '/intelligence', section: 'Intelligence' },
   { label: 'Admin Panel', path: '/admin', section: 'Admin' },
   { label: 'Settings — Channels', path: '/settings/channels', section: 'Settings' },

@@ -7,7 +7,7 @@ describe('FeaturesPage', () => {
     renderWithProviders(<FeaturesPage />);
     expect(screen.getByText('Feature Gates')).toBeInTheDocument();
     expect(screen.getByText('MCP Connectors')).toBeInTheDocument();
-    expect(screen.getByText('Canvas Editor')).toBeInTheDocument();
+    expect(screen.getByText('Agent Canvas')).toBeInTheDocument();
     expect(screen.getByText('Score Simulator')).toBeInTheDocument();
   });
 

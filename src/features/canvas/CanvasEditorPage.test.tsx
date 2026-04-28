@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/utils';
 import { CanvasEditorPage } from '@/features/canvas/CanvasEditorPage';
 
-vi.mock('@xyflow/react', () => {
+// Mock @xyflow/react including ReactFlowProvider
+vi.mock('@xyflow/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@xyflow/react')>();
   const ReactFlow = ({ children, ...props }: Record<string, unknown>) => (
     <div data-testid="react-flow" data-nodes={JSON.stringify(props.nodes)}>
       {children as React.ReactNode}
@@ -13,6 +14,7 @@ vi.mock('@xyflow/react', () => {
   const Background = () => <div data-testid="rf-background" />;
   const Controls = () => <div data-testid="rf-controls" />;
   const MiniMap = () => <div data-testid="rf-minimap" />;
+  const ReactFlowProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 
   function useNodesState(initial: unknown[]) {
     const [nodes, setNodes] = useState(initial);
@@ -25,10 +27,12 @@ vi.mock('@xyflow/react', () => {
   }
 
   return {
+    ...actual,
     ReactFlow,
     Background,
     Controls,
     MiniMap,
+    ReactFlowProvider,
     addEdge: vi.fn((conn: unknown, edges: unknown[]) => [...edges, conn]),
     useNodesState,
     useEdgesState,
@@ -36,30 +40,47 @@ vi.mock('@xyflow/react', () => {
   };
 });
 
+// Mock canvas API hooks
+vi.mock('@/features/canvas/hooks/useCanvasApi', () => ({
+  useCanvasLayout: () => ({ data: null, isLoading: false }),
+  useSaveCanvasLayout: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useAgentConfig: () => ({ data: null, isLoading: false }),
+  useInstalledSkills: () => ({ data: [], isLoading: false }),
+  useMCPServers: () => ({ data: [], isLoading: false }),
+  useA2AAgents: () => ({ data: [], isLoading: false }),
+  useCreateAgentDefinition: () => ({ mutateAsync: vi.fn(), isPending: false, isError: false }),
+  useDeleteAgentDefinition: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
+
+// Mock intelligence agents hook
+vi.mock('@/lib/api-hooks', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/api-hooks')>();
+  return {
+    ...actual,
+    useIntelligenceAgents: () => ({ data: [], isLoading: false }),
+  };
+});
+
 describe('CanvasEditorPage', () => {
-  it('renders the React Flow canvas', () => {
+  it('renders the canvas page container', () => {
+    renderWithProviders(<CanvasEditorPage />);
+    expect(screen.getByTestId('canvas-page')).toBeInTheDocument();
+  });
+
+  it('renders the React Flow canvas editor', () => {
     renderWithProviders(<CanvasEditorPage />);
     expect(screen.getByTestId('canvas-editor')).toBeInTheDocument();
     expect(screen.getByTestId('react-flow')).toBeInTheDocument();
   });
 
-  it('renders toolbar buttons', () => {
+  it('renders the canvas toolbar', () => {
     renderWithProviders(<CanvasEditorPage />);
-    expect(screen.getByText('Undo')).toBeInTheDocument();
-    expect(screen.getByText('Redo')).toBeInTheDocument();
-    expect(screen.getByText('Export')).toBeInTheDocument();
-    expect(screen.getByText('Import')).toBeInTheDocument();
+    expect(screen.getByTestId('canvas-toolbar')).toBeInTheDocument();
   });
 
-  it('renders node palette with all node types', () => {
+  it('renders the Add Agent button in the palette', () => {
     renderWithProviders(<CanvasEditorPage />);
-    expect(screen.getByText('Node Palette')).toBeInTheDocument();
-    expect(screen.getByText('LLM Call')).toBeInTheDocument();
-    expect(screen.getByText('Tool Call')).toBeInTheDocument();
-    expect(screen.getByText('Condition')).toBeInTheDocument();
-    expect(screen.getByText('Loop')).toBeInTheDocument();
-    expect(screen.getByText('Human Gate')).toBeInTheDocument();
-    expect(screen.getByText('Sub-Agent')).toBeInTheDocument();
+    expect(screen.getByTestId('add-agent-button')).toBeInTheDocument();
   });
 
   it('renders background, controls, and minimap', () => {
@@ -67,21 +88,5 @@ describe('CanvasEditorPage', () => {
     expect(screen.getByTestId('rf-background')).toBeInTheDocument();
     expect(screen.getByTestId('rf-controls')).toBeInTheDocument();
     expect(screen.getByTestId('rf-minimap')).toBeInTheDocument();
-  });
-
-  it('adds a node when palette button is clicked', async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<CanvasEditorPage />);
-
-    const rfEl = screen.getByTestId('react-flow');
-    const initialNodes = JSON.parse(rfEl.getAttribute('data-nodes') || '[]');
-    expect(initialNodes).toHaveLength(3);
-
-    await user.click(screen.getByText('Tool Call'));
-
-    const updatedNodes = JSON.parse(
-      screen.getByTestId('react-flow').getAttribute('data-nodes') || '[]',
-    );
-    expect(updatedNodes).toHaveLength(4);
   });
 });

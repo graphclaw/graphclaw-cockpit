@@ -1,4 +1,14 @@
-import { useCallback, useRef, useState } from 'react';
+/**
+ * CanvasEditorPage — Agent Configuration Hub (F3 rewrite).
+ *
+ * - Loads agents + canvas layout from API on mount
+ * - Renders OrchestratorNode + SubAgentNodes from intelligence/agents list
+ * - NodePalette with AGENTS + RESOURCES sections
+ * - CanvasToolbar with undo/redo/save
+ * - AddAgentDialog for creating sub-agents
+ * - Layout persisted via PUT /app/v1/canvas/layout (debounced 2s)
+ */
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -11,119 +21,312 @@ import {
   type Node,
   type Edge,
   BackgroundVariant,
+  ReactFlowProvider,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { NodePalette } from './NodePalette';
-import { Button } from '@/components/ui/button';
-import { Undo2, Redo2, Download, Upload } from 'lucide-react';
+import { NodePalette, type PaletteAgent } from './NodePalette';
+import { CanvasToolbar } from './CanvasToolbar';
+import { AddAgentDialog } from './AddAgentDialog';
+import { OrchestratorNode } from './nodes/OrchestratorNode';
+import { SubAgentNode } from './nodes/SubAgentNode';
+import { DelegationEdge } from './edges/DelegationEdge';
+import { useCanvasStore } from './hooks/useCanvasStore';
+import {
+  useCanvasLayout,
+  useSaveCanvasLayout,
+  useAgentConfig,
+} from './hooks/useCanvasApi';
+import { useIntelligenceAgents } from '@/lib/api-hooks';
+import { useAuthStore } from '@/stores/auth';
 
-const INITIAL_NODES: Node[] = [
-  { id: 'input-1', type: 'input', data: { label: 'Input' }, position: { x: 250, y: 25 } },
-  { id: 'llm-1', type: 'default', data: { label: 'LLM Call' }, position: { x: 250, y: 150 } },
-  { id: 'output-1', type: 'output', data: { label: 'Output' }, position: { x: 250, y: 300 } },
-];
+// ---------------------------------------------------------------------------
+// Custom node/edge type maps
+// ---------------------------------------------------------------------------
 
-const INITIAL_EDGES: Edge[] = [
-  { id: 'e-input-llm', source: 'input-1', target: 'llm-1', animated: true },
-  { id: 'e-llm-output', source: 'llm-1', target: 'output-1' },
-];
+const nodeTypes = {
+  orchestrator: OrchestratorNode,
+  sub_agent: SubAgentNode,
+};
 
-export function CanvasEditorPage() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(INITIAL_NODES);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(INITIAL_EDGES);
-  const [undoStack, setUndoStack] = useState<Array<{ nodes: Node[]; edges: Edge[] }>>([]);
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+const edgeTypes = {
+  delegation: DelegationEdge,
+};
+
+// ---------------------------------------------------------------------------
+// Inner component (needs ReactFlowProvider)
+// ---------------------------------------------------------------------------
+
+function CanvasEditorInner() {
+  const userId = useAuthStore((s) => s.userId) ?? '';
+  const { undoStack, redoStack, undo, redo, isDirty, isSaving, markDirty, markSaved, setSaving } =
+    useCanvasStore();
+
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const [toolbarMode, setToolbarMode] = useState<'select' | 'pan'>('select');
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [addAgentOpen, setAddAgentOpen] = useState(false);
+
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  // ---------------------------------------------------------------------------
+  // Data fetching
+  // ---------------------------------------------------------------------------
+
+  const { data: agentsData } = useIntelligenceAgents();
+  const { data: layoutData } = useCanvasLayout();
+  const saveLayout = useSaveCanvasLayout();
+
+  // Load orchestrator config for wiring summary
+  const { data: orchestratorConfig } = useAgentConfig(userId);
+
+  // ---------------------------------------------------------------------------
+  // Build canvas nodes from agents list
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!agentsData || !userId) return;
+
+    const existingPositions: Record<string, { x: number; y: number }> = {};
+    if (layoutData?.nodes) {
+      for (const n of layoutData.nodes) {
+        existingPositions[n.id] = n.position;
+      }
+    }
+
+    const newNodes: Node[] = [];
+    let subAgentY = 300;
+
+    for (const agent of agentsData) {
+      const isOrchestrator = agent.agent_id === userId || agent.source === 'system' && agent.agent_id === userId;
+      const isSystem = agent.source === 'system' && agent.agent_id !== userId;
+
+      if (isOrchestrator || agent.agent_id === userId) {
+        // Orchestrator node
+        newNodes.push({
+          id: agent.agent_id,
+          type: 'orchestrator',
+          position: existingPositions[agent.agent_id] ?? { x: 400, y: 80 },
+          data: {
+            label: agent.name,
+            agentId: agent.agent_id,
+            llmModel: orchestratorConfig?.llm_model,
+            skillsCount: orchestratorConfig?.skills?.length ?? 0,
+            mcpCount: orchestratorConfig?.mcp_servers?.length ?? 0,
+            toolSetsCount: orchestratorConfig?.tool_sets?.length ?? 0,
+            subAgentsCount: orchestratorConfig?.sub_agents?.length ?? 0,
+          },
+          deletable: false,
+        });
+      } else if (!isSystem) {
+        // Sub-agent node
+        newNodes.push({
+          id: agent.agent_id,
+          type: 'sub_agent',
+          position: existingPositions[agent.agent_id] ?? { x: 100 + (subAgentY % 600), y: subAgentY },
+          data: {
+            label: agent.name,
+            agentId: agent.agent_id,
+          },
+        });
+        subAgentY += 180;
+      }
+    }
+
+    setNodes(newNodes);
+  }, [agentsData, layoutData, orchestratorConfig, userId, setNodes]);
+
+  // Build delegation edges from orchestrator sub_agents config
+  useEffect(() => {
+    if (!orchestratorConfig?.sub_agents || !userId) return;
+    const delegationEdges: Edge[] = orchestratorConfig.sub_agents.map((subId) => ({
+      id: `delegation-${userId}-${subId}`,
+      source: userId,
+      target: subId,
+      type: 'delegation',
+      sourceHandle: 'bottom-delegation',
+      targetHandle: 'top-delegation',
+      animated: true,
+    }));
+    setEdges(delegationEdges);
+  }, [orchestratorConfig, userId, setEdges]);
+
+  // ---------------------------------------------------------------------------
+  // Canvas palette agent list
+  // ---------------------------------------------------------------------------
+
+  const paletteAgents = useMemo<PaletteAgent[]>(() => {
+    if (!agentsData) return [];
+    return agentsData
+      .filter((a) => a.source !== 'system')
+      .map((a) => ({
+        agent_id: a.agent_id,
+        name: a.name,
+        type: a.agent_id === userId ? ('orchestrator' as const) : ('sub_agent' as const),
+      }));
+  }, [agentsData, userId]);
+
+  // ---------------------------------------------------------------------------
+  // Connection handler
+  // ---------------------------------------------------------------------------
 
   const onConnect = useCallback(
-    (connection: Connection) => setEdges((eds) => addEdge(connection, eds)),
-    [setEdges],
-  );
-
-  const pushUndo = useCallback(() => {
-    setUndoStack((prev) => [...prev.slice(-49), { nodes: [...nodes], edges: [...edges] }]);
-  }, [nodes, edges]);
-
-  const handleUndo = useCallback(() => {
-    setUndoStack((prev) => {
-      const last = prev[prev.length - 1];
-      if (!last) return prev;
-      setNodes(last.nodes);
-      setEdges(last.edges);
-      return prev.slice(0, -1);
-    });
-  }, [setNodes, setEdges]);
-
-  const handleExport = useCallback(() => {
-    const data = JSON.stringify({ nodes, edges }, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'agent-flow.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [nodes, edges]);
-
-  const handleAddNode = useCallback(
-    (type: string, label: string) => {
-      pushUndo();
-      const newNode: Node = {
-        id: `${type}-${Date.now()}`,
-        type: type === 'input' || type === 'output' ? type : 'default',
-        data: { label },
-        position: { x: 200 + Math.random() * 200, y: 100 + Math.random() * 200 },
-      };
-      setNodes((nds) => [...nds, newNode]);
+    (connection: Connection) => {
+      setEdges((eds) => addEdge({ ...connection, type: 'delegation', animated: true }, eds));
+      markDirty();
     },
-    [pushUndo, setNodes],
+    [setEdges, markDirty],
   );
+
+  // ---------------------------------------------------------------------------
+  // Save (debounced 2s on dirty, immediate on explicit call)
+  // ---------------------------------------------------------------------------
+
+  const doSave = useCallback(async () => {
+    if (isSaving) return;
+    setSaving(true);
+    try {
+      await saveLayout.mutateAsync({
+        nodes: nodes.map((n) => ({ id: n.id, position: n.position })),
+        viewport: { x: 0, y: 0, zoom: 1 },
+      });
+      markSaved();
+    } catch {
+      setSaving(false);
+    }
+  }, [isSaving, setSaving, saveLayout, nodes, markSaved]);
+
+  // Auto-save debounce
+  useEffect(() => {
+    if (!isDirty) return;
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(doSave, 2000);
+    return () => clearTimeout(saveTimer.current);
+  }, [isDirty, doSave]);
+
+  // Keyboard shortcut: Ctrl+S
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        void doSave();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [doSave]);
+
+  // ---------------------------------------------------------------------------
+  // Auto-layout (simple grid — dagre deferred to Phase 2)
+  // ---------------------------------------------------------------------------
+
+  const handleAutoLayout = useCallback(() => {
+    setNodes((nds) =>
+      nds.map((n, i) => ({
+        ...n,
+        position:
+          n.type === 'orchestrator' ? { x: 400, y: 80 } : { x: 100 + (i % 3) * 260, y: 300 + Math.floor(i / 3) * 220 },
+      })),
+    );
+    markDirty();
+  }, [setNodes, markDirty]);
+
+  // ---------------------------------------------------------------------------
+  // Agent created callback
+  // ---------------------------------------------------------------------------
+
+  const handleAgentCreated = useCallback(() => {
+    markDirty();
+    // Query invalidation handled by useCreateAgentDefinition
+  }, [markDirty]);
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
 
   return (
-    <div className="flex h-full gap-4">
+    <div className="flex h-full gap-0" data-testid="canvas-page">
       {/* Node Palette */}
-      <NodePalette onAddNode={handleAddNode} />
+      <NodePalette
+        agents={paletteAgents}
+        selectedAgentId={selectedAgentId}
+        wiredSkills={orchestratorConfig?.skills ?? []}
+        wiredMcpServers={orchestratorConfig?.mcp_servers ?? []}
+        wiredToolSets={orchestratorConfig?.tool_sets ?? []}
+        onAgentClick={setSelectedAgentId}
+        onAddAgent={() => setAddAgentOpen(true)}
+      />
 
-      {/* Canvas */}
-      <div className="flex flex-1 flex-col gap-2">
-        {/* Toolbar */}
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={handleUndo} disabled={undoStack.length === 0}>
-            <Undo2 size={14} className="mr-1" /> Undo
-          </Button>
-          <Button size="sm" variant="outline" disabled>
-            <Redo2 size={14} className="mr-1" /> Redo
-          </Button>
-          <div className="flex-1" />
-          <Button size="sm" variant="outline" onClick={handleExport}>
-            <Download size={14} className="mr-1" /> Export
-          </Button>
-          <Button size="sm" variant="outline">
-            <Upload size={14} className="mr-1" /> Import
-          </Button>
+      {/* Canvas area */}
+      <div className="relative flex flex-1 flex-col">
+        {/* Floating toolbar */}
+        <div className="pointer-events-none absolute top-3 left-0 right-0 z-10 flex justify-center">
+          <CanvasToolbar
+            mode={toolbarMode}
+            canUndo={undoStack.length > 0}
+            canRedo={redoStack.length > 0}
+            isDirty={isDirty}
+            isSaving={isSaving}
+            onModeChange={setToolbarMode}
+            onUndo={undo}
+            onRedo={redo}
+            onAutoLayout={handleAutoLayout}
+            onSave={doSave}
+          />
         </div>
 
         {/* React Flow Canvas */}
         <div
-          ref={reactFlowWrapper}
           className="flex-1 rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-inset)]"
           data-testid="canvas-editor"
         >
           <ReactFlow
             nodes={nodes}
             edges={edges}
-            onNodesChange={onNodesChange}
+            onNodesChange={(changes) => {
+              onNodesChange(changes);
+              const hasMoveOrAdd = changes.some(
+                (c) => c.type === 'position' || c.type === 'add',
+              );
+              if (hasMoveOrAdd) markDirty();
+            }}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onNodeClick={(_evt, node) => setSelectedAgentId(node.id)}
+            onPaneClick={() => setSelectedAgentId(null)}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            panOnDrag={toolbarMode === 'pan'}
+            selectionOnDrag={toolbarMode === 'select'}
             fitView
             minZoom={0.3}
             maxZoom={3}
           >
-            <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+            <Background variant={BackgroundVariant.Dots} gap={24} size={1} />
             <Controls />
             <MiniMap />
           </ReactFlow>
         </div>
       </div>
+
+      {/* Add Agent Dialog */}
+      <AddAgentDialog
+        open={addAgentOpen}
+        onOpenChange={setAddAgentOpen}
+        onCreated={handleAgentCreated}
+      />
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Public export (wrapped in ReactFlowProvider)
+// ---------------------------------------------------------------------------
+
+export function CanvasEditorPage() {
+  return (
+    <ReactFlowProvider>
+      <CanvasEditorInner />
+    </ReactFlowProvider>
   );
 }

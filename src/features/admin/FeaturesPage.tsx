@@ -5,7 +5,7 @@ const FEATURE_META: {
   name: string;
   description: string;
 }[] = [
-  { key: 'enable_agent_canvas', name: 'Canvas Editor', description: 'Visual agent workflow builder' },
+  { key: 'enable_agent_canvas', name: 'Agent Canvas', description: 'Visual agent configuration and wiring hub' },
   { key: 'enable_mcp_integration', name: 'MCP Connectors', description: 'Enable MCP server integrations' },
   { key: 'enable_skill_marketplace', name: 'Skill Marketplace', description: 'Browse and install agent skills' },
   { key: 'enable_multi_channel', name: 'Multi-Channel', description: 'Inbound message channel support' },

@@ -15,4 +15,8 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   // Extra delay between test suites — same rationale as Playwright's 1-second preamble
   testSequencer: require.resolve('./sequencer.cjs'),
+  // Required for AWS SDK v3 which uses dynamic imports internally
+  testEnvironmentOptions: {
+    customExportConditions: ['node', 'require', 'default'],
+  },
 };
