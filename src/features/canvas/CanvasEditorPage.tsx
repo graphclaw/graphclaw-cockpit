@@ -37,14 +37,17 @@ import { SkillNode } from './nodes/SkillNode';
 import { MCPServerNode } from './nodes/MCPServerNode';
 import { ToolSetNode } from './nodes/ToolSetNode';
 import { SystemAgentNode } from './nodes/SystemAgentNode';
+import { ExternalAgentNode } from './nodes/ExternalAgentNode';
 import { DelegationEdge } from './edges/DelegationEdge';
 import { WiringEdge } from './edges/WiringEdge';
+import { A2ALinkEdge } from './edges/A2ALinkEdge';
 import { useCanvasStore } from './hooks/useCanvasStore';
 import {
   useCanvasLayout,
   useSaveCanvasLayout,
   useAgentConfig,
   useSaveAgentConfig,
+  useA2AAgents,
   type AgentConfig,
 } from './hooks/useCanvasApi';
 import { useIntelligenceAgents } from '@/lib/api-hooks';
@@ -61,11 +64,13 @@ const nodeTypes = {
   mcp_server: MCPServerNode,
   tool_set: ToolSetNode,
   system_agent: SystemAgentNode,
+  external_agent: ExternalAgentNode,
 };
 
 const edgeTypes = {
   delegation: DelegationEdge,
   wiring: WiringEdge,
+  a2a_link: A2ALinkEdge,
 };
 
 // ---------------------------------------------------------------------------
@@ -74,11 +79,19 @@ const edgeTypes = {
 
 function CanvasEditorInner() {
   const userId = useAuthStore((s) => s.userId) ?? '';
-  const { undoStack, redoStack, undo, redo, isDirty, isSaving, markDirty, markSaved, setSaving } =
+  const { undoStack, redoStack, undo, redo, isDirty, isSaving, markDirty, markSaved, setSaving, pushSnapshot } =
     useCanvasStore();
+
+  // Refs for current ReactFlow state (used in undo/redo to avoid stale closures)
+  const nodesRef = useRef<Node[]>([]);
+  const edgesRef = useRef<Edge[]>([]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  // Keep refs in sync with ReactFlow state for stable undo/redo
+  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+  useEffect(() => { edgesRef.current = edges; }, [edges]);
   const [toolbarMode, setToolbarMode] = useState<'select' | 'pan'>('select');
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
@@ -93,6 +106,7 @@ function CanvasEditorInner() {
 
   const { data: agentsData } = useIntelligenceAgents();
   const { data: layoutData } = useCanvasLayout();
+  const { data: a2aAgents } = useA2AAgents();
   const saveLayout = useSaveCanvasLayout();
 
   // Load orchestrator config for wiring summary
@@ -144,7 +158,16 @@ function CanvasEditorInner() {
           },
           deletable: false,
         });
-      } else if (!isSystem) {
+      } else if (isSystem) {
+        // System agent node (read-only)
+        newNodes.push({
+          id: agent.agent_id,
+          type: 'system_agent',
+          position: existingPositions[agent.agent_id] ?? { x: 700, y: 80 },
+          data: { label: agent.name, agentId: agent.agent_id },
+          deletable: false,
+        });
+      } else {
         // Sub-agent node
         newNodes.push({
           id: agent.agent_id,
@@ -159,8 +182,28 @@ function CanvasEditorInner() {
       }
     }
 
+    // A2A external agents
+    let a2aX = 800;
+    for (const a2a of a2aAgents ?? []) {
+      const nodeId = `a2a-${a2a.agent_id}`;
+      newNodes.push({
+        id: nodeId,
+        type: 'external_agent',
+        position: existingPositions[nodeId] ?? { x: a2aX, y: 80 },
+        data: {
+          label: a2a.name,
+          agentId: a2a.agent_id,
+          endpoint: a2a.endpoint,
+          capabilities: a2a.capabilities,
+          trustStatus: a2a.trust_status ?? 'ACTIVE',
+        },
+        deletable: true,
+      });
+      a2aX += 260;
+    }
+
     setNodes(newNodes);
-  }, [agentsData, layoutData, orchestratorConfig, userId, setNodes]);
+  }, [agentsData, a2aAgents, layoutData, orchestratorConfig, userId, setNodes]);
 
   // Build delegation edges from orchestrator sub_agents config
   useEffect(() => {
@@ -192,12 +235,66 @@ function CanvasEditorInner() {
       }));
   }, [agentsData, userId]);
 
+  // Build A2A link edges from orchestrator to external agents
+  useEffect(() => {
+    if (!a2aAgents || a2aAgents.length === 0) return;
+    setEdges((prev) => {
+      const nonA2A = prev.filter((e) => e.type !== 'a2a_link');
+      const a2aEdges = a2aAgents.map((a2a) => ({
+        id: `a2a-link-${userId}-${a2a.agent_id}`,
+        source: userId,
+        target: `a2a-${a2a.agent_id}`,
+        type: 'a2a_link' as const,
+        animated: true,
+      }));
+      return [...nonA2A, ...a2aEdges];
+    });
+  }, [a2aAgents, userId, setEdges]);
+
+  // ---------------------------------------------------------------------------
+  // Undo / Redo handlers (F30)
+  // ---------------------------------------------------------------------------
+
+  const handleUndo = useCallback(() => {
+    const prev = undo({ nodes: [...nodesRef.current], edges: [...edgesRef.current] });
+    if (!prev) return;
+    setNodes(prev.nodes);
+    setEdges(prev.edges);
+    markDirty();
+  }, [undo, setNodes, setEdges, markDirty]);
+
+  const handleRedo = useCallback(() => {
+    const next = redo({ nodes: [...nodesRef.current], edges: [...edgesRef.current] });
+    if (!next) return;
+    setNodes(next.nodes);
+    setEdges(next.edges);
+    markDirty();
+  }, [redo, setNodes, setEdges, markDirty]);
+
+  // Keyboard shortcuts: Ctrl+Z / Ctrl+Shift+Z
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [handleUndo, handleRedo]);
+
   // ---------------------------------------------------------------------------
   // Connection handler (F21: detect wiring edges, sync config)
   // ---------------------------------------------------------------------------
 
   const onConnect = useCallback(
     (connection: Connection) => {
+      // Push snapshot before adding edge (F30 undo/redo)
+      pushSnapshot({ nodes: [...nodesRef.current], edges: [...edgesRef.current] });
+
       const sourceNode = nodes.find((n) => n.id === connection.source);
       const targetNode = nodes.find((n) => n.id === connection.target);
 
@@ -256,7 +353,7 @@ function CanvasEditorInner() {
       setEdges((eds) => addEdge({ ...connection, type: 'delegation', animated: true }, eds));
       markDirty();
     },
-    [nodes, setEdges, markDirty, orchestratorConfig, selectedAgentConfig, saveAgentConfig, userId],
+    [nodes, setEdges, markDirty, pushSnapshot, orchestratorConfig, selectedAgentConfig, saveAgentConfig, userId],
   );
 
   // ---------------------------------------------------------------------------
@@ -302,6 +399,8 @@ function CanvasEditorInner() {
   // ---------------------------------------------------------------------------
 
   const handleAutoLayout = useCallback(() => {
+    // Push snapshot before auto-layout (F30 undo)
+    pushSnapshot({ nodes: [...nodesRef.current], edges: [...edgesRef.current] });
     const g = new dagre.graphlib.Graph();
     g.setGraph({ rankdir: 'TB', nodesep: 80, ranksep: 120 });
     g.setDefaultEdgeLabel(() => ({}));
@@ -331,7 +430,7 @@ function CanvasEditorInner() {
       }),
     );
     markDirty();
-  }, [nodes, edges, setNodes, markDirty]);
+  }, [nodes, edges, setNodes, markDirty, pushSnapshot]);
 
   // ---------------------------------------------------------------------------
   // Export / Import JSON (F32)
@@ -363,6 +462,8 @@ function CanvasEditorInner() {
             nodes?: Node[];
             edges?: Edge[];
           };
+          // Push snapshot before importing (F30)
+          pushSnapshot({ nodes: [...nodesRef.current], edges: [...edgesRef.current] });
           if (Array.isArray(data.nodes)) setNodes(data.nodes);
           if (Array.isArray(data.edges)) setEdges(data.edges);
           markDirty();
@@ -373,7 +474,7 @@ function CanvasEditorInner() {
       reader.readAsText(file);
       e.target.value = '';
     },
-    [setNodes, setEdges, markDirty],
+    [setNodes, setEdges, markDirty, pushSnapshot],
   );
 
   // ---------------------------------------------------------------------------
@@ -415,8 +516,8 @@ function CanvasEditorInner() {
             isDirty={isDirty}
             isSaving={isSaving}
             onModeChange={setToolbarMode}
-            onUndo={undo}
-            onRedo={redo}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
             onAutoLayout={handleAutoLayout}
             onSave={doSave}
             onExport={handleExport}
@@ -439,8 +540,19 @@ function CanvasEditorInner() {
               );
               if (hasMoveOrAdd) markDirty();
             }}
-            onEdgesChange={onEdgesChange}
+            onEdgesChange={(changes) => {
+              // Push snapshot before edge deletion (F30 undo/redo)
+              const hasRemove = changes.some((c) => c.type === 'remove');
+              if (hasRemove) {
+                pushSnapshot({ nodes: [...nodesRef.current], edges: [...edgesRef.current] });
+              }
+              onEdgesChange(changes);
+            }}
             onConnect={onConnect}
+            onNodeDragStart={() => {
+              // Push snapshot at drag start so drag can be undone (F30)
+              pushSnapshot({ nodes: [...nodesRef.current], edges: [...edgesRef.current] });
+            }}
             onNodeClick={(_evt, node) => {
               setSelectedAgentId(node.id);
               setSelectedNodeType(node.type ?? null);
@@ -469,7 +581,7 @@ function CanvasEditorInner() {
         <PropertyInspector
           agentId={selectedAgentId}
           agentName={
-            selectedNodeType === 'skill' || selectedNodeType === 'mcp_server' || selectedNodeType === 'tool_set'
+            selectedNodeType === 'skill' || selectedNodeType === 'mcp_server' || selectedNodeType === 'tool_set' || selectedNodeType === 'external_agent'
               ? ((nodes.find((n) => n.id === selectedAgentId)?.data as Record<string, unknown>)?.label as string) ?? selectedAgentId
               : selectedAgent?.name ?? selectedAgentId
           }

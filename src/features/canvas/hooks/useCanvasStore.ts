@@ -65,9 +65,9 @@ interface CanvasState {
   // Actions — node/edge mutations
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
-  pushSnapshot: () => void;
-  undo: () => void;
-  redo: () => void;
+  pushSnapshot: (snapshot: CanvasSnapshot) => void;
+  undo: (current: CanvasSnapshot) => CanvasSnapshot | null;
+  redo: (current: CanvasSnapshot) => CanvasSnapshot | null;
   selectNode: (nodeId: string | null) => void;
   setViewport: (viewport: Viewport) => void;
 
@@ -97,38 +97,37 @@ export const useCanvasStore = create<CanvasState>()((set, get) => ({
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
 
-  pushSnapshot: () => {
-    const { nodes, edges, undoStack } = get();
+  pushSnapshot: (snapshot: CanvasSnapshot) => {
+    const { undoStack } = get();
     set({
-      undoStack: [...undoStack.slice(-49), { nodes: [...nodes], edges: [...edges] }],
+      undoStack: [...undoStack.slice(-49), snapshot],
       redoStack: [],
     });
   },
 
-  undo: () => {
-    const { undoStack, nodes, edges, redoStack } = get();
+  // Returns the snapshot to restore (caller applies it to ReactFlow state)
+  undo: (current: CanvasSnapshot) => {
+    const { undoStack, redoStack } = get();
     const prev = undoStack[undoStack.length - 1];
-    if (!prev) return;
+    if (!prev) return null;
     set({
-      nodes: prev.nodes,
-      edges: prev.edges,
       undoStack: undoStack.slice(0, -1),
-      redoStack: [{ nodes: [...nodes], edges: [...edges] }, ...redoStack.slice(0, 49)],
+      redoStack: [current, ...redoStack.slice(0, 49)],
       isDirty: true,
     });
+    return prev;
   },
 
-  redo: () => {
-    const { redoStack, nodes, edges, undoStack } = get();
+  redo: (current: CanvasSnapshot) => {
+    const { redoStack, undoStack } = get();
     const next = redoStack[0];
-    if (!next) return;
+    if (!next) return null;
     set({
-      nodes: next.nodes,
-      edges: next.edges,
       redoStack: redoStack.slice(1),
-      undoStack: [...undoStack.slice(-49), { nodes: [...nodes], edges: [...edges] }],
+      undoStack: [...undoStack.slice(-49), current],
       isDirty: true,
     });
+    return next;
   },
 
   selectNode: (nodeId) => set({ selectedNodeId: nodeId }),

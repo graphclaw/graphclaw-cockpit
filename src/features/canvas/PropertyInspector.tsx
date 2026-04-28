@@ -9,7 +9,7 @@
  */
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, RotateCcw, ExternalLink, Brain, Loader2, Wand2, Plug } from 'lucide-react';
+import { Save, RotateCcw, ExternalLink, Brain, Loader2, Wand2, Plug, Globe, ShieldCheck, ShieldX } from 'lucide-react';
 import {
   useAgentProfile,
   useUpdateAgentProfile,
@@ -21,7 +21,9 @@ import {
   useInstalledSkills,
   useMCPServers,
   useMCPServerTools,
+  useA2AAgents,
   type AgentConfig,
+  type A2AAgentEntry,
 } from '@/features/canvas/hooks/useCanvasApi';
 import { MemoryEditor } from '@/features/intelligence/MemoryEditor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -35,7 +37,7 @@ import { cn } from '@/lib/utils';
 export interface PropertyInspectorProps {
   agentId: string;
   agentName: string;
-  nodeType?: string; // 'orchestrator' | 'sub_agent' | 'skill' | 'mcp_server' | 'tool_set'
+  nodeType?: string; // 'orchestrator' | 'sub_agent' | 'skill' | 'mcp_server' | 'tool_set' | 'external_agent'
   onClose?: () => void;
 }
 
@@ -529,6 +531,110 @@ function MCPDetailPanel({ serverId }: { serverId: string }) {
 }
 
 // ---------------------------------------------------------------------------
+// F29 — A2A external agent detail panel
+// ---------------------------------------------------------------------------
+
+function A2ADetailPanel({ agentId }: { agentId: string }) {
+  const { data: agents, isLoading } = useA2AAgents();
+  const [endpointEdit, setEndpointEdit] = useState('');
+  const [showKey, setShowKey] = useState(false);
+
+  const agent: A2AAgentEntry | undefined = (agents ?? []).find((a) => a.agent_id === agentId);
+
+  useEffect(() => {
+    if (agent?.endpoint) setEndpointEdit(agent.endpoint);
+  }, [agent?.endpoint]);
+
+  if (isLoading) return <PanelLoader />;
+  if (!agent) return <p className="p-4 text-xs text-[var(--text-muted)]">External agent not found.</p>;
+
+  const isRevoked = agent.trust_status === 'REVOKED';
+
+  return (
+    <div className="flex flex-col gap-4 p-4" data-testid="inspector-a2a-panel">
+      {/* Trust status */}
+      <div className="flex items-center gap-2">
+        {isRevoked ? (
+          <ShieldX size={14} className="text-red-400" />
+        ) : (
+          <ShieldCheck size={14} className="text-emerald-400" />
+        )}
+        <span
+          className={cn(
+            'rounded px-2 py-0.5 text-[11px] font-medium uppercase',
+            isRevoked ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400',
+          )}
+        >
+          {agent.trust_status ?? 'ACTIVE'}
+        </span>
+      </div>
+
+      {/* Endpoint URL */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[10px] uppercase text-[var(--text-muted)]">Endpoint URL</label>
+        <input
+          type="text"
+          className="h-8 rounded-md border border-[var(--border-default)] bg-[var(--bg-input)] px-2 text-[11px] font-mono text-[var(--text-primary)]"
+          value={endpointEdit}
+          onChange={(e) => setEndpointEdit(e.target.value)}
+          placeholder="https://agent.example.com/a2a"
+          data-testid="a2a-endpoint-input"
+        />
+      </div>
+
+      {/* Auth key (masked) */}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between">
+          <label className="text-[10px] uppercase text-[var(--text-muted)]">Auth Key</label>
+          <button
+            onClick={() => setShowKey((v) => !v)}
+            className="text-[10px] text-purple-400 hover:text-purple-300"
+            data-testid="a2a-toggle-key"
+          >
+            {showKey ? 'Hide' : 'Show'}
+          </button>
+        </div>
+        <input
+          type={showKey ? 'text' : 'password'}
+          className="h-8 rounded-md border border-[var(--border-default)] bg-[var(--bg-input)] px-2 text-[11px] font-mono text-[var(--text-primary)]"
+          defaultValue="••••••••••••••••"
+          readOnly
+          data-testid="a2a-key-input"
+        />
+        <button
+          className="mt-0.5 self-start rounded border border-purple-500/40 px-2 py-0.5 text-[10px] text-purple-400 hover:bg-purple-500/10"
+          data-testid="a2a-rotate-key-btn"
+          onClick={() => toast.info('Key rotation not yet supported via canvas.')}
+        >
+          Rotate Key
+        </button>
+      </div>
+
+      {/* Capabilities */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[10px] uppercase text-[var(--text-muted)]">
+          Capabilities ({(agent.capabilities ?? []).length})
+        </label>
+        {(agent.capabilities ?? []).length === 0 ? (
+          <p className="text-xs text-[var(--text-muted)] italic">No capabilities declared.</p>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {(agent.capabilities ?? []).map((cap) => (
+              <span
+                key={cap}
+                className="rounded bg-purple-500/10 px-1.5 py-0.5 text-[10px] text-purple-300"
+              >
+                {cap}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // PropertyInspector — main component (F16)
 // ---------------------------------------------------------------------------
 
@@ -542,15 +648,18 @@ const TABS: { id: TabId; label: string }[] = [
 export function PropertyInspector({ agentId, agentName, nodeType, onClose }: PropertyInspectorProps) {
   const [activeTab, setActiveTab] = useState<TabId>('config');
 
-  // F24/F25: if a resource node is selected, show detail view instead of agent tabs
+  // F24/F25/F29: if a resource or external node is selected, show detail view instead of agent tabs
   const isSkillNode = nodeType === 'skill';
   const isMCPNode = nodeType === 'mcp_server';
-  const isResourceNode = isSkillNode || isMCPNode;
+  const isA2ANode = nodeType === 'external_agent';
+  const isResourceNode = isSkillNode || isMCPNode || isA2ANode;
 
   const headerIcon = isSkillNode ? (
     <Wand2 size={14} className="shrink-0 text-amber-400" />
   ) : isMCPNode ? (
     <Plug size={14} className="shrink-0 text-red-400" />
+  ) : isA2ANode ? (
+    <Globe size={14} className="shrink-0 text-purple-400" />
   ) : (
     <Brain size={14} className="shrink-0 text-sky-400" />
   );
@@ -585,6 +694,7 @@ export function PropertyInspector({ agentId, agentName, nodeType, onClose }: Pro
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isSkillNode && <SkillDetailPanel skillId={agentId} />}
           {isMCPNode && <MCPDetailPanel serverId={agentId} />}
+          {isA2ANode && <A2ADetailPanel agentId={agentId} />}
         </div>
       ) : (
         <>

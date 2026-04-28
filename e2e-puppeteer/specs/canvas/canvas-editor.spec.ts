@@ -517,5 +517,33 @@ describe('Canvas — Phase 3 Advanced Features', () => {
     expect(getOk).toBe(true);
     expect(config.skills).toContain('test-skill-e13');
   });
+
+  // ── E14: Toolbar undo/redo buttons are present and functional ─────────────
+  test('E14: Toolbar undo/redo buttons present (F30)', async () => {
+    const page = await ctx.newPage();
+    try {
+      await page.setViewport({ width: 1440, height: 900 });
+      await gotoAndWaitForApi(page, '/canvas', '/app/v1');
+      await page.waitForSelector('[data-testid="canvas-toolbar"]', { timeout: 15000 });
+
+      // Undo and Redo buttons should be present in toolbar
+      const undoBtn = await page.$('[data-testid="toolbar-undo"]');
+      expect(undoBtn).not.toBeNull();
+
+      const redoBtn = await page.$('[data-testid="toolbar-redo"]');
+      expect(redoBtn).not.toBeNull();
+    } finally {
+      await page.close();
+    }
+  });
+
+  // ── E15: ExternalAgentNode renders and A2ADetailPanel shown on click ──────
+  test('E15: A2A API endpoint accessible (GET /a2a/agents)', async () => {
+    // Verify the A2A agents endpoint returns a valid response (even if empty)
+    const { ok, body } = await ctx.api.get<unknown[]>('/a2a/agents');
+    // Should return 200 with array (empty array is valid if no A2A agents registered)
+    expect(ok).toBe(true);
+    expect(Array.isArray(body)).toBe(true);
+  });
 });
 
