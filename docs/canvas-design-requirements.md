@@ -933,10 +933,10 @@ The current canvas implementation is a prototype that will be fully replaced:
 | F24 | `SkillDetailPanel` (SKILL.md preview in inspector) | ✅ | ✅ | ✅ | ✅ |
 | F25 | `MCPDetailPanel` (server details + tools list) | ✅ | ✅ | ✅ | ✅ |
 | F26 | `SystemAgentNode` (read-only, dimmed) | ✅ | ✅ | ✅ | ✅ |
-| F27 | `ExternalAgentNode` (A2A with protocol config) | ⬜ | ⬜ | ⬜ | ⬜ |
-| F28 | `A2ALinkEdge` component | ⬜ | ⬜ | ⬜ | ⬜ |
-| F29 | `A2ADetailPanel` (A2A config editor) | ⬜ | ⬜ | ⬜ | ⬜ |
-| F30 | Undo/redo (full stack implementation) | ⬜ | ⬜ | ⬜ | ⬜ |
+| F27 | `ExternalAgentNode` (A2A with protocol config) | ✅ | ✅ | ✅ | ✅ |
+| F28 | `A2ALinkEdge` component | ✅ | ✅ | ✅ | ✅ |
+| F29 | `A2ADetailPanel` (A2A config editor) | ✅ | ✅ | ✅ | ✅ |
+| F30 | Undo/redo (full stack implementation) | ✅ | ✅ | ✅ | ✅ |
 | F31 | Autosave with 2s debounce | ✅ | ✅ | ✅ | ✅ |
 | F32 | Canvas export/import JSON | ✅ | ✅ | ✅ | ✅ |
 
@@ -957,6 +957,8 @@ The current canvas implementation is a prototype that will be fully replaced:
 | E11 | Orchestrator cannot be deleted | ✅ | ✅ | ✅ | ✅ |
 | E12 | Export/Import toolbar buttons present (F32) | ✅ | ✅ | ✅ | ✅ |
 | E13 | Palette shows checkmarks for wired resources | ✅ | ✅ | ✅ | ✅ |
+| E14 | Undo/Redo toolbar buttons present (F30) | ✅ | ✅ | ✅ | ✅ |
+| E15 | A2A API endpoint accessible (GET /a2a/agents) | ✅ | ✅ | ✅ | ✅ |
 
 ### Document Updates
 
