@@ -68,7 +68,7 @@ export class ApiClient {
     return this.request<T>('PUT', path, data);
   }
 
-  delete(path: string): Promise<ApiResponse<void>> {
-    return this.request<void>('DELETE', path);
+  delete(path: string): Promise<ApiResponse<undefined>> {
+    return this.request<undefined>('DELETE', path);
   }
 }

@@ -110,7 +110,7 @@ describe('Intelligence — Working Memory', () => {
       );
       await page.waitForSelector('main', { timeout: 10000 });
       await page.waitForFunction(
-        () => document.querySelector('main')?.innerText.length! > 5,
+        () => (document.querySelector('main')?.innerText.length ?? 0) > 5,
         { timeout: 10000 },
       );
     } finally {
@@ -127,7 +127,7 @@ describe('Intelligence — Working Memory', () => {
       content: `## To Compact\n\nThis session covered working memory tests.\n`,
     });
 
-    const { body, status } = await ctx.api.post(
+    const { status } = await ctx.api.post(
       `/intelligence/agents/${ctx.userId}/memory/compact`,
       {
         summary: `E2E working memory spec completed at ${new Date().toISOString()}`,
@@ -137,10 +137,10 @@ describe('Intelligence — Working Memory', () => {
     expect([200, 201]).toContain(status);
 
     // REST: episodic list should contain the new entry
-    const { body: episodic } = await ctx.api.get<{
-      entries?: Array<{ name?: string; entry_name?: string }>;
-    }>(`/intelligence/agents/${ctx.userId}/memory/episodic`);
-    const entries = episodic.entries ?? [];
+    const { body: episodic } = await ctx.api.get<Array<{ name?: string; entry_name?: string }>>(
+      `/intelligence/agents/${ctx.userId}/memory/episodic`,
+    );
+    const entries = Array.isArray(episodic) ? episodic : [];
     const found = entries.find(
       (e) => (e.name ?? e.entry_name ?? '').includes(sessionLabel),
     );

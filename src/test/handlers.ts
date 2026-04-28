@@ -182,7 +182,7 @@ export const handlers = [
   }),
 
   // Skills: toggle
-  http.patch('/app/v1/skills/:skillId', ({ params, request }) => {
+  http.patch('/app/v1/skills/:skillId', ({ params }) => {
     return HttpResponse.json({
       skill_id: params.skillId,
       skill_name: 'email-triage',

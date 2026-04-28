@@ -17,7 +17,7 @@ interface Feature {
 
 describe('Admin — Feature Gates', () => {
   let ctx: TestContext;
-  let originalStates: Map<string, boolean> = new Map();
+  const originalStates: Map<string, boolean> = new Map();
 
   beforeAll(async () => {
     ctx = await TestContext.create();

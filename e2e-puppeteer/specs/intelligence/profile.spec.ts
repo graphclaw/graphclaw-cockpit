@@ -8,7 +8,7 @@
 
 import { TestContext } from '../../base/TestContext';
 import { StoragePaths } from '../../helpers/minio.helper';
-import { gotoAndWaitForApi, waitForText } from '../../helpers/browser.helper';
+import { gotoAndWaitForApi } from '../../helpers/browser.helper';
 
 describe('Intelligence — Agent Profile', () => {
   let ctx: TestContext;
@@ -87,7 +87,7 @@ describe('Intelligence — Agent Profile', () => {
       await page.waitForSelector('main', { timeout: 10000 });
       // Profile editor or markdown viewer should be present
       await page.waitForFunction(
-        () => document.querySelector('main')?.innerText.length! > 10,
+        () => (document.querySelector('main')?.innerText.length ?? 0) > 10,
         { timeout: 10000 },
       );
     } finally {
@@ -107,31 +107,23 @@ describe('Intelligence — Agent Profile', () => {
         '/app/v1/intelligence/agents',
       );
 
-      // Find and fill the profile editor (Monaco or textarea)
-      const editorSel =
-        '[data-testid="profile-editor"], textarea[aria-label], .monaco-editor textarea';
-      await page.waitForSelector(editorSel, { timeout: 10000 }).catch(() => {});
+      // Wait for Monaco editor to load
+      await page.waitForSelector('.monaco-editor, [data-testid="profile-editor"]', { timeout: 10000 }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 1500)); // allow Monaco to fully initialize
 
-      // Try textarea approach first (simpler)
-      const textarea = await page.$('textarea').catch(() => null);
-      if (textarea) {
-        await page.evaluate(
-          (el: Element, text: string) => {
-            const ta = el as HTMLTextAreaElement;
-            const nativeSetter = Object.getOwnPropertyDescriptor(
-              HTMLTextAreaElement.prototype,
-              'value',
-            )?.set;
-            nativeSetter?.call(ta, text);
-            ta.dispatchEvent(new Event('input', { bubbles: true }));
-          },
-          textarea,
-          `# Profile\n\n${uniqueText}\n`,
-        );
+      // Interact with Monaco editor via keyboard (Monaco does not respond to native value setter)
+      const monacoEditor = await page.$('.monaco-editor').catch(() => null);
+      if (monacoEditor) {
+        await monacoEditor.click();
+        await page.keyboard.down('Control');
+        await page.keyboard.press('a');
+        await page.keyboard.up('Control');
+        await page.keyboard.type(`# Profile\n\n${uniqueText}\n`);
+        await new Promise((r) => setTimeout(r, 500));
 
         // Click Save
         const saveBtn = await page
-          .$('button[type="submit"], button ::-p-text(Save)')
+          .$('button ::-p-text(Save)')
           .catch(() => null);
         if (saveBtn) {
           const [apiRes] = await Promise.all([

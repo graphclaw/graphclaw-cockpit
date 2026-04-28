@@ -12,9 +12,9 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { getDevToken, TEST_USER_ID, API_BASE } from '../helpers/auth.helper';
+import { getDevToken } from '../helpers/auth.helper';
 import { ApiClient } from '../helpers/api.helper';
-import { MinioClient, StoragePaths } from '../helpers/minio.helper';
+import { StoragePaths } from '../helpers/minio.helper';
 import {
   type SeedManifest,
   EMPTY_MANIFEST,
@@ -206,8 +206,6 @@ async function seedAll(): Promise<SeedManifest> {
   console.log('\n[seed-all] Obtaining dev token from real backend...');
   const { access_token } = await getDevToken();
   const api = new ApiClient(access_token);
-  const minio = new MinioClient();
-
   // ── 1. Users ────────────────────────────────────────────────────────────────
   console.log('[seed-all] Creating users...');
   const userDefs = [

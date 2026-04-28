@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, RotateCcw } from 'lucide-react';
 import { useAgentProfile, useUpdateAgentProfile } from '@/lib/api-hooks';
+import { toast } from 'sonner';
 import { useSelectedAgentId } from './IntelligenceLayout';
+import { MemoryEditor } from './MemoryEditor';
 
 export function AgentProfilePage() {
   const agentId = useSelectedAgentId();
   const { data: profile, isLoading } = useAgentProfile(agentId);
   const update = useUpdateAgentProfile();
-
   const [content, setContent] = useState('');
   const [savedContent, setSavedContent] = useState('');
 
@@ -24,7 +25,15 @@ export function AgentProfilePage() {
   function handleSave() {
     update.mutate(
       { agentId, content },
-      { onSuccess: () => setSavedContent(content) },
+      {
+        onSuccess: () => {
+          setSavedContent(content);
+          toast.success('Profile saved.');
+        },
+        onError: () => {
+          toast.error('Save failed.');
+        },
+      },
     );
   }
 
@@ -63,14 +72,11 @@ export function AgentProfilePage() {
         </div>
       </div>
 
-      <div className="flex-1 rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-inset)]">
-        <textarea
+      <div className="flex-1">
+        <MemoryEditor
           value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="h-full w-full resize-none rounded-[var(--radius-lg)] bg-transparent p-4 font-mono text-sm text-[var(--text-primary)] focus:outline-none"
-          spellCheck={false}
+          onChange={setContent}
           data-testid="profile-editor"
-          placeholder="# Agent Profile&#10;&#10;## Role&#10;..."
         />
       </div>
     </div>

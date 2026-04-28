@@ -51,7 +51,7 @@ describe('Admin — SSO', () => {
       const oidcBtn = await page
         .$('button::-p-text(OIDC), [data-testid="protocol-oidc"]')
         .catch(() => null);
-      const samlBtn = await page
+      await page
         .$('button::-p-text(SAML), [data-testid="protocol-saml"]')
         .catch(() => null);
 

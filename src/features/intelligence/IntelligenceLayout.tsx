@@ -1,7 +1,7 @@
 import { NavLink, Outlet, Navigate, useMatch } from 'react-router';
 import { User, Brain, BookOpen, Tags, Wrench } from 'lucide-react';
 import { createContext, useContext, useState } from 'react';
-import { useAgents } from '@/lib/api-hooks';
+import { useIntelligenceAgents } from '@/lib/api-hooks';
 import { useAuthStore } from '@/stores/auth';
 
 const INTELLIGENCE_TABS = [
@@ -21,17 +21,14 @@ export function useSelectedAgentId() {
 export function IntelligenceLayout() {
   const isRoot = useMatch('/intelligence');
   const userId = useAuthStore((s) => s.userId) ?? 'test-user';
-  const { data: agents = [] } = useAgents();
+  const { data: agents = [] } = useIntelligenceAgents();
   const [selectedId, setSelectedId] = useState<string>(userId);
 
-  // Build agent options: always include the logged-in user's agent,
-  // plus any additional agents from the pool
-  const agentOptions = [
-    { id: userId, name: `My Agent (${userId})` },
-    ...agents
-      .filter((a) => a.agent_id !== userId)
-      .map((a) => ({ id: a.agent_id, name: a.name ?? a.agent_id })),
-  ];
+  // Build agent options from Intelligence Hub MinIO scan
+  const agentOptions =
+    agents.length > 0
+      ? agents.map((a) => ({ id: a.agent_id, name: `${a.name}${a.source === 'system' ? ' (system)' : ''}` }))
+      : [{ id: userId, name: `My Agent (${userId})` }];
 
   if (isRoot) {
     return <Navigate to="profile" replace />;

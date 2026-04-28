@@ -88,8 +88,8 @@ async function apiPut<T>(path: string, body: unknown): Promise<T> {
   return apiRequest<T>(path, 'PUT', body);
 }
 
-async function apiDelete(path: string): Promise<void> {
-  await apiRequest<void>(path, 'DELETE');
+async function apiDelete(path: string): Promise<undefined> {
+  await apiRequest<undefined>(path, 'DELETE');
 }
 
 // ---------------------------------------------------------------------------
@@ -346,6 +346,24 @@ export function useAgentTriggers() {
   return useQuery({
     queryKey: ['agent', 'triggers'],
     queryFn: () => apiFetch<AgentTrigger[]>('/app/v1/agent/triggers/schedule'),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Intelligence Hub — Agent List (MinIO scan, NOT canvas API)
+// ---------------------------------------------------------------------------
+
+export interface IntelligenceAgent {
+  agent_id: string;
+  name: string;
+  source: 'user' | 'system';
+  description?: string;
+}
+
+export function useIntelligenceAgents() {
+  return useQuery({
+    queryKey: ['intelligence', 'agents'],
+    queryFn: () => apiFetch<IntelligenceAgent[]>('/app/v1/intelligence/agents'),
   });
 }
 
@@ -1090,13 +1108,50 @@ export function useWorkingMemory(agentId: string) {
   });
 }
 
+export interface CompactResponse {
+  agent_id: string;
+  archived_as: string;
+  working_context_replaced: boolean;
+  context_before_chars: number;
+  context_after_chars: number;
+  reduction_pct: number;
+}
+
 export function useCompactWorkingMemory() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (agentId: string) =>
-      apiPost(`/app/v1/intelligence/agents/${agentId}/memory/compact`),
-    onSuccess: (_data, agentId) => {
+    mutationFn: ({ agentId, summary, session_label }: { agentId: string; summary: string; session_label?: string }) =>
+      apiPost<CompactResponse>(`/app/v1/intelligence/agents/${agentId}/memory/compact`, { summary, session_label }),
+    onSuccess: (_data, { agentId }) => {
       void qc.invalidateQueries({ queryKey: ['intelligence', agentId, 'memory'] });
+    },
+  });
+}
+
+export interface WorkingArchiveEntry {
+  name: string;
+  size_chars: number;
+  created_at?: string;
+}
+
+export function useWorkingMemoryArchive(agentId: string) {
+  return useQuery({
+    queryKey: ['intelligence', agentId, 'memory', 'working', 'archive'],
+    queryFn: () =>
+      apiFetch<WorkingArchiveEntry[]>(
+        `/app/v1/intelligence/agents/${agentId}/memory/working/archive`,
+      ),
+    enabled: !!agentId,
+  });
+}
+
+export function useUpdateWorkingMemory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ agentId, content }: { agentId: string; content: string }) =>
+      apiPut<WorkingMemory>(`/app/v1/intelligence/agents/${agentId}/memory/working`, { content }),
+    onSuccess: (_data, { agentId }) => {
+      void qc.invalidateQueries({ queryKey: ['intelligence', agentId, 'memory', 'working'] });
     },
   });
 }
@@ -1108,23 +1163,29 @@ export function useCompactWorkingMemory() {
 export interface EpisodicMemoryEntry {
   name: string;
   content: string;
-  created_at: string;
-}
-
-export interface EpisodicMemory {
-  agent_id: string;
-  memory_type: string;
-  entries: EpisodicMemoryEntry[];
+  created_at?: string;
+  status: 'active' | 'archived';
 }
 
 export function useEpisodicMemory(agentId: string) {
   return useQuery({
     queryKey: ['intelligence', agentId, 'memory', 'episodic'],
     queryFn: () =>
-      apiFetch<EpisodicMemory>(
+      apiFetch<EpisodicMemoryEntry[]>(
         `/app/v1/intelligence/agents/${agentId}/memory/episodic`,
       ),
     enabled: !!agentId,
+  });
+}
+
+export function useArchiveEpisodicEntry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ agentId, entryName }: { agentId: string; entryName: string }) =>
+      apiPost(`/app/v1/intelligence/agents/${agentId}/memory/episodic/${entryName}/archive`),
+    onSuccess: (_data, { agentId }) => {
+      void qc.invalidateQueries({ queryKey: ['intelligence', agentId, 'memory', 'episodic'] });
+    },
   });
 }
 
@@ -1133,25 +1194,64 @@ export function useEpisodicMemory(agentId: string) {
 // ---------------------------------------------------------------------------
 
 export interface SemanticMemoryEntry {
-  topic: string;
-  content: string;
-  updated_at: string;
+  key: string;    // topic slug (e.g. "knowledge", "users")
+  path: string;
 }
 
-export interface SemanticMemory {
+export interface SemanticMemoryList {
   agent_id: string;
   memory_type: string;
   entries: SemanticMemoryEntry[];
+}
+
+export interface SemanticMemoryContent {
+  agent_id: string;
+  memory_type: string;
+  key: string;
+  content: string;
 }
 
 export function useSemanticMemory(agentId: string) {
   return useQuery({
     queryKey: ['intelligence', agentId, 'memory', 'semantic'],
     queryFn: () =>
-      apiFetch<SemanticMemory>(
+      apiFetch<SemanticMemoryList>(
         `/app/v1/intelligence/agents/${agentId}/memory/semantic`,
       ),
     enabled: !!agentId,
+  });
+}
+
+export function useSemanticTopic(agentId: string, topic: string) {
+  return useQuery({
+    queryKey: ['intelligence', agentId, 'memory', 'semantic', topic],
+    queryFn: () =>
+      apiFetch<SemanticMemoryContent>(
+        `/app/v1/intelligence/agents/${agentId}/memory/semantic/${topic}`,
+      ),
+    enabled: !!agentId && !!topic,
+  });
+}
+
+export function useUpdateSemanticMemory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ agentId, topic, content }: { agentId: string; topic: string; content: string }) =>
+      apiPut<SemanticMemoryContent>(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${topic}`, { content }),
+    onSuccess: (_data, { agentId }) => {
+      void qc.invalidateQueries({ queryKey: ['intelligence', agentId, 'memory', 'semantic'] });
+    },
+  });
+}
+
+export function useDeleteSemanticMemory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ agentId, topic }: { agentId: string; topic: string }) =>
+      apiDelete(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${topic}`),
+    onSuccess: (_data, { agentId }) => {
+      void qc.invalidateQueries({ queryKey: ['intelligence', agentId, 'memory', 'semantic'] });
+    },
   });
 }
 

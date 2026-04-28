@@ -1,4 +1,4 @@
-import { screen, waitFor, fireEvent, within } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 import { SkillsPage } from '@/features/skills/SkillsPage';
 

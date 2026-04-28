@@ -9,7 +9,7 @@
  */
 
 import * as fs from 'fs';
-import { getDevToken, TEST_USER_ID } from '../helpers/auth.helper';
+import { getDevToken } from '../helpers/auth.helper';
 import { ApiClient } from '../helpers/api.helper';
 import { DbClient } from '../helpers/db.helper';
 import { MinioClient } from '../helpers/minio.helper';

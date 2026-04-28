@@ -8,7 +8,7 @@
  */
 
 import { TestContext } from '../../base/TestContext';
-import { gotoAndWaitForApi, waitForText } from '../../helpers/browser.helper';
+import { gotoAndWaitForApi } from '../../helpers/browser.helper';
 
 describe('Agent — CRUD', () => {
   let ctx: TestContext;
@@ -163,7 +163,7 @@ describe('Agent — CRUD', () => {
       await page.waitForSelector('main', { timeout: 10000 });
       // Status section must render
       await page.waitForFunction(
-        () => document.querySelector('main')?.innerText.length! > 10,
+        () => (document.querySelector('main')?.innerText.length ?? 0) > 10,
         { timeout: 10000 },
       );
     } finally {

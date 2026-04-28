@@ -1,105 +1,159 @@
 import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, Eye, X } from 'lucide-react';
-import { useEpisodicMemory } from '@/lib/api-hooks';
+import { useEpisodicMemory, useArchiveEpisodicEntry } from '@/lib/api-hooks';
+import { toast } from 'sonner';
 import { useSelectedAgentId } from './IntelligenceLayout';
+import { MemoryEditor } from './MemoryEditor';
 
 export function EpisodicMemoryPage() {
   const agentId = useSelectedAgentId();
-  const { data: mem, isLoading } = useEpisodicMemory(agentId);
-  const [query, setQuery] = useState('');
-  const [selectedName, setSelectedName] = useState<string | null>(null);
+  const { data: entries = [], isLoading } = useEpisodicMemory(agentId);
+  const archiveEntry = useArchiveEpisodicEntry();
 
-  const entries = mem?.entries ?? [];
-  const filtered = entries.filter((e) =>
-    e.name.toLowerCase().includes(query.toLowerCase()),
-  );
+  const [selectedName, setSelectedName] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState<string | null>(null);
+
+  const active = entries.filter((e) => e.status === 'active');
+  const archived = entries.filter((e) => e.status === 'archived');
   const selected = entries.find((e) => e.name === selectedName);
+
+  function handleArchive(entryName: string) {
+    archiveEntry.mutate(
+      { agentId, entryName },
+      {
+        onSuccess: () => {
+          setShowConfirm(null);
+          if (selectedName === entryName) setSelectedName(null);
+          toast.success('Entry archived. It will no longer be loaded into the agent context.');
+        },
+        onError: () => toast.error('Archive failed.'),
+      },
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--brand-primary)] border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full gap-4">
-      {/* List */}
-      <div className="flex flex-1 flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-[var(--text-primary)]">Episodic Memory</h2>
-          <Badge variant="outline">{entries.length} entries</Badge>
-        </div>
+      {/* Left panel */}
+      <div className="w-56 shrink-0 space-y-1" data-testid="episodic-list">
+        {active.length === 0 && archived.length === 0 && (
+          <p className="py-6 text-center text-sm text-[var(--text-tertiary)]">
+            No episodic memory entries yet.
+          </p>
+        )}
 
-        <div className="relative max-w-sm">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
-          <input
-            type="text"
-            placeholder="Search episodes..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-surface)] py-1.5 pl-8 pr-3 text-sm text-[var(--text-primary)]"
-          />
-        </div>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--brand-primary)] border-t-transparent" />
-          </div>
-        ) : (
-          <div className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)]" data-testid="episodic-list">
-            <div className="grid grid-cols-[1fr_140px_80px] gap-4 border-b border-[var(--border-default)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-              <span>Label</span>
-              <span>Date</span>
-              <span className="text-right">Actions</span>
-            </div>
-            {filtered.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-[var(--text-tertiary)] text-center">
-                No episodic memory entries yet.
-              </p>
-            ) : (
-              <div className="divide-y divide-[var(--border-subtle)]">
-                {filtered.map((ep) => (
-                  <div
-                    key={ep.name}
-                    className={`grid grid-cols-[1fr_140px_80px] items-center gap-4 px-4 py-3 text-sm ${
-                      selectedName === ep.name ? 'bg-[var(--bg-inset)]' : ''
-                    }`}
-                  >
-                    <span className="font-medium text-[var(--text-primary)]">{ep.name}</span>
-                    <span className="text-xs text-[var(--text-tertiary)]">
-                      {new Date(ep.created_at).toLocaleDateString()}
-                    </span>
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        title="View"
-                        onClick={() => setSelectedName(ep.name)}
-                      >
-                        <Eye size={14} />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+        {active.length > 0 && (
+          <>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+              Active
+            </p>
+            {active.map((ep) => (
+              <div
+                key={ep.name}
+                className={`flex cursor-pointer items-center gap-2 rounded-[var(--radius-md)] px-2 py-1.5 text-sm ${
+                  selectedName === ep.name
+                    ? 'bg-[var(--bg-inset)] text-[var(--text-primary)]'
+                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-inset)]'
+                }`}
+                onClick={() => setSelectedName(ep.name)}
+              >
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand-primary)]" />
+                <span className="truncate text-xs">{ep.name.replace('.md', '')}</span>
               </div>
-            )}
+            ))}
+          </>
+        )}
+
+        {archived.length > 0 && (
+          <>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+              Archived
+            </p>
+            {archived.map((ep) => (
+              <div
+                key={ep.name}
+                className={`flex cursor-pointer items-center gap-2 rounded-[var(--radius-md)] px-2 py-1.5 text-sm ${
+                  selectedName === ep.name
+                    ? 'bg-[var(--bg-inset)] text-[var(--text-primary)]'
+                    : 'text-[var(--text-tertiary)] hover:bg-[var(--bg-inset)]'
+                }`}
+                onClick={() => setSelectedName(ep.name)}
+              >
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full border border-[var(--text-tertiary)]" />
+                <span className="truncate text-xs">{ep.name.replace('.md', '')}</span>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+
+      {/* Viewer panel */}
+      <div className="flex flex-1 flex-col gap-3">
+        {selected ? (
+          <>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-[var(--text-primary)]">{selected.name}</span>
+                <span
+                  className={`rounded border px-1.5 py-0.5 text-xs ${
+                    selected.status === 'active'
+                      ? 'border-[var(--brand-primary)] text-[var(--brand-primary)]'
+                      : 'border-[var(--border-default)] text-[var(--text-tertiary)]'
+                  }`}
+                >
+                  {selected.status}
+                </span>
+              </div>
+              {selected.status === 'active' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowConfirm(selected.name)}
+                >
+                  Archive ↓
+                </Button>
+              )}
+            </div>
+            <div className="flex-1">
+              <MemoryEditor value={selected.content} readOnly />
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-1 items-center justify-center text-sm text-[var(--text-tertiary)]">
+            Select an entry to view its content
           </div>
         )}
       </div>
 
-      {/* Slide-over viewer */}
-      {selected && (
-        <div className="w-96 shrink-0 rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">{selected.name}</h3>
-            <Button size="sm" variant="ghost" onClick={() => setSelectedName(null)}>
-              <X size={14} />
-            </Button>
-          </div>
-          <p className="mb-3 text-xs text-[var(--text-tertiary)]">
-            {new Date(selected.created_at).toLocaleString()}
-          </p>
-          <div
-            className="rounded-[var(--radius-md)] bg-[var(--bg-inset)] p-3 font-mono text-xs text-[var(--text-secondary)]"
-            data-testid="episode-viewer"
-          >
-            {selected.content}
+      {/* Archive confirmation dialog */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 shadow-lg">
+            <h3 className="mb-2 text-sm font-semibold text-[var(--text-primary)]">
+              Archive Entry?
+            </h3>
+            <p className="mb-5 text-xs text-[var(--text-tertiary)]">
+              Archiving this entry removes it from the agent&apos;s context permanently and cannot be undone. Continue?
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="outline" onClick={() => setShowConfirm(null)}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleArchive(showConfirm)}
+                disabled={archiveEntry.isPending}
+              >
+                {archiveEntry.isPending ? 'Archiving…' : 'Archive'}
+              </Button>
+            </div>
           </div>
         </div>
       )}

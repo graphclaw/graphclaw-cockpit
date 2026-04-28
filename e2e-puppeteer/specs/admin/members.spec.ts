@@ -6,7 +6,6 @@
  */
 
 import { TestContext } from '../../base/TestContext';
-import { gotoAndWaitForApi, waitForText } from '../../helpers/browser.helper';
 
 describe('Admin — Members', () => {
   let ctx: TestContext;

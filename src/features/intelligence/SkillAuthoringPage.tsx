@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Save, Plus, GitFork, CheckCircle, XCircle } from 'lucide-react';
-import { useAuthoredSkills, useCreateSkill, useUpdateSkill, useForkSkill, useValidateSkill } from '@/lib/api-hooks';
+import { Save, Plus, GitFork, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { useAuthoredSkills, useCreateSkill, useUpdateSkill, useForkSkill, useValidateSkill, useDeleteAuthoredSkill } from '@/lib/api-hooks';
+import { toast } from 'sonner';
 
 interface LocalSkill {
   skill_id: string;
@@ -29,7 +30,9 @@ export function SkillAuthoringPage() {
   const updateSkill = useUpdateSkill();
   const forkSkill = useForkSkill();
   const validateSkill = useValidateSkill();
+  const deleteSkill = useDeleteAuthoredSkill();
   const [localSkills, setLocalSkills] = useState<LocalSkill[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState('');
 
@@ -108,26 +111,25 @@ export function SkillAuthoringPage() {
     if (!skill) return;
 
     if (isLocal) {
-      // New skill — create via API
       createSkill.mutate(
         { name: skill.name, description: skill.description, version: skill.version, content: editedContent },
         {
           onSuccess: (created) => {
-            // Remove from local list, it now lives remotely
             setLocalSkills((prev) => prev.filter((s) => s.skill_id !== selectedId));
             setSelectedId(created.skill_id);
+            toast.success(`Skill '${created.skill_id}' created.`);
           },
+          onError: () => toast.error('Create failed.'),
         },
       );
     } else {
-      // Existing remote skill — update
-      updateSkill.mutate({
-        skillId: selectedId,
-        content: editedContent,
-        name: skill.name,
-        description: skill.description,
-        version: skill.version,
-      });
+      updateSkill.mutate(
+        { skillId: selectedId, content: editedContent, name: skill.name, description: skill.description, version: skill.version },
+        {
+          onSuccess: () => toast.success('Skill saved.'),
+          onError: () => toast.error('Save failed.'),
+        },
+      );
     }
   }
 
@@ -140,9 +142,30 @@ export function SkillAuthoringPage() {
       {
         onSuccess: (forked) => {
           setSelectedId(forked.skill_id ?? forked.forked_skill_id ?? null);
+          toast.success(`Forked as '${forked.forked_skill_id ?? forked.skill_id}'.`);
         },
+        onError: () => toast.error('Fork failed.'),
       },
     );
+  }
+
+  function handleDelete() {
+    if (!selectedId) return;
+    const isLocal = localSkills.some((s) => s.skill_id === selectedId);
+    if (isLocal) {
+      setLocalSkills((prev) => prev.filter((s) => s.skill_id !== selectedId));
+      setSelectedId(null);
+      setShowDeleteConfirm(false);
+      return;
+    }
+    deleteSkill.mutate(selectedId, {
+      onSuccess: () => {
+        setSelectedId(null);
+        setShowDeleteConfirm(false);
+        toast.success(`Skill '${selectedId}' deleted.`);
+      },
+      onError: () => toast.error('Delete failed.'),
+    });
   }
 
   if (isLoading) {
@@ -205,6 +228,14 @@ export function SkillAuthoringPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-[var(--state-error)]"
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  <Trash2 size={14} className="mr-1" /> Delete
+                </Button>
                 <Button size="sm" variant="outline" title="Fork" onClick={handleFork} disabled={forkSkill.isPending}>
                   <GitFork size={14} className="mr-1" /> Fork
                 </Button>
@@ -265,6 +296,26 @@ export function SkillAuthoringPage() {
           </div>
         )}
       </div>
+
+      {/* Delete confirmation */}
+      {showDeleteConfirm && selectedId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 shadow-lg">
+            <h3 className="mb-2 text-sm font-semibold text-[var(--text-primary)]">Delete Skill?</h3>
+            <p className="mb-5 text-xs text-[var(--text-tertiary)]">
+              Delete <strong>{selectedId}</strong>? This cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleDelete} disabled={deleteSkill.isPending}>
+                {deleteSkill.isPending ? 'Deleting…' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

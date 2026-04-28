@@ -13,7 +13,7 @@
  */
 
 import { TestContext } from '../../base/TestContext';
-import { gotoAndWaitForApi, waitForText, clickAndWaitForApi } from '../../helpers/browser.helper';
+import { gotoAndWaitForApi, clickAndWaitForApi } from '../../helpers/browser.helper';
 
 describe('Skills — Marketplace', () => {
   let ctx: TestContext;

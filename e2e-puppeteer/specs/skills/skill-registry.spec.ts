@@ -70,7 +70,7 @@ describe('Skills — Registry', () => {
     const sourceUri = `graphclaw://e2e-test-registry/${Date.now()}`;
     addedSourceUris.push(sourceUri);
 
-    const { body, status } = await ctx.api.post<{
+    const { status } = await ctx.api.post<{
       source_type?: string;
       uri?: string;
     }>('/skills/sources', {

@@ -7,7 +7,7 @@
  */
 
 import { TestContext } from '../../base/TestContext';
-import { gotoAndWaitForApi, waitForText } from '../../helpers/browser.helper';
+import { gotoAndWaitForApi } from '../../helpers/browser.helper';
 
 describe('Graph — Sub-task / Parent–Child', () => {
   let ctx: TestContext;

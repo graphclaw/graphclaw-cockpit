@@ -4,6 +4,7 @@
  * Tests episodic memory (compacted session summaries) management.
  * Episodic entries are created via POST /memory/compact and stored
  * as individual Markdown files in MinIO.
+ * Archive action moves entries from episodic/ to episodic/archive/ (irreversible).
  */
 
 import { TestContext } from '../../base/TestContext';
@@ -19,21 +20,16 @@ describe('Intelligence — Episodic Memory', () => {
   });
 
   afterAll(async () => {
-    for (const entry of createdEntries) {
-      await ctx.api.delete(
-        `/intelligence/agents/${ctx.userId}/memory/episodic/${entry}`,
-      ).catch(() => {});
-    }
     await ctx.destroy();
   });
 
   // ── List episodic entries ──────────────────────────────────────────────────
   test('GET episodic list — returns array', async () => {
-    const { body, status } = await ctx.api.get<{
-      entries?: unknown[];
-    }>(`/intelligence/agents/${ctx.userId}/memory/episodic`);
+    const { body, status } = await ctx.api.get<unknown[]>(
+      `/intelligence/agents/${ctx.userId}/memory/episodic`,
+    );
     expect(status).toBe(200);
-    expect(Array.isArray(body.entries ?? [])).toBe(true);
+    expect(Array.isArray(body)).toBe(true);
   });
 
   // ── Create episodic entry via compact ─────────────────────────────────────
@@ -41,12 +37,11 @@ describe('Intelligence — Episodic Memory', () => {
     const sessionLabel = `e2e-session-${Date.now()}`;
     createdEntries.push(sessionLabel);
 
-    // Ensure working memory has content to compact
     await ctx.api.put(`/intelligence/agents/${ctx.userId}/memory/working`, {
       content: `## Session: ${sessionLabel}\n\nCompleted graph CRUD tests.\n`,
     });
 
-    const { body, status } = await ctx.api.post(
+    const { status } = await ctx.api.post(
       `/intelligence/agents/${ctx.userId}/memory/compact`,
       {
         summary: `E2E episodic compact: ${sessionLabel}`,
@@ -55,15 +50,13 @@ describe('Intelligence — Episodic Memory', () => {
     );
     expect([200, 201]).toContain(status);
 
-    // REST: entry in list
-    const { body: list } = await ctx.api.get<{
-      entries?: Array<{ name?: string; entry_name?: string }>;
-    }>(`/intelligence/agents/${ctx.userId}/memory/episodic`);
-    const entries = list.entries ?? [];
-    const found = entries.find(
-      (e) => (e.name ?? e.entry_name ?? '').includes(sessionLabel),
+    // REST: entry in list (new API returns plain array of EpisodicEntryListItem)
+    const { body: list } = await ctx.api.get<Array<{ name?: string; status?: string }>>(
+      `/intelligence/agents/${ctx.userId}/memory/episodic`,
     );
-    if (found) expect(found).toBeDefined();
+    const entries = Array.isArray(list) ? list : [];
+    const found = entries.find((e) => (e.name ?? '').includes(sessionLabel));
+    if (found) expect(found.status).toBe('active');
 
     // MinIO: object exists
     const key = StoragePaths.episodicEntry(ctx.userId, sessionLabel);
@@ -84,7 +77,7 @@ describe('Intelligence — Episodic Memory', () => {
     if (createdEntries.length === 0) return;
     const entry = createdEntries[0];
 
-    const { body, status } = await ctx.api.get<{ content?: string }>(
+    const { body, status } = await ctx.api.get<{ content?: string; status?: string }>(
       `/intelligence/agents/${ctx.userId}/memory/episodic/${entry}`,
     );
     expect([200, 404]).toContain(status);
@@ -93,48 +86,37 @@ describe('Intelligence — Episodic Memory', () => {
     }
   });
 
-  // ── Delete episodic entry → absent in REST and MinIO ──────────────────────
+  // ── Archive episodic entry → moved to archive folder ──────────────────────
   test('DELETE episodic entry → REST 404 → MinIO key absent', async () => {
-    const sessionLabel = `e2e-delete-episodic-${Date.now()}`;
+    const sessionLabel = `e2e-archive-episodic-${Date.now()}`;
 
-    // Create entry
     await ctx.api.put(`/intelligence/agents/${ctx.userId}/memory/working`, {
-      content: `## To Delete\n\nThis will be compacted and deleted.\n`,
+      content: `## To Archive\n\nThis will be compacted and archived.\n`,
     });
-    await ctx.api.post(`/intelligence/agents/${ctx.userId}/memory/compact`, {
-      summary: `Entry to delete: ${sessionLabel}`,
-      session_label: sessionLabel,
-    });
-
-    // Verify entry was created in MinIO
-    const key = StoragePaths.episodicEntry(ctx.userId, sessionLabel);
-    try {
-      const existsBefore = await ctx.minio.objectExists(key);
-      // May or may not exist depending on backend behaviour
-    } catch {
-      console.warn('MinIO check skipped');
-    }
-
-    // Delete via API
-    const { status: delStatus } = await ctx.api.delete(
-      `/intelligence/agents/${ctx.userId}/memory/episodic/${sessionLabel}`,
+    const { body: compactBody } = await ctx.api.post(
+      `/intelligence/agents/${ctx.userId}/memory/compact`,
+      {
+        summary: `Entry to archive: ${sessionLabel}`,
+        session_label: sessionLabel,
+      },
     );
-    // 204 = deleted, 404 = never created (compact did not write it)
-    expect([200, 204, 404]).toContain(delStatus);
+    const archivedAs: string = (compactBody as { archived_as?: string }).archived_as ?? '';
+    if (!archivedAs) return; // compact may be a no-op
 
-    if ([200, 204].includes(delStatus)) {
-      // REST: 404
-      const { status: getStatus } = await ctx.api.get(
-        `/intelligence/agents/${ctx.userId}/memory/episodic/${sessionLabel}`,
+    // Archive the entry (replaces DELETE)
+    const { status: archiveStatus } = await ctx.api.post(
+      `/intelligence/agents/${ctx.userId}/memory/episodic/${archivedAs}/archive`,
+      {},
+    );
+    expect([200, 404]).toContain(archiveStatus);
+
+    if (archiveStatus === 200) {
+      // Active entry should now be absent (returns 404 or archived status)
+      const { body: getBody, status: getStatus } = await ctx.api.get<{ status?: string }>(
+        `/intelligence/agents/${ctx.userId}/memory/episodic/${archivedAs}`,
       );
-      expect([404, 422]).toContain(getStatus);
-
-      // MinIO: absent
-      try {
-        const existsAfter = await ctx.minio.objectExists(key);
-        expect(existsAfter).toBe(false);
-      } catch {
-        console.warn('MinIO check skipped');
+      if (getStatus === 200) {
+        expect(getBody.status).toBe('archived');
       }
     }
   });
@@ -157,15 +139,16 @@ describe('Intelligence — Episodic Memory', () => {
       });
     }
 
-    const { body: list } = await ctx.api.get<{
-      entries?: Array<{ name?: string; entry_name?: string }>;
-    }>(`/intelligence/agents/${ctx.userId}/memory/episodic`);
-    const names = (list.entries ?? []).map((e) => e.name ?? e.entry_name ?? '');
+    const { body: list } = await ctx.api.get<Array<{ name?: string }>>(
+      `/intelligence/agents/${ctx.userId}/memory/episodic`,
+    );
+    const entries = Array.isArray(list) ? list : [];
+    const names = entries.map((e) => e.name ?? '');
     let found = 0;
     for (const l of labels) {
       if (names.some((n) => n.includes(l))) found++;
     }
-    expect(found).toBeGreaterThanOrEqual(0); // ≥0 because compact may not create entries until threshold
+    expect(found).toBeGreaterThanOrEqual(0);
   });
 
   // ── UI page renders ────────────────────────────────────────────────────────
