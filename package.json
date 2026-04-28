@@ -18,6 +18,7 @@
     "teardown:puppeteer": "npx tsx e2e-puppeteer/fixtures/teardown-all.ts"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
     "@hookform/resolvers": "^5.2.2",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-checkbox": "^1.1.0",

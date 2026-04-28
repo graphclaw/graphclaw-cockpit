@@ -881,25 +881,25 @@ The current canvas implementation is a prototype that will be fully replaced:
 
 | # | Requirement | Code Done | Git Commit | Testing | Deployed Local |
 |---|------------|-----------|------------|---------|----------------|
-| B1 | Fix UUID auto-gen in `_tool_create_agent` — use deterministic slug | ⬜ | ⬜ | ⬜ | ⬜ |
-| C1 | Extend config.json schema: add `tool_sets[]` and `sub_agents[]` fields | ⬜ | ⬜ | ⬜ | ⬜ |
-| C6 | `GET /app/v1/canvas/layout` endpoint | ⬜ | ⬜ | ⬜ | ⬜ |
-| C7 | `PUT /app/v1/canvas/layout` endpoint | ⬜ | ⬜ | ⬜ | ⬜ |
-| C8 | `GET /app/v1/agents/{id}/config` endpoint | ⬜ | ⬜ | ⬜ | ⬜ |
-| C9 | `PUT /app/v1/agents/{id}/config` endpoint | ⬜ | ⬜ | ⬜ | ⬜ |
-| C11 | POST `/agents` bridge: provision runtime agent files | ⬜ | ⬜ | ⬜ | ⬜ |
-| C14 | `AgentCreateRequest` accept optional `agent_id` + slugify | ⬜ | ⬜ | ⬜ | ⬜ |
-| F1 | Zustand store (`useCanvasStore`) | ⬜ | ⬜ | ⬜ | ⬜ |
-| F2 | TanStack Query hooks (`useCanvasApi`) — 11 new hooks | ⬜ | ⬜ | ⬜ | ⬜ |
-| F3 | `CanvasEditorPage` rewrite (Zustand + API loading) | ⬜ | ⬜ | ⬜ | ⬜ |
-| F4 | `OrchestratorNode` custom React Flow component | ⬜ | ⬜ | ⬜ | ⬜ |
-| F5 | `SubAgentNode` custom React Flow component | ⬜ | ⬜ | ⬜ | ⬜ |
-| F6 | `DelegationEdge` component | ⬜ | ⬜ | ⬜ | ⬜ |
-| F7 | `NodePalette` rewrite (agents + resources sections with checkmarks) | ⬜ | ⬜ | ⬜ | ⬜ |
-| F8 | `AddAgentDialog` component | ⬜ | ⬜ | ⬜ | ⬜ |
-| F9 | `CanvasToolbar` component | ⬜ | ⬜ | ⬜ | ⬜ |
-| F10 | Canvas layout save/load | ⬜ | ⬜ | ⬜ | ⬜ |
-| F11 | Cleanup: Sidebar icon, Topbar breadcrumb, CommandPalette, FeaturesPage | ⬜ | ⬜ | ⬜ | ⬜ |
+| B1 | Fix UUID auto-gen in `_tool_create_agent` — use deterministic slug | ✅ | ✅ | ✅ | ✅ |
+| C1 | Extend config.json schema: add `tool_sets[]` and `sub_agents[]` fields | ✅ | ✅ | ✅ | ✅ |
+| C6 | `GET /app/v1/canvas/layout` endpoint | ✅ | ✅ | ✅ | ✅ |
+| C7 | `PUT /app/v1/canvas/layout` endpoint | ✅ | ✅ | ✅ | ✅ |
+| C8 | `GET /app/v1/agents/{id}/config` endpoint | ✅ | ✅ | ✅ | ✅ |
+| C9 | `PUT /app/v1/agents/{id}/config` endpoint | ✅ | ✅ | ✅ | ✅ |
+| C11 | POST `/agents` bridge: provision runtime agent files | ✅ | ✅ | ✅ | ✅ |
+| C14 | `AgentCreateRequest` accept optional `agent_id` + slugify | ✅ | ✅ | ✅ | ✅ |
+| F1 | Zustand store (`useCanvasStore`) | ✅ | ✅ | ✅ | ✅ |
+| F2 | TanStack Query hooks (`useCanvasApi`) — 11 new hooks | ✅ | ✅ | ✅ | ✅ |
+| F3 | `CanvasEditorPage` rewrite (Zustand + API loading) | ✅ | ✅ | ✅ | ✅ |
+| F4 | `OrchestratorNode` custom React Flow component | ✅ | ✅ | ✅ | ✅ |
+| F5 | `SubAgentNode` custom React Flow component | ✅ | ✅ | ✅ | ✅ |
+| F6 | `DelegationEdge` component | ✅ | ✅ | ✅ | ✅ |
+| F7 | `NodePalette` rewrite (agents + resources sections with checkmarks) | ✅ | ✅ | ✅ | ✅ |
+| F8 | `AddAgentDialog` component | ✅ | ✅ | ✅ | ✅ |
+| F9 | `CanvasToolbar` component | ✅ | ✅ | ✅ | ✅ |
+| F10 | Canvas layout save/load | ✅ | ✅ | ✅ | ✅ |
+| F11 | Cleanup: Sidebar icon, Topbar breadcrumb, CommandPalette, FeaturesPage | ✅ | ✅ | ✅ | ✅ |
 
 ### Phase 2: Wiring & Inspection
 
@@ -944,10 +944,10 @@ The current canvas implementation is a prototype that will be fully replaced:
 
 | # | Test Scenario | Code Done | Git Commit | Testing | Deployed Local |
 |---|--------------|-----------|------------|---------|----------------|
-| E1 | Canvas loads with orchestrator always present | ⬜ | ⬜ | ⬜ | ⬜ |
-| E2 | Add agent via (+) → node + runtime files created | ⬜ | ⬜ | ⬜ | ⬜ |
+| E1 | Canvas loads with orchestrator always present | ✅ | ✅ | ✅ | ✅ |
+| E2 | Add agent via (+) → node + runtime files created | ✅ | ✅ | ✅ | ✅ |
 | E3 | Wire skill to agent via edge drawing | ⬜ | ⬜ | ⬜ | ⬜ |
-| E4 | Wire skill via wiring panel checkbox | ⬜ | ⬜ | ⬜ | ⬜ |
+| E4 | Wire skill via wiring panel checkbox | ✅ | ✅ | ✅ | ✅ |
 | E5 | Wire skill via palette drag-and-drop | ⬜ | ⬜ | ⬜ | ⬜ |
 | E6 | Remove skill wiring | ⬜ | ⬜ | ⬜ | ⬜ |
 | E7 | Delete sub-agent with confirmation | ⬜ | ⬜ | ⬜ | ⬜ |

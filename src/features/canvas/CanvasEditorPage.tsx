@@ -6,7 +6,9 @@
  * - NodePalette with AGENTS + RESOURCES sections
  * - CanvasToolbar with undo/redo/save
  * - AddAgentDialog for creating sub-agents
+ * - PropertyInspector with 4 tabs when node is selected (F16-F20)
  * - Layout persisted via PUT /app/v1/canvas/layout (debounced 2s)
+ * - Dagre auto-layout (F23)
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -24,12 +26,18 @@ import {
   ReactFlowProvider,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import dagre from '@dagrejs/dagre';
 import { NodePalette, type PaletteAgent } from './NodePalette';
 import { CanvasToolbar } from './CanvasToolbar';
 import { AddAgentDialog } from './AddAgentDialog';
+import { PropertyInspector } from './PropertyInspector';
 import { OrchestratorNode } from './nodes/OrchestratorNode';
 import { SubAgentNode } from './nodes/SubAgentNode';
+import { SkillNode } from './nodes/SkillNode';
+import { MCPServerNode } from './nodes/MCPServerNode';
+import { ToolSetNode } from './nodes/ToolSetNode';
 import { DelegationEdge } from './edges/DelegationEdge';
+import { WiringEdge } from './edges/WiringEdge';
 import { useCanvasStore } from './hooks/useCanvasStore';
 import {
   useCanvasLayout,
@@ -46,10 +54,14 @@ import { useAuthStore } from '@/stores/auth';
 const nodeTypes = {
   orchestrator: OrchestratorNode,
   sub_agent: SubAgentNode,
+  skill: SkillNode,
+  mcp_server: MCPServerNode,
+  tool_set: ToolSetNode,
 };
 
 const edgeTypes = {
   delegation: DelegationEdge,
+  wiring: WiringEdge,
 };
 
 // ---------------------------------------------------------------------------
@@ -217,19 +229,40 @@ function CanvasEditorInner() {
   }, [doSave]);
 
   // ---------------------------------------------------------------------------
-  // Auto-layout (simple grid — dagre deferred to Phase 2)
+  // Auto-layout using dagre (F23)
   // ---------------------------------------------------------------------------
 
   const handleAutoLayout = useCallback(() => {
+    const g = new dagre.graphlib.Graph();
+    g.setGraph({ rankdir: 'TB', nodesep: 80, ranksep: 120 });
+    g.setDefaultEdgeLabel(() => ({}));
+
+    nodes.forEach((n) => {
+      const w = n.type === 'orchestrator' ? 280 : 200;
+      const h = 80;
+      g.setNode(n.id, { width: w, height: h });
+    });
+    edges.forEach((e) => g.setEdge(e.source, e.target));
+
+    dagre.layout(g);
+
     setNodes((nds) =>
-      nds.map((n, i) => ({
-        ...n,
-        position:
-          n.type === 'orchestrator' ? { x: 400, y: 80 } : { x: 100 + (i % 3) * 260, y: 300 + Math.floor(i / 3) * 220 },
-      })),
+      nds.map((n) => {
+        const nodeWithPosition = g.node(n.id);
+        if (!nodeWithPosition) return n;
+        const w = n.type === 'orchestrator' ? 280 : 200;
+        const h = 80;
+        return {
+          ...n,
+          position: {
+            x: nodeWithPosition.x - w / 2,
+            y: nodeWithPosition.y - h / 2,
+          },
+        };
+      }),
     );
     markDirty();
-  }, [setNodes, markDirty]);
+  }, [nodes, edges, setNodes, markDirty]);
 
   // ---------------------------------------------------------------------------
   // Agent created callback
@@ -243,6 +276,8 @@ function CanvasEditorInner() {
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
+
+  const selectedAgent = agentsData?.find((a) => a.agent_id === selectedAgentId);
 
   return (
     <div className="flex h-full gap-0" data-testid="canvas-page">
@@ -308,6 +343,15 @@ function CanvasEditorInner() {
           </ReactFlow>
         </div>
       </div>
+
+      {/* Property Inspector — shown when a node is selected */}
+      {selectedAgentId && (
+        <PropertyInspector
+          agentId={selectedAgentId}
+          agentName={selectedAgent?.name ?? selectedAgentId}
+          onClose={() => setSelectedAgentId(null)}
+        />
+      )}
 
       {/* Add Agent Dialog */}
       <AddAgentDialog
