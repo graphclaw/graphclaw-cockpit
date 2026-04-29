@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: graphclaw
       POSTGRES_PASSWORD: ${DB_PASSWORD:-graphclaw_dev}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql
     networks:
@@ -25,7 +25,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
