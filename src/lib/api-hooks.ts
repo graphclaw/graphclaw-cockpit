@@ -118,6 +118,14 @@ export interface GoalItem {
   title: string;
   state: string;
   priority: string;
+  assignee?: string;
+  created_at?: string;
+  started_at?: string;
+  deadline?: string;
+  estimated_effort_days?: number;
+  task_type?: string;
+  progress?: number;
+  parent_id?: string;
 }
 
 export interface GoalListResponse {
@@ -137,6 +145,42 @@ export function useGoals(cursor?: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Graph — Goal Tree
+// ---------------------------------------------------------------------------
+
+export interface GoalTreeNode {
+  id: string;
+  title: string;
+  state: string;
+  priority?: string;
+  assignee?: string;
+  task_type?: string;
+  progress?: number;
+  started_at?: string;
+  created_at?: string;
+  deadline?: string;
+  estimated_effort_days?: number;
+  parent_id?: string;
+  children?: GoalTreeNode[];
+}
+
+export interface GoalTreeResponse {
+  root: GoalTreeNode;
+}
+
+export function useGoalTree(goalId: string, depth = 5) {
+  return useQuery({
+    queryKey: ['graph', 'goals', goalId, 'tree', depth],
+    queryFn: () =>
+      apiFetch<GoalTreeResponse>(
+        `/app/v1/graph/goals/${goalId}/tree?depth=${depth}`,
+      ),
+    enabled: !!goalId,
+    retry: false,
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Graph — Tasks
 // ---------------------------------------------------------------------------
 
@@ -148,6 +192,13 @@ export interface TaskItem {
   priority?: string;
   assignee?: string;
   goal_id?: string;
+  parent_id?: string;
+  task_type?: string;
+  progress?: number;
+  started_at?: string;
+  created_at?: string;
+  deadline?: string;
+  estimated_effort_days?: number;
 }
 
 export interface TaskListResponse {
