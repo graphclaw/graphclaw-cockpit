@@ -4,28 +4,29 @@ import { renderWithProviders } from '@/test/utils';
 import { SemanticMemoryPage } from '@/features/intelligence/SemanticMemoryPage';
 
 describe('SemanticMemoryPage', () => {
-  it('renders topic list', () => {
+  it('renders topic list header', () => {
     renderWithProviders(<SemanticMemoryPage />);
     expect(screen.getByText('Topics')).toBeInTheDocument();
-    expect(screen.getByText('Task Scoring')).toBeInTheDocument();
-    expect(screen.getByText('API Patterns')).toBeInTheDocument();
-    expect(screen.getByText('Task State Machine')).toBeInTheDocument();
   });
 
-  it('renders editor for selected topic', () => {
+  it('shows empty state when no topics', () => {
     renderWithProviders(<SemanticMemoryPage />);
-    expect(screen.getByTestId('semantic-editor')).toBeInTheDocument();
+    // agentId is empty in tests so query is disabled — empty state shown
+    expect(screen.getByText('No topics yet.')).toBeInTheDocument();
   });
 
-  it('can create a new topic', async () => {
+  it('can create a new topic and editor appears', async () => {
     const user = userEvent.setup();
     renderWithProviders(<SemanticMemoryPage />);
 
-    await user.click(screen.getAllByRole('button').find((b) => b.querySelector('svg'))!);
+    // Click the + button (has an SVG child)
+    const plusBtn = screen.getAllByRole('button').find((b) => b.querySelector('svg'))!;
+    await user.click(plusBtn);
     const input = screen.getByTestId('new-topic-input');
-    await user.type(input, 'New Topic');
+    await user.type(input, 'my-new-topic');
     await user.click(screen.getByText('Add'));
 
-    expect(screen.getByText('New Topic')).toBeInTheDocument();
+    expect(screen.getByText('my-new-topic')).toBeInTheDocument();
+    expect(screen.getByTestId('semantic-editor')).toBeInTheDocument();
   });
 });

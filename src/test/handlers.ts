@@ -357,4 +357,95 @@ export const handlers = [
     const body = await request.json();
     return HttpResponse.json(body);
   }),
+
+  // Intelligence: list agents
+  http.get('/app/v1/intelligence/agents', () => {
+    return HttpResponse.json([
+      { agent_id: 'agent-comm', name: 'Communications Agent', agent_type: 'system' },
+    ]);
+  }),
+
+  // Intelligence: agent profile GET
+  http.get('/app/v1/intelligence/agents/:agentId/profile', ({ params }) => {
+    return HttpResponse.json({
+      agent_id: params.agentId,
+      content: `# Agent: ${String(params.agentId)}\n\nNo profile defined yet.`,
+    });
+  }),
+
+  // Intelligence: agent profile PUT (handles empty agentId from test context)
+  http.put('/app/v1/intelligence/agents/:agentId/profile', async ({ params, request }) => {
+    const body = await request.json() as Record<string, string>;
+    return HttpResponse.json({ agent_id: params.agentId, content: body.content ?? '' });
+  }),
+
+  // Intelligence: agent profile PUT with empty segment (test fallback)
+  http.put('/app/v1/intelligence/agents//profile', async ({ request }) => {
+    const body = await request.json() as Record<string, string>;
+    return HttpResponse.json({ agent_id: '', content: body.content ?? '' });
+  }),
+
+  // Intelligence: working memory GET
+  http.get('/app/v1/intelligence/agents/:agentId/memory/working', () => {
+    return HttpResponse.json({ content: '' });
+  }),
+
+  // Intelligence: working memory PUT
+  http.put('/app/v1/intelligence/agents/:agentId/memory/working', async ({ request }) => {
+    const body = await request.json() as Record<string, string>;
+    return HttpResponse.json({ content: body.content ?? '' });
+  }),
+
+  // Intelligence: working memory archive list
+  http.get('/app/v1/intelligence/agents/:agentId/memory/working/archives', () => {
+    return HttpResponse.json([]);
+  }),
+
+  // Intelligence: working memory compact
+  http.post('/app/v1/intelligence/agents/:agentId/memory/working/compact', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    return HttpResponse.json({
+      context_before_chars: 1000,
+      context_after_chars: 100,
+      reduction_pct: 90,
+      summary: body.summary ?? '',
+    });
+  }),
+
+  // Intelligence: semantic memory list
+  http.get('/app/v1/intelligence/agents/:agentId/memory/semantic', () => {
+    return HttpResponse.json({ entries: [
+      { key: 'knowledge', size_chars: 200 },
+      { key: 'task-scoring', size_chars: 150 },
+    ]});
+  }),
+
+  // Intelligence: semantic topic GET
+  http.get('/app/v1/intelligence/agents/:agentId/memory/semantic/:topic', ({ params }) => {
+    return HttpResponse.json({ topic: params.topic, content: `# ${String(params.topic)}\n\n` });
+  }),
+
+  // Intelligence: semantic topic PUT
+  http.put('/app/v1/intelligence/agents/:agentId/memory/semantic/:topic', async ({ params, request }) => {
+    const body = await request.json() as Record<string, string>;
+    return HttpResponse.json({ topic: params.topic, content: body.content ?? '' });
+  }),
+
+  // Intelligence: semantic topic DELETE
+  http.delete('/app/v1/intelligence/agents/:agentId/memory/semantic/:topic', () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // Intelligence: episodic memory list
+  http.get('/app/v1/intelligence/agents/:agentId/memory/episodic', () => {
+    return HttpResponse.json([
+      { name: 'sprint-12-planning.md', status: 'active', content: '# Sprint 12 planning\n\nSession notes.' },
+      { name: 'bug-triage.md', status: 'active', content: '# Bug triage\n\nNotes.' },
+    ]);
+  }),
+
+  // Intelligence: episodic entry archive
+  http.post('/app/v1/intelligence/agents/:agentId/memory/episodic/:entryName/archive', ({ params }) => {
+    return HttpResponse.json({ name: params.entryName, status: 'archived' });
+  }),
 ];

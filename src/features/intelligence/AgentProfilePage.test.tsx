@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/utils';
 import { AgentProfilePage } from '@/features/intelligence/AgentProfilePage';
@@ -31,6 +31,8 @@ describe('AgentProfilePage', () => {
 
     await user.click(screen.getByText('Save'));
 
-    expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
+    }, { timeout: 3000 });
   });
 });

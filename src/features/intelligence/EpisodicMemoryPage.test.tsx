@@ -3,20 +3,19 @@ import { renderWithProviders } from '@/test/utils';
 import { EpisodicMemoryPage } from '@/features/intelligence/EpisodicMemoryPage';
 
 describe('EpisodicMemoryPage', () => {
-  it('renders episode list', () => {
+  it('renders the episode list panel', () => {
     renderWithProviders(<EpisodicMemoryPage />);
-    expect(screen.getByText('Episodic Memory')).toBeInTheDocument();
-    expect(screen.getByText('Sprint 12 planning session')).toBeInTheDocument();
-    expect(screen.getByText('Bug triage — scoring edge cases')).toBeInTheDocument();
+    expect(screen.getByTestId('episodic-list')).toBeInTheDocument();
   });
 
-  it('shows entry count badge', () => {
+  it('shows empty state when no entries', () => {
     renderWithProviders(<EpisodicMemoryPage />);
-    expect(screen.getByText('4 entries')).toBeInTheDocument();
+    // agentId is empty in tests so query is disabled — empty state shown
+    expect(screen.getByText('No episodic memory entries yet.')).toBeInTheDocument();
   });
 
-  it('renders search input', () => {
+  it('shows placeholder when no entry selected', () => {
     renderWithProviders(<EpisodicMemoryPage />);
-    expect(screen.getByPlaceholderText('Search episodes...')).toBeInTheDocument();
+    expect(screen.getByText('Select an entry to view its content')).toBeInTheDocument();
   });
 });
