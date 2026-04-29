@@ -1,111 +1,12 @@
+networks:
+  # Attach to the graphclaw backend stack's network so nginx can resolve
+  # the `gateway` hostname and e2e runners can reach db/minio directly.
+  # Start the backend first: cd ../graphclaw && docker compose -f docker/docker-compose.yml up -d
+  default:
+    external: true
+    name: docker_default
+
 services:
-  # ─── Backend Infrastructure ───
-  db:
-    build:
-      context: ../graphclaw
-      dockerfile: docker/Dockerfile.db
-    environment:
-      POSTGRES_DB: graphclaw
-      POSTGRES_USER: graphclaw
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-graphclaw_dev}
-    ports:
-      - "5433:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql
-    networks:
-      default:
-        aliases:
-          - graph-db
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U graphclaw -d graphclaw"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6380:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
-    ports:
-      - "9002:9000"
-      - "9003:9001"
-    environment:
-      MINIO_ROOT_USER: graphclaw
-      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-graphclaw_dev}
-    volumes:
-      - miniodata:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  minio-init:
-    image: minio/mc:latest
-    depends_on:
-      minio:
-        condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-        mc alias set local http://minio:9000 graphclaw $${MINIO_PASSWORD:-graphclaw_dev} &&
-        mc mb --ignore-existing local/graphclaw &&
-        echo 'MinIO bucket ready'
-      "
-    restart: "no"
-
-  # ─── Backend API Gateway ───
-  gateway:
-    build:
-      context: ../graphclaw
-      dockerfile: docker/Dockerfile.gateway
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-      minio-init:
-        condition: service_completed_successfully
-    ports:
-      - "8001:8000"
-    environment:
-      ENVIRONMENT: development
-      DATABASE_URL: postgresql://graphclaw:${DB_PASSWORD:-graphclaw_dev}@db:5432/graphclaw
-      SECRETS_BACKEND: env_file
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      REDIS_URL: redis://redis:6379
-      STORAGE_ENDPOINT_URL: http://minio:9000
-      STORAGE_BUCKET: graphclaw
-      AWS_ACCESS_KEY_ID: graphclaw
-      AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD:-graphclaw_dev}
-      GRAPHCLAW_USER_ID: ${GRAPHCLAW_USER_ID:-test-user}
-      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}
-      LOG_SINKS: ${LOG_SINKS:-stdout,object_storage}
-      # OAuth 2.0 provider credentials
-      OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID:-}
-      OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET:-}
-      OAUTH_GITHUB_CLIENT_ID: ${OAUTH_GITHUB_CLIENT_ID:-}
-      OAUTH_GITHUB_CLIENT_SECRET: ${OAUTH_GITHUB_CLIENT_SECRET:-}
-      OAUTH_MICROSOFT_CLIENT_ID: ${OAUTH_MICROSOFT_CLIENT_ID:-}
-      OAUTH_MICROSOFT_CLIENT_SECRET: ${OAUTH_MICROSOFT_CLIENT_SECRET:-}
-      OAUTH_REDIRECT_BASE_URL: ${OAUTH_REDIRECT_BASE_URL:-http://localhost:8000}
-      COCKPIT_BASE_URL: ${COCKPIT_BASE_URL:-http://localhost:3000}
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   # ─── Cockpit Frontend ───
   cockpit:
     build:
@@ -115,9 +16,6 @@ services:
         VITE_API_URL: ""
         VITE_ENABLE_DEV_AUTH: ${VITE_ENABLE_DEV_AUTH:-true}
         VITE_LOG_LEVEL: ${VITE_LOG_LEVEL:-debug}
-    depends_on:
-      gateway:
-        condition: service_healthy
     ports:
       - "3000:3000"
     healthcheck:
@@ -127,14 +25,13 @@ services:
       retries: 3
 
   # ─── Playwright E2E Runner (on-demand) ───
+  # Run: docker compose --profile test run --rm e2e
   e2e:
     image: mcr.microsoft.com/playwright:v1.48.0-noble
     profiles:
       - test
     depends_on:
       cockpit:
-        condition: service_healthy
-      gateway:
         condition: service_healthy
     working_dir: /app
     volumes:
@@ -145,7 +42,7 @@ services:
       CI: "true"
     command: ["npx", "playwright", "test", "--reporter=html"]
 
-  # ─── Puppeteer + Data-level E2E Runner (on-demand) ───────────────────────
+  # ─── Puppeteer + Data-level E2E Runner (on-demand) ───
   # Run: docker compose --profile test-puppeteer run --rm e2e-puppeteer
   e2e-puppeteer:
     image: node:22-bookworm-slim
@@ -153,12 +50,6 @@ services:
       - test-puppeteer
     depends_on:
       cockpit:
-        condition: service_healthy
-      gateway:
-        condition: service_healthy
-      db:
-        condition: service_healthy
-      minio:
         condition: service_healthy
     working_dir: /app
     volumes:
@@ -187,6 +78,4 @@ services:
       "
 
 volumes:
-  pgdata:
-  miniodata:
   puppeteer_modules:
