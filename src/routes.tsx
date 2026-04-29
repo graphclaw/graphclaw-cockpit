@@ -23,8 +23,8 @@ const ProjectsPage = lazy(() =>
 const TimelinePage = lazy(() =>
   import('@/features/graph/TimelinePage').then((m) => ({ default: m.TimelinePage })),
 );
-const PeoplePage = lazy(() =>
-  import('@/features/graph/PeoplePage').then((m) => ({ default: m.PeoplePage })),
+const WorkforcePage = lazy(() =>
+  import('@/features/workforce/WorkforcePage').then((m) => ({ default: m.WorkforcePage })),
 );
 const AgentMonitorPage = lazy(() =>
   import('@/features/agent/AgentMonitorPage').then((m) => ({ default: m.AgentMonitorPage })),
@@ -152,7 +152,8 @@ export function AppRoutes() {
                         <Route path="goals" element={<GoalViewPage />} />
                         <Route path="projects" element={<ProjectsPage />} />
                         <Route path="timeline" element={<TimelinePage />} />
-                        <Route path="people" element={<PeoplePage />} />
+                        <Route path="people" element={<Navigate to="/workforce" replace />} />
+                        <Route path="workforce" element={<WorkforcePage />} />
 
                         {/* Intelligence */}
                         <Route path="agent-monitor" element={<AgentMonitorPage />} />

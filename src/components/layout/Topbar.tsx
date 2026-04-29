@@ -1,6 +1,6 @@
 import { useLocation, Link } from 'react-router';
 import { ThemePicker } from '@/components/common/ThemePicker';
-import { Bell, Search, ChevronRight } from 'lucide-react';
+import { Bell, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth';
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -9,7 +9,7 @@ const ROUTE_LABELS: Record<string, string> = {
   '/goals': 'Goals',
   '/projects': 'Projects',
   '/timeline': 'Timeline',
-  '/people': 'People',
+  '/workforce': 'Workforce',
   '/agent-monitor': 'Agent Monitor',
   '/chat': 'Chat',
   '/skills': 'Skills',
@@ -82,18 +82,6 @@ export function Topbar() {
           </span>
         ))}
       </nav>
-
-      {/* Search */}
-      <div className="mx-auto hidden max-w-[360px] flex-1 md:block">
-        <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
-          <input
-            type="text"
-            placeholder="Search goals, tasks, people..."
-            className="h-8 w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-inset)] pl-8 pr-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--brand-primary)] focus:outline-none"
-          />
-        </div>
-      </div>
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-2">

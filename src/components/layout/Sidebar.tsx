@@ -14,6 +14,7 @@ import {
   Puzzle,
   Plug,
   Brain,
+  Workflow,
   Shield,
   Settings,
   PanelLeftClose,
@@ -39,7 +40,7 @@ const WORKSPACE_NAV: NavItem[] = [
   { label: 'Goals', icon: Target, path: '/goals' },
   { label: 'Projects', icon: FolderKanban, path: '/projects' },
   { label: 'Timeline', icon: CalendarRange, path: '/timeline' },
-  { label: 'People', icon: Users, path: '/people' },
+  { label: 'Workforce', icon: Users, path: '/workforce' },
 ];
 
 const INTELLIGENCE_NAV: NavItem[] = [
@@ -47,7 +48,7 @@ const INTELLIGENCE_NAV: NavItem[] = [
   { label: 'Chat', icon: MessageCircle, path: '/chat' },
   { label: 'Skills', icon: Puzzle, path: '/skills' },
   { label: 'MCP Registry', icon: Plug, path: '/mcp' },
-  { label: 'Agent Canvas', icon: Brain, path: '/canvas' },
+  { label: 'Agent Canvas', icon: Workflow, path: '/canvas' },
   { label: 'Intelligence', icon: Brain, path: '/intelligence' },
 ];
 
@@ -93,10 +94,15 @@ export function Sidebar() {
         </button>
         {!collapsed && (
           <Link to="/" className="flex items-center gap-2 overflow-hidden">
-            <img src="/logo.png" alt="GraphClaw" className="h-6 w-6 shrink-0 rounded" />
-            <span className="truncate text-sm font-semibold text-[var(--text-primary)]">
-              GraphClaw
-            </span>
+            <img src="/logo.svg" alt="GraphClaw" className="h-7 w-7 shrink-0" />
+            <div className="flex flex-col leading-tight overflow-hidden">
+              <span className="truncate text-sm font-semibold text-[var(--text-primary)]">
+                GraphClaw
+              </span>
+              <span className="text-[10px] italic text-[var(--text-tertiary)]">
+                Cockpit
+              </span>
+            </div>
           </Link>
         )}
       </div>

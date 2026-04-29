@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html data-page="workforce-view" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workforce — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+html, body { height: 100%; overflow: hidden; }
+.app-shell { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* Sidebar */
+.sidebar { width:240px; flex-shrink:0; background:var(--bg-sidebar); border-right:1px solid var(--border-default); display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+.sidebar-logo { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-4); border-bottom:1px solid var(--border-default); height:56px; }
+.sidebar-logo-mark { width:28px; height:28px; background:linear-gradient(135deg,var(--brand-primary) 0%,#7C3AED 100%); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:13px; flex-shrink:0; }
+.sidebar-logo-text { font-size:var(--text-body); font-weight:700; color:var(--text-primary); letter-spacing:-0.01em; }
+.sidebar-logo-sub { font-size:var(--text-micro); color:var(--text-tertiary); }
+.sidebar-nav { flex:1; overflow-y:auto; padding:var(--space-2) 0; }
+.nav-section-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-tertiary); padding:var(--space-3) var(--space-4) var(--space-1); }
+.nav-item { display:flex; align-items:center; gap:var(--space-3); padding:var(--space-2) var(--space-3); margin:1px var(--space-2); border-radius:var(--radius-md); cursor:pointer; text-decoration:none; color:var(--text-secondary); font-size:var(--text-body-sm); font-weight:500; transition:background 100ms,color 100ms; }
+.nav-item:hover { background:var(--bg-inset); color:var(--text-primary); }
+.nav-item.active { background:var(--brand-primary-light); color:var(--brand-primary); }
+[data-theme="dark"] .nav-item.active { background:rgba(56,189,248,0.12); }
+.nav-icon { display:flex; align-items:center; flex-shrink:0; width:18px; height:18px; }
+.nav-count { margin-left:auto; background:var(--state-blocked); color:white; font-size:10px; font-weight:700; padding:1px 5px; border-radius:9999px; min-width:18px; text-align:center; }
+.sidebar-divider { height:1px; background:var(--border-default); margin:var(--space-2) var(--space-4); }
+.sidebar-footer { padding:var(--space-2) var(--space-2) var(--space-3); border-top:1px solid var(--border-default); }
+.user-row { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2); border-radius:var(--radius-md); cursor:pointer; transition:background 100ms; }
+.user-row:hover { background:var(--bg-inset); }
+.avatar { width:28px; height:28px; border-radius:9999px; background:linear-gradient(135deg,#7C3AED,#0EA5E9); display:flex; align-items:center; justify-content:center; color:white; font-size:11px; font-weight:600; flex-shrink:0; }
+.avatar-sm { width:22px; height:22px; font-size:9px; }
+.avatar-md { width:36px; height:36px; font-size:14px; }
+.avatar-lg { width:44px; height:44px; font-size:16px; }
+
+.main-layout { display:flex; flex-direction:column; flex:1; min-width:0; overflow:hidden; }
+.topbar { height:56px; background:var(--bg-surface); border-bottom:1px solid var(--border-default); display:flex; align-items:center; padding:0 var(--space-5); gap:var(--space-4); flex-shrink:0; }
+.breadcrumb { display:flex; align-items:center; gap:var(--space-1); font-size:var(--text-body-sm); color:var(--text-tertiary); }
+.breadcrumb a { color:var(--text-tertiary); text-decoration:none; }
+.breadcrumb .current { color:var(--text-primary); font-weight:500; }
+.topbar-search { flex:1; max-width:360px; margin:0 auto; position:relative; }
+.topbar-search input { width:100%; height:32px; background:var(--bg-inset); border:1.5px solid var(--border-default); border-radius:var(--radius-md); padding:0 var(--space-3) 0 32px; font-size:var(--text-body-sm); font-family:var(--font-sans); color:var(--text-primary); outline:none; transition:all 150ms; }
+.topbar-search input::placeholder { color:var(--text-tertiary); }
+.topbar-search input:focus { border-color:var(--brand-primary); background:var(--bg-surface); box-shadow:var(--shadow-focus); }
+.topbar-search .s-icon { position:absolute; left:8px; top:50%; transform:translateY(-50%); color:var(--icon-tertiary); display:flex; }
+.topbar-actions { display:flex; align-items:center; gap:var(--space-1); margin-left:auto; }
+.icon-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:var(--radius-md); border:none; background:transparent; cursor:pointer; color:var(--icon-secondary); transition:background 100ms,color 100ms; }
+.icon-btn:hover { background:var(--bg-inset); color:var(--text-primary); }
+.notif-badge { position:relative; }
+.notif-badge::after { content:''; position:absolute; top:5px; right:5px; width:7px; height:7px; background:var(--state-blocked); border-radius:50%; border:1.5px solid var(--bg-surface); }
+
+/* --- WORKFORCE VIEW --- */
+.main-content { flex:1; overflow-y:auto; }
+.content-pad { padding:var(--space-5) var(--space-6); max-width:1200px; }
+
+/* Tabs */
+.tab-bar { display:flex; gap:var(--space-1); border-bottom:1px solid var(--border-default); margin-bottom:var(--space-5); }
+.tab-btn {
+  display:flex; align-items:center; gap:var(--space-1-5);
+  padding:var(--space-2) var(--space-4);
+  font-size:var(--text-body-sm); font-weight:500; font-family:var(--font-sans);
+  color:var(--text-secondary);
+  background:none; border:none; border-bottom:2px solid transparent;
+  cursor:pointer; transition:all 100ms; margin-bottom:-1px;
+}
+.tab-btn:hover { color:var(--text-primary); }
+.tab-btn.active { border-bottom-color:var(--brand-primary); color:var(--brand-primary); font-weight:600; }
+.tab-count { font-size:10px; font-weight:700; padding:1px 6px; border-radius:9999px; background:var(--bg-inset); color:var(--text-tertiary); }
+.tab-btn.active .tab-count { background:var(--brand-primary-light); color:var(--brand-primary); }
+
+/* Tab content panels */
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* KPI summary cards */
+.kpi-bar {
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:var(--space-3);
+  margin-bottom:var(--space-5);
+}
+.kpi-card {
+  background:var(--bg-surface);
+  border:1px solid var(--border-default);
+  border-radius:var(--radius-lg);
+  padding:var(--space-3) var(--space-4);
+  box-shadow:var(--shadow-1);
+}
+.kpi-val { font-size:var(--text-heading); font-weight:700; color:var(--text-primary); }
+.kpi-lbl { font-size:var(--text-caption); color:var(--text-tertiary); margin-top:2px; }
+.kpi-sub { font-size:var(--text-caption); font-weight:500; margin-top:var(--space-1); }
+.kpi-up { color:var(--state-progress); }
+.kpi-warn { color:var(--state-delayed); }
+.kpi-bad { color:var(--state-blocked); }
+
+/* Search / filter row within tab */
+.tab-filter-row { display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-4); }
+.tab-search { position:relative; width:260px; }
+.tab-search input { width:100%; height:32px; background:var(--bg-inset); border:1.5px solid var(--border-default); border-radius:var(--radius-md); padding:0 var(--space-3) 0 32px; font-size:var(--text-body-sm); font-family:var(--font-sans); color:var(--text-primary); outline:none; transition:all 150ms; }
+.tab-search input::placeholder { color:var(--text-tertiary); }
+.tab-search input:focus { border-color:var(--brand-primary); background:var(--bg-surface); box-shadow:var(--shadow-focus); }
+.tab-search .s-icon { position:absolute; left:8px; top:50%; transform:translateY(-50%); color:var(--icon-tertiary); display:flex; }
+.filter-chip { display:inline-flex; align-items:center; gap:var(--space-1); height:28px; padding:0 var(--space-3); border:1.5px solid var(--border-default); border-radius:var(--radius-md); font-size:var(--text-body-sm); color:var(--text-secondary); background:var(--bg-surface); cursor:pointer; font-family:var(--font-sans); transition:all 100ms; }
+.filter-chip:hover { border-color:var(--brand-primary); color:var(--brand-primary); }
+.filter-chip.active { border-color:var(--brand-primary); background:var(--brand-primary-light); color:var(--brand-primary); font-weight:500; }
+.filter-chip.over-cap { color:var(--state-blocked); border-color:var(--state-blocked); }
+.filter-chip.over-cap:hover { background:var(--state-blocked-light); }
+.sort-dropdown { height:28px; padding:0 var(--space-3); border:1.5px solid var(--border-default); border-radius:var(--radius-md); font-size:var(--text-body-sm); color:var(--text-secondary); background:var(--bg-surface); cursor:pointer; font-family:var(--font-sans); margin-left:auto; }
+
+/* Resource cards grid */
+.resource-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:var(--space-4); }
+
+/* Resource card */
+.resource-card {
+  background:var(--bg-surface);
+  border:1px solid var(--border-default);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-1);
+  transition:border-color 150ms, box-shadow 150ms;
+  overflow:hidden;
+}
+.resource-card:hover { border-color:var(--brand-primary); box-shadow:var(--shadow-2); }
+.resource-card.over-capacity { border-left:3px solid var(--state-blocked); }
+
+.rc-header {
+  display:flex; align-items:center; gap:var(--space-3);
+  padding:var(--space-4);
+  cursor:pointer;
+}
+.rc-info { flex:1; min-width:0; }
+.rc-name { font-size:var(--text-body); font-weight:600; color:var(--text-primary); }
+.rc-role { font-size:var(--text-caption); color:var(--text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rc-type-badge { font-size:10px; font-weight:700; padding:2px 6px; border-radius:9999px; display:inline-block; margin-top:var(--space-1); }
+.badge-human { background:#EFF6FF; color:#1D4ED8; }
+.badge-agent { background:#F0FDF4; color:#15803D; }
+[data-theme="dark"] .badge-human { background:rgba(29,78,216,0.15); color:#93C5FD; }
+[data-theme="dark"] .badge-agent { background:rgba(21,128,61,0.15); color:#86EFAC; }
+.rc-expand-icon { display:flex; color:var(--icon-tertiary); transition:transform 200ms; }
+.resource-card.expanded .rc-expand-icon { transform:rotate(180deg); }
+
+/* Capacity section */
+.rc-capacity {
+  padding:0 var(--space-4) var(--space-3);
+  display:flex; align-items:center; gap:var(--space-3);
+}
+.cap-bar-track { flex:1; height:8px; background:var(--bg-inset); border-radius:9999px; overflow:hidden; }
+.cap-bar-fill { height:100%; border-radius:9999px; transition:width 200ms; }
+.cap-ok { background:linear-gradient(90deg,#34D399,#10B981); }
+.cap-warn { background:linear-gradient(90deg,#FBBF24,#F59E0B); }
+.cap-over { background:linear-gradient(90deg,#F87171,#EF4444); }
+.cap-pct { font-size:var(--text-body-sm); font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-secondary); min-width:40px; text-align:right; }
+.cap-pct.over { color:var(--state-blocked); }
+
+/* Status pills row */
+.rc-status-row {
+  display:flex; align-items:center; gap:var(--space-2);
+  padding:0 var(--space-4) var(--space-3);
+  flex-wrap:wrap;
+}
+.status-pill {
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:var(--text-caption); font-weight:500;
+  padding:2px 8px; border-radius:9999px;
+}
+.pill-pending { background:var(--state-active-light); color:var(--state-active); }
+.pill-progress { background:var(--state-progress-light); color:var(--state-progress); }
+.pill-review { background:var(--state-review-light); color:var(--state-review); }
+.pill-blocked { background:var(--state-blocked-light); color:var(--state-blocked); }
+.pill-done { background:var(--state-complete-light); color:var(--state-complete); }
+.pill-dot { width:6px; height:6px; border-radius:50%; }
+.pill-pending .pill-dot { background:var(--state-active); }
+.pill-progress .pill-dot { background:var(--state-progress); }
+.pill-review .pill-dot { background:var(--state-review); }
+.pill-blocked .pill-dot { background:var(--state-blocked); }
+.pill-done .pill-dot { background:var(--state-complete); }
+
+/* Expandable task list */
+.rc-tasks {
+  display:none;
+  border-top:1px solid var(--border-default);
+  background:var(--bg-surface-alt);
+}
+.resource-card.expanded .rc-tasks { display:block; }
+.rc-tasks-header {
+  display:grid; grid-template-columns:1fr 90px 80px 80px;
+  padding:var(--space-2) var(--space-4);
+  font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;
+  color:var(--text-tertiary); border-bottom:1px solid var(--border-default);
+}
+.task-row {
+  display:grid; grid-template-columns:1fr 90px 80px 80px;
+  padding:var(--space-2) var(--space-4);
+  font-size:var(--text-body-sm); color:var(--text-secondary);
+  border-bottom:1px solid var(--border-subtle);
+  cursor:pointer; transition:background 100ms;
+}
+.task-row:last-child { border-bottom:none; }
+.task-row:hover { background:var(--bg-inset); }
+.task-title { font-weight:500; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.state-badge { display:inline-flex; align-items:center; gap:4px; font-size:var(--text-caption); font-weight:600; padding:2px 8px; border-radius:var(--radius-md); }
+.state-pending { background:var(--state-active-light); color:var(--state-active); }
+.state-progress { background:var(--state-progress-light); color:var(--state-progress); }
+.state-review { background:var(--state-review-light); color:var(--state-review); }
+.state-blocked { background:var(--state-blocked-light); color:var(--state-blocked); }
+.state-done { background:var(--state-complete-light); color:var(--state-complete); }
+.priority-badge { font-size:var(--text-caption); font-weight:600; }
+.pri-critical { color:var(--state-blocked); }
+.pri-high { color:var(--state-delayed); }
+.pri-medium { color:var(--text-secondary); }
+.pri-low { color:var(--text-tertiary); }
+
+/* Task count link at bottom of expanded section */
+.rc-tasks-footer {
+  padding:var(--space-2) var(--space-4);
+  border-top:1px solid var(--border-default);
+  font-size:var(--text-caption); color:var(--text-link);
+  cursor:pointer; text-align:center;
+}
+.rc-tasks-footer:hover { text-decoration:underline; }
+
+/* Responsive */
+@media (max-width:1024px) { .kpi-bar { grid-template-columns:repeat(3,1fr); } }
+@media (max-width:768px) {
+  .kpi-bar { grid-template-columns:repeat(2,1fr); }
+  .resource-grid { grid-template-columns:1fr; }
+  .rc-tasks-header, .task-row { grid-template-columns:1fr 80px; }
+  .task-row > :nth-child(3), .task-row > :nth-child(4),
+  .rc-tasks-header > :nth-child(3), .rc-tasks-header > :nth-child(4) { display:none; }
+}
+@media (max-width:640px) {
+  .sidebar { display:none; }
+  .tab-search { width:100%; }
+  .tab-filter-row { flex-wrap:wrap; }
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">G</div>
+      <div>
+        <div class="sidebar-logo-text">GraphClaw</div>
+        <div class="sidebar-logo-sub">Cockpit</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="layout-dashboard" width="16" height="16"></i></span>Dashboard</a>
+      <a href="my-tasks.html" class="nav-item"><span class="nav-icon"><i data-lucide="check-square" width="16" height="16"></i></span>My Tasks<span class="nav-count">3</span></a>
+      <a href="goal-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="target" width="16" height="16"></i></span>Goals</a>
+      <a href="project-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="kanban-square" width="16" height="16"></i></span>Projects</a>
+      <a href="timeline-view.html" class="nav-item"><span class="nav-icon"><i data-lucide="gantt-chart" width="16" height="16"></i></span>Timeline</a>
+      <a href="workforce-view.html" class="nav-item active"><span class="nav-icon"><i data-lucide="users" width="16" height="16"></i></span>Workforce</a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section-label">Intelligence</div>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="cpu" width="16" height="16"></i></span>Agent Monitor</a>
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="message-square" width="16" height="16"></i></span>Chat</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="nav-item"><span class="nav-icon"><i data-lucide="settings" width="16" height="16"></i></span>Settings</a>
+      <div class="user-row">
+        <div class="avatar">AS</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:var(--text-body-sm);font-weight:600;color:var(--text-primary);">Abhishek S.</div>
+          <div style="font-size:var(--text-micro);color:var(--text-tertiary);">Admin · Product Ops</div>
+        </div>
+        <div style="color:var(--icon-tertiary);display:flex;"><i data-lucide="chevrons-up-down" width="14" height="14"></i></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-layout">
+    <header class="topbar">
+      <nav class="breadcrumb">
+        <a href="#">Workspace</a>
+        <span style="color:var(--text-tertiary);display:flex;"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+        <span class="current">Workforce</span>
+      </nav>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14"></i></span>
+        <input type="text" placeholder="Search people, agents, tasks…" />
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notif-badge"><i data-lucide="bell" width="18" height="18"></i></button>
+        <button class="icon-btn" id="theme-toggle"><i data-lucide="moon" width="18" height="18"></i></button>
+        <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#0EA5E9,#7C3AED);" title="Abhishek S.">AS</div>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <div class="content-pad">
+
+        <!-- Page heading -->
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-4);">
+          <div>
+            <h1 style="font-size:var(--text-heading); font-weight:700; color:var(--text-primary); letter-spacing:-0.02em;">Workforce</h1>
+            <div style="font-size:var(--text-body-sm); color:var(--text-tertiary); margin-top:2px;">Task assignments across 4 humans and 3 AI agents</div>
+          </div>
+          <div style="display:flex; gap:var(--space-2);">
+            <button class="icon-btn" title="Export"><i data-lucide="download" width="16" height="16"></i></button>
+            <button class="icon-btn" title="Fullscreen"><i data-lucide="maximize-2" width="16" height="16"></i></button>
+          </div>
+        </div>
+
+        <!-- ===== TABS ===== -->
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="humans">
+            <i data-lucide="user" width="14" height="14"></i>
+            <span>Humans</span>
+            <span class="tab-count">4</span>
+          </button>
+          <button class="tab-btn" data-tab="agents">
+            <i data-lucide="cpu" width="14" height="14"></i>
+            <span>AI Agents</span>
+            <span class="tab-count">3</span>
+          </button>
+        </div>
+
+        <!-- ================================================================
+             TAB 1 — HUMANS
+             ================================================================ -->
+        <div class="tab-panel active" id="panel-humans">
+
+          <!-- KPI Row -->
+          <div class="kpi-bar">
+            <div class="kpi-card">
+              <div class="kpi-val">4</div>
+              <div class="kpi-lbl">Active Members</div>
+              <div class="kpi-sub kpi-up">All available</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val">72%</div>
+              <div class="kpi-lbl">Avg Utilisation</div>
+              <div class="kpi-sub kpi-up">↑ 5% vs last week</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val" style="color:var(--state-blocked);">1</div>
+              <div class="kpi-lbl">Over Capacity</div>
+              <div class="kpi-sub kpi-bad">Marcus Webb</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val">18</div>
+              <div class="kpi-lbl">Active Tasks</div>
+              <div class="kpi-sub kpi-warn">4 blocked</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val" style="color:var(--state-progress);">7</div>
+              <div class="kpi-lbl">Completed This Week</div>
+              <div class="kpi-sub kpi-up">↑ 2 ahead of plan</div>
+            </div>
+          </div>
+
+          <!-- Filter row -->
+          <div class="tab-filter-row">
+            <div class="tab-search">
+              <span class="s-icon"><i data-lucide="search" width="14" height="14"></i></span>
+              <input type="text" placeholder="Filter by name…" />
+            </div>
+            <button class="filter-chip over-cap"><i data-lucide="alert-triangle" width="12" height="12"></i> Over capacity</button>
+            <select class="sort-dropdown">
+              <option>Sort: Utilisation ↓</option>
+              <option>Sort: Name A–Z</option>
+              <option>Sort: Tasks ↓</option>
+            </select>
+          </div>
+
+          <!-- Resource cards -->
+          <div class="resource-grid">
+
+            <!-- ===== Sarah Chen ===== -->
+            <div class="resource-card">
+              <div class="rc-header" onclick="this.closest('.resource-card').classList.toggle('expanded')">
+                <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#0EA5E9,#0369A1);">SC</div>
+                <div class="rc-info">
+                  <div class="rc-name">Sarah Chen</div>
+                  <div class="rc-role">Infrastructure Lead</div>
+                  <span class="rc-type-badge badge-human">Human</span>
+                </div>
+                <div class="rc-expand-icon"><i data-lucide="chevron-down" width="16" height="16"></i></div>
+              </div>
+              <div class="rc-capacity">
+                <div class="cap-bar-track"><div class="cap-bar-fill cap-ok" style="width:68%;"></div></div>
+                <div class="cap-pct">68%</div>
+              </div>
+              <div class="rc-status-row">
+                <span class="status-pill pill-pending"><span class="pill-dot"></span>2 Pending</span>
+                <span class="status-pill pill-progress"><span class="pill-dot"></span>2 In Progress</span>
+                <span class="status-pill pill-review"><span class="pill-dot"></span>1 Review</span>
+                <span class="status-pill pill-done"><span class="pill-dot"></span>3 Done</span>
+              </div>
+              <div class="rc-tasks">
+                <div class="rc-tasks-header">
+                  <div>Task</div>
+                  <div>State</div>
+                  <div>Priority</div>
+                  <div>Due</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Cluster provisioning in GKE</div>
+                  <div><span class="state-badge state-progress">In Progress</span></div>
+                  <div class="priority-badge pri-high">High</div>
+                  <div>Apr 11</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Set up Istio service mesh</div>
+                  <div><span class="state-badge state-progress">In Progress</span></div>
+                  <div class="priority-badge pri-critical">Critical</div>
+                  <div>Apr 12</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Write runbook documentation</div>
+                  <div><span class="state-badge state-pending">Pending</span></div>
+                  <div class="priority-badge pri-medium">Medium</div>
+                  <div>Apr 14</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">PR #418 review — auth middleware</div>
+                  <div><span class="state-badge state-review">Review</span></div>
+                  <div class="priority-badge pri-medium">Medium</div>
+                  <div>Apr 10</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">API Gateway migration</div>
+                  <div><span class="state-badge state-pending">Pending</span></div>
+                  <div class="priority-badge pri-high">High</div>
+                  <div>Apr 15</div>
+                </div>
+                <div class="rc-tasks-footer">View all 8 tasks →</div>
+              </div>
+            </div>
+
+            <!-- ===== Marcus Webb — OVER CAPACITY ===== -->
+            <div class="resource-card over-capacity expanded">
+              <div class="rc-header" onclick="this.closest('.resource-card').classList.toggle('expanded')">
+                <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);">MW</div>
+                <div class="rc-info">
+                  <div class="rc-name">Marcus Webb</div>
+                  <div class="rc-role">Senior Backend Engineer</div>
+                  <span class="rc-type-badge badge-human">Human</span>
+                </div>
+                <div class="rc-expand-icon"><i data-lucide="chevron-down" width="16" height="16"></i></div>
+              </div>
+              <div class="rc-capacity">
+                <div class="cap-bar-track"><div class="cap-bar-fill cap-over" style="width:100%;"></div></div>
+                <div class="cap-pct over">115%</div>
+              </div>
+              <div class="rc-status-row">
+                <span class="status-pill pill-pending"><span class="pill-dot"></span>1 Pending</span>
+                <span class="status-pill pill-progress"><span class="pill-dot"></span>3 In Progress</span>
+                <span class="status-pill pill-blocked"><span class="pill-dot"></span>1 Blocked</span>
+                <span class="status-pill pill-done"><span class="pill-dot"></span>2 Done</span>
+              </div>
+              <div class="rc-tasks">
+                <div class="rc-tasks-header">
+                  <div>Task</div>
+                  <div>State</div>
+                  <div>Priority</div>
+                  <div>Due</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">K8s cluster migration to v1.29</div>
+                  <div><span class="state-badge state-progress">In Progress</span></div>
+                  <div class="priority-badge pri-critical">Critical</div>
+                  <div>Apr 10</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">GraphQL federation proof of concept</div>
+                  <div><span class="state-badge state-progress">In Progress</span></div>
+                  <div class="priority-badge pri-high">High</div>
+                  <div>Apr 11</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Incident response — payment gateway</div>
+                  <div><span class="state-badge state-blocked">Blocked</span></div>
+                  <div class="priority-badge pri-critical">Critical</div>
+                  <div style="color:var(--state-blocked); font-weight:600;">Overdue!</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">OAuth PKCE PR review</div>
+                  <div><span class="state-badge state-progress">In Progress</span></div>
+                  <div class="priority-badge pri-medium">Medium</div>
+                  <div>Apr 12</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">OpenTelemetry tracing setup</div>
+                  <div><span class="state-badge state-pending">Pending</span></div>
+                  <div class="priority-badge pri-high">High</div>
+                  <div>Apr 14</div>
+                </div>
+                <div class="rc-tasks-footer">View all 7 tasks →</div>
+              </div>
+            </div>
+
+            <!-- ===== Lena Torres ===== -->
+            <div class="resource-card">
+              <div class="rc-header" onclick="this.closest('.resource-card').classList.toggle('expanded')">
+                <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#F59E0B,#D97706);">LT</div>
+                <div class="rc-info">
+                  <div class="rc-name">Lena Torres</div>
+                  <div class="rc-role">Mobile Engineer</div>
+                  <span class="rc-type-badge badge-human">Human</span>
+                </div>
+                <div class="rc-expand-icon"><i data-lucide="chevron-down" width="16" height="16"></i></div>
+              </div>
+              <div class="rc-capacity">
+                <div class="cap-bar-track"><div class="cap-bar-fill cap-ok" style="width:62%;"></div></div>
+                <div class="cap-pct">62%</div>
+              </div>
+              <div class="rc-status-row">
+                <span class="status-pill pill-pending"><span class="pill-dot"></span>1 Pending</span>
+                <span class="status-pill pill-progress"><span class="pill-dot"></span>2 In Progress</span>
+                <span class="status-pill pill-done"><span class="pill-dot"></span>2 Done</span>
+              </div>
+              <div class="rc-tasks">
+                <div class="rc-tasks-header">
+                  <div>Task</div>
+                  <div>State</div>
+                  <div>Priority</div>
+                  <div>Due</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Biometric unlock implementation</div>
+                  <div><span class="state-badge state-progress">In Progress</span></div>
+                  <div class="priority-badge pri-high">High</div>
+                  <div>Apr 11</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Offline sync engine for mobile</div>
+                  <div><span class="state-badge state-progress">In Progress</span></div>
+                  <div class="priority-badge pri-medium">Medium</div>
+                  <div>Apr 14</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Push notifications stream setup</div>
+                  <div><span class="state-badge state-pending">Pending</span></div>
+                  <div class="priority-badge pri-medium">Medium</div>
+                  <div>Apr 16</div>
+                </div>
+                <div class="rc-tasks-footer">View all 5 tasks →</div>
+              </div>
+            </div>
+
+            <!-- ===== Rohan Mehta ===== -->
+            <div class="resource-card">
+              <div class="rc-header" onclick="this.closest('.resource-card').classList.toggle('expanded')">
+                <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#10B981,#059669);">RM</div>
+                <div class="rc-info">
+                  <div class="rc-name">Rohan Mehta</div>
+                  <div class="rc-role">Data Platform Engineer</div>
+                  <span class="rc-type-badge badge-human">Human</span>
+                </div>
+                <div class="rc-expand-icon"><i data-lucide="chevron-down" width="16" height="16"></i></div>
+              </div>
+              <div class="rc-capacity">
+                <div class="cap-bar-track"><div class="cap-bar-fill cap-ok" style="width:55%;"></div></div>
+                <div class="cap-pct">55%</div>
+              </div>
+              <div class="rc-status-row">
+                <span class="status-pill pill-progress"><span class="pill-dot"></span>1 In Progress</span>
+                <span class="status-pill pill-pending"><span class="pill-dot"></span>2 Pending</span>
+                <span class="status-pill pill-done"><span class="pill-dot"></span>1 Done</span>
+              </div>
+              <div class="rc-tasks">
+                <div class="rc-tasks-header">
+                  <div>Task</div>
+                  <div>State</div>
+                  <div>Priority</div>
+                  <div>Due</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Spark checkpointing for data pipeline</div>
+                  <div><span class="state-badge state-progress">In Progress</span></div>
+                  <div class="priority-badge pri-high">High</div>
+                  <div>Apr 12</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">GDPR data audit — user PII scan</div>
+                  <div><span class="state-badge state-pending">Pending</span></div>
+                  <div class="priority-badge pri-critical">Critical</div>
+                  <div>Apr 15</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Data pipeline monitoring dashboard</div>
+                  <div><span class="state-badge state-pending">Pending</span></div>
+                  <div class="priority-badge pri-medium">Medium</div>
+                  <div>Apr 18</div>
+                </div>
+                <div class="rc-tasks-footer">View all 4 tasks →</div>
+              </div>
+            </div>
+
+          </div><!-- /resource-grid -->
+        </div><!-- /panel-humans -->
+
+
+        <!-- ================================================================
+             TAB 2 — AI AGENTS
+             ================================================================ -->
+        <div class="tab-panel" id="panel-agents">
+
+          <!-- KPI Row -->
+          <div class="kpi-bar">
+            <div class="kpi-card">
+              <div class="kpi-val">3</div>
+              <div class="kpi-lbl">Active Agents</div>
+              <div class="kpi-sub kpi-up">All online</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val">63%</div>
+              <div class="kpi-lbl">Avg Utilisation</div>
+              <div class="kpi-sub kpi-up">↑ 8% vs last week</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val" style="color:var(--state-blocked);">1</div>
+              <div class="kpi-lbl">Over Capacity</div>
+              <div class="kpi-sub kpi-bad">Research Agent</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val">16</div>
+              <div class="kpi-lbl">Tasks Processing</div>
+              <div class="kpi-sub kpi-warn">3 queued</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val" style="color:var(--state-progress);">24</div>
+              <div class="kpi-lbl">Completed This Week</div>
+              <div class="kpi-sub kpi-up">↑ 6 vs last week</div>
+            </div>
+          </div>
+
+          <!-- Filter row -->
+          <div class="tab-filter-row">
+            <div class="tab-search">
+              <span class="s-icon"><i data-lucide="search" width="14" height="14"></i></span>
+              <input type="text" placeholder="Filter by agent name…" />
+            </div>
+            <button class="filter-chip over-cap"><i data-lucide="alert-triangle" width="12" height="12"></i> Over capacity</button>
+            <select class="sort-dropdown">
+              <option>Sort: Utilisation ↓</option>
+              <option>Sort: Name A–Z</option>
+              <option>Sort: Tasks ↓</option>
+            </select>
+          </div>
+
+          <!-- Agent cards -->
+          <div class="resource-grid">
+
+            <!-- ===== Research Agent — OVER CAPACITY ===== -->
+            <div class="resource-card over-capacity expanded">
+              <div class="rc-header" onclick="this.closest('.resource-card').classList.toggle('expanded')">
+                <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#6366F1,#8B5CF6);">
+                  <i data-lucide="bot" width="20" height="20" style="color:white;"></i>
+                </div>
+                <div class="rc-info">
+                  <div class="rc-name">Research Agent</div>
+                  <div class="rc-role">Autonomous · LiteLLM · Max 10 concurrent</div>
+                  <span class="rc-type-badge badge-agent">AI Agent</span>
+                </div>
+                <div class="rc-expand-icon"><i data-lucide="chevron-down" width="16" height="16"></i></div>
+              </div>
+              <div class="rc-capacity">
+                <div class="cap-bar-track"><div class="cap-bar-fill cap-over" style="width:100%;"></div></div>
+                <div class="cap-pct over">120%</div>
+              </div>
+              <div class="rc-status-row">
+                <span class="status-pill pill-pending"><span class="pill-dot"></span>3 Queued</span>
+                <span class="status-pill pill-progress"><span class="pill-dot"></span>5 Processing</span>
+                <span class="status-pill pill-blocked"><span class="pill-dot"></span>1 Stalled</span>
+                <span class="status-pill pill-done"><span class="pill-dot"></span>12 Done</span>
+              </div>
+              <div class="rc-tasks">
+                <div class="rc-tasks-header">
+                  <div>Task</div>
+                  <div>State</div>
+                  <div>Priority</div>
+                  <div>Due</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Threat landscape research — Q2 report</div>
+                  <div><span class="state-badge state-progress">Processing</span></div>
+                  <div class="priority-badge pri-critical">Critical</div>
+                  <div>Apr 11</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">GDPR compliance gap analysis</div>
+                  <div><span class="state-badge state-progress">Processing</span></div>
+                  <div class="priority-badge pri-high">High</div>
+                  <div>Apr 12</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Competitor feature matrix update</div>
+                  <div><span class="state-badge state-blocked">Stalled</span></div>
+                  <div class="priority-badge pri-high">High</div>
+                  <div style="color:var(--state-blocked); font-weight:600;">Timeout</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Architecture patterns deep dive</div>
+                  <div><span class="state-badge state-progress">Processing</span></div>
+                  <div class="priority-badge pri-medium">Medium</div>
+                  <div>Apr 13</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Market research — AI orchestration</div>
+                  <div><span class="state-badge state-pending">Queued</span></div>
+                  <div class="priority-badge pri-medium">Medium</div>
+                  <div>Apr 14</div>
+                </div>
+                <div class="rc-tasks-footer">View all 9 tasks →</div>
+              </div>
+            </div>
+
+            <!-- ===== Code Review Agent ===== -->
+            <div class="resource-card">
+              <div class="rc-header" onclick="this.closest('.resource-card').classList.toggle('expanded')">
+                <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#0EA5E9,#6366F1);">
+                  <i data-lucide="bot" width="20" height="20" style="color:white;"></i>
+                </div>
+                <div class="rc-info">
+                  <div class="rc-name">Code Review Agent</div>
+                  <div class="rc-role">Autonomous · Claude 3.5 Sonnet · Max 8 concurrent</div>
+                  <span class="rc-type-badge badge-agent">AI Agent</span>
+                </div>
+                <div class="rc-expand-icon"><i data-lucide="chevron-down" width="16" height="16"></i></div>
+              </div>
+              <div class="rc-capacity">
+                <div class="cap-bar-track"><div class="cap-bar-fill cap-ok" style="width:55%;"></div></div>
+                <div class="cap-pct">55%</div>
+              </div>
+              <div class="rc-status-row">
+                <span class="status-pill pill-pending"><span class="pill-dot"></span>1 Queued</span>
+                <span class="status-pill pill-progress"><span class="pill-dot"></span>3 Processing</span>
+                <span class="status-pill pill-done"><span class="pill-dot"></span>8 Done</span>
+              </div>
+              <div class="rc-tasks">
+                <div class="rc-tasks-header">
+                  <div>Task</div>
+                  <div>State</div>
+                  <div>Priority</div>
+                  <div>Due</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">PR #421 — OpenTelemetry instrumentation</div>
+                  <div><span class="state-badge state-progress">Processing</span></div>
+                  <div class="priority-badge pri-high">High</div>
+                  <div>Apr 10</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">PR #419 — Auth middleware refactor</div>
+                  <div><span class="state-badge state-progress">Processing</span></div>
+                  <div class="priority-badge pri-medium">Medium</div>
+                  <div>Apr 10</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">PR #422 — OAuth PKCE flow</div>
+                  <div><span class="state-badge state-progress">Processing</span></div>
+                  <div class="priority-badge pri-medium">Medium</div>
+                  <div>Apr 11</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">PR #423 — Database migration scripts</div>
+                  <div><span class="state-badge state-pending">Queued</span></div>
+                  <div class="priority-badge pri-low">Low</div>
+                  <div>Apr 12</div>
+                </div>
+                <div class="rc-tasks-footer">View all 4 tasks →</div>
+              </div>
+            </div>
+
+            <!-- ===== Email Agent ===== -->
+            <div class="resource-card">
+              <div class="rc-header" onclick="this.closest('.resource-card').classList.toggle('expanded')">
+                <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#F59E0B,#6366F1);">
+                  <i data-lucide="bot" width="20" height="20" style="color:white;"></i>
+                </div>
+                <div class="rc-info">
+                  <div class="rc-name">Email Agent</div>
+                  <div class="rc-role">Gateway · Channel Handler · Continuous</div>
+                  <span class="rc-type-badge badge-agent">AI Agent</span>
+                </div>
+                <div class="rc-expand-icon"><i data-lucide="chevron-down" width="16" height="16"></i></div>
+              </div>
+              <div class="rc-capacity">
+                <div class="cap-bar-track"><div class="cap-bar-fill cap-ok" style="width:38%;"></div></div>
+                <div class="cap-pct">38%</div>
+              </div>
+              <div class="rc-status-row">
+                <span class="status-pill pill-progress"><span class="pill-dot"></span>2 Processing</span>
+                <span class="status-pill pill-done"><span class="pill-dot"></span>19 msgs today</span>
+              </div>
+              <div class="rc-tasks">
+                <div class="rc-tasks-header">
+                  <div>Task</div>
+                  <div>State</div>
+                  <div>Priority</div>
+                  <div>Due</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Process inbound — vendor follow-ups</div>
+                  <div><span class="state-badge state-progress">Processing</span></div>
+                  <div class="priority-badge pri-medium">Medium</div>
+                  <div>Continuous</div>
+                </div>
+                <div class="task-row">
+                  <div class="task-title">Send daily briefing summaries</div>
+                  <div><span class="state-badge state-progress">Processing</span></div>
+                  <div class="priority-badge pri-high">High</div>
+                  <div>Daily 9am</div>
+                </div>
+                <div class="rc-tasks-footer">View all 2 active tasks →</div>
+              </div>
+            </div>
+
+          </div><!-- /resource-grid -->
+        </div><!-- /panel-agents -->
+
+
+        <!-- Legend -->
+        <div style="display:flex; align-items:center; gap:var(--space-4); margin-top:var(--space-5); font-size:var(--text-caption); color:var(--text-tertiary); flex-wrap:wrap;">
+          <span style="font-weight:600; color:var(--text-secondary);">Capacity:</span>
+          <span style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:12px; height:8px; border-radius:9999px; background:linear-gradient(90deg,#34D399,#10B981);"></span>Under 80%</span>
+          <span style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:12px; height:8px; border-radius:9999px; background:linear-gradient(90deg,#FBBF24,#F59E0B);"></span>80–100%</span>
+          <span style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:12px; height:8px; border-radius:9999px; background:linear-gradient(90deg,#F87171,#EF4444);"></span>Over capacity</span>
+          <span style="margin-left:auto;">Click card to expand task list</span>
+        </div>
+
+      </div><!-- /content-pad -->
+    </div><!-- /main-content -->
+  </div><!-- /main-layout -->
+</div><!-- /app-shell -->
+
+<script>
+  lucide.createIcons();
+
+  // Theme toggle
+  document.getElementById('theme-toggle').addEventListener('click', function() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    this.querySelector('i').setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+    lucide.createIcons();
+  });
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById('panel-' + this.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Over-capacity filter chip toggle
+  document.querySelectorAll('.filter-chip.over-cap').forEach(chip => {
+    chip.addEventListener('click', function() {
+      this.classList.toggle('active');
+      const panel = this.closest('.tab-panel');
+      const cards = panel.querySelectorAll('.resource-card');
+      if (this.classList.contains('active')) {
+        cards.forEach(card => {
+          if (!card.classList.contains('over-capacity')) card.style.display = 'none';
+        });
+      } else {
+        cards.forEach(card => card.style.display = '');
+      }
+    });
+  });
+</script>
+  <script src="../assets/nav.js"></script>
+  <script src="../assets/theme.js"></script>
+</body>
+</html>
