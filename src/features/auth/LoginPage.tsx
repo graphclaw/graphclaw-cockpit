@@ -57,7 +57,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-[var(--bg-page)] p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
-          <img src="/logo.png" alt="GraphClaw" className="mb-2 h-12 w-12 rounded-[var(--radius-lg)]" />
+          <img src="/logo.svg" alt="GraphClaw" className="mb-2 h-16 w-16" />
           <CardTitle>GraphClaw Cockpit</CardTitle>
           <CardDescription>Sign in to your workspace</CardDescription>
         </CardHeader>

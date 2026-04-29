@@ -113,24 +113,28 @@ function getNodeSize(priority?: string): number {
 }
 
 function toElements(nodes: GraphNode[], edges: GraphEdge[]): ElementDefinition[] {
-  const nodeElements: ElementDefinition[] = nodes.map((n) => ({
-    data: {
-      id: n.id,
-      label: n.label,
-      color: STATE_COLORS[n.state] ?? STATE_COLORS.BACKLOG,
-      borderColor: STATE_COLORS[n.state] ?? STATE_COLORS.BACKLOG,
-      size: getNodeSize(n.priority),
-    },
-  }));
+  const nodeElements: ElementDefinition[] = nodes
+    .filter((n) => !!n.id)
+    .map((n) => ({
+      data: {
+        id: n.id,
+        label: n.label,
+        color: STATE_COLORS[n.state] ?? STATE_COLORS.BACKLOG,
+        borderColor: STATE_COLORS[n.state] ?? STATE_COLORS.BACKLOG,
+        size: getNodeSize(n.priority),
+      },
+    }));
 
-  const edgeElements: ElementDefinition[] = edges.map((e) => ({
-    data: {
-      id: e.id,
-      source: e.source,
-      target: e.target,
-      edgeType: e.edgeType ?? 'subtask',
-    },
-  }));
+  const edgeElements: ElementDefinition[] = edges
+    .filter((e) => !!e.id && !!e.source && !!e.target)
+    .map((e) => ({
+      data: {
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        edgeType: e.edgeType ?? 'subtask',
+      },
+    }));
 
   return [...nodeElements, ...edgeElements];
 }

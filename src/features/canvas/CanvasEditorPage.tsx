@@ -225,15 +225,20 @@ function CanvasEditorInner() {
   // ---------------------------------------------------------------------------
 
   const paletteAgents = useMemo<PaletteAgent[]>(() => {
-    if (!agentsData) return [];
-    return agentsData
+    const internal: PaletteAgent[] = (agentsData ?? [])
       .filter((a) => a.source !== 'system')
       .map((a) => ({
         agent_id: a.agent_id,
         name: a.name,
         type: a.agent_id === userId ? ('orchestrator' as const) : ('sub_agent' as const),
       }));
-  }, [agentsData, userId]);
+    const external: PaletteAgent[] = (a2aAgents ?? []).map((a) => ({
+      agent_id: a.agent_id,
+      name: a.name,
+      type: 'a2a' as const,
+    }));
+    return [...internal, ...external];
+  }, [agentsData, a2aAgents, userId]);
 
   // Build A2A link edges from orchestrator to external agents
   useEffect(() => {
@@ -579,7 +584,11 @@ function CanvasEditorInner() {
       {/* Property Inspector — shown when a node is selected */}
       {selectedAgentId && (
         <PropertyInspector
-          agentId={selectedAgentId}
+          agentId={
+            selectedNodeType === 'external_agent'
+              ? selectedAgentId.replace(/^a2a-/, '')
+              : selectedAgentId
+          }
           agentName={
             selectedNodeType === 'skill' || selectedNodeType === 'mcp_server' || selectedNodeType === 'tool_set' || selectedNodeType === 'external_agent'
               ? ((nodes.find((n) => n.id === selectedAgentId)?.data as Record<string, unknown>)?.label as string) ?? selectedAgentId

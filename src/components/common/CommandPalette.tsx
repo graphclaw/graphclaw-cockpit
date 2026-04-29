@@ -14,6 +14,7 @@ const COMMANDS: CommandItem[] = [
   { label: 'Goals', path: '/goals', section: 'Workspace' },
   { label: 'Projects', path: '/projects', section: 'Workspace' },
   { label: 'Timeline', path: '/timeline', section: 'Workspace' },
+  { label: 'Graph Explorer', path: '/graph-explorer', section: 'Workspace' },
   { label: 'Workforce', path: '/workforce', section: 'Workspace' },
   { label: 'Agent Monitor', path: '/agent-monitor', section: 'Intelligence' },
   { label: 'Chat', path: '/chat', section: 'Intelligence' },

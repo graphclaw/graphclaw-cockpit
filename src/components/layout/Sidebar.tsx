@@ -9,6 +9,7 @@ import {
   FolderKanban,
   CalendarRange,
   Users,
+  Network,
   Cpu,
   MessageCircle,
   Puzzle,
@@ -40,6 +41,7 @@ const WORKSPACE_NAV: NavItem[] = [
   { label: 'Goals', icon: Target, path: '/goals' },
   { label: 'Projects', icon: FolderKanban, path: '/projects' },
   { label: 'Timeline', icon: CalendarRange, path: '/timeline' },
+  { label: 'Graph Explorer', icon: Network, path: '/graph-explorer' },
   { label: 'Workforce', icon: Users, path: '/workforce' },
 ];
 

@@ -56,7 +56,7 @@ async function apiRequest<T>(path: string, method = 'GET', body?: unknown): Prom
 const apiFetch = <T>(path: string) => apiRequest<T>(path, 'GET');
 const apiPost = <T>(path: string, body?: unknown) => apiRequest<T>(path, 'POST', body);
 const apiPut = <T>(path: string, body: unknown) => apiRequest<T>(path, 'PUT', body);
-const apiDelete = (path: string) => apiRequest<void>(path, 'DELETE');
+const apiDelete = (path: string) => apiRequest<undefined>(path, 'DELETE');
 
 // ---------------------------------------------------------------------------
 // Types
@@ -64,12 +64,15 @@ const apiDelete = (path: string) => apiRequest<void>(path, 'DELETE');
 
 export interface SkillEntry {
   skill_id: string;
+  /** Normalised display name (API may return this as `skill_name`). */
   name: string;
   description?: string;
   output_type?: string;
   version?: string;
   source?: string;
 }
+
+type RawSkillEntry = Omit<SkillEntry, 'name'> & { skill_name?: string; name?: string };
 
 export interface MCPServerEntry {
   server_id: string;
@@ -142,15 +145,18 @@ export interface CreateAgentPayload {
 export function useInstalledSkills() {
   return useQuery({
     queryKey: ['canvas', 'skills'],
-    queryFn: () => apiFetch<SkillEntry[]>('/app/v1/skills'),
+    queryFn: () =>
+      apiFetch<RawSkillEntry[]>('/app/v1/skills').then((items) =>
+        items.map((raw) => ({ ...raw, name: raw.skill_name ?? raw.name ?? '' }) as SkillEntry),
+      ),
     staleTime: 5 * 60_000,
   });
 }
 
-/** List all registered MCP servers. */
+/** List all registered MCP servers. Shares ['mcp-servers'] key with McpRegistryPage so mutations there invalidate this too. */
 export function useMCPServers() {
   return useQuery({
-    queryKey: ['canvas', 'mcp-servers'],
+    queryKey: ['mcp-servers'],
     queryFn: () => apiFetch<MCPServerEntry[]>('/app/v1/mcp-servers'),
     staleTime: 5 * 60_000,
   });

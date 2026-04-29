@@ -23,7 +23,6 @@ import { gotoAndWaitForApi } from '../../helpers/browser.helper';
 import { TEST_USER_ID } from '../../helpers/auth.helper';
 
 const CANVAS_URL = '/canvas';
-const AGENT_NAME = `E2E Canvas Agent ${Date.now()}`;
 
 describe('Canvas — Phase 1 Agent Hub', () => {
   let ctx: TestContext;

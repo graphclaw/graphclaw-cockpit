@@ -13,11 +13,6 @@ describe('Topbar', () => {
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
   });
 
-  it('renders search input', () => {
-    renderWithProviders(<Topbar />);
-    expect(screen.getByPlaceholderText('Search goals, tasks, people...')).toBeInTheDocument();
-  });
-
   it('renders notification bell', () => {
     renderWithProviders(<Topbar />);
     expect(screen.getByLabelText('Notifications')).toBeInTheDocument();

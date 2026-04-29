@@ -125,6 +125,9 @@ const ConnectorsPage = lazy(() =>
 const MarketplacePolicyPage = lazy(() =>
   import('@/features/admin/MarketplacePolicyPage').then((m) => ({ default: m.MarketplacePolicyPage })),
 );
+const GraphExplorerPage = lazy(() =>
+  import('@/features/graph-explorer/GraphExplorerPage').then((m) => ({ default: m.GraphExplorerPage })),
+);
 
 function SuspenseFallback() {
   return (
@@ -154,6 +157,7 @@ export function AppRoutes() {
                         <Route path="timeline" element={<TimelinePage />} />
                         <Route path="people" element={<Navigate to="/workforce" replace />} />
                         <Route path="workforce" element={<WorkforcePage />} />
+                        <Route path="graph-explorer" element={<GraphExplorerPage />} />
 
                         {/* Intelligence */}
                         <Route path="agent-monitor" element={<AgentMonitorPage />} />

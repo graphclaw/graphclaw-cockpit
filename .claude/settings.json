@@ -20,7 +20,26 @@
       "Bash(python -m pytest tests/test_api/test_agent_routes.py tests/test_api/test_settings_extended_routes.py -v)",
       "Bash(python -m pytest --timeout=60 -q)",
       "Bash(python -m pytest tests/test_api/test_agents_routes.py tests/test_api/test_skill_registry_extended_routes.py tests/test_api/test_mcp_registry_extended_routes.py -v)",
-      "Bash(python -c \"from graphclaw.api.router import app_router; print\\('Import OK — routes:', len\\(app_router.routes\\)\\)\")"
+      "Bash(python -c \"from graphclaw.api.router import app_router; print\\('Import OK — routes:', len\\(app_router.routes\\)\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(python -m pytest tests/ -x -q --tb=short)",
+      "Bash(python -m pytest tests/ -x -q --tb=short --ignore=tests/test_a2a)",
+      "Bash(python -m pytest tests/test_cli/test_commands.py::TestTaskList::test_task_list_asyncio_run_called -v --tb=long)",
+      "Bash(python -m pytest tests/ -x -q --tb=no)",
+      "Bash(python -m pytest tests/ -q --tb=short --ignore=tests/test_a2a)",
+      "Bash(python -m pytest tests/test_cli/test_commands.py -q --tb=short)",
+      "Bash(python -m pytest tests/test_cli/test_commands.py -q --tb=long)",
+      "Bash(xargs wc *)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(python3 -c ' *)",
+      "Bash(docker exec *)",
+      "Bash(curl -s -X POST http://localhost:8000/auth/exchange -H 'Content-Type: application/json' -d '{\"code\": \"test-code-abc123\"}')",
+      "Bash(python -c \"from graphclaw.db.age.queries.engine import AgeGraphQueryEngine; print\\('engine OK'\\)\")",
+      "Bash(python -c \"from graphclaw.gateway.app import create_app; print\\('app OK'\\)\")",
+      "Bash(curl -s -X POST http://localhost:8000/auth/exchange -H 'Content-Type: application/json' -d '{\"code\": \"test-code-ag-001\"}')",
+      "Bash(curl -s -X POST http://localhost:8000/auth/exchange -H 'Content-Type: application/json' -d '{\"code\": \"final-test-001\"}')",
+      "Bash(curl -s -X POST http://localhost:8000/auth/dev-token -H 'Content-Type: application/json' -d '{\"user_id\": \"USER-dev-check\", \"role\": \"USER\"}')",
+      "Bash(python -m pytest tests/llm/ -x -q)"
     ]
   }
 }

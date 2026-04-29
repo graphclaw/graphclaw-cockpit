@@ -49,6 +49,8 @@
       + '<span class="ni"><i data-lucide="folder-kanban" width="16" height="16" aria-label="Projects"></i></span><span class="nav-label">Projects</span></a>'
       + '<a href="' + p + 'timeline-view.html" title="Timeline"' + a('timeline-view') + '>'
       + '<span class="ni"><i data-lucide="calendar-range" width="16" height="16" aria-label="Timeline"></i></span><span class="nav-label">Timeline</span></a>'
+      + '<a href="' + p + 'graph-explorer.html" title="Graph Explorer"' + a('graph-explorer') + '>'
+      + '<span class="ni"><i data-lucide="network" width="16" height="16" aria-label="Graph Explorer"></i></span><span class="nav-label">Graph Explorer</span></a>'
       + '<a href="' + p + 'resource-view.html" title="People"' + a('resource-view') + '>'
       + '<span class="ni"><i data-lucide="users" width="16" height="16" aria-label="People"></i></span><span class="nav-label">People</span></a>'
       + '<div class="sidebar-divider"></div>'

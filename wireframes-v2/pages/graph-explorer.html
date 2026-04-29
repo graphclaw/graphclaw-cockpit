@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html data-page="graph-explorer" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graph Explorer — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   Graph Explorer — Full-viewport graph database viewer/editor
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: var(--font-sans); }
+.editor-shell { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--bg-page); }
+
+/* ─── Topbar ─────────────────────────────────────────────── */
+.topbar {
+  height: 56px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center;
+  padding: 0 var(--space-4);
+  gap: var(--space-3);
+  flex-shrink: 0;
+  z-index: 50;
+}
+.topbar-logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  text-decoration: none;
+  padding-right: var(--space-4);
+  border-right: 1px solid var(--border-default);
+  margin-right: var(--space-2);
+}
+.logo-text { font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--text-primary); letter-spacing: -0.01em; }
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; transition: color var(--duration-fast); }
+.breadcrumb a:hover { color: var(--text-primary); }
+.breadcrumb .sep { color: var(--text-tertiary); margin: 0 1px; }
+.breadcrumb .current { color: var(--text-primary); font-weight: var(--weight-semibold); }
+.topbar-spacer { flex: 1; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-2); }
+
+/* Stats bar */
+.stats-bar {
+  display: flex; align-items: center; gap: 6px;
+  font-size: var(--text-caption); color: var(--text-tertiary);
+  padding: 4px 12px;
+  background: var(--bg-inset); border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+}
+.stats-bar .stat-sep { width: 1px; height: 12px; background: var(--border-default); }
+.stats-bar .stat-val { font-weight: var(--weight-semibold); color: var(--text-secondary); }
+.stats-bar .stat-highlight { font-weight: var(--weight-semibold); color: var(--brand-primary); }
+
+.icon-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); border: none; background: transparent;
+  cursor: pointer; color: var(--icon-secondary);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 2px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 32px; padding: 0 14px;
+  border-radius: var(--radius-md); border: 1.5px solid transparent;
+  font-family: var(--font-sans); font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  cursor: pointer; text-decoration: none; transition: all var(--duration-normal);
+  white-space: nowrap; outline: none;
+}
+.btn-ghost { background: transparent; border-color: var(--border-default); color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--bg-inset); border-color: var(--border-strong); color: var(--text-primary); }
+.btn-secondary { background: var(--bg-surface); border-color: var(--border-default); color: var(--text-primary); }
+.btn-secondary:hover { background: var(--bg-inset); border-color: var(--border-strong); }
+.btn-primary { background: var(--brand-primary); border-color: var(--brand-primary); color: white; }
+.btn-primary:hover { background: var(--brand-primary-hover); border-color: var(--brand-primary-hover); }
+.btn-danger { background: transparent; border-color: #EF4444; color: #EF4444; }
+.btn-danger:hover { background: rgba(239,68,68,0.1); }
+
+.topbar-avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: var(--weight-semibold);
+  cursor: pointer; flex-shrink: 0; margin-left: 4px;
+}
+
+/* ─── Editor Body ───────────────────────────────────────── */
+.editor-body { display: flex; flex: 1; overflow: hidden; }
+
+/* ─── Left Panel: Filter Panel ─────────────────────────── */
+.left-panel {
+  width: 260px; flex-shrink: 0;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  z-index: 20;
+  transition: width 0.2s ease, opacity 0.2s ease;
+}
+.left-panel.collapsed { width: 0; overflow: hidden; opacity: 0; pointer-events: none; }
+
+.lp-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.lp-header-title { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+.lp-close {
+  width: 24px; height: 24px; border: none; background: transparent;
+  border-radius: var(--radius-md); cursor: pointer; color: var(--text-tertiary);
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--duration-fast);
+}
+.lp-close:hover { background: var(--bg-inset); color: var(--text-primary); }
+
+.lp-scroll { flex: 1; overflow-y: auto; padding: 0; }
+.lp-scroll::-webkit-scrollbar { width: 4px; }
+.lp-scroll::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+/* Preset chips */
+.preset-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-default);
+}
+.preset-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: var(--radius-full);
+  font-size: 10px; font-weight: var(--weight-semibold);
+  border: 1px solid var(--border-default);
+  background: transparent; color: var(--text-secondary);
+  cursor: pointer; transition: all var(--duration-fast);
+  white-space: nowrap;
+}
+.preset-chip:hover { border-color: var(--brand-primary); color: var(--brand-primary); background: var(--brand-primary-light); }
+.preset-chip.active { background: var(--brand-primary); border-color: var(--brand-primary); color: white; }
+[data-theme="dark"] .preset-chip.active { color: #0B1120; }
+
+/* Filter sections */
+.filter-section { border-bottom: 1px solid var(--border-default); }
+.filter-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  cursor: pointer; user-select: none;
+  transition: background var(--duration-fast);
+}
+.filter-section-header:hover { background: var(--bg-inset); }
+.filter-section-title {
+  font-size: var(--text-caption); font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+.filter-section-chevron {
+  color: var(--text-tertiary); transition: transform 0.2s ease;
+  display: flex; align-items: center;
+}
+.filter-section.open .filter-section-chevron { transform: rotate(180deg); }
+.filter-section-body { padding: 0 16px 12px; }
+.filter-section:not(.open) .filter-section-body { display: none; }
+
+/* Search */
+.filter-search {
+  position: relative; padding: 12px 16px;
+  border-bottom: 1px solid var(--border-default);
+}
+.filter-search input {
+  width: 100%; height: 32px; padding: 0 10px 0 32px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-sans);
+  font-size: var(--text-body-sm); color: var(--text-primary); outline: none;
+  transition: all var(--duration-normal);
+}
+.filter-search input:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.filter-search input::placeholder { color: var(--text-tertiary); }
+.filter-search-icon { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); display: flex; }
+
+/* Checkbox group */
+.filter-check-group { display: flex; flex-direction: column; gap: 4px; }
+.filter-check-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 8px; border-radius: var(--radius-md);
+  cursor: pointer; transition: background var(--duration-fast);
+  font-size: var(--text-body-sm); color: var(--text-primary);
+}
+.filter-check-item:hover { background: var(--bg-inset); }
+.filter-check-item input[type="checkbox"] { accent-color: var(--brand-primary); width: 14px; height: 14px; cursor: pointer; }
+.filter-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.filter-check-label { flex: 1; }
+.filter-check-count { font-size: 10px; color: var(--text-tertiary); }
+
+/* State chips */
+.state-chip-group { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.state-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: var(--radius-full);
+  font-size: 10px; font-weight: var(--weight-medium);
+  border: 1px solid var(--border-default);
+  background: transparent; color: var(--text-secondary);
+  cursor: pointer; transition: all var(--duration-fast);
+}
+.state-chip:hover { border-color: var(--border-strong); }
+.state-chip.on { background: var(--bg-inset); border-color: var(--border-strong); color: var(--text-primary); }
+.state-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* Toggle switch */
+.filter-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 0;
+}
+.filter-toggle-label { font-size: var(--text-body-sm); color: var(--text-primary); }
+.toggle-switch {
+  position: relative; width: 34px; height: 18px;
+  background: var(--border-strong); border-radius: 9px;
+  cursor: pointer; transition: background 0.2s;
+  border: none; padding: 0;
+}
+.toggle-switch::after {
+  content: ''; position: absolute;
+  top: 2px; left: 2px; width: 14px; height: 14px;
+  background: white; border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle-switch.on { background: var(--brand-primary); }
+.toggle-switch.on::after { transform: translateX(16px); }
+
+/* Range slider display */
+.filter-range-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+.filter-range-label { font-size: var(--text-caption); color: var(--text-secondary); white-space: nowrap; }
+.filter-range-track {
+  flex: 1; height: 4px; background: var(--border-default);
+  border-radius: 2px; position: relative;
+}
+.filter-range-fill {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: var(--brand-primary); border-radius: 2px;
+}
+.filter-range-thumb {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--brand-primary); border: 2px solid var(--bg-surface);
+  box-shadow: var(--shadow-1); position: absolute; top: -4px;
+}
+.filter-range-value { font-size: var(--text-caption); font-weight: var(--weight-semibold); color: var(--text-primary); min-width: 32px; text-align: right; }
+
+/* Date input */
+.filter-date-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
+.filter-date-label { font-size: var(--text-caption); color: var(--text-secondary); min-width: 32px; }
+.filter-date-input {
+  flex: 1; height: 28px; padding: 0 8px;
+  background: var(--bg-inset); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-sans);
+  font-size: 11px; color: var(--text-primary); outline: none;
+}
+.filter-date-input:focus { border-color: var(--brand-primary); }
+
+/* Edge type grouped */
+.edge-type-group { margin-bottom: 8px; }
+.edge-type-group-label {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); margin-bottom: 4px; padding-left: 4px;
+}
+.edge-type-checks { display: flex; flex-direction: column; gap: 2px; }
+.edge-type-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 6px; border-radius: var(--radius-md);
+  font-size: 11px; color: var(--text-primary);
+  cursor: pointer; transition: background var(--duration-fast);
+}
+.edge-type-item:hover { background: var(--bg-inset); }
+.edge-type-item input { accent-color: var(--brand-primary); width: 13px; height: 13px; cursor: pointer; }
+
+/* Filter footer */
+.lp-footer {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-default);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.filter-count-badge {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  padding: 2px 8px; border-radius: var(--radius-full);
+  background: var(--brand-primary-light); color: var(--brand-primary);
+}
+[data-theme="dark"] .filter-count-badge { background: rgba(56,189,248,0.12); }
+.reset-btn {
+  font-size: var(--text-caption); font-weight: var(--weight-medium);
+  color: var(--text-tertiary); background: none; border: none;
+  cursor: pointer; text-decoration: underline;
+  transition: color var(--duration-fast);
+}
+.reset-btn:hover { color: var(--text-primary); }
+
+/* ─── Canvas Toolbar ─────────────────────────────────────── */
+.canvas-toolbar {
+  position: absolute;
+  top: 12px; left: 50%; transform: translateX(-50%);
+  z-index: 40;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  display: flex; align-items: center; gap: 2px;
+  padding: 4px;
+}
+.tool-btn {
+  display: flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 10px;
+  border-radius: 5px; border: none; background: transparent;
+  font-family: var(--font-sans); font-size: var(--text-caption); font-weight: var(--weight-medium);
+  color: var(--text-secondary); cursor: pointer;
+  transition: all var(--duration-fast);
+}
+.tool-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.tool-btn.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+[data-theme="dark"] .tool-btn.active { background: rgba(56,189,248,0.12); }
+.tool-sep { width: 1px; height: 20px; background: var(--border-default); margin: 0 2px; }
+
+/* Layout dropdown */
+.layout-dropdown {
+  position: relative; display: inline-flex;
+}
+.layout-dropdown .tool-btn { gap: 4px; }
+.layout-menu {
+  display: none; position: absolute; top: 100%; left: 0;
+  margin-top: 4px; min-width: 140px;
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-2);
+  padding: 4px; z-index: 50;
+}
+.layout-menu.show { display: block; }
+.layout-menu-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: 4px;
+  font-size: var(--text-body-sm); color: var(--text-secondary);
+  cursor: pointer; transition: all var(--duration-fast);
+  border: none; background: transparent; width: 100%;
+  font-family: var(--font-sans);
+}
+.layout-menu-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.layout-menu-item.active { color: var(--brand-primary); font-weight: var(--weight-semibold); }
+
+/* ─── Canvas Area ─────────────────────────────────────────── */
+.canvas-viewport {
+  flex: 1; position: relative;
+  background-color: var(--bg-surface-alt, #F8FAFC);
+  background-image: radial-gradient(circle, var(--border-default) 1px, transparent 1px);
+  background-size: 24px 24px;
+  overflow: hidden;
+  cursor: default;
+}
+[data-theme="dark"] .canvas-viewport {
+  background-color: #0F172A;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+}
+.canvas-inner { position: absolute; inset: 0; }
+
+/* ─── Graph Nodes ─────────────────────────────────────────── */
+.graph-node {
+  position: absolute;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-default);
+  border-radius: 10px;
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+  transition: box-shadow var(--duration-normal), transform var(--duration-normal);
+  overflow: hidden;
+}
+.graph-node:hover { box-shadow: var(--shadow-3); transform: translateY(-1px); }
+.graph-node.selected {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.25), var(--shadow-3);
+}
+[data-theme="dark"] .graph-node {
+  background: #1E293B;
+  border-color: rgba(255,255,255,0.10);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .graph-node:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.55); }
+[data-theme="dark"] .graph-node.selected {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.3), 0 8px 24px rgba(0,0,0,0.45);
+}
+
+/* Node shapes */
+.graph-node.shape-rect { width: 220px; border-radius: 10px; }
+.graph-node.shape-diamond { width: 200px; border-radius: 10px; transform-origin: center center; }
+.graph-node.shape-diamond .gn-accent { border-radius: 0; }
+.graph-node.shape-ellipse { width: 190px; border-radius: 60px; }
+.graph-node.shape-hex { width: 195px; border-radius: 14px; clip-path: polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%); }
+.graph-node.shape-hex .gn-accent { display: none; }
+
+.gn-accent { height: 3px; width: 100%; }
+.gn-body { padding: 12px 14px; }
+.gn-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+.gn-title {
+  font-size: var(--text-body-sm); font-weight: var(--weight-semibold);
+  color: var(--text-primary); line-height: 1.35;
+}
+[data-theme="dark"] .gn-title { color: rgba(255,255,255,0.92); }
+.gn-type {
+  font-size: 10px; font-weight: var(--weight-medium);
+  padding: 2px 6px; border-radius: 3px; white-space: nowrap; flex-shrink: 0;
+}
+.gn-footer { display: flex; align-items: center; justify-content: space-between; }
+.gn-assignee {
+  width: 22px; height: 22px; border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: var(--weight-bold); color: white; flex-shrink: 0;
+}
+.gn-score {
+  font-size: 10px; font-weight: var(--weight-semibold);
+  padding: 2px 7px; border-radius: var(--radius-full);
+  background: var(--bg-inset); color: var(--text-tertiary);
+  display: flex; align-items: center; gap: 3px;
+}
+[data-theme="dark"] .gn-score { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); }
+.gn-score.high { background: rgba(239,68,68,0.12); color: #EF4444; }
+.gn-score.med { background: rgba(245,158,11,0.12); color: #F59E0B; }
+[data-theme="dark"] .gn-score.high { background: rgba(239,68,68,0.18); color: #F87171; }
+[data-theme="dark"] .gn-score.med { background: rgba(245,158,11,0.18); color: #FBBF24; }
+
+.gn-meta { font-size: 10px; color: var(--text-tertiary); }
+[data-theme="dark"] .gn-meta { color: rgba(255,255,255,0.4); }
+
+/* SVG edges */
+.edge-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.edge-label {
+  font-size: 9px; font-weight: var(--weight-semibold);
+  fill: var(--text-tertiary); text-anchor: middle;
+}
+
+/* Minimap */
+.minimap {
+  position: absolute; bottom: 60px; right: 16px;
+  width: 160px; height: 100px;
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); overflow: hidden;
+  box-shadow: var(--shadow-2);
+}
+[data-theme="dark"] .minimap { background: rgba(15,23,42,0.9); border-color: rgba(255,255,255,0.12); }
+.minimap-inner { position: relative; width: 100%; height: 100%; }
+.minimap-node { position: absolute; border-radius: 2px; opacity: 0.7; }
+.minimap-viewport {
+  position: absolute; border: 1.5px solid rgba(14,165,233,0.7);
+  border-radius: 2px; background: rgba(14,165,233,0.08);
+}
+
+/* Zoom controls */
+.zoom-controls {
+  position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 1px;
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 3px;
+  box-shadow: var(--shadow-2); z-index: 30;
+}
+.zoom-btn {
+  width: 28px; height: 28px; border: none; background: transparent;
+  border-radius: 4px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--icon-secondary); font-size: var(--text-caption);
+  font-weight: var(--weight-semibold); font-family: var(--font-sans);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.zoom-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.zoom-label {
+  padding: 0 8px; font-size: var(--text-caption);
+  font-weight: var(--weight-semibold); color: var(--text-secondary);
+  font-family: var(--font-sans); min-width: 44px; text-align: center;
+}
+
+/* ─── Right Panel: Inspector ─────────────────────────────── */
+.right-panel {
+  width: 300px; flex-shrink: 0;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  overflow: hidden; z-index: 20;
+  transition: width 0.2s ease, opacity 0.2s ease;
+}
+.right-panel.empty-state { display: flex; }
+
+.rp-header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.rp-title { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.rp-type-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: var(--radius-full);
+  font-weight: 600;
+}
+.rp-body { flex: 1; overflow-y: auto; padding: 16px; }
+.rp-body::-webkit-scrollbar { width: 4px; }
+.rp-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+.field-group { margin-bottom: 16px; }
+.field-label {
+  font-size: var(--text-caption); font-weight: var(--weight-semibold);
+  color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 5px; display: block;
+}
+.field-input {
+  width: 100%; height: 34px; padding: 0 10px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-sans);
+  font-size: var(--text-body-sm); color: var(--text-primary); outline: none;
+  transition: all var(--duration-normal);
+}
+.field-input:focus { border-color: var(--brand-primary); background: var(--bg-surface); box-shadow: var(--shadow-focus); }
+.field-select {
+  width: 100%; height: 34px; padding: 0 10px;
+  background: var(--bg-inset); border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); font-family: var(--font-sans);
+  font-size: var(--text-body-sm); color: var(--text-primary); outline: none;
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  padding-right: 30px;
+}
+.field-select:focus { border-color: var(--brand-primary); box-shadow: var(--shadow-focus); }
+.field-readonly {
+  font-size: var(--text-body-sm); color: var(--text-primary);
+  padding: 6px 10px; background: var(--bg-inset); border-radius: var(--radius-md);
+  border: 1px solid var(--border-default); font-family: var(--font-mono, monospace);
+  font-size: 11px;
+}
+
+.tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: var(--radius-full);
+  font-size: var(--text-caption); font-weight: var(--weight-medium);
+  border: 1px solid var(--border-default);
+  background: var(--bg-inset); color: var(--text-secondary);
+}
+.tag-remove { display: flex; align-items: center; cursor: pointer; color: var(--text-tertiary); }
+.tag-remove:hover { color: var(--text-primary); }
+.tag-add {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: var(--radius-full);
+  font-size: var(--text-caption); font-weight: var(--weight-medium);
+  border: 1.5px dashed var(--border-strong); color: var(--text-tertiary);
+  cursor: pointer; background: transparent; transition: all var(--duration-fast);
+}
+.tag-add:hover { border-color: var(--brand-primary); color: var(--brand-primary); background: var(--brand-primary-light); }
+
+.rp-divider { height: 1px; background: var(--border-default); margin: 14px -16px; }
+
+.edge-list { display: flex; flex-direction: column; gap: 4px; }
+.edge-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; background: var(--bg-inset);
+  border-radius: var(--radius-md); border: 1px solid var(--border-default);
+  cursor: pointer; transition: all var(--duration-fast);
+}
+.edge-row:hover { border-color: var(--brand-primary); background: var(--brand-primary-light); }
+[data-theme="dark"] .edge-row:hover { background: rgba(14,165,233,0.08); }
+.edge-arrow { color: var(--text-tertiary); display: flex; flex-shrink: 0; }
+.edge-name { font-size: var(--text-body-sm); color: var(--text-primary); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.edge-type-badge {
+  font-size: 9px; font-weight: var(--weight-semibold);
+  padding: 1px 5px; border-radius: 3px;
+  white-space: nowrap; text-transform: uppercase; letter-spacing: 0.03em;
+}
+
+.open-detail-link {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px; border-radius: var(--radius-md);
+  font-size: var(--text-body-sm); font-weight: var(--weight-medium);
+  color: var(--brand-primary); text-decoration: none;
+  background: var(--brand-primary-light); transition: all var(--duration-fast);
+  margin-top: 4px;
+}
+.open-detail-link:hover { background: var(--brand-primary); color: white; }
+[data-theme="dark"] .open-detail-link { background: rgba(14,165,233,0.1); }
+[data-theme="dark"] .open-detail-link:hover { background: var(--brand-primary); }
+
+.rp-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-default);
+}
+
+/* Inspector empty state */
+.inspector-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 24px; text-align: center;
+}
+.inspector-empty-icon { color: var(--text-tertiary); opacity: 0.4; margin-bottom: 16px; }
+.inspector-empty-title { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-secondary); margin-bottom: 4px; }
+.inspector-empty-desc { font-size: var(--text-caption); color: var(--text-tertiary); line-height: 1.5; }
+
+/* Scoring factors */
+.scoring-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.scoring-factor {
+  padding: 6px 8px; border-radius: var(--radius-md);
+  background: var(--bg-inset); border: 1px solid var(--border-default);
+}
+.scoring-factor-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-bottom: 2px; }
+.scoring-factor-value { font-size: var(--text-body-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+
+/* ─── Misc ───────────────────────────────────────────────── */
+@keyframes pulse-ring { 0% { transform:scale(1); opacity:0.3; } 100% { transform:scale(2.2); opacity:0; } }
+</style>
+</head>
+<body>
+<div class="editor-shell">
+
+  <!-- ── Topbar ─────────────────────────────────────────── -->
+  <div class="topbar">
+    <a href="../index.html" class="topbar-logo" style="display:flex;align-items:center;gap:6px;text-decoration:none;">
+      <img src="../assets/logo.png" alt="GraphClaw" style="height:28px;width:auto;flex-shrink:0;mix-blend-mode:multiply;" onerror="this.style.display='none'">
+      <span class="logo-text" aria-hidden="true" style="font-style:italic;font-size:11px;color:var(--text-tertiary);">Cockpit</span>
+    </a>
+
+    <div class="breadcrumb">
+      <a href="#">Workspace</a>
+      <span class="sep"><i data-lucide="chevron-right" width="14"></i></span>
+      <span class="current">Graph Explorer</span>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <!-- Stats bar -->
+    <div class="stats-bar" id="statsBar">
+      <span class="stat-val" id="statNodes">312</span> nodes
+      <span class="stat-sep"></span>
+      <span class="stat-val" id="statEdges">540</span> edges
+      <span class="stat-sep"></span>
+      Showing <span class="stat-highlight" id="statVisible">47</span> / <span class="stat-highlight" id="statVisibleEdges">89</span>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="topbar-actions">
+      <!-- Toggle filter panel -->
+      <button class="icon-btn" id="toggleFilter" title="Toggle filter panel" aria-label="Toggle filter panel">
+        <i data-lucide="panel-left" style="width:16px;height:16px;"></i>
+      </button>
+
+      <button class="btn btn-ghost" id="refreshBtn" title="Refresh graph">
+        <i data-lucide="refresh-cw" style="width:14px;height:14px;" aria-label="Refresh"></i>
+        Refresh
+      </button>
+
+      <button class="btn btn-ghost" id="exportBtn" title="Export graph as PNG">
+        <i data-lucide="image-down" style="width:14px;height:14px;" aria-label="Export"></i>
+        Export PNG
+      </button>
+
+      <div class="divider-v"></div>
+
+      <button class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
+        <i data-lucide="sun" style="width:16px;height:16px;"></i>
+      </button>
+      <div class="topbar-avatar" title="Arjun Reyes">AR</div>
+    </div>
+  </div>
+
+  <!-- ── Editor Body ─────────────────────────────────────── -->
+  <div class="editor-body">
+
+    <!-- ═══ Left Panel: Filter Panel ═══ -->
+    <div class="left-panel" id="leftPanel">
+      <div class="lp-header">
+        <span class="lp-header-title">
+          <i data-lucide="filter" style="width:14px;height:14px;"></i>
+          Filters
+        </span>
+        <button class="lp-close" id="closeFilter" title="Collapse filters" aria-label="Collapse filters">
+          <i data-lucide="panel-left-close" style="width:14px;height:14px;"></i>
+        </button>
+      </div>
+
+      <div class="lp-scroll">
+
+        <!-- Quick Presets -->
+        <div class="preset-row">
+          <button class="preset-chip active">All</button>
+          <button class="preset-chip">Active Work</button>
+          <button class="preset-chip">Blocked</button>
+          <button class="preset-chip">Critical Path</button>
+          <button class="preset-chip">My Tasks</button>
+          <button class="preset-chip">Overdue</button>
+        </div>
+
+        <!-- Search -->
+        <div class="filter-search">
+          <span class="filter-search-icon"><i data-lucide="search" style="width:14px;height:14px;"></i></span>
+          <input type="text" placeholder="Search nodes by title or ID..." id="filterSearch" />
+        </div>
+
+        <!-- ── Tier 1: Node Types (always visible) ──────── -->
+        <div class="filter-section open" style="border-bottom:1px solid var(--border-default);">
+          <div class="filter-section-header" style="cursor:default;">
+            <span class="filter-section-title">Node Types</span>
+          </div>
+          <div class="filter-section-body">
+            <div class="filter-check-group">
+              <label class="filter-check-item">
+                <input type="checkbox" checked>
+                <span class="filter-dot" style="background:#3B82F6;"></span>
+                <span class="filter-check-label">Tasks</span>
+                <span class="filter-check-count">247</span>
+              </label>
+              <label class="filter-check-item">
+                <input type="checkbox" checked>
+                <span class="filter-dot" style="background:#10B981;"></span>
+                <span class="filter-check-label">Goals</span>
+                <span class="filter-check-count">18</span>
+              </label>
+              <label class="filter-check-item">
+                <input type="checkbox" checked>
+                <span class="filter-dot" style="background:#0EA5E9;"></span>
+                <span class="filter-check-label">Resources</span>
+                <span class="filter-check-count">35</span>
+              </label>
+              <label class="filter-check-item">
+                <input type="checkbox" checked>
+                <span class="filter-dot" style="background:#F59E0B;"></span>
+                <span class="filter-check-label">Constraints</span>
+                <span class="filter-check-count">12</span>
+              </label>
+            </div>
+
+            <!-- Task State Chips -->
+            <div style="margin-top:12px;">
+              <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:6px;">Task State</div>
+              <div class="state-chip-group">
+                <button class="state-chip on"><span class="state-dot" style="background:#3B82F6;"></span> Active</button>
+                <button class="state-chip on"><span class="state-dot" style="background:#10B981;"></span> In Progress</button>
+                <button class="state-chip on"><span class="state-dot" style="background:#EF4444;"></span> Blocked</button>
+                <button class="state-chip on"><span class="state-dot" style="background:#F59E0B;"></span> Delayed</button>
+                <button class="state-chip on"><span class="state-dot" style="background:#A855F7;"></span> Needs Review</button>
+                <button class="state-chip"><span class="state-dot" style="background:#9CA3AF;"></span> Complete</button>
+                <button class="state-chip"><span class="state-dot" style="background:#6B7280;"></span> Cancelled</button>
+                <button class="state-chip on"><span class="state-dot" style="background:#64748B;"></span> Snoozed</button>
+                <button class="state-chip on"><span class="state-dot" style="background:#94A3B8;"></span> Pending</button>
+                <button class="state-chip"><span class="state-dot" style="background:#CBD5E1;"></span> Inactive</button>
+              </div>
+            </div>
+
+            <!-- Goal State Chips -->
+            <div style="margin-top:12px;">
+              <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:6px;">Goal State</div>
+              <div class="state-chip-group">
+                <button class="state-chip on"><span class="state-dot" style="background:#10B981;"></span> Active</button>
+                <button class="state-chip"><span class="state-dot" style="background:#9CA3AF;"></span> Complete</button>
+                <button class="state-chip on"><span class="state-dot" style="background:#6B7280;"></span> On Hold</button>
+                <button class="state-chip"><span class="state-dot" style="background:#64748B;"></span> Obsolete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Tier 2: Task Filters (collapsible) ────────── -->
+        <div class="filter-section open">
+          <div class="filter-section-header" onclick="this.parentElement.classList.toggle('open')">
+            <span class="filter-section-title">Task Filters</span>
+            <span class="filter-section-chevron"><i data-lucide="chevron-down" style="width:14px;height:14px;"></i></span>
+          </div>
+          <div class="filter-section-body">
+            <!-- Task Type pills -->
+            <div style="margin-bottom:12px;">
+              <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:6px;">Task Type</div>
+              <div class="state-chip-group">
+                <button class="state-chip on">Atomic</button>
+                <button class="state-chip on">Composite</button>
+                <button class="state-chip on">Delegated</button>
+                <button class="state-chip on">Follow-up</button>
+                <button class="state-chip on">Approval</button>
+                <button class="state-chip on">Milestone</button>
+                <button class="state-chip on">Review</button>
+                <button class="state-chip on">Recurring</button>
+                <button class="state-chip on">Decision</button>
+                <button class="state-chip on">Check-in</button>
+                <button class="state-chip on">Research</button>
+              </div>
+            </div>
+
+            <!-- Assignee -->
+            <div class="field-group" style="margin-bottom:12px;">
+              <label class="field-label">Assignee</label>
+              <select class="field-select" style="height:30px; font-size:11px;">
+                <option value="">All assignees</option>
+                <option>Arjun Sharma</option>
+                <option>Priya Mehta</option>
+                <option>Nalini Joshi</option>
+                <option>Lars Theron</option>
+                <option>Orchestrator Agent</option>
+              </select>
+            </div>
+
+            <!-- Owner -->
+            <div class="field-group" style="margin-bottom:12px;">
+              <label class="field-label">Owner</label>
+              <select class="field-select" style="height:30px; font-size:11px;">
+                <option value="">All owners</option>
+                <option selected>Arjun Reyes</option>
+                <option>Priya Mehta</option>
+              </select>
+            </div>
+
+            <!-- Priority Score Range -->
+            <div style="margin-bottom:12px;">
+              <div class="field-label">Priority Score</div>
+              <div class="filter-range-row">
+                <span class="filter-range-label">0.0</span>
+                <div class="filter-range-track" style="position:relative;">
+                  <div class="filter-range-fill" style="left:0; width:100%;"></div>
+                  <div class="filter-range-thumb" style="left:0;"></div>
+                  <div class="filter-range-thumb" style="right:0;"></div>
+                </div>
+                <span class="filter-range-value">1.2</span>
+              </div>
+            </div>
+
+            <!-- Toggles -->
+            <div class="filter-toggle-row">
+              <span class="filter-toggle-label">On Critical Path</span>
+              <button class="toggle-switch" aria-label="Toggle critical path filter"></button>
+            </div>
+            <div class="filter-toggle-row">
+              <span class="filter-toggle-label">Has Override</span>
+              <button class="toggle-switch" aria-label="Toggle override filter"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Tier 3: Timeline (collapsible) ────────────── -->
+        <div class="filter-section">
+          <div class="filter-section-header" onclick="this.parentElement.classList.toggle('open')">
+            <span class="filter-section-title">Timeline</span>
+            <span class="filter-section-chevron"><i data-lucide="chevron-down" style="width:14px;height:14px;"></i></span>
+          </div>
+          <div class="filter-section-body">
+            <div style="margin-bottom:10px;">
+              <div class="field-label">Deadline Range</div>
+              <div class="filter-date-row">
+                <span class="filter-date-label">From</span>
+                <input class="filter-date-input" type="date" />
+              </div>
+              <div class="filter-date-row">
+                <span class="filter-date-label">To</span>
+                <input class="filter-date-input" type="date" />
+              </div>
+            </div>
+            <div style="margin-bottom:10px;">
+              <div class="field-label">Created Range</div>
+              <div class="filter-date-row">
+                <span class="filter-date-label">From</span>
+                <input class="filter-date-input" type="date" />
+              </div>
+              <div class="filter-date-row">
+                <span class="filter-date-label">To</span>
+                <input class="filter-date-input" type="date" />
+              </div>
+            </div>
+            <div class="filter-toggle-row">
+              <span class="filter-toggle-label">Overdue Only</span>
+              <button class="toggle-switch" aria-label="Toggle overdue filter"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Tier 4: Edges (collapsible) ────────────────── -->
+        <div class="filter-section">
+          <div class="filter-section-header" onclick="this.parentElement.classList.toggle('open')">
+            <span class="filter-section-title">Edge Types</span>
+            <span class="filter-section-chevron"><i data-lucide="chevron-down" style="width:14px;height:14px;"></i></span>
+          </div>
+          <div class="filter-section-body">
+            <div class="edge-type-group">
+              <div class="edge-type-group-label">Task Relations</div>
+              <div class="edge-type-checks">
+                <label class="edge-type-item"><input type="checkbox" checked> DEPENDS_ON</label>
+                <label class="edge-type-item"><input type="checkbox" checked> BLOCKS</label>
+                <label class="edge-type-item"><input type="checkbox" checked> SPAWNED_FROM</label>
+                <label class="edge-type-item"><input type="checkbox" checked> BRANCHED_FROM</label>
+                <label class="edge-type-item"><input type="checkbox" checked> REFERRED_BY</label>
+                <label class="edge-type-item"><input type="checkbox" checked> FOLLOW_UP_FOR</label>
+              </div>
+            </div>
+            <div class="edge-type-group">
+              <div class="edge-type-group-label">Structure</div>
+              <div class="edge-type-checks">
+                <label class="edge-type-item"><input type="checkbox" checked> PART_OF</label>
+                <label class="edge-type-item"><input type="checkbox" checked> BATCHED_IN</label>
+                <label class="edge-type-item"><input type="checkbox" checked> INFORMS</label>
+              </div>
+            </div>
+            <div class="edge-type-group">
+              <div class="edge-type-group-label">Ownership</div>
+              <div class="edge-type-checks">
+                <label class="edge-type-item"><input type="checkbox" checked> ASSIGNED_TO</label>
+                <label class="edge-type-item"><input type="checkbox" checked> OWNED_BY</label>
+              </div>
+            </div>
+            <div class="edge-type-group">
+              <div class="edge-type-group-label">Constraints</div>
+              <div class="edge-type-checks">
+                <label class="edge-type-item"><input type="checkbox" checked> APPLIES_TO</label>
+              </div>
+            </div>
+            <div class="edge-type-group">
+              <div class="edge-type-group-label">Organization</div>
+              <div class="edge-type-checks">
+                <label class="edge-type-item"><input type="checkbox" checked> MEMBER_OF</label>
+                <label class="edge-type-item"><input type="checkbox" checked> ADMIN_OF</label>
+                <label class="edge-type-item"><input type="checkbox" checked> BELONGS_TO_ORG</label>
+                <label class="edge-type-item"><input type="checkbox" checked> SCOPED_TO_WS</label>
+                <label class="edge-type-item"><input type="checkbox" checked> GRANTS_ACCESS</label>
+              </div>
+            </div>
+
+            <div class="filter-toggle-row" style="margin-top:8px;">
+              <span class="filter-toggle-label">Show Orphan Nodes</span>
+              <button class="toggle-switch on" aria-label="Toggle orphan nodes"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Tier 5: Risk & Health (collapsible) ────────── -->
+        <div class="filter-section">
+          <div class="filter-section-header" onclick="this.parentElement.classList.toggle('open')">
+            <span class="filter-section-title">Risk &amp; Health</span>
+            <span class="filter-section-chevron"><i data-lucide="chevron-down" style="width:14px;height:14px;"></i></span>
+          </div>
+          <div class="filter-section-body">
+            <div style="margin-bottom:10px;">
+              <div class="field-label">Confidence Level</div>
+              <div class="state-chip-group">
+                <button class="state-chip on"><span class="state-dot" style="background:#10B981;"></span> High</button>
+                <button class="state-chip on"><span class="state-dot" style="background:#F59E0B;"></span> Medium</button>
+                <button class="state-chip on"><span class="state-dot" style="background:#EF4444;"></span> Low</button>
+              </div>
+            </div>
+            <div style="margin-bottom:10px;">
+              <div class="field-label">Resource Availability</div>
+              <div class="state-chip-group">
+                <button class="state-chip on"><span class="state-dot" style="background:#10B981;"></span> Available</button>
+                <button class="state-chip on"><span class="state-dot" style="background:#F59E0B;"></span> Busy</button>
+                <button class="state-chip on"><span class="state-dot" style="background:#EF4444;"></span> At Capacity</button>
+                <button class="state-chip on"><span class="state-dot" style="background:#6B7280;"></span> Unavailable</button>
+              </div>
+            </div>
+            <div class="filter-toggle-row">
+              <span class="filter-toggle-label">Root Blockers Only</span>
+              <button class="toggle-switch" aria-label="Toggle root blockers filter"></button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /lp-scroll -->
+
+      <!-- Filter Footer -->
+      <div class="lp-footer">
+        <span class="filter-count-badge">5 filters active</span>
+        <button class="reset-btn" id="resetFilters">Reset All</button>
+      </div>
+    </div><!-- /left-panel -->
+
+    <!-- ═══ Canvas Viewport ═══ -->
+    <div class="canvas-viewport" id="canvas">
+
+      <!-- Floating toolbar -->
+      <div class="canvas-toolbar">
+        <button class="tool-btn active" id="toolSelect">
+          <i data-lucide="mouse-pointer-2" style="width:13px;height:13px;"></i>
+          Select
+        </button>
+        <button class="tool-btn" id="toolPan">
+          <i data-lucide="hand" style="width:13px;height:13px;"></i>
+          Pan
+        </button>
+        <div class="tool-sep"></div>
+        <button class="tool-btn" id="toolAddNode">
+          <i data-lucide="plus-square" style="width:13px;height:13px;"></i>
+          Add Node
+        </button>
+        <button class="tool-btn" id="toolAddEdge">
+          <i data-lucide="arrow-right-from-line" style="width:13px;height:13px;"></i>
+          Add Edge
+        </button>
+        <div class="tool-sep"></div>
+        <button class="tool-btn" id="toolLabels">
+          <i data-lucide="tag" style="width:13px;height:13px;"></i>
+          Labels
+        </button>
+        <div class="tool-sep"></div>
+        <div class="layout-dropdown">
+          <button class="tool-btn" id="layoutToggle">
+            <i data-lucide="layout-grid" style="width:13px;height:13px;"></i>
+            Dagre
+            <i data-lucide="chevron-down" style="width:10px;height:10px;"></i>
+          </button>
+          <div class="layout-menu" id="layoutMenu">
+            <button class="layout-menu-item active"><i data-lucide="git-branch" style="width:13px;height:13px;"></i> Dagre (Hierarchical)</button>
+            <button class="layout-menu-item"><i data-lucide="atom" style="width:13px;height:13px;"></i> CoSE (Force-directed)</button>
+            <button class="layout-menu-item"><i data-lucide="align-vertical-distribute-start" style="width:13px;height:13px;"></i> Breadthfirst</button>
+            <button class="layout-menu-item"><i data-lucide="target" style="width:13px;height:13px;"></i> Concentric</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SVG edges overlay -->
+      <svg class="edge-svg" id="edgeSvg" aria-hidden="true">
+        <defs>
+          <marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="rgba(148,163,184,0.55)"/></marker>
+          <marker id="ah-red" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="rgba(239,68,68,0.7)"/></marker>
+          <marker id="ah-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="rgba(59,130,246,0.7)"/></marker>
+          <marker id="ah-cyan" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="rgba(14,165,233,0.7)"/></marker>
+          <marker id="ah-purple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="rgba(168,85,247,0.7)"/></marker>
+          <marker id="ah-amber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="rgba(245,158,11,0.7)"/></marker>
+        </defs>
+      </svg>
+
+      <!-- ── Graph Nodes ─────────────────────────────── -->
+
+      <!-- Node: Goal (diamond shape, green) -->
+      <div class="graph-node shape-diamond" id="node-g1" style="top:60px; left:360px;">
+        <div class="gn-accent" style="background:#10B981;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Q2 Platform Migration</div>
+            <span class="gn-type" style="background:rgba(16,185,129,0.12); color:#10B981;">Goal</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#7C3AED,#0EA5E9);">AR</div>
+              <span class="gn-meta">P1 · 45%</span>
+            </div>
+            <span class="gn-score med">87.3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node: Goal 2 -->
+      <div class="graph-node shape-diamond" id="node-g2" style="top:60px; left:650px;">
+        <div class="gn-accent" style="background:#10B981;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Cost Optimization Q2</div>
+            <span class="gn-type" style="background:rgba(16,185,129,0.12); color:#10B981;">Goal</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#059669,#0D9488);">PM</div>
+              <span class="gn-meta">P2 · 20%</span>
+            </div>
+            <span class="gn-score">62.1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node: Task — Active (selected) -->
+      <div class="graph-node shape-rect selected" id="node-t1" style="top:220px; left:200px;">
+        <div class="gn-accent" style="background:#3B82F6;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Deploy API Gateway v2</div>
+            <span class="gn-type" style="background:rgba(59,130,246,0.12); color:#3B82F6;">Task</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#059669,#0EA5E9);">AS</div>
+              <span class="gn-meta">Apr 14 · ATOMIC</span>
+            </div>
+            <span class="gn-score high">94.2</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node: Task — Blocked -->
+      <div class="graph-node shape-rect" id="node-t2" style="top:220px; left:460px;">
+        <div class="gn-accent" style="background:#EF4444;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Finalize auth service design</div>
+            <span class="gn-type" style="background:rgba(239,68,68,0.12); color:#EF4444;">Task</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#DC2626,#9333EA);">NJ</div>
+              <span class="gn-meta">Apr 12 · DELEGATED</span>
+            </div>
+            <span class="gn-score high">88.7</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node: Task — Delayed -->
+      <div class="graph-node shape-rect" id="node-t3" style="top:220px; left:720px;">
+        <div class="gn-accent" style="background:#F59E0B;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Database schema migration</div>
+            <span class="gn-type" style="background:rgba(245,158,11,0.12); color:#F59E0B;">Task</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#D97706,#EA580C);">LT</div>
+              <span class="gn-meta">Apr 11 · COMPOSITE</span>
+            </div>
+            <span class="gn-score med">72.5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node: Task — Complete -->
+      <div class="graph-node shape-rect" id="node-t4" style="top:400px; left:620px;">
+        <div class="gn-accent" style="background:#9CA3AF;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Write integration test suite</div>
+            <span class="gn-type" style="background:rgba(156,163,175,0.12); color:#9CA3AF;">Task</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#6B7280,#374151);">RK</div>
+              <span class="gn-meta">Done · ATOMIC</span>
+            </div>
+            <span class="gn-score">52.1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node: Task — Follow-up -->
+      <div class="graph-node shape-rect" id="node-t5" style="top:400px; left:340px;">
+        <div class="gn-accent" style="background:#3B82F6;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Follow up on auth review</div>
+            <span class="gn-type" style="background:rgba(59,130,246,0.12); color:#3B82F6;">Task</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="gn-assignee" style="background:linear-gradient(135deg,#7C3AED,#0EA5E9);">AR</div>
+              <span class="gn-meta">Apr 18 · FOLLOWUP</span>
+            </div>
+            <span class="gn-score med">76.3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node: Resource (ellipse, cyan) -->
+      <div class="graph-node shape-ellipse" id="node-r1" style="top:390px; left:80px;">
+        <div class="gn-accent" style="background:#0EA5E9;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Arjun Sharma</div>
+            <span class="gn-type" style="background:rgba(14,165,233,0.12); color:#0EA5E9;">Resource</span>
+          </div>
+          <div class="gn-footer">
+            <span class="gn-meta">Engineer · HUMAN</span>
+            <span class="gn-score" style="background:rgba(16,185,129,0.12); color:#10B981;">Available</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node: Resource — Agent -->
+      <div class="graph-node shape-ellipse" id="node-r2" style="top:540px; left:300px;">
+        <div class="gn-accent" style="background:#0EA5E9;"></div>
+        <div class="gn-body">
+          <div class="gn-header">
+            <div class="gn-title">Orchestrator Agent</div>
+            <span class="gn-type" style="background:rgba(14,165,233,0.12); color:#0EA5E9;">Resource</span>
+          </div>
+          <div class="gn-footer">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#10B981;position:relative;flex-shrink:0;">
+                <span style="position:absolute;inset:-3px;border-radius:50%;background:#10B981;opacity:0.3;animation:pulse-ring 2s ease-out infinite;"></span>
+              </div>
+              <span class="gn-meta">AI_AGENT · Running</span>
+            </div>
+            <span class="gn-score" style="background:rgba(16,185,129,0.12); color:#10B981;">Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node: Constraint (hexagon, amber) -->
+      <div class="graph-node shape-hex" id="node-c1" style="top:130px; left:140px;">
+        <div class="gn-body" style="padding:14px 20px;">
+          <div class="gn-header">
+            <div class="gn-title">Q2 Deadline</div>
+            <span class="gn-type" style="background:rgba(245,158,11,0.12); color:#F59E0B;">Constraint</span>
+          </div>
+          <div class="gn-footer">
+            <span class="gn-meta">DEADLINE · GOAL</span>
+            <span class="gn-score" style="background:rgba(239,68,68,0.12); color:#EF4444;">0.85</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Minimap -->
+      <div class="minimap" aria-label="Graph minimap">
+        <div class="minimap-inner">
+          <!-- Goal nodes -->
+          <div class="minimap-node" style="top:6px;left:40px;width:18px;height:8px;background:#10B981;"></div>
+          <div class="minimap-node" style="top:6px;left:72px;width:18px;height:8px;background:#10B981;"></div>
+          <!-- Constraint -->
+          <div class="minimap-node" style="top:14px;left:14px;width:14px;height:6px;background:#F59E0B;"></div>
+          <!-- Task nodes -->
+          <div class="minimap-node" style="top:24px;left:22px;width:20px;height:8px;background:#3B82F6;border:1px solid rgba(14,165,233,0.6);"></div>
+          <div class="minimap-node" style="top:24px;left:50px;width:20px;height:8px;background:#EF4444;"></div>
+          <div class="minimap-node" style="top:24px;left:78px;width:20px;height:8px;background:#F59E0B;"></div>
+          <!-- Tasks row 2 -->
+          <div class="minimap-node" style="top:42px;left:36px;width:20px;height:8px;background:#3B82F6;"></div>
+          <div class="minimap-node" style="top:42px;left:68px;width:20px;height:8px;background:#9CA3AF;"></div>
+          <!-- Resources -->
+          <div class="minimap-node" style="top:44px;left:8px;width:16px;height:6px;background:#0EA5E9;border-radius:6px;"></div>
+          <div class="minimap-node" style="top:56px;left:32px;width:16px;height:6px;background:#0EA5E9;border-radius:6px;"></div>
+          <!-- Viewport indicator -->
+          <div class="minimap-viewport" style="top:12px;left:4px;width:80px;height:50px;"></div>
+        </div>
+      </div>
+
+      <!-- Zoom controls -->
+      <div class="zoom-controls">
+        <button class="zoom-btn" id="zoomOut" title="Zoom out" aria-label="Zoom out">
+          <i data-lucide="minus" style="width:13px;height:13px;"></i>
+        </button>
+        <span class="zoom-label" id="zoomLevel">100%</span>
+        <button class="zoom-btn" id="zoomIn" title="Zoom in" aria-label="Zoom in">
+          <i data-lucide="plus" style="width:13px;height:13px;"></i>
+        </button>
+        <div style="width:1px;height:18px;background:var(--border-default);margin:0 2px;"></div>
+        <button class="zoom-btn" id="zoomFit" title="Fit to view" aria-label="Fit to view">
+          <i data-lucide="maximize-2" style="width:13px;height:13px;"></i>
+        </button>
+      </div>
+
+    </div><!-- /canvas-viewport -->
+
+    <!-- ═══ Right Panel: Inspector ═══ -->
+    <div class="right-panel" id="rightPanel">
+      <!-- Node Inspector (Task selected: Deploy API Gateway v2) -->
+      <div class="rp-header">
+        <span class="rp-title">Properties</span>
+        <span class="rp-type-badge" style="background:rgba(59,130,246,0.1); color:#3B82F6;">Task</span>
+      </div>
+      <div class="rp-body" id="rpBody">
+        <!-- Node ID -->
+        <div class="field-group" style="margin-bottom:10px;">
+          <label class="field-label">Node ID</label>
+          <div class="field-readonly">TSK-AS-0042-ATM</div>
+        </div>
+
+        <!-- Title -->
+        <div class="field-group">
+          <label class="field-label" for="nodeName">Title</label>
+          <input class="field-input" id="nodeName" type="text" value="Deploy API Gateway v2" />
+        </div>
+
+        <!-- State -->
+        <div class="field-group">
+          <label class="field-label" for="nodeState">State</label>
+          <select class="field-select" id="nodeState">
+            <option value="active" selected>🔵 Active</option>
+            <option value="in_progress">🟢 In Progress</option>
+            <option value="blocked">🔴 Blocked</option>
+            <option value="delayed">🟡 Delayed</option>
+            <option value="needs_review">🟣 Needs Review</option>
+          </select>
+        </div>
+
+        <!-- Task Type (read-only) -->
+        <div class="field-group">
+          <label class="field-label">Task Type</label>
+          <div class="field-readonly">ATOMIC</div>
+        </div>
+
+        <!-- Assignee -->
+        <div class="field-group">
+          <label class="field-label" for="nodeAssignee">Assignee</label>
+          <select class="field-select" id="nodeAssignee">
+            <option selected>Arjun Sharma</option>
+            <option>Priya Mehta</option>
+            <option>Nalini Joshi</option>
+            <option>Lars Theron</option>
+            <option>Orchestrator Agent</option>
+          </select>
+        </div>
+
+        <!-- Deadline -->
+        <div class="field-group">
+          <label class="field-label" for="nodeDue">Deadline</label>
+          <input class="field-input" id="nodeDue" type="date" value="2026-04-14" />
+        </div>
+
+        <!-- Tags -->
+        <div class="field-group">
+          <label class="field-label">Tags</label>
+          <div class="tag-list">
+            <span class="tag">infrastructure <span class="tag-remove"><i data-lucide="x" style="width:10px;height:10px;"></i></span></span>
+            <span class="tag">api <span class="tag-remove"><i data-lucide="x" style="width:10px;height:10px;"></i></span></span>
+            <span class="tag">q2 <span class="tag-remove"><i data-lucide="x" style="width:10px;height:10px;"></i></span></span>
+            <button class="tag-add"><i data-lucide="plus" style="width:10px;height:10px;"></i> Add</button>
+          </div>
+        </div>
+
+        <div class="rp-divider"></div>
+
+        <!-- Priority Score (7 factors) -->
+        <div style="margin-bottom:14px;">
+          <div class="field-label" style="margin-bottom:8px;">Priority Score · <span style="color:#EF4444; font-size:12px; font-weight:700;">94.2</span></div>
+          <div class="scoring-grid">
+            <div class="scoring-factor">
+              <div class="scoring-factor-label">W1 Timeline</div>
+              <div class="scoring-factor-value">1.05</div>
+            </div>
+            <div class="scoring-factor">
+              <div class="scoring-factor-label">W2 Dependency</div>
+              <div class="scoring-factor-value">0.82</div>
+            </div>
+            <div class="scoring-factor">
+              <div class="scoring-factor-label">W3 Critical</div>
+              <div class="scoring-factor-value">1.00</div>
+            </div>
+            <div class="scoring-factor">
+              <div class="scoring-factor-label">W4 Blocker</div>
+              <div class="scoring-factor-value">0.60</div>
+            </div>
+            <div class="scoring-factor">
+              <div class="scoring-factor-label">W5 Override</div>
+              <div class="scoring-factor-value">0.00</div>
+            </div>
+            <div class="scoring-factor">
+              <div class="scoring-factor-label">W6 Resource</div>
+              <div class="scoring-factor-value">0.35</div>
+            </div>
+            <div class="scoring-factor">
+              <div class="scoring-factor-label">W7 Constraint</div>
+              <div class="scoring-factor-value">0.85</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rp-divider"></div>
+
+        <!-- Outgoing Edges -->
+        <div style="margin-bottom:10px;">
+          <div class="field-label" style="display:block; margin-bottom:8px;">Outgoing Edges</div>
+          <div class="edge-list">
+            <div class="edge-row">
+              <span class="edge-arrow"><i data-lucide="arrow-right" style="width:12px;height:12px;"></i></span>
+              <span class="edge-name">Q2 Platform Migration</span>
+              <span class="edge-type-badge" style="background:rgba(59,130,246,0.1); color:#3B82F6;">PART_OF</span>
+            </div>
+            <div class="edge-row">
+              <span class="edge-arrow"><i data-lucide="arrow-right" style="width:12px;height:12px;"></i></span>
+              <span class="edge-name">Finalize auth service design</span>
+              <span class="edge-type-badge" style="background:rgba(239,68,68,0.1); color:#EF4444;">DEPENDS_ON</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Incoming Edges -->
+        <div style="margin-bottom:10px;">
+          <div class="field-label" style="display:block; margin-bottom:8px;">Incoming Edges</div>
+          <div class="edge-list">
+            <div class="edge-row">
+              <span class="edge-arrow"><i data-lucide="arrow-left" style="width:12px;height:12px;"></i></span>
+              <span class="edge-name">Arjun Sharma</span>
+              <span class="edge-type-badge" style="background:rgba(14,165,233,0.1); color:#0EA5E9;">ASSIGNED_TO</span>
+            </div>
+            <div class="edge-row">
+              <span class="edge-arrow"><i data-lucide="arrow-left" style="width:12px;height:12px;"></i></span>
+              <span class="edge-name">Q2 Deadline</span>
+              <span class="edge-type-badge" style="background:rgba(245,158,11,0.1); color:#F59E0B;">APPLIES_TO</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Open full detail -->
+        <a href="task-detail.html" class="open-detail-link">
+          <i data-lucide="external-link" style="width:14px;height:14px;"></i>
+          Open full task detail
+        </a>
+      </div>
+
+      <div class="rp-footer">
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-danger" style="flex:1; justify-content:center;">
+            <i data-lucide="trash-2" style="width:13px;height:13px;"></i>
+            Delete
+          </button>
+          <button class="btn btn-primary" style="flex:1; justify-content:center;">
+            <i data-lucide="check" style="width:13px;height:13px;"></i>
+            Apply
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /editor-body -->
+</div><!-- /editor-shell -->
+
+<script>
+(function() {
+  lucide.createIcons();
+
+  // ── Theme toggle (simple light/dark for standalone preview)
+  var toggle = document.getElementById('themeToggle');
+  var html = document.documentElement;
+  toggle.addEventListener('click', function() {
+    var dark = html.getAttribute('data-theme') !== 'dark';
+    html.setAttribute('data-theme', dark ? 'dark' : 'light');
+    var icon = toggle.querySelector('[data-lucide]');
+    icon.setAttribute('data-lucide', dark ? 'moon' : 'sun');
+    lucide.createIcons();
+  });
+
+  // ── Filter panel collapse/expand
+  var leftPanel = document.getElementById('leftPanel');
+  document.getElementById('closeFilter').addEventListener('click', function() {
+    leftPanel.classList.add('collapsed');
+  });
+  document.getElementById('toggleFilter').addEventListener('click', function() {
+    leftPanel.classList.toggle('collapsed');
+  });
+
+  // ── Preset chip toggle
+  document.querySelectorAll('.preset-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('.preset-chip').forEach(function(c) { c.classList.remove('active'); });
+      this.classList.add('active');
+    });
+  });
+
+  // ── State chip toggle
+  document.querySelectorAll('.state-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      this.classList.toggle('on');
+    });
+  });
+
+  // ── Toggle switches
+  document.querySelectorAll('.toggle-switch').forEach(function(sw) {
+    sw.addEventListener('click', function() {
+      this.classList.toggle('on');
+    });
+  });
+
+  // ── Layout dropdown
+  var layoutToggle = document.getElementById('layoutToggle');
+  var layoutMenu = document.getElementById('layoutMenu');
+  layoutToggle.addEventListener('click', function(e) {
+    e.stopPropagation();
+    layoutMenu.classList.toggle('show');
+  });
+  document.addEventListener('click', function() { layoutMenu.classList.remove('show'); });
+  document.querySelectorAll('.layout-menu-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('.layout-menu-item').forEach(function(i) { i.classList.remove('active'); });
+      this.classList.add('active');
+      var name = this.textContent.trim().split(' ')[0];
+      layoutToggle.querySelector('.tool-btn') || null;
+      // Update button text
+      layoutToggle.innerHTML = '<i data-lucide="layout-grid" style="width:13px;height:13px;"></i> ' + name + ' <i data-lucide="chevron-down" style="width:10px;height:10px;"></i>';
+      lucide.createIcons();
+      layoutMenu.classList.remove('show');
+    });
+  });
+
+  // ── Toolbar tool toggle
+  var toolBtns = document.querySelectorAll('.canvas-toolbar > .tool-btn');
+  toolBtns.forEach(function(btn) {
+    if (btn.id === 'toolSelect' || btn.id === 'toolPan') {
+      btn.addEventListener('click', function() {
+        document.getElementById('toolSelect').classList.remove('active');
+        document.getElementById('toolPan').classList.remove('active');
+        this.classList.add('active');
+      });
+    }
+  });
+
+  // ── Node selection
+  var rightPanel = document.getElementById('rightPanel');
+  document.querySelectorAll('.graph-node').forEach(function(node) {
+    node.addEventListener('click', function() {
+      document.querySelectorAll('.graph-node').forEach(function(n) { n.classList.remove('selected'); });
+      this.classList.add('selected');
+      rightPanel.style.display = 'flex';
+    });
+  });
+
+  // ── Draw SVG edges
+  function getCenter(el) {
+    var rect = el.getBoundingClientRect();
+    var cvRect = document.getElementById('canvas').getBoundingClientRect();
+    return {
+      x: rect.left - cvRect.left + rect.width / 2,
+      y: rect.top - cvRect.top + rect.height / 2
+    };
+  }
+  function cubicPath(x1, y1, x2, y2) {
+    var mx = (x1 + x2) / 2;
+    return 'M ' + x1 + ' ' + y1 + ' C ' + mx + ' ' + y1 + ' ' + mx + ' ' + y2 + ' ' + x2 + ' ' + y2;
+  }
+  function drawEdges() {
+    var svg = document.getElementById('edgeSvg');
+    // Keep defs
+    var defs = svg.querySelector('defs').outerHTML;
+    svg.innerHTML = defs;
+
+    var edges = [
+      // PART_OF: Tasks → Goals (solid blue)
+      { from:'node-t1', to:'node-g1', color:'rgba(59,130,246,0.5)', w:1.5, dash:'', marker:'ah-blue', label:'PART_OF' },
+      { from:'node-t2', to:'node-g1', color:'rgba(59,130,246,0.5)', w:1.5, dash:'', marker:'ah-blue', label:'PART_OF' },
+      { from:'node-t3', to:'node-g2', color:'rgba(59,130,246,0.5)', w:1.5, dash:'', marker:'ah-blue', label:'PART_OF' },
+      // DEPENDS_ON: dashed red
+      { from:'node-t1', to:'node-t2', color:'rgba(239,68,68,0.55)', w:1.5, dash:'6,4', marker:'ah-red', label:'DEPENDS_ON' },
+      // BLOCKS: solid red thick
+      { from:'node-t4', to:'node-t3', color:'rgba(239,68,68,0.5)', w:2.5, dash:'', marker:'ah-red', label:'BLOCKS' },
+      // FOLLOW_UP_FOR: dashed amber
+      { from:'node-t5', to:'node-t2', color:'rgba(245,158,11,0.55)', w:1.5, dash:'6,4', marker:'ah-amber', label:'FOLLOW_UP_FOR' },
+      // ASSIGNED_TO: dotted cyan
+      { from:'node-r1', to:'node-t1', color:'rgba(14,165,233,0.45)', w:1, dash:'3,3', marker:'ah-cyan', label:'ASSIGNED_TO' },
+      { from:'node-r2', to:'node-t5', color:'rgba(14,165,233,0.45)', w:1, dash:'3,3', marker:'ah-cyan', label:'ASSIGNED_TO' },
+      // APPLIES_TO: dotted amber (constraint → goal)
+      { from:'node-c1', to:'node-g1', color:'rgba(245,158,11,0.5)', w:1, dash:'3,3', marker:'ah-amber', label:'APPLIES_TO' },
+    ];
+
+    edges.forEach(function(e) {
+      var a = document.getElementById(e.from);
+      var b = document.getElementById(e.to);
+      if (!a || !b) return;
+      var c1 = getCenter(a), c2 = getCenter(b);
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', cubicPath(c1.x, c1.y, c2.x, c2.y));
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', e.color);
+      path.setAttribute('stroke-width', String(e.w));
+      if (e.dash) path.setAttribute('stroke-dasharray', e.dash);
+      path.setAttribute('marker-end', 'url(#' + e.marker + ')');
+      svg.appendChild(path);
+
+      // Edge label at midpoint
+      var mx = (c1.x + c2.x) / 2;
+      var my = (c1.y + c2.y) / 2 - 6;
+      var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', String(mx));
+      text.setAttribute('y', String(my));
+      text.setAttribute('class', 'edge-label');
+      text.textContent = e.label;
+      svg.appendChild(text);
+    });
+  }
+  setTimeout(drawEdges, 120);
+
+  // ── Zoom controls
+  var zoomPct = 100;
+  document.getElementById('zoomIn').addEventListener('click', function() {
+    zoomPct = Math.min(200, zoomPct + 10);
+    document.getElementById('zoomLevel').textContent = zoomPct + '%';
+  });
+  document.getElementById('zoomOut').addEventListener('click', function() {
+    zoomPct = Math.max(25, zoomPct - 10);
+    document.getElementById('zoomLevel').textContent = zoomPct + '%';
+  });
+  document.getElementById('zoomFit').addEventListener('click', function() {
+    zoomPct = 100;
+    document.getElementById('zoomLevel').textContent = '100%';
+  });
+
+})();
+</script>
+<script src="../assets/nav.js"></script>
+<script src="../assets/theme.js"></script>
+</body>
+</html>
