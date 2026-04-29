@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Plus, Trash2, RotateCcw } from 'lucide-react';
+import { Save, Plus, Trash2, RotateCcw, Eye, Pencil } from 'lucide-react';
 import {
   useSemanticMemory,
   useSemanticTopic,
@@ -24,6 +24,7 @@ export function SemanticMemoryPage() {
   const [newSlug, setNewSlug] = useState('');
   const [showNew, setShowNew] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [mode, setMode] = useState<'edit' | 'preview'>('edit');
   // Local topics: new ones not yet persisted to server
   const [localTopics, setLocalTopics] = useState<{ topic: string; content: string }[]>([]);
 
@@ -60,6 +61,7 @@ export function SemanticMemoryPage() {
 
   function handleSelectTopic(slug: string) {
     setSelectedTopic(slug);
+    setMode('edit');
   }
 
   function handleCreateTopic() {
@@ -220,6 +222,26 @@ export function SemanticMemoryPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <div className="flex rounded-[var(--radius-md)] border border-[var(--border-default)] overflow-hidden">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className={`rounded-none px-2 ${mode === 'edit' ? 'bg-[var(--bg-inset)]' : ''}`}
+                    onClick={() => setMode('edit')}
+                    title="Edit"
+                  >
+                    <Pencil size={13} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className={`rounded-none px-2 border-l border-[var(--border-default)] ${mode === 'preview' ? 'bg-[var(--bg-inset)]' : ''}`}
+                    onClick={() => setMode('preview')}
+                    title="Preview"
+                  >
+                    <Eye size={13} />
+                  </Button>
+                </div>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -241,6 +263,7 @@ export function SemanticMemoryPage() {
               <MemoryEditor
                 value={editedContent}
                 onChange={setEditedContent}
+                mode={mode}
                 data-testid="semantic-editor"
               />
             </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Eye, Pencil } from 'lucide-react';
 import { useEpisodicMemory, useArchiveEpisodicEntry } from '@/lib/api-hooks';
 import { toast } from 'sonner';
 import { useSelectedAgentId } from './IntelligenceLayout';
@@ -12,6 +13,7 @@ export function EpisodicMemoryPage() {
 
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState<string | null>(null);
+  const [mode, setMode] = useState<'edit' | 'preview'>('preview');
 
   const active = entries.filter((e) => e.status === 'active');
   const archived = entries.filter((e) => e.status === 'archived');
@@ -84,7 +86,7 @@ export function EpisodicMemoryPage() {
                     ? 'bg-[var(--bg-inset)] text-[var(--text-primary)]'
                     : 'text-[var(--text-tertiary)] hover:bg-[var(--bg-inset)]'
                 }`}
-                onClick={() => setSelectedName(ep.name)}
+                onClick={() => { setSelectedName(ep.name); setMode('preview'); }}
               >
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full border border-[var(--text-tertiary)]" />
                 <span className="truncate text-xs">{ep.name.replace('.md', '')}</span>
@@ -120,9 +122,29 @@ export function EpisodicMemoryPage() {
                   Archive ↓
                 </Button>
               )}
+              <div className="flex rounded-[var(--radius-md)] border border-[var(--border-default)] overflow-hidden">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={`rounded-none px-2 ${mode === 'edit' ? 'bg-[var(--bg-inset)]' : ''}`}
+                  onClick={() => setMode('edit')}
+                  title="Raw"
+                >
+                  <Pencil size={13} />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={`rounded-none px-2 border-l border-[var(--border-default)] ${mode === 'preview' ? 'bg-[var(--bg-inset)]' : ''}`}
+                  onClick={() => setMode('preview')}
+                  title="Preview"
+                >
+                  <Eye size={13} />
+                </Button>
+              </div>
             </div>
             <div className="flex-1">
-              <MemoryEditor value={selected.content} readOnly />
+              <MemoryEditor value={selected.content} readOnly mode={mode} />
             </div>
           </>
         ) : (

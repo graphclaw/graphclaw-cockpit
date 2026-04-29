@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, RotateCcw } from 'lucide-react';
+import { Save, RotateCcw, Eye, Pencil } from 'lucide-react';
 import { useAgentProfile, useUpdateAgentProfile } from '@/lib/api-hooks';
 import { toast } from 'sonner';
 import { useSelectedAgentId } from './IntelligenceLayout';
@@ -12,6 +12,7 @@ export function AgentProfilePage() {
   const update = useUpdateAgentProfile();
   const [content, setContent] = useState('');
   const [savedContent, setSavedContent] = useState('');
+  const [mode, setMode] = useState<'edit' | 'preview'>('edit');
 
   useEffect(() => {
     if (profile) {
@@ -62,6 +63,26 @@ export function AgentProfilePage() {
           {isDirty && (
             <span className="text-xs text-[var(--state-warning)]">Unsaved changes</span>
           )}
+          <div className="flex rounded-[var(--radius-md)] border border-[var(--border-default)] overflow-hidden">
+            <Button
+              size="sm"
+              variant="ghost"
+              className={`rounded-none px-2 ${mode === 'edit' ? 'bg-[var(--bg-inset)]' : ''}`}
+              onClick={() => setMode('edit')}
+              title="Edit"
+            >
+              <Pencil size={13} />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className={`rounded-none px-2 border-l border-[var(--border-default)] ${mode === 'preview' ? 'bg-[var(--bg-inset)]' : ''}`}
+              onClick={() => setMode('preview')}
+              title="Preview"
+            >
+              <Eye size={13} />
+            </Button>
+          </div>
           <Button size="sm" variant="outline" onClick={handleDiscard} disabled={!isDirty}>
             <RotateCcw size={14} className="mr-1" /> Discard
           </Button>
@@ -76,6 +97,7 @@ export function AgentProfilePage() {
         <MemoryEditor
           value={content}
           onChange={setContent}
+          mode={mode}
           data-testid="profile-editor"
         />
       </div>

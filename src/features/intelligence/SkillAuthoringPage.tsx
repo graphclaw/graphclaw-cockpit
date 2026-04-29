@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Save, Plus, GitFork, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Save, Plus, GitFork, CheckCircle, XCircle, Trash2, Eye, Pencil } from 'lucide-react';
 import { useAuthoredSkills, useCreateSkill, useUpdateSkill, useForkSkill, useValidateSkill, useDeleteAuthoredSkill } from '@/lib/api-hooks';
 import { toast } from 'sonner';
+import { MemoryEditor } from './MemoryEditor';
 
 interface LocalSkill {
   skill_id: string;
@@ -35,6 +36,7 @@ export function SkillAuthoringPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState('');
+  const [mode, setMode] = useState<'edit' | 'preview'>('edit');
 
   // Merge remote + local unsaved skills
   const allSkills: LocalSkill[] = [
@@ -65,6 +67,7 @@ export function SkillAuthoringPage() {
     if (skill) {
       setSelectedId(id);
       setEditedContent(skill.content);
+      setMode('edit');
     }
   }
 
@@ -228,6 +231,26 @@ export function SkillAuthoringPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <div className="flex rounded-[var(--radius-md)] border border-[var(--border-default)] overflow-hidden">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className={`rounded-none px-2 ${mode === 'edit' ? 'bg-[var(--bg-inset)]' : ''}`}
+                    onClick={() => setMode('edit')}
+                    title="Edit"
+                  >
+                    <Pencil size={13} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className={`rounded-none px-2 border-l border-[var(--border-default)] ${mode === 'preview' ? 'bg-[var(--bg-inset)]' : ''}`}
+                    onClick={() => setMode('preview')}
+                    title="Preview"
+                  >
+                    <Eye size={13} />
+                  </Button>
+                </div>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -280,12 +303,11 @@ export function SkillAuthoringPage() {
               </div>
             )}
 
-            <div className="flex-1 rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-inset)]">
-              <textarea
+            <div className="flex-1">
+              <MemoryEditor
                 value={editedContent}
-                onChange={(e) => setEditedContent(e.target.value)}
-                className="h-full w-full resize-none rounded-[var(--radius-lg)] bg-transparent p-4 font-mono text-sm text-[var(--text-primary)] focus:outline-none"
-                spellCheck={false}
+                onChange={setEditedContent}
+                mode={mode}
                 data-testid="skill-editor"
               />
             </div>

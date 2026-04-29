@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Archive, AlertTriangle, RotateCcw } from 'lucide-react';
+import { Save, Archive, AlertTriangle, RotateCcw, Eye, Pencil } from 'lucide-react';
 import { useWorkingMemory, useUpdateWorkingMemory, useCompactWorkingMemory, useWorkingMemoryArchive } from '@/lib/api-hooks';
 import { toast } from 'sonner';
 import { useSelectedAgentId } from './IntelligenceLayout';
@@ -18,6 +18,7 @@ export function WorkingMemoryPage() {
   const [savedContent, setSavedContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<string>('context.md');
   const [showCompact, setShowCompact] = useState(false);
+  const [mode, setMode] = useState<'edit' | 'preview'>('edit');
   const [compactSummary, setCompactSummary] = useState('');
   const [compactLabel, setCompactLabel] = useState('');
 
@@ -148,6 +149,26 @@ export function WorkingMemoryPage() {
           </div>
           {isActiveFile && (
             <div className="flex items-center gap-2">
+              <div className="flex rounded-[var(--radius-md)] border border-[var(--border-default)] overflow-hidden">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={`rounded-none px-2 ${mode === 'edit' ? 'bg-[var(--bg-inset)]' : ''}`}
+                  onClick={() => setMode('edit')}
+                  title="Edit"
+                >
+                  <Pencil size={13} />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={`rounded-none px-2 border-l border-[var(--border-default)] ${mode === 'preview' ? 'bg-[var(--bg-inset)]' : ''}`}
+                  onClick={() => setMode('preview')}
+                  title="Preview"
+                >
+                  <Eye size={13} />
+                </Button>
+              </div>
               <Button size="sm" variant="outline" onClick={() => setContent(savedContent)} disabled={!isDirty}>
                 <RotateCcw size={14} className="mr-1" /> Discard
               </Button>
@@ -167,6 +188,7 @@ export function WorkingMemoryPage() {
             value={isActiveFile ? content : ''}
             onChange={isActiveFile ? setContent : undefined}
             readOnly={!isActiveFile}
+            mode={mode}
             data-testid="working-memory-editor"
           />
         </div>
