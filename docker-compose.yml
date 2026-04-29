@@ -77,7 +77,7 @@ services:
       minio-init:
         condition: service_completed_successfully
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       ENVIRONMENT: development
       DATABASE_URL: postgresql://graphclaw:${DB_PASSWORD:-graphclaw_dev}@db:5432/graphclaw
