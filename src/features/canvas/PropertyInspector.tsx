@@ -107,7 +107,7 @@ function ProfilePanel({ agentId }: { agentId: string }) {
         </div>
       </div>
       <div className="min-h-0 flex-1">
-        <MemoryEditor value={content} onChange={setContent} height="100%" data-testid="profile-monaco" />
+        <MemoryEditor value={content} onChange={setContent} data-testid="profile-monaco" />
       </div>
     </div>
   );
