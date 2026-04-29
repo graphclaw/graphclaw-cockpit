@@ -101,15 +101,25 @@ interface TaskRowProps {
   isAgent: boolean;
 }
 
+function formatDue(deadline?: string): string {
+  if (!deadline) return '—';
+  try {
+    return new Date(deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch {
+    return '—';
+  }
+}
+
 function TaskRow({ task, isAgent }: TaskRowProps) {
   const stateDisplay = getStateDisplay(task.state, isAgent);
   const priStyle = priorityStyle(task.priority);
   const priLabel = task.priority
     ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1).toLowerCase()
     : '—';
+  const dueLabel = formatDue(task.deadline);
 
   return (
-    <div className="grid grid-cols-[1fr_90px_70px] items-center border-b border-[var(--border-subtle)] px-4 py-2 text-sm transition-colors last:border-b-0 hover:bg-[var(--bg-inset)] cursor-pointer">
+    <div className="grid grid-cols-[1fr_90px_70px_60px] items-center border-b border-[var(--border-subtle)] px-4 py-2 text-sm transition-colors last:border-b-0 hover:bg-[var(--bg-inset)] cursor-pointer">
       <div className="truncate pr-2 font-medium text-[var(--text-primary)]">{task.title}</div>
       <div>
         <span
@@ -119,6 +129,7 @@ function TaskRow({ task, isAgent }: TaskRowProps) {
         </span>
       </div>
       <div className={`text-xs font-semibold ${priStyle}`}>{priLabel}</div>
+      <div className="text-xs text-[var(--text-tertiary)]">{dueLabel}</div>
     </div>
   );
 }
@@ -205,10 +216,11 @@ export function WorkforceCard({ resource }: WorkforceCardProps) {
           ) : (
             <>
               {/* Column headers */}
-              <div className="grid grid-cols-[1fr_90px_70px] border-b border-[var(--border-default)] px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+              <div className="grid grid-cols-[1fr_90px_70px_60px] border-b border-[var(--border-default)] px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
                 <div>Task</div>
                 <div>State</div>
                 <div>Priority</div>
+                <div>Due</div>
               </div>
 
               {visibleTasks.map((task) => (

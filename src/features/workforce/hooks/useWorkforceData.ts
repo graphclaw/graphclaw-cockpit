@@ -82,10 +82,14 @@ export function useWorkforceData() {
   const resources: ResourceItem[] = resourcesQuery.data?.items ?? [];
   const allTasks: TaskItem[] = tasksQuery.data?.items ?? [];
 
-  // Group tasks by the `assignee` field (maps to assigned_to on the backend)
+  // Group tasks by assignee. The backend raw dict may serialize the field as
+  // either "assigned_to" (ResourceNode model field name) or "assignee"
+  // (the aliased name used in some response shapes). Handle both.
   const byResource: Record<string, TaskItem[]> = {};
   for (const t of allTasks) {
-    const key = t.assignee;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = t as any;
+    const key: string | undefined = t.assignee ?? (raw.assigned_to as string | undefined);
     if (key) {
       byResource[key] = byResource[key] ?? [];
       byResource[key].push(t);
@@ -99,9 +103,17 @@ export function useWorkforceData() {
     // In-flight = tasks actively consuming capacity
     const inFlight = task_counts.in_progress + task_counts.review + task_counts.blocked;
     const load_factor = capacity > 0 ? inFlight / capacity : 0;
+
+    // The backend ResourceNode serializes the type field as "resource_type"
+    // but the ResourceItem interface maps it as "type". Handle both.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawR = r as any;
+    const rawType: string = r.type ?? (rawR.resource_type as string) ?? '';
+    const resolvedType: 'HUMAN' | 'AI_AGENT' = rawType === 'HUMAN' ? 'HUMAN' : 'AI_AGENT';
+
     return {
       ...r,
-      type: r.type === 'HUMAN' ? 'HUMAN' : 'AI_AGENT',
+      type: resolvedType,
       task_counts,
       load_factor,
       tasks,

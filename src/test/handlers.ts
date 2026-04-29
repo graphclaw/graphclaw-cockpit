@@ -85,8 +85,21 @@ export const handlers = [
   http.get('/app/v1/graph/tasks', () => {
     return HttpResponse.json({
       items: [
-        { id: 'TSK-001', title: 'Set up CI/CD', state: 'IN_PROGRESS', score: 0.85 },
-        { id: 'TSK-002', title: 'Write API docs', state: 'BACKLOG', score: 0.42 },
+        { id: 'TSK-001', title: 'Set up CI/CD', state: 'IN_PROGRESS', score: 0.85, assigned_to: 'RES-001' },
+        { id: 'TSK-002', title: 'Write API docs', state: 'BACKLOG', score: 0.42, assigned_to: 'RES-001' },
+        { id: 'TSK-003', title: 'Train model', state: 'ACTIVE', score: 0.77, assigned_to: 'RES-002' },
+      ],
+      next_cursor: null,
+      total: 3,
+    });
+  }),
+
+  // Graph: resources list
+  http.get('/app/v1/graph/resources', () => {
+    return HttpResponse.json({
+      items: [
+        { id: 'RES-001', name: 'Alice Chen', resource_type: 'HUMAN', capacity: 8 },
+        { id: 'RES-002', name: 'Agent-Alpha', resource_type: 'AI_AGENT', capacity: 5 },
       ],
       next_cursor: null,
       total: 2,
