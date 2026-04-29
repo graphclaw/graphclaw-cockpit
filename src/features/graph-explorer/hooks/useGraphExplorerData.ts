@@ -64,7 +64,7 @@ export function useExplorerResources() {
 export function useExplorerEdges() {
   return useQuery({
     queryKey: ['graph-explorer', 'edges'],
-    queryFn: () => apiFetch<EdgeListResponse>('/app/v1/graph/edges?limit=500'),
+    queryFn: () => apiFetch<EdgeListResponse>('/app/v1/graph/edges?limit=200'),
     staleTime: 30_000,
   });
 }

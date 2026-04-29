@@ -68,7 +68,7 @@ export function useWorkforceData() {
     queryKey: ['graph', 'tasks', 'workforce-all'],
     queryFn: async (): Promise<TaskListRaw> => {
       const token = localStorage.getItem('gc-access-token') ?? '';
-      const res = await fetch('/app/v1/graph/tasks?limit=500', {
+      const res = await fetch('/app/v1/graph/tasks?limit=200', {
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
