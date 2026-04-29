@@ -309,7 +309,7 @@ graphclaw-cockpit/
 - ☐ Project View (expanded tree)
 - ☐ Dependency Graph View (LTR flow, blocked chain highlighting)
 - ☐ Resource View (group by assignee)
-- ☐ Timeline View (Gantt-style horizontal axis)
+- ☐ Timeline View — Hierarchical Gantt (wireframe: `wireframes-v2/pages/timeline-gantt.html`, full spec in Wave 4b)
 - ☐ View switcher (segmented control)
 - ☐ Custom node rendering (state color, priority size, type icon)
 - ☐ Custom edge rendering (type-based styling)
@@ -322,6 +322,208 @@ graphclaw-cockpit/
 - ☐ State transition buttons with valid-transition check
 - ☐ Saved filter presets (6 built-in + custom)
 - ☐ Zustand graph store (selected nodes, undo stack)
+
+---
+
+### Wave 4b — Timeline Hierarchical Gantt View
+
+**Wireframe:** `wireframes-v2/pages/timeline-gantt.html`
+**Route:** `/workspace/timeline`
+**Goal:** Replace the stub TimelinePage with a fully interactive hierarchical Gantt chart showing Goals → Composite Tasks → Atomic Tasks on a time axis, with synchronized scroll, zoom, filters, dependency arrows, and full 6-theme support.
+
+---
+
+#### Design Requirements
+
+**DR-1 — Left Panel (Hierarchy Tree)**
+- Fixed 320px width; scrolls vertically only (no horizontal scroll)
+- Three-level hierarchy: Goal → Composite Task → Atomic Task
+- Row heights: Goal = 40px (bold, `var(--bg-surface-alt)` background); Task = 44px
+- Indentation: `depth × 20px` left padding
+- Each row: chevron expand/collapse toggle, status dot (state color), emoji type icon, task title, assignee avatar
+- Undated tasks: `opacity: 0.55`, no Gantt bar rendered (row still appears in left panel)
+- Collapse state persisted in Zustand (`expandedIds: Set<string>`)
+
+**DR-2 — Gantt Area (Time Axis)**
+- Sticky 68px header: top row 30px (month labels), bottom row 38px (day numbers)
+- Day column widths by zoom level: Week = 56px, Month = 28px, Quarter = 8px
+- Vertical grid lines at each day; heavier line at month boundaries
+- Today line: 2px solid `var(--brand-primary)`, full height, labeled "Today"
+- Weekend columns: `var(--bg-inset)` background tint
+- Horizontal scroll independent from left panel; vertical scroll synchronized with left panel
+- Minimum visible range: 90 days; extends dynamically to cover all task dates + 14-day padding
+
+**DR-3 — Task Bars**
+- Height: 24px; border-radius: `var(--radius-md)`
+- State-based colors (all via CSS custom properties):
+  - `ACTIVE` → `var(--brand-primary)` gradient
+  - `IN_PROGRESS` → `var(--status-success)` gradient
+  - `BLOCKED` → `var(--status-error)` gradient
+  - `DELAYED` → `var(--status-warning)` gradient
+  - `IN_REVIEW` → `var(--status-info)` gradient
+  - `DONE` / `COMPLETE` → `var(--text-tertiary)` at 60% opacity
+  - `PENDING` / `NOT_STARTED` → `var(--bg-muted)` at 50% opacity
+- Progress fill: darker inner fill proportional to `progress` field (0–100)
+- Hover: tooltip appears above bar (see DR-9)
+
+**DR-4 — Goal and Composite Bracket Bars**
+- Goal bracket: 8px tall, `var(--brand-primary)` at 25% opacity, full-width spanning all child task dates, with angled end-caps
+- Composite task bracket: 6px tall, `var(--text-tertiary)` at 35% opacity, spanning child task dates, with end-caps
+- Both bars sit centered in their row's gantt cell
+
+**DR-5 — Milestones**
+- Tasks with `type === 'MILESTONE'` or zero duration: render as 14px diamond (rotated square)
+- Hover: scale to 1.3× with tooltip
+- Color follows state rules (DR-3)
+
+**DR-6 — Dependency Arrows**
+- Rendered as SVG overlay on the Gantt area
+- Dashed curved path from predecessor bar end to successor bar start
+- Color: `var(--status-error)` for BLOCKED dependencies; `var(--border-default)` for all others
+- Arrows only visible when both tasks are currently expanded/visible
+
+**DR-7 — Toolbar**
+- Zoom controls: `Week` / `Month` / `Quarter` segmented buttons; active = `var(--brand-primary)` fill
+- Date navigation: `←` / `→` buttons to shift view by one zoom-period
+- Filter chips (4): `All` / `Active` / `Blocked` / `Delayed` — toggleable, multi-select
+- `Collapse All` / `Expand All` buttons
+- `⛶ Fullscreen` toggle
+- Today button to re-center view on current date
+
+**DR-8 — Legend**
+- Horizontal strip at bottom of the page (outside scroll area)
+- Shows state color swatches: Active, In Progress, Blocked, Delayed, In Review, Done, Pending
+- Shows bracket icons for Goal / Composite
+- Shows milestone diamond icon
+
+**DR-9 — Tooltips**
+- Appear above the hovered bar, min-width 220px
+- Contents: task title, state badge, dates (start → end), progress %, assignee, priority score
+- Z-index above SVG arrows; dismiss on mouse-leave
+
+**DR-10 — Synchronized Vertical Scroll**
+- Left panel and Gantt area share vertical scroll position
+- Implemented via `onScroll` refs with a `syncing` boolean guard to prevent scroll event loops
+- Both containers have `overflow-y: auto`; outer wrapper `overflow: hidden`
+
+**DR-11 — Date Resolution**
+- Start date: `started_at` → fallback to `created_at`
+- End date: `deadline` → fallback to `started_at + estimated_effort_days` → fallback to `started_at + 7 days`
+- Tasks with no resolvable start date: rendered greyed in left panel, no bar in Gantt
+
+**DR-12 — Theme Safety**
+- Zero hardcoded hex or RGB values in component styles
+- All colors via `var(--*)` CSS custom properties
+- Must pass visual inspection on all 6 themes: `light`, `dark`, `solarized-light`, `solarized-dark`, `midnight`, `high-contrast`
+- Do NOT use any third-party Gantt library (all use hardcoded colors)
+
+---
+
+#### Architecture Decisions
+
+| ID | Decision | Rationale |
+|----|----------|-----------|
+| AD-1 | Custom CSS Grid + SVG rendering (no library) | Only approach compatible with `var(--*)` 6-theme system |
+| AD-2 | `date-fns` for date math (`npm install date-fns`) | Tree-shakeable; already in `package.json` planned deps |
+| AD-3 | New Zustand store `src/stores/timeline.ts` | Isolates Gantt state (zoom, range, expansion) from graph store |
+| AD-4 | New `useGoalTree(goalId, depth?)` hook | Fetches `GET /app/v1/graph/goals/{id}/tree?depth=5` per goal |
+| AD-5 | `src/features/graph/timeline/` subdirectory | Isolates Gantt sub-components from other graph views |
+
+---
+
+#### Implementation Phases
+
+**Phase 1 — Foundation (data layer)**
+
+New files:
+- `src/features/graph/timeline/types.ts` — `TimelineRow`, `GanttBar`, `DependencyEdge`, `ZoomLevel`, `ActiveFilter` TypeScript interfaces
+- `src/features/graph/timeline/date-utils.ts` — `resolveTaskDates()`, `computeViewRange()`, `dayOffset()`, `formatDayHeader()`, `formatMonthHeader()`, `isWeekend()` using `date-fns`
+- `src/stores/timeline.ts` — Zustand store: `zoom: ZoomLevel`, `viewStart: Date`, `viewEnd: Date`, `expandedIds: Set<string>`, `selectedRowId: string | null`, `activeFilters: ActiveFilter[]`; actions: `setZoom`, `shiftView`, `toggleExpand`, `expandAll`, `collapseAll`, `setFilters`
+
+Modified files:
+- `src/lib/api-hooks.ts` — Add `GoalTreeResponse` interface and `useGoalTree(goalId: string, depth?: number)` hook calling `GET /app/v1/graph/goals/{goalId}/tree?depth={depth}`
+- `src/features/graph/timeline/useTimelineData.ts` — Composes `useGoals()` + multiple `useGoalTree()` calls; flattens into `TimelineRow[]`; resolves dates via `date-utils`; handles expand/collapse visibility
+
+**Phase 2 — Components**
+
+New files:
+- `src/features/graph/timeline/TimelineToolbar.tsx` — Zoom buttons, date nav arrows, filter chips, collapse/expand all, today button
+- `src/features/graph/timeline/TimelineLeftPanel.tsx` — Virtualized list of rows; indent, chevron, status dot, emoji icon, title, avatar; synced scroll ref
+- `src/features/graph/timeline/TimelineGanttArea.tsx` — Sticky header (month + day labels, today marker, weekend tint); row cells with bar positioning via CSS `left` + `width` from `dayOffset()`; synced scroll ref
+- `src/features/graph/timeline/TimelineBarTooltip.tsx` — Floating tooltip with Radix Tooltip or custom portal
+- `src/features/graph/timeline/TimelineDependencyArrows.tsx` — SVG overlay; computes bezier paths from visible bars
+- `src/features/graph/timeline/TimelineLegend.tsx` — Bottom strip with state swatches, bracket icons, diamond icon
+
+**Phase 3 — Page Assembly**
+
+Modified file:
+- `src/features/graph/TimelinePage.tsx` — Rewrite: mount `TimelineToolbar`, horizontal flex container with `TimelineLeftPanel` + `TimelineGanttArea` + SVG overlay, `TimelineLegend`; wire scroll sync via `useRef` callbacks; loading skeleton (left panel shimmer + gantt bar shimmer); empty state (no goals with dates); error boundary
+
+**Phase 4 — E2E Tests (Playwright)**
+
+New file: `e2e/graph/timeline-view.spec.ts`
+Test cases: see TS-05 table below
+
+**Phase 5 — Unit Tests (Vitest)**
+
+New files:
+- `src/features/graph/timeline/date-utils.test.ts` — Known-answer tests for `resolveTaskDates()`, `dayOffset()`, `computeViewRange()`
+- `src/features/graph/timeline/useTimelineData.test.ts` — MSW-mocked hook test
+- `src/stores/timeline.test.ts` — Zustand store action tests
+
+---
+
+#### New Files Summary
+
+| File | Type | Description |
+|------|------|-------------|
+| `src/features/graph/timeline/types.ts` | NEW | TypeScript interfaces for all timeline data |
+| `src/features/graph/timeline/date-utils.ts` | NEW | date-fns wrappers for Gantt date math |
+| `src/features/graph/timeline/useTimelineData.ts` | NEW | Composite data hook |
+| `src/features/graph/timeline/TimelineToolbar.tsx` | NEW | Zoom / filter / nav toolbar |
+| `src/features/graph/timeline/TimelineLeftPanel.tsx` | NEW | Hierarchy tree left panel |
+| `src/features/graph/timeline/TimelineGanttArea.tsx` | NEW | Time axis + bars area |
+| `src/features/graph/timeline/TimelineBarTooltip.tsx` | NEW | Hover tooltip |
+| `src/features/graph/timeline/TimelineDependencyArrows.tsx` | NEW | SVG dependency arrows |
+| `src/features/graph/timeline/TimelineLegend.tsx` | NEW | Legend strip |
+| `src/stores/timeline.ts` | NEW | Zustand store for timeline view state |
+| `src/features/graph/timeline/date-utils.test.ts` | NEW | Unit tests for date-utils |
+| `src/features/graph/timeline/useTimelineData.test.ts` | NEW | Unit tests for data hook |
+| `src/stores/timeline.test.ts` | NEW | Unit tests for store |
+| `e2e/graph/timeline-view.spec.ts` | NEW | Playwright E2E spec |
+| `src/features/graph/TimelinePage.tsx` | MODIFY | Rewrite as hierarchical Gantt |
+| `src/lib/api-hooks.ts` | MODIFY | Add `GoalTreeResponse` + `useGoalTree` |
+| `package.json` | MODIFY | Verify `date-fns ^4.1.0` is installed |
+
+---
+
+#### Checklist
+
+- ☐ Install / verify `date-fns` (`npm install date-fns`)
+- ☐ `src/features/graph/timeline/types.ts` — TimelineRow, GanttBar, DependencyEdge, ZoomLevel interfaces
+- ☐ `src/features/graph/timeline/date-utils.ts` — resolveTaskDates, dayOffset, computeViewRange, isWeekend
+- ☐ `src/lib/api-hooks.ts` — GoalTreeResponse interface + useGoalTree hook
+- ☐ `src/stores/timeline.ts` — zoom, viewStart/End, expandedIds, activeFilters, all actions
+- ☐ `src/features/graph/timeline/useTimelineData.ts` — composited hook returning TimelineRow[]
+- ☐ `src/features/graph/timeline/TimelineToolbar.tsx` — zoom, date nav, filter chips, today, collapse all
+- ☐ `src/features/graph/timeline/TimelineLeftPanel.tsx` — hierarchy rows, status dot, avatar, scroll ref
+- ☐ `src/features/graph/timeline/TimelineGanttArea.tsx` — sticky header, day/month labels, today line, weekend tint, bars
+- ☐ `src/features/graph/timeline/TimelineBarTooltip.tsx` — hover tooltip (title, state, dates, progress, assignee)
+- ☐ `src/features/graph/timeline/TimelineDependencyArrows.tsx` — SVG bezier arrows (blocked=red, normal=grey)
+- ☐ `src/features/graph/timeline/TimelineLegend.tsx` — state swatches, bracket icons, diamond
+- ☐ `src/features/graph/TimelinePage.tsx` — rewired with scroll sync, loading/empty/error states
+- ☐ Goal bracket bars (8px, brand-primary 25%)
+- ☐ Composite bracket bars (6px, text-tertiary 35%)
+- ☐ Task bars (24px, state-color gradient, progress fill)
+- ☐ Milestone diamond rendering (14px, hover scale)
+- ☐ Zoom levels: Week (56px/day), Month (28px/day), Quarter (8px/day)
+- ☐ Today line at correct date offset
+- ☐ Undated tasks: greyed left panel row, no Gantt bar
+- ☐ Vertical scroll sync (left panel ↔ gantt area, syncing-flag guard)
+- ☐ DR-12: zero hardcoded colors — all `var(--*)`
+- ☐ `e2e/graph/timeline-view.spec.ts` — 9 Playwright test cases
+- ☐ `src/features/graph/timeline/date-utils.test.ts` — unit tests
+- ☐ `src/stores/timeline.test.ts` — store action tests
 
 ---
 
@@ -1127,12 +1329,18 @@ export default defineConfig({
 | 04.4 | Approve task | Click "Approve" button | State transitions, toast confirms |
 | 04.5 | Add comment | Type comment → Send | Comment appears in activity feed |
 
-#### TS-05: Timeline View
+#### TS-05: Timeline View — Hierarchical Gantt
 | # | Scenario | Steps | Expected |
 |---|----------|-------|----------|
-| 05.1 | Gantt render | Navigate to /timeline | Bars and milestones render |
-| 05.2 | Zoom levels | Click Week → Month → Quarter | Time scale adjusts |
-| 05.3 | Dependency arrows | View dependency edges | SVG arrows connect dependent tasks |
+| 05.1 | Gantt container renders | Navigate to /workspace/timeline | Left panel (`.tl-left`) and Gantt area (`.tl-right`) both present |
+| 05.2 | Goal hierarchy tree | Wait for data load | Goal rows visible with expand chevrons; child composite/atomic rows indented |
+| 05.3 | Expand / collapse | Click chevron on a Goal row | Child rows toggle hidden/visible; chevron rotates |
+| 05.4 | Zoom — Week view | Click "Week" zoom button | Button shows active state; day columns 56px wide |
+| 05.5 | Zoom — Month view | Click "Month" zoom button | Button shows active state; day columns 28px wide |
+| 05.6 | Zoom — Quarter view | Click "Quarter" zoom button | Button shows active state; day columns 8px wide |
+| 05.7 | Today line visible | Load page with today in range | `.gantt-today-line` element present and positioned within visible area |
+| 05.8 | Filter chips toggle | Click "Blocked" chip | Chip gains active state; non-blocked task rows hidden |
+| 05.9 | Undated tasks greyed | View a task with no dates | Row appears in left panel with reduced opacity; no bar in Gantt area |
 
 #### TS-06: Agent Monitor
 | # | Scenario | Steps | Expected |

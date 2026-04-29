@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html data-page="timeline-view" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timeline (Hierarchical Gantt) — GraphClaw Cockpit</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/layout.css">
+<link rel="stylesheet" href="../assets/utilities.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ============================================================
+   TIMELINE GANTT — PAGE-SPECIFIC STYLES
+   Uses only design-system CSS custom properties (var(--*)).
+   All colors are theme-safe across all 6 themes.
+   ============================================================ */
+html, body { height:100%; overflow:hidden; }
+.app-shell { display:flex; height:100vh; overflow:hidden; background:var(--bg-page); }
+
+/* ---------- Main layout ---------- */
+.main-layout { display:flex; flex-direction:column; flex:1; min-width:0; overflow:hidden; }
+.topbar { height:56px; background:var(--bg-surface); border-bottom:1px solid var(--border-default); display:flex; align-items:center; padding:0 var(--space-5); gap:var(--space-4); flex-shrink:0; }
+.breadcrumb { display:flex; align-items:center; gap:var(--space-1); font-size:var(--text-body-sm); color:var(--text-tertiary); }
+.breadcrumb a { color:var(--text-tertiary); text-decoration:none; }
+.breadcrumb .current { color:var(--text-primary); font-weight:var(--weight-medium); }
+.topbar-search { flex:1; max-width:360px; margin:0 auto; position:relative; }
+.topbar-search input { width:100%; height:32px; background:var(--bg-inset); border:1.5px solid var(--border-default); border-radius:var(--radius-md); padding:0 var(--space-3) 0 32px; font-size:var(--text-body-sm); font-family:var(--font-sans); color:var(--text-primary); outline:none; }
+.topbar-search input::placeholder { color:var(--text-tertiary); }
+.topbar-search .s-icon { position:absolute; left:8px; top:50%; transform:translateY(-50%); color:var(--icon-tertiary); display:flex; }
+.topbar-actions { display:flex; align-items:center; gap:var(--space-1); margin-left:auto; }
+.icon-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:var(--radius-md); border:none; background:transparent; cursor:pointer; color:var(--icon-secondary); transition:background var(--duration-fast),color var(--duration-fast); }
+.icon-btn:hover { background:var(--bg-inset); color:var(--text-primary); }
+.notif-badge { position:relative; }
+.notif-badge::after { content:''; position:absolute; top:5px; right:5px; width:7px; height:7px; background:var(--state-blocked); border-radius:50%; border:1.5px solid var(--bg-surface); }
+.avatar { width:28px; height:28px; border-radius:var(--radius-full); background:linear-gradient(135deg,var(--brand-primary),#7C3AED); display:flex; align-items:center; justify-content:center; color:white; font-size:11px; font-weight:var(--weight-semibold); flex-shrink:0; }
+.avatar-sm { width:22px; height:22px; font-size:9px; }
+
+/* ---------- Toolbar ---------- */
+.tl-toolbar { display:flex; align-items:center; gap:var(--space-3); padding:var(--space-3) var(--space-5); border-bottom:1px solid var(--border-default); background:var(--bg-surface); flex-shrink:0; flex-wrap:wrap; }
+.zoom-group { display:flex; border:1.5px solid var(--border-default); border-radius:var(--radius-md); overflow:hidden; }
+.zoom-btn { height:28px; padding:0 var(--space-3); font-size:var(--text-body-sm); font-weight:var(--weight-medium); color:var(--text-secondary); background:var(--bg-surface); border:none; cursor:pointer; font-family:var(--font-sans); transition:background var(--duration-fast),color var(--duration-fast); border-right:1px solid var(--border-default); }
+.zoom-btn:last-child { border-right:none; }
+.zoom-btn.active { background:var(--brand-primary-light); color:var(--brand-primary); font-weight:var(--weight-semibold); }
+.filter-chip { display:inline-flex; align-items:center; gap:var(--space-1); height:28px; padding:0 var(--space-3); border:1.5px solid var(--border-default); border-radius:var(--radius-md); font-size:var(--text-body-sm); color:var(--text-secondary); background:var(--bg-surface); cursor:pointer; font-family:var(--font-sans); transition:all var(--duration-fast); }
+.filter-chip:hover { border-color:var(--brand-primary); color:var(--brand-primary); }
+.filter-chip.active { border-color:var(--brand-primary); background:var(--brand-primary-light); color:var(--brand-primary); font-weight:var(--weight-medium); }
+.toolbar-separator { width:1px; height:20px; background:var(--border-default); }
+.date-nav { display:flex; align-items:center; gap:var(--space-2); }
+.date-label { font-size:var(--text-body-sm); font-weight:var(--weight-semibold); color:var(--text-primary); min-width:180px; text-align:center; }
+
+/* ---------- Gantt container (split: left labels + right chart) ---------- */
+.main-content { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+.tl-container { display:flex; flex:1; min-height:0; overflow:hidden; }
+
+/* ---------- Left panel: hierarchical task tree ---------- */
+.tl-left { width:320px; flex-shrink:0; border-right:1px solid var(--border-default); background:var(--bg-surface); display:flex; flex-direction:column; }
+.tl-left-header { height:68px; border-bottom:1px solid var(--border-default); display:flex; align-items:flex-end; padding:0 var(--space-4) var(--space-3); background:var(--bg-surface-alt); flex-shrink:0; }
+.tl-left-header-text { font-size:var(--text-caption); font-weight:var(--weight-semibold); color:var(--text-secondary); text-transform:uppercase; letter-spacing:var(--tracking-caps); }
+.tl-left-scroll { flex:1; overflow-y:auto; overflow-x:hidden; }
+
+/* Row types */
+.tl-row { display:flex; align-items:center; gap:var(--space-2); height:44px; padding:0 var(--space-3); border-bottom:1px solid var(--border-subtle); cursor:pointer; transition:background var(--duration-fast); }
+.tl-row:hover { background:var(--bg-inset); }
+.tl-row.selected { background:var(--brand-primary-light); }
+
+/* Hierarchy indent (applied via inline style: padding-left) */
+.tl-row-chevron { display:flex; align-items:center; justify-content:center; width:16px; height:16px; color:var(--icon-tertiary); transition:transform var(--duration-fast); cursor:pointer; flex-shrink:0; }
+.tl-row-chevron.expanded { transform:rotate(90deg); }
+.tl-row-chevron.leaf { visibility:hidden; }
+.tl-row-type-icon { display:flex; align-items:center; justify-content:center; width:20px; height:20px; flex-shrink:0; font-size:14px; }
+.tl-row-dot { width:8px; height:8px; border-radius:var(--radius-full); flex-shrink:0; }
+.tl-row-info { flex:1; min-width:0; }
+.tl-row-name { font-size:var(--text-body-sm); font-weight:var(--weight-medium); color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tl-row-meta { font-size:var(--text-micro); color:var(--text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* Goal row (depth 0) — bolder */
+.tl-row.goal-row { background:var(--bg-surface-alt); height:40px; }
+.tl-row.goal-row .tl-row-name { font-weight:var(--weight-semibold); font-size:var(--text-body-sm); }
+/* Undated rows */
+.tl-row.undated { opacity:0.55; }
+
+/* ---------- Right panel: Gantt chart area ---------- */
+.tl-right { flex:1; overflow:hidden; display:flex; flex-direction:column; position:relative; }
+.tl-right-scroll { flex:1; overflow:auto; position:relative; }
+
+/* Header: month + day strip (sticky) */
+.tl-header-strip { position:sticky; top:0; background:var(--bg-surface-alt); border-bottom:1px solid var(--border-default); height:68px; z-index:5; display:flex; flex-direction:column; }
+.month-row { display:flex; height:30px; border-bottom:1px solid var(--border-default); }
+.month-cell { border-right:1px solid var(--border-default); display:flex; align-items:center; padding:0 var(--space-3); font-size:var(--text-caption); font-weight:var(--weight-bold); color:var(--text-secondary); text-transform:uppercase; letter-spacing:var(--tracking-wide); flex-shrink:0; }
+.day-row { display:flex; height:38px; }
+.day-cell { border-right:1px solid var(--border-subtle); display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0; }
+.day-name { font-size:10px; color:var(--text-tertiary); }
+.day-num { font-size:var(--text-caption); font-weight:var(--weight-semibold); color:var(--text-secondary); }
+.day-cell.today { background:rgba(var(--brand-primary-rgb),0.08); }
+.day-cell.today .day-num { color:var(--brand-primary); font-weight:var(--weight-bold); }
+.day-cell.today .day-name { color:var(--brand-primary); }
+.day-cell.weekend { background:var(--bg-inset); }
+.day-cell.weekend .day-num { color:var(--text-tertiary); }
+
+/* Gantt rows area */
+.gantt-rows { position:relative; }
+.gantt-row { height:44px; border-bottom:1px solid var(--border-subtle); position:relative; display:flex; align-items:center; }
+.gantt-row:hover { background:rgba(var(--brand-primary-rgb),0.03); }
+.gantt-row.goal-row { height:40px; background:var(--bg-surface-alt); }
+.gantt-grid-line { position:absolute; top:0; bottom:0; width:1px; background:var(--border-subtle); pointer-events:none; }
+.gantt-today-line { position:absolute; top:0; bottom:0; width:2px; background:var(--brand-primary); z-index:3; pointer-events:none; }
+.gantt-today-line::before { content:'TODAY'; position:absolute; top:4px; left:4px; font-size:9px; font-weight:var(--weight-bold); color:var(--brand-primary); letter-spacing:var(--tracking-wide); }
+
+/* Task bars */
+.task-bar {
+  position:absolute; height:24px; border-radius:var(--radius-md);
+  display:flex; align-items:center; padding:0 var(--space-2);
+  font-size:var(--text-micro); font-weight:var(--weight-semibold); color:white;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  cursor:pointer; transition:filter var(--duration-fast),transform var(--duration-fast);
+  top:50%; transform:translateY(-50%);
+  box-shadow:var(--shadow-1);
+}
+.task-bar:hover { filter:brightness(1.08); transform:translateY(calc(-50% - 1px)); box-shadow:var(--shadow-2); }
+
+/* Bar colors — using gradient pairs from state palette */
+.bar-active   { background:linear-gradient(90deg,#1D4ED8,var(--state-active)); }
+.bar-progress { background:linear-gradient(90deg,#059669,var(--state-progress)); }
+.bar-blocked  { background:linear-gradient(90deg,#DC2626,var(--state-blocked)); }
+.bar-delayed  { background:linear-gradient(90deg,#B45309,var(--state-delayed)); }
+.bar-review   { background:linear-gradient(90deg,#6D28D9,var(--state-review)); }
+.bar-complete { background:linear-gradient(90deg,#374151,var(--state-complete)); opacity:0.6; }
+.bar-pending  { background:var(--border-strong); opacity:0.5; }
+
+/* Goal summary bar — wider, semi-transparent bracket */
+.goal-bar {
+  position:absolute; height:8px; border-radius:var(--radius-sm);
+  background:var(--brand-primary); opacity:0.25;
+  top:50%; transform:translateY(-50%);
+  pointer-events:none;
+}
+.goal-bar::before, .goal-bar::after {
+  content:''; position:absolute; width:3px; height:16px; background:var(--brand-primary); opacity:0.6; border-radius:1px; top:50%; transform:translateY(-50%);
+}
+.goal-bar::before { left:0; }
+.goal-bar::after  { right:0; }
+
+/* Composite summary bar — thinner, colored */
+.composite-bar {
+  position:absolute; height:6px; border-radius:2px;
+  background:var(--text-tertiary); opacity:0.35;
+  top:50%; transform:translateY(-50%);
+}
+.composite-bar::before, .composite-bar::after {
+  content:''; position:absolute; width:2px; height:12px; background:var(--text-secondary); opacity:0.5; border-radius:1px; top:50%; transform:translateY(-50%);
+}
+.composite-bar::before { left:0; }
+.composite-bar::after  { right:0; }
+
+/* Progress fill within bar */
+.task-bar-progress { position:absolute; top:0; bottom:0; left:0; background:rgba(0,0,0,0.15); border-radius:var(--radius-md); pointer-events:none; }
+
+/* Milestone diamond */
+.milestone { position:absolute; width:14px; height:14px; background:var(--state-delayed); transform:translateY(-50%) rotate(45deg); top:50%; cursor:pointer; z-index:4; box-shadow:0 1px 4px rgba(0,0,0,0.3); transition:transform var(--duration-fast); }
+.milestone:hover { transform:translateY(-50%) rotate(45deg) scale(1.3); }
+.milestone.done { background:var(--state-complete); }
+
+/* Dependency arrows */
+.dep-arrows { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:2; overflow:visible; }
+
+/* Tooltip */
+.bar-tooltip {
+  display:none; position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-40%);
+  background:var(--bg-surface-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-3); padding:var(--space-3); z-index:20; min-width:220px; color:var(--text-primary); white-space:normal;
+}
+.task-bar:hover .bar-tooltip { display:block; }
+.bar-tooltip::after { content:''; position:absolute; top:100%; left:40%; border:6px solid transparent; border-top-color:var(--border-default); }
+.tt-name { font-size:var(--text-body-sm); font-weight:var(--weight-bold); margin-bottom:var(--space-2); }
+.tt-row  { display:flex; justify-content:space-between; font-size:var(--text-caption); color:var(--text-secondary); margin-bottom:2px; }
+.tt-val  { color:var(--text-primary); font-weight:var(--weight-medium); }
+
+/* ---------- Legend strip ---------- */
+.tl-legend { display:flex; align-items:center; gap:var(--space-4); padding:var(--space-2) var(--space-5); border-top:1px solid var(--border-default); background:var(--bg-surface-alt); flex-shrink:0; font-size:var(--text-caption); color:var(--text-tertiary); }
+.legend-item { display:flex; align-items:center; gap:var(--space-1); }
+.legend-swatch { width:12px; height:4px; border-radius:2px; }
+.legend-diamond { width:8px; height:8px; transform:rotate(45deg); border-radius:1px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR (injected by nav.js) -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <!-- MAIN -->
+  <div class="main-layout">
+    <header class="topbar">
+      <nav class="breadcrumb">
+        <a href="#">Workspace</a>
+        <span style="color:var(--text-tertiary);display:flex;"><i data-lucide="chevron-right" width="14" height="14"></i></span>
+        <span class="current">Timeline</span>
+      </nav>
+      <div class="topbar-search">
+        <span class="s-icon"><i data-lucide="search" width="14" height="14"></i></span>
+        <input type="text" placeholder="Search goals, tasks, people…" />
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notif-badge" title="Notifications"><i data-lucide="bell" width="18" height="18"></i></button>
+        <button class="icon-btn" id="theme-toggle" title="Toggle theme"><i data-lucide="moon" width="18" height="18"></i></button>
+        <div class="avatar avatar-sm" title="Abhishek G.">AG</div>
+      </div>
+    </header>
+
+    <!-- TOOLBAR -->
+    <div class="tl-toolbar">
+      <!-- Zoom -->
+      <div class="zoom-group">
+        <button class="zoom-btn" data-zoom="week">Week</button>
+        <button class="zoom-btn active" data-zoom="month">Month</button>
+        <button class="zoom-btn" data-zoom="quarter">Quarter</button>
+      </div>
+      <!-- Date navigation -->
+      <div class="date-nav">
+        <button class="btn btn-secondary btn-sm"><i data-lucide="chevron-left" width="14" height="14"></i></button>
+        <span class="date-label">Apr 1 – May 2, 2026</span>
+        <button class="btn btn-secondary btn-sm"><i data-lucide="chevron-right" width="14" height="14"></i></button>
+        <button class="btn btn-ghost btn-sm" title="Go to today">Today</button>
+      </div>
+      <div class="toolbar-separator"></div>
+      <!-- Filters -->
+      <button class="filter-chip active"><i data-lucide="layers" width="12" height="12"></i>All Goals</button>
+      <button class="filter-chip"><i data-lucide="zap" width="12" height="12"></i>Critical Path</button>
+      <button class="filter-chip"><i data-lucide="git-merge" width="12" height="12"></i>Dependencies</button>
+      <button class="filter-chip"><i data-lucide="circle-dot" width="12" height="12"></i>Milestones</button>
+      <!-- Right-side actions -->
+      <div style="margin-left:auto; display:flex; gap:var(--space-2);">
+        <button class="btn btn-ghost btn-sm" title="Collapse all"><i data-lucide="fold-vertical" width="14" height="14"></i></button>
+        <button class="btn btn-ghost btn-sm" title="Expand all"><i data-lucide="unfold-vertical" width="14" height="14"></i></button>
+        <button class="icon-btn" title="Fullscreen"><i data-lucide="maximize-2" width="16" height="16"></i></button>
+      </div>
+    </div>
+
+    <!-- TIMELINE CONTENT -->
+    <div class="main-content">
+      <div class="tl-container">
+
+        <!-- ================================================================
+             LEFT PANEL: Hierarchical task tree
+             Depth indenting:
+               0 = Goal      (pl 8px)
+               1 = Composite (pl 28px)
+               2 = Task      (pl 48px)
+               3 = Subtask   (pl 68px)
+             ================================================================ -->
+        <div class="tl-left">
+          <div class="tl-left-header">
+            <span class="tl-left-header-text">Goal / Task Hierarchy</span>
+          </div>
+          <div class="tl-left-scroll" id="left-scroll">
+
+            <!-- ──────── GOAL 1: Minecraft Birthday Party ──────── -->
+            <div class="tl-row goal-row" style="padding-left:8px;" data-id="g1">
+              <div class="tl-row-chevron expanded"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+              <div class="tl-row-type-icon">🎯</div>
+              <div class="tl-row-dot" style="background:var(--state-progress);"></div>
+              <div class="tl-row-info">
+                <div class="tl-row-name">Minecraft Birthday Party</div>
+                <div class="tl-row-meta">Goal · 6 tasks · Due May 15</div>
+              </div>
+            </div>
+
+              <!-- Composite: Party Planning -->
+              <div class="tl-row" style="padding-left:28px;" data-id="c1" data-parent="g1">
+                <div class="tl-row-chevron expanded"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                <div class="tl-row-type-icon">📦</div>
+                <div class="tl-row-dot" style="background:var(--state-progress);"></div>
+                <div class="tl-row-info">
+                  <div class="tl-row-name">Party Planning & Procurement</div>
+                  <div class="tl-row-meta">Composite · Sequential · 4 tasks</div>
+                </div>
+              </div>
+
+                <!-- Sequential task 1 -->
+                <div class="tl-row" style="padding-left:48px;" data-id="t1" data-parent="c1">
+                  <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                  <div class="tl-row-type-icon">📨</div>
+                  <div class="tl-row-dot" style="background:var(--state-active);"></div>
+                  <div class="tl-row-info">
+                    <div class="tl-row-name">Send Digital Minecraft Invitations</div>
+                    <div class="tl-row-meta">Atomic · In Progress · Apr 1–10</div>
+                  </div>
+                  <div class="avatar-sm avatar" style="background:linear-gradient(135deg,var(--brand-primary),#7C3AED);">AG</div>
+                </div>
+
+                <!-- Sequential task 2 -->
+                <div class="tl-row" style="padding-left:48px;" data-id="t2" data-parent="c1">
+                  <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                  <div class="tl-row-type-icon">🍕</div>
+                  <div class="tl-row-dot" style="background:var(--state-delayed);"></div>
+                  <div class="tl-row-info">
+                    <div class="tl-row-name">Plan & Shop for Minecraft Party Food</div>
+                    <div class="tl-row-meta">Atomic · Pending · Apr 10–18</div>
+                  </div>
+                  <div class="avatar-sm avatar" style="background:linear-gradient(135deg,#10B981,#059669);">SP</div>
+                </div>
+
+                <!-- Sequential task 3 -->
+                <div class="tl-row" style="padding-left:48px;" data-id="t3" data-parent="c1">
+                  <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                  <div class="tl-row-type-icon">🎈</div>
+                  <div class="tl-row-dot" style="background:var(--text-tertiary);"></div>
+                  <div class="tl-row-info">
+                    <div class="tl-row-name">Purchase Minecraft Decorations</div>
+                    <div class="tl-row-meta">Atomic · Pending · Apr 18–25</div>
+                  </div>
+                </div>
+
+                <!-- Sequential task 4 -->
+                <div class="tl-row" style="padding-left:48px;" data-id="t4" data-parent="c1">
+                  <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                  <div class="tl-row-type-icon">🎂</div>
+                  <div class="tl-row-dot" style="background:var(--text-tertiary);"></div>
+                  <div class="tl-row-info">
+                    <div class="tl-row-name">Order Minecraft Birthday Cake</div>
+                    <div class="tl-row-meta">Atomic · Pending · Apr 25–May 5</div>
+                  </div>
+                </div>
+
+              <!-- Composite: Day-Of Execution -->
+              <div class="tl-row" style="padding-left:28px;" data-id="c2" data-parent="g1">
+                <div class="tl-row-chevron expanded"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                <div class="tl-row-type-icon">📦</div>
+                <div class="tl-row-dot" style="background:var(--text-tertiary);"></div>
+                <div class="tl-row-info">
+                  <div class="tl-row-name">Day-Of Party Execution</div>
+                  <div class="tl-row-meta">Composite · Parallel · 3 tasks</div>
+                </div>
+              </div>
+
+                <!-- Parallel task 1 -->
+                <div class="tl-row" style="padding-left:48px;" data-id="t5" data-parent="c2">
+                  <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                  <div class="tl-row-type-icon">🏠</div>
+                  <div class="tl-row-dot" style="background:var(--text-tertiary);"></div>
+                  <div class="tl-row-info">
+                    <div class="tl-row-name">Set Up Venue & Decorations</div>
+                    <div class="tl-row-meta">Atomic · Pending · May 10–14</div>
+                  </div>
+                </div>
+
+                <!-- Parallel task 2 -->
+                <div class="tl-row" style="padding-left:48px;" data-id="t6" data-parent="c2">
+                  <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                  <div class="tl-row-type-icon">🎁</div>
+                  <div class="tl-row-dot" style="background:var(--text-tertiary);"></div>
+                  <div class="tl-row-info">
+                    <div class="tl-row-name">Assemble Minecraft Party Favor Bags</div>
+                    <div class="tl-row-meta">Atomic · Pending · May 10–14</div>
+                  </div>
+                </div>
+
+                <!-- Parallel task 3 -->
+                <div class="tl-row" style="padding-left:48px;" data-id="t7" data-parent="c2">
+                  <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                  <div class="tl-row-type-icon">🎮</div>
+                  <div class="tl-row-dot" style="background:var(--text-tertiary);"></div>
+                  <div class="tl-row-info">
+                    <div class="tl-row-name">Research & Print Minecraft Activities</div>
+                    <div class="tl-row-meta">Atomic · Pending · May 8–14</div>
+                  </div>
+                </div>
+
+              <!-- Milestone under Goal 1 -->
+              <div class="tl-row" style="padding-left:28px;" data-id="m1" data-parent="g1">
+                <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                <div class="tl-row-type-icon">◆</div>
+                <div class="tl-row-dot" style="background:var(--state-delayed);"></div>
+                <div class="tl-row-info">
+                  <div class="tl-row-name">🎉 Party Day!</div>
+                  <div class="tl-row-meta">Milestone · May 15</div>
+                </div>
+              </div>
+
+            <!-- ──────── GOAL 2: Generate Daily AI News Briefing ──────── -->
+            <div class="tl-row goal-row" style="padding-left:8px;" data-id="g2">
+              <div class="tl-row-chevron expanded"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+              <div class="tl-row-type-icon">🎯</div>
+              <div class="tl-row-dot" style="background:var(--state-active);"></div>
+              <div class="tl-row-info">
+                <div class="tl-row-name">Generate Daily AI News Briefing</div>
+                <div class="tl-row-meta">Goal · 4 tasks · Recurring</div>
+              </div>
+            </div>
+
+              <!-- Composite: Briefing Pipeline -->
+              <div class="tl-row" style="padding-left:28px;" data-id="c3" data-parent="g2">
+                <div class="tl-row-chevron expanded"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                <div class="tl-row-type-icon">📦</div>
+                <div class="tl-row-dot" style="background:var(--state-active);"></div>
+                <div class="tl-row-info">
+                  <div class="tl-row-name">Briefing Pipeline</div>
+                  <div class="tl-row-meta">Composite · Sequential · 4 tasks</div>
+                </div>
+              </div>
+
+                <div class="tl-row" style="padding-left:48px;" data-id="t8" data-parent="c3">
+                  <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                  <div class="tl-row-type-icon">🔍</div>
+                  <div class="tl-row-dot" style="background:var(--state-complete);"></div>
+                  <div class="tl-row-info">
+                    <div class="tl-row-name">Crawl AI news sources</div>
+                    <div class="tl-row-meta">Atomic · Complete · Apr 1–3</div>
+                  </div>
+                </div>
+
+                <div class="tl-row" style="padding-left:48px;" data-id="t9" data-parent="c3">
+                  <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                  <div class="tl-row-type-icon">🧠</div>
+                  <div class="tl-row-dot" style="background:var(--state-active);"></div>
+                  <div class="tl-row-info">
+                    <div class="tl-row-name">Summarize & rank articles</div>
+                    <div class="tl-row-meta">Atomic · In Progress · Apr 3–8</div>
+                  </div>
+                </div>
+
+                <div class="tl-row" style="padding-left:48px;" data-id="t10" data-parent="c3">
+                  <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                  <div class="tl-row-type-icon">✍️</div>
+                  <div class="tl-row-dot" style="background:var(--state-blocked);"></div>
+                  <div class="tl-row-info">
+                    <div class="tl-row-name">Draft briefing email</div>
+                    <div class="tl-row-meta">Atomic · Blocked · Apr 8–12</div>
+                  </div>
+                </div>
+
+                <div class="tl-row" style="padding-left:48px;" data-id="t11" data-parent="c3">
+                  <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+                  <div class="tl-row-type-icon">📤</div>
+                  <div class="tl-row-dot" style="background:var(--text-tertiary);"></div>
+                  <div class="tl-row-info">
+                    <div class="tl-row-name">Send via email channel</div>
+                    <div class="tl-row-meta">Atomic · Pending · Apr 12–13</div>
+                  </div>
+                </div>
+
+            <!-- ──────── GOAL 3: Q3 Infrastructure Upgrade (collapsed) ──────── -->
+            <div class="tl-row goal-row" style="padding-left:8px;" data-id="g3">
+              <div class="tl-row-chevron"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+              <div class="tl-row-type-icon">🎯</div>
+              <div class="tl-row-dot" style="background:var(--state-review);"></div>
+              <div class="tl-row-info">
+                <div class="tl-row-name">Q3 Infrastructure Upgrade</div>
+                <div class="tl-row-meta">Goal · 8 tasks · Due Jun 30 · Collapsed</div>
+              </div>
+            </div>
+
+            <!-- ──────── Undated task (no timeline bar) ──────── -->
+            <div class="tl-row undated" style="padding-left:8px;" data-id="u1">
+              <div class="tl-row-chevron leaf"><i data-lucide="chevron-right" width="14" height="14"></i></div>
+              <div class="tl-row-type-icon" style="opacity:0.5;">📝</div>
+              <div class="tl-row-dot" style="background:var(--border-strong);"></div>
+              <div class="tl-row-info">
+                <div class="tl-row-name" style="color:var(--text-tertiary);">Review team retrospective notes</div>
+                <div class="tl-row-meta">Atomic · No dates set</div>
+              </div>
+            </div>
+
+          </div><!-- .tl-left-scroll -->
+        </div>
+
+        <!-- ================================================================
+             RIGHT PANEL: Gantt chart bars + grid
+             Day width = 28px; 46 days shown (Apr 1 – May 16)
+             Total width = 46 * 28 = 1288px
+             ================================================================ -->
+        <div class="tl-right">
+          <div class="tl-right-scroll" id="right-scroll">
+            <div id="gantt-inner" style="width:1288px; min-width:100%; position:relative;">
+
+              <!-- HEADER -->
+              <div class="tl-header-strip">
+                <div class="month-row">
+                  <div class="month-cell" style="width:840px;">APRIL 2026</div>
+                  <div class="month-cell" style="width:448px;">MAY 2026</div>
+                </div>
+                <div class="day-row" id="day-row">
+                  <!-- Generated by JS -->
+                </div>
+              </div>
+
+              <!-- GANTT ROWS -->
+              <div class="gantt-rows" id="gantt-rows">
+                <!-- Today line: Apr 29 = day index 28, offset = 28*28 = 784px -->
+                <div class="gantt-today-line" id="today-line" style="left:784px; height:100%;"></div>
+
+                <!-- ═══════ GOAL 1: Minecraft Birthday Party ═══════ -->
+                <!-- Goal summary row (goal bracket bar spanning Apr 1 – May 15) -->
+                <div class="gantt-row goal-row">
+                  <div class="goal-bar" style="left:0px; width:1260px;"></div>
+                </div>
+
+                  <!-- Composite: Party Planning (bracket: Apr 1 – May 5) -->
+                  <div class="gantt-row">
+                    <div class="composite-bar" style="left:0px; width:980px;"></div>
+                  </div>
+
+                    <!-- t1: Send Invitations: Apr 1–10 (active, 10 days) -->
+                    <div class="gantt-row">
+                      <div class="task-bar bar-active" style="left:0px; width:280px;">
+                        Send Invitations
+                        <div class="task-bar-progress" style="width:80%;"></div>
+                        <div class="bar-tooltip">
+                          <div class="tt-name">Send Digital Minecraft Invitations</div>
+                          <div class="tt-row"><span>Status</span><span class="tt-val" style="color:var(--state-active);">In Progress</span></div>
+                          <div class="tt-row"><span>Start</span><span class="tt-val">Apr 1</span></div>
+                          <div class="tt-row"><span>End</span><span class="tt-val">Apr 10</span></div>
+                          <div class="tt-row"><span>Assignee</span><span class="tt-val">Abhishek G.</span></div>
+                          <div class="tt-row"><span>Progress</span><span class="tt-val">80%</span></div>
+                          <div class="tt-row"><span>Type</span><span class="tt-val">Atomic · Sequential #1</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- t2: Party Food: Apr 10–18 (delayed, 8 days) -->
+                    <div class="gantt-row">
+                      <div class="task-bar bar-delayed" style="left:252px; width:224px;">
+                        Plan & Shop Food
+                        <div class="bar-tooltip">
+                          <div class="tt-name">Plan & Shop for Minecraft Party Food</div>
+                          <div class="tt-row"><span>Status</span><span class="tt-val" style="color:var(--state-delayed);">Delayed</span></div>
+                          <div class="tt-row"><span>Start</span><span class="tt-val">Apr 10</span></div>
+                          <div class="tt-row"><span>End</span><span class="tt-val">Apr 18</span></div>
+                          <div class="tt-row"><span>Depends on</span><span class="tt-val">Send Invitations</span></div>
+                          <div class="tt-row"><span>Assignee</span><span class="tt-val">Sunita P.</span></div>
+                          <div class="tt-row"><span>Type</span><span class="tt-val">Atomic · Sequential #2</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- t3: Decorations: Apr 18–25 (pending, 7 days) -->
+                    <div class="gantt-row">
+                      <div class="task-bar bar-pending" style="left:476px; width:196px;">
+                        Purchase Decorations
+                        <div class="bar-tooltip">
+                          <div class="tt-name">Purchase Minecraft Decorations</div>
+                          <div class="tt-row"><span>Status</span><span class="tt-val">Pending</span></div>
+                          <div class="tt-row"><span>Start</span><span class="tt-val">Apr 18</span></div>
+                          <div class="tt-row"><span>End</span><span class="tt-val">Apr 25</span></div>
+                          <div class="tt-row"><span>Depends on</span><span class="tt-val">Plan & Shop Food</span></div>
+                          <div class="tt-row"><span>Type</span><span class="tt-val">Atomic · Sequential #3</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- t4: Cake: Apr 25–May 5 (pending, 10 days) -->
+                    <div class="gantt-row">
+                      <div class="task-bar bar-pending" style="left:672px; width:280px;">
+                        Order Birthday Cake
+                        <div class="bar-tooltip">
+                          <div class="tt-name">Order Minecraft Birthday Cake</div>
+                          <div class="tt-row"><span>Status</span><span class="tt-val">Pending</span></div>
+                          <div class="tt-row"><span>Start</span><span class="tt-val">Apr 25</span></div>
+                          <div class="tt-row"><span>End</span><span class="tt-val">May 5</span></div>
+                          <div class="tt-row"><span>Depends on</span><span class="tt-val">Purchase Decorations</span></div>
+                          <div class="tt-row"><span>Type</span><span class="tt-val">Atomic · Sequential #4</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                  <!-- Composite: Day-Of Execution (bracket: May 8 – May 14) -->
+                  <div class="gantt-row">
+                    <div class="composite-bar" style="left:1036px; width:196px;"></div>
+                  </div>
+
+                    <!-- t5: Set Up Venue: May 10–14 (pending, parallel) -->
+                    <div class="gantt-row">
+                      <div class="task-bar bar-pending" style="left:1092px; width:112px;">
+                        Set Up Venue
+                      </div>
+                    </div>
+
+                    <!-- t6: Favor Bags: May 10–14 (pending, parallel) -->
+                    <div class="gantt-row">
+                      <div class="task-bar bar-pending" style="left:1092px; width:112px;">
+                        Favor Bags
+                      </div>
+                    </div>
+
+                    <!-- t7: Print Activities: May 8–14 (pending, parallel) -->
+                    <div class="gantt-row">
+                      <div class="task-bar bar-pending" style="left:1036px; width:196px;">
+                        Print Activities
+                      </div>
+                    </div>
+
+                  <!-- m1: Milestone — Party Day! May 15 = day 44, offset = 44*28 = 1232 -->
+                  <div class="gantt-row">
+                    <div class="milestone" style="left:1253px;" title="🎉 Party Day!"></div>
+                  </div>
+
+                <!-- ═══════ GOAL 2: Daily AI News Briefing ═══════ -->
+                <div class="gantt-row goal-row">
+                  <div class="goal-bar" style="left:0px; width:364px;"></div>
+                </div>
+
+                  <!-- Composite: Briefing Pipeline (Apr 1 – Apr 13) -->
+                  <div class="gantt-row">
+                    <div class="composite-bar" style="left:0px; width:336px;"></div>
+                  </div>
+
+                    <!-- t8: Crawl sources: Apr 1–3 (complete) -->
+                    <div class="gantt-row">
+                      <div class="task-bar bar-complete" style="left:0px; width:84px;">
+                        Crawl sources ✓
+                        <div class="bar-tooltip">
+                          <div class="tt-name">Crawl AI news sources</div>
+                          <div class="tt-row"><span>Status</span><span class="tt-val" style="color:var(--state-complete);">Complete</span></div>
+                          <div class="tt-row"><span>Completed</span><span class="tt-val">Apr 3, 2026</span></div>
+                          <div class="tt-row"><span>Type</span><span class="tt-val">Atomic · Sequential #1</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- t9: Summarize: Apr 3–8 (active) -->
+                    <div class="gantt-row">
+                      <div class="task-bar bar-active" style="left:56px; width:140px;">
+                        Summarize & rank
+                        <div class="task-bar-progress" style="width:65%;"></div>
+                        <div class="bar-tooltip">
+                          <div class="tt-name">Summarize & rank articles</div>
+                          <div class="tt-row"><span>Status</span><span class="tt-val" style="color:var(--state-active);">In Progress</span></div>
+                          <div class="tt-row"><span>Start</span><span class="tt-val">Apr 3</span></div>
+                          <div class="tt-row"><span>End</span><span class="tt-val">Apr 8</span></div>
+                          <div class="tt-row"><span>Progress</span><span class="tt-val">65%</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- t10: Draft briefing: Apr 8–12 (blocked) -->
+                    <div class="gantt-row">
+                      <div class="task-bar bar-blocked" style="left:196px; width:112px;">
+                        Draft briefing
+                        <div class="bar-tooltip">
+                          <div class="tt-name">Draft briefing email</div>
+                          <div class="tt-row"><span>Status</span><span class="tt-val" style="color:var(--state-blocked);">Blocked</span></div>
+                          <div class="tt-row"><span>Blocked by</span><span class="tt-val">Summarize & rank</span></div>
+                          <div class="tt-row"><span>Start</span><span class="tt-val">Apr 8</span></div>
+                          <div class="tt-row"><span>End</span><span class="tt-val">Apr 12</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- t11: Send via email: Apr 12–13 (pending) -->
+                    <div class="gantt-row">
+                      <div class="task-bar bar-pending" style="left:308px; width:28px;">
+                        <div class="bar-tooltip">
+                          <div class="tt-name">Send via email channel</div>
+                          <div class="tt-row"><span>Status</span><span class="tt-val">Pending</span></div>
+                          <div class="tt-row"><span>Start</span><span class="tt-val">Apr 12</span></div>
+                          <div class="tt-row"><span>End</span><span class="tt-val">Apr 13</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                <!-- ═══════ GOAL 3: Q3 Infrastructure (collapsed — single summary row) ═══════ -->
+                <div class="gantt-row goal-row">
+                  <div class="goal-bar" style="left:784px; width:504px;"></div>
+                </div>
+
+                <!-- ═══════ Undated task — no bar ═══════ -->
+                <div class="gantt-row" style="opacity:0.4;">
+                  <!-- No bar rendered — just empty row for alignment -->
+                </div>
+
+                <!-- ═══════ SVG DEPENDENCY ARROWS ═══════ -->
+                <svg class="dep-arrows" style="position:absolute;top:0;left:0;width:1288px;pointer-events:none;" id="dep-svg">
+                  <defs>
+                    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-tertiary)"/>
+                    </marker>
+                    <marker id="arr-blocked" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--state-blocked)"/>
+                    </marker>
+                  </defs>
+                  <!-- t1 → t2 (sequential dependency): end of bar1 → start of bar2 -->
+                  <!-- bar1 end = 0+280 = 280, row1 center = 68 + 40 + 44 + 22 = 174; bar2 start = 252, row2 center = 174 + 44 = 218 -->
+                  <path d="M 280 174 C 296 174, 252 218, 252 218" stroke="var(--text-tertiary)" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+                  <!-- t2 → t3 -->
+                  <path d="M 476 218 C 492 218, 476 262, 476 262" stroke="var(--text-tertiary)" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+                  <!-- t3 → t4 -->
+                  <path d="M 672 262 C 688 262, 672 306, 672 306" stroke="var(--text-tertiary)" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+                  <!-- t9 → t10 (blocked dependency — red) -->
+                  <path d="M 196 614 C 210 614, 196 658, 196 658" stroke="var(--state-blocked)" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arr-blocked)"/>
+                </svg>
+
+              </div><!-- .gantt-rows -->
+            </div><!-- #gantt-inner -->
+          </div><!-- .tl-right-scroll -->
+        </div><!-- .tl-right -->
+      </div><!-- .tl-container -->
+
+      <!-- LEGEND -->
+      <div class="tl-legend">
+        <span style="font-weight:var(--weight-semibold); color:var(--text-secondary);">Legend:</span>
+        <div class="legend-item"><div class="legend-swatch" style="background:linear-gradient(90deg,#1D4ED8,var(--state-active));"></div>Active</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:linear-gradient(90deg,#059669,var(--state-progress));"></div>In Progress</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:linear-gradient(90deg,#DC2626,var(--state-blocked));"></div>Blocked</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:linear-gradient(90deg,#B45309,var(--state-delayed));"></div>Delayed</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:linear-gradient(90deg,#6D28D9,var(--state-review));"></div>Review</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:linear-gradient(90deg,#374151,var(--state-complete));opacity:0.6;"></div>Complete</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--border-strong);opacity:0.5;"></div>Pending</div>
+        <div class="toolbar-separator"></div>
+        <div class="legend-item"><div class="legend-diamond" style="background:var(--state-delayed);"></div>Milestone</div>
+        <div class="legend-item"><div style="width:14px;height:2px;background:var(--brand-primary);"></div>Today</div>
+        <div class="legend-item"><div style="width:20px;height:6px;background:var(--brand-primary);opacity:0.25;border-radius:2px;"></div>Goal span</div>
+        <div class="legend-item"><div style="width:20px;height:4px;background:var(--text-tertiary);opacity:0.35;border-radius:2px;"></div>Composite span</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── Initialize icons ─────────────────────────────── */
+  lucide.createIcons();
+
+  /* ── Generate day header cells ─────────────────────── */
+  var DAY_W = 28;
+  var TOTAL_DAYS = 46; // Apr 1 – May 16
+  var dayRow = document.getElementById('day-row');
+  var startDate = new Date(2026, 3, 1); // Apr 1
+  var dayNames = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  var todayIdx = 28; // Apr 29 = index 28
+
+  for (var i = 0; i < TOTAL_DAYS; i++) {
+    var d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    var isToday = (i === todayIdx);
+    var isWeekend = (d.getDay() === 0 || d.getDay() === 6);
+    var cell = document.createElement('div');
+    cell.className = 'day-cell' + (isToday ? ' today' : '') + (isWeekend ? ' weekend' : '');
+    cell.style.width = DAY_W + 'px';
+    cell.innerHTML = '<span class="day-name">' + dayNames[d.getDay()] + '</span>'
+                   + '<span class="day-num">' + d.getDate() + '</span>';
+    dayRow.appendChild(cell);
+
+    // Grid lines
+    var gl = document.createElement('div');
+    gl.className = 'gantt-grid-line';
+    gl.style.left = (i * DAY_W) + 'px';
+    document.getElementById('gantt-rows').appendChild(gl);
+  }
+
+  /* ── Zoom button toggle ────────────────────────────── */
+  document.querySelectorAll('.zoom-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.zoom-btn').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+    });
+  });
+
+  /* ── Synchronized vertical scroll ──────────────────── */
+  var leftScroll  = document.getElementById('left-scroll');
+  var rightScroll = document.getElementById('right-scroll');
+  var syncing = false;
+
+  leftScroll.addEventListener('scroll', function() {
+    if (syncing) return;
+    syncing = true;
+    rightScroll.scrollTop = leftScroll.scrollTop;
+    syncing = false;
+  });
+
+  rightScroll.addEventListener('scroll', function() {
+    if (syncing) return;
+    syncing = true;
+    leftScroll.scrollTop = rightScroll.scrollTop;
+    syncing = false;
+  });
+
+  /* ── Expand / Collapse hierarchy ───────────────────── */
+  document.querySelectorAll('.tl-row-chevron:not(.leaf)').forEach(function(chevron) {
+    chevron.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var row = this.closest('.tl-row');
+      var id = row.getAttribute('data-id');
+      var isExpanded = this.classList.toggle('expanded');
+
+      // Find all child rows
+      var allRows = Array.from(document.querySelectorAll('.tl-left-scroll .tl-row'));
+      var ganttRows = Array.from(document.querySelectorAll('.gantt-rows .gantt-row'));
+      var startIdx = allRows.indexOf(row);
+
+      // Collect children (rows whose data-parent chain includes this id)
+      var childIds = new Set();
+      childIds.add(id);
+      for (var i = startIdx + 1; i < allRows.length; i++) {
+        var parent = allRows[i].getAttribute('data-parent');
+        if (!parent || !childIds.has(parent)) {
+          // Check if this is a direct child by parent matching the id
+          if (parent !== id && !childIds.has(parent)) break;
+        }
+        childIds.add(allRows[i].getAttribute('data-id'));
+        allRows[i].style.display = isExpanded ? '' : 'none';
+        // Also hide/show the corresponding gantt row
+        if (ganttRows[i]) ganttRows[i].style.display = isExpanded ? '' : 'none';
+      }
+    });
+  });
+
+  /* ── Row click highlight ───────────────────────────── */
+  document.querySelectorAll('.tl-left-scroll .tl-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      document.querySelectorAll('.tl-left-scroll .tl-row.selected').forEach(function(r) { r.classList.remove('selected'); });
+      this.classList.add('selected');
+    });
+  });
+
+  /* ── Filter chip toggle ────────────────────────────── */
+  document.querySelectorAll('.filter-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      // "All Goals" is exclusive; others are toggleable
+      if (this.textContent.includes('All Goals')) {
+        document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
+        this.classList.add('active');
+      } else {
+        document.querySelector('.filter-chip.active:first-child')?.classList.remove('active');
+        this.classList.toggle('active');
+        // If none active, re-enable "All Goals"
+        if (!document.querySelector('.filter-chip.active')) {
+          document.querySelector('.filter-chip').classList.add('active');
+        }
+      }
+    });
+  });
+</script>
+<script src="../assets/nav.js"></script>
+<script src="../assets/theme.js"></script>
+</body>
+</html>
