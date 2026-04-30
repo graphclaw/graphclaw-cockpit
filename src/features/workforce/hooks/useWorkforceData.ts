@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useResources, type TaskItem, type ResourceItem } from '@/lib/api-hooks';
+import { useAdminMembers, useAgents, type TaskItem } from '@/lib/api-hooks';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -14,8 +14,12 @@ export interface TaskCounts {
   total: number;
 }
 
-export interface WorkforceResource extends ResourceItem {
+export interface WorkforceResource {
+  id: string;
+  name: string;
   type: 'HUMAN' | 'AI_AGENT';
+  capacity?: number;
+  allocated?: number;
   task_counts: TaskCounts;
   /** Ratio of in-flight tasks to capacity (0–1.5+). >1 = over capacity. */
   load_factor: number;
@@ -61,8 +65,23 @@ interface TaskListRaw {
   total?: number;
 }
 
+const DEFAULT_CAPACITY = 10;
+
+function buildResource(
+  id: string,
+  name: string,
+  type: 'HUMAN' | 'AI_AGENT',
+  tasks: TaskItem[],
+): WorkforceResource {
+  const task_counts = computeTaskCounts(tasks);
+  const inFlight = task_counts.in_progress + task_counts.review + task_counts.blocked;
+  const load_factor = DEFAULT_CAPACITY > 0 ? inFlight / DEFAULT_CAPACITY : 0;
+  return { id, name, type, capacity: DEFAULT_CAPACITY, task_counts, load_factor, tasks };
+}
+
 export function useWorkforceData() {
-  const resourcesQuery = useResources();
+  const membersQuery = useAdminMembers();
+  const agentsQuery = useAgents();
 
   const tasksQuery = useQuery({
     queryKey: ['graph', 'tasks', 'workforce-all'],
@@ -79,50 +98,42 @@ export function useWorkforceData() {
     },
   });
 
-  const resources: ResourceItem[] = resourcesQuery.data?.items ?? [];
   const allTasks: TaskItem[] = tasksQuery.data?.items ?? [];
 
-  // Group tasks by assignee. The backend raw dict may serialize the field as
-  // either "assigned_to" (ResourceNode model field name) or "assignee"
-  // (the aliased name used in some response shapes). Handle both.
-  const byResource: Record<string, TaskItem[]> = {};
+  // Group tasks by assignee. The backend stores the field as "assigned_to";
+  // the TaskItem interface maps it as "assignee". Handle both shapes.
+  const byAssignee: Record<string, TaskItem[]> = {};
   for (const t of allTasks) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const raw = t as any;
     const key: string | undefined = t.assignee ?? (raw.assigned_to as string | undefined);
     if (key) {
-      byResource[key] = byResource[key] ?? [];
-      byResource[key].push(t);
+      byAssignee[key] = byAssignee[key] ?? [];
+      byAssignee[key].push(t);
     }
   }
 
-  const workforce: WorkforceResource[] = resources.map((r) => {
-    const tasks = byResource[r.id] ?? [];
-    const task_counts = computeTaskCounts(tasks);
-    const capacity = r.capacity ?? 10;
-    // In-flight = tasks actively consuming capacity
-    const inFlight = task_counts.in_progress + task_counts.review + task_counts.blocked;
-    const load_factor = capacity > 0 ? inFlight / capacity : 0;
-
-    // The backend ResourceNode serializes the type field as "resource_type"
-    // but the ResourceItem interface maps it as "type". Handle both.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rawR = r as any;
-    const rawType: string = r.type ?? (rawR.resource_type as string) ?? '';
-    const resolvedType: 'HUMAN' | 'AI_AGENT' = rawType === 'HUMAN' ? 'HUMAN' : 'AI_AGENT';
-
-    return {
-      ...r,
-      type: resolvedType,
-      task_counts,
-      load_factor,
-      tasks,
-    };
+  // Human resources — workspace members from /admin/members.
+  // Each member's user_id matches the assigned_to field on tasks.
+  const humanResources: WorkforceResource[] = (membersQuery.data ?? []).map((m) => {
+    const displayName = m.email.includes('@')
+      ? m.email.split('@')[0]!.replace(/[._-]/g, ' ')
+      : m.email;
+    const name = displayName.replace(/\b\w/g, (c) => c.toUpperCase());
+    return buildResource(m.user_id, name, 'HUMAN', byAssignee[m.user_id] ?? []);
   });
+
+  // AI agent resources — canvas agent definitions from /agents.
+  // Each agent's agent_id matches the assigned_to field on tasks.
+  const agentResources: WorkforceResource[] = (agentsQuery.data ?? []).map((a) => {
+    return buildResource(a.agent_id, a.name, 'AI_AGENT', byAssignee[a.agent_id] ?? []);
+  });
+
+  const workforce = [...humanResources, ...agentResources];
 
   return {
     workforce,
-    isLoading: resourcesQuery.isLoading || tasksQuery.isLoading,
-    isError: resourcesQuery.isError || tasksQuery.isError,
+    isLoading: membersQuery.isLoading || agentsQuery.isLoading || tasksQuery.isLoading,
+    isError: membersQuery.isError || agentsQuery.isError || tasksQuery.isError,
   };
 }
