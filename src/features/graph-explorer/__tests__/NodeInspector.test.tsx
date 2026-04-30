@@ -43,7 +43,7 @@ const sampleTask: TaskNode = {
   title: 'Test Task Title',
   state: 'ACTIVE',
   priority: 'HIGH',
-  task_type: 'ACTION',
+  task_type: 'ATOMIC',
   deadline: '2025-12-31',
   description: 'Test description',
   scoring: {

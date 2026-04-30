@@ -136,17 +136,17 @@ export const GOAL_STATES = ['ACTIVE', 'IN_PROGRESS', 'COMPLETE', 'ARCHIVED'] as 
 export type GoalState = (typeof GOAL_STATES)[number];
 
 export const TASK_TYPES = [
-  'GOAL',
-  'MILESTONE',
-  'ACTION',
+  'ATOMIC',
+  'COMPOSITE',
   'DELEGATED',
   'FOLLOWUP',
-  'CHECKIN',
-  'BRIEFING',
-  'DECISION',
+  'APPROVAL',
+  'MILESTONE',
   'REVIEW',
-  'SYNC',
-  'HANDOFF',
+  'RECURRING',
+  'DECISION',
+  'CHECKIN',
+  'RESEARCH',
 ] as const;
 export type TaskType = (typeof TASK_TYPES)[number];
 
