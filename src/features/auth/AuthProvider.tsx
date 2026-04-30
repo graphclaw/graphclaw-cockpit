@@ -10,11 +10,12 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { isAuthenticated, refreshToken } = useAuthStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasRefreshToken = useAuthStore((state) => !!state.refreshToken);
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => {
-    if (!isAuthenticated || !refreshToken) return;
+    if (!isAuthenticated || !hasRefreshToken) return;
 
     async function refreshTokens() {
       const recovered = await recoverAuthSession();
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isAuthenticated, refreshToken]);
+  }, [isAuthenticated, hasRefreshToken]);
 
   return <>{children}</>;
 }
