@@ -179,7 +179,7 @@ export function GraphExplorerPage() {
           )}
 
           {!isLoading && nodes.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 z-10 flex items-center justify-center">
               <div className="text-center">
                 <Network size={40} className="mx-auto mb-3 text-[var(--text-tertiary)]" />
                 <p className="text-sm font-medium text-[var(--text-secondary)]">No nodes in graph</p>

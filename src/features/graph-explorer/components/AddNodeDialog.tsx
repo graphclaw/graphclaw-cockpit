@@ -34,8 +34,8 @@ const createTaskSchema = z.object({
 type CreateTaskForm = z.infer<typeof createTaskSchema>;
 
 const TASK_TYPES = [
-  'ACTION', 'MILESTONE', 'GOAL', 'DELEGATED', 'FOLLOWUP',
-  'CHECKIN', 'BRIEFING', 'DECISION', 'REVIEW', 'SYNC', 'HANDOFF',
+  'ATOMIC', 'COMPOSITE', 'DELEGATED', 'FOLLOWUP', 'APPROVAL',
+  'MILESTONE', 'REVIEW', 'RECURRING', 'DECISION', 'CHECKIN', 'RESEARCH',
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ export function AddNodeDialog({ open, onClose, onNodeCreated }: Props) {
     formState: { errors, isSubmitting },
   } = useForm<CreateTaskForm>({
     resolver: zodResolver(createTaskSchema),
-    defaultValues: { task_type: 'ACTION', priority: 'MEDIUM', description: '', deadline: '', tags: '' },
+    defaultValues: { task_type: 'ATOMIC', priority: 'MEDIUM', description: '', deadline: '', tags: '' },
   });
 
   const handleClose = () => {
