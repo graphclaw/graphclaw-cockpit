@@ -24,13 +24,16 @@ export function GoalViewPage() {
     priority: g.priority,
   }));
 
-  // Real edges from API
-  const graphEdges: GraphEdge[] = (edgesData?.items ?? []).map((e) => ({
-    id: e.edge_id,
-    source: e.source_id,
-    target: e.target_id,
-    edgeType: e.edge_type,
-  }));
+  // Only include edges where both endpoints exist in the loaded goal nodes
+  const nodeIdSet = new Set(graphNodes.map((n) => n.id));
+  const graphEdges: GraphEdge[] = (edgesData?.items ?? [])
+    .filter((e) => nodeIdSet.has(e.source_id) && nodeIdSet.has(e.target_id))
+    .map((e) => ({
+      id: e.edge_id,
+      source: e.source_id,
+      target: e.target_id,
+      edgeType: e.edge_type,
+    }));
 
   const selectedGoal = goals.find((g) => g.id === selectedNodeId);
 
