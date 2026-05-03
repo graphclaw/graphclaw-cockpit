@@ -5,6 +5,7 @@ import type { LucideIcon } from 'lucide-react';
 import { AttentionStrip } from './components/AttentionStrip';
 import { EmptyPanel } from './components/EmptyPanel';
 import { GlanceStrip } from './components/GlanceStrip';
+import { LiveTicker } from './components/LiveTicker';
 import { OverviewKpiStrip } from './components/OverviewKpiStrip';
 
 type Section = 'overview' | 'activity' | 'comms' | 'scheduling' | 'skills' | 'scoring' | 'agents';
@@ -276,19 +277,20 @@ export function AgentMonitorPage() {
                 data-testid={`agent-monitor-panel-${activeSection}`}
               >
                 {isOverviewSection && (
-                  <div className="mb-4">
+                  <div className="mb-4 space-y-3">
                     <OverviewKpiStrip />
-                    <div className="mt-3">
-                      <GlanceStrip />
-                    </div>
+                    <GlanceStrip />
+                    <LiveTicker />
                   </div>
                 )}
 
-                <EmptyPanel
-                  icon={panelEmptyState.icon}
-                  title={panelEmptyState.title}
-                  subtitle={panelEmptyState.subtitle}
-                />
+                {!isOverviewSection && (
+                  <EmptyPanel
+                    icon={panelEmptyState.icon}
+                    title={panelEmptyState.title}
+                    subtitle={panelEmptyState.subtitle}
+                  />
+                )}
 
                 {activeSection === 'comms' && (
                   <div className="mt-3 inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--bg-inset)] px-2 py-1 text-xs text-[var(--text-secondary)]">

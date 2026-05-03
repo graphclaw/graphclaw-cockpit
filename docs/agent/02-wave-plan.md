@@ -271,6 +271,28 @@ All cards use `<KpiCard />` (existing shared component). Poll cadence: 30s. Firs
 
 ### M-B-3 — Live Activity Ticker
 
+**Kickoff notes (2026-05-03):**
+- Scope for this step: implement `LiveTicker` with SSE subscription, 20-event ring buffer, and UTC-day localStorage restore/rollover.
+- Event scope for Phase A: `task.scored`, `skill.completed`, `briefing.ready`, `task.state_changed`, `approval.pending`.
+- Data decisions:
+  - use direct `EventSource('/app/v1/events')` with safe JSON parse per message,
+  - map events to plain-language ticker rows via `formatEvent.ts`,
+  - persist only today rows at `gc:ticker:today` with date guard.
+- Edge cases validated before coding:
+  - invalid/non-JSON SSE frames,
+  - reconnect/disconnect states should toggle LIVE badge visibility,
+  - old-day cache must clear automatically at UTC day change.
+- Failure modes to guard:
+  - unlimited in-memory growth without ring-buffer cap,
+  - localStorage parse crashes blocking render,
+  - noisy unknown event types flooding ticker.
+
+**Completion notes (2026-05-03):**
+- Implemented `LiveTicker` with a 6-row viewport over a 20-event ring buffer and a conditional LIVE badge when SSE is connected.
+- Added `useLiveTickerEvents` with direct EventSource subscriptions for the required event set and localStorage bridge (`gc:ticker:today`) with UTC-day rollover reset.
+- Added `formatEvent.ts` to map SSE payloads into plain-language ticker records and ignore unsupported events.
+- Verification passed: focused unit tests (`formatEvent`, `LiveTicker`, `GlanceStrip`, `OverviewKpiStrip`, `AgentMonitorPage`), `npm run typecheck`, focused eslint, and Playwright `e2e/agent/agent-monitor.spec.ts`.
+
 **File:** `components/LiveTicker.tsx`
 
 - Subscribes via `useSSE(['task.scored', 'skill.completed', 'briefing.ready', 'task.state_changed', 'approval.pending'])`.

@@ -22,6 +22,10 @@ vi.mock('@/features/agent-monitor/components/GlanceStrip', () => ({
   GlanceStrip: () => <div data-testid="agent-monitor-glance-strip" />,
 }));
 
+vi.mock('@/features/agent-monitor/components/LiveTicker', () => ({
+  LiveTicker: () => <div data-testid="agent-monitor-live-ticker" />,
+}));
+
 const mockUseAttentionItems = vi.mocked(useAttentionItems);
 
 describe('AgentMonitorPage', () => {
@@ -86,6 +90,7 @@ describe('AgentMonitorPage', () => {
       expect(screen.getByTestId('agent-monitor-mobile-banner')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-kpi-strip')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-glance-strip')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-live-ticker')).toBeInTheDocument();
     });
   });
 
