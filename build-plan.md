@@ -527,42 +527,129 @@ New files:
 
 ---
 
-### Wave 5 — Agent Monitor + Scoring + Explainability
-**Goal:** Agent monitoring dashboard, scoring inspector, and explainability views.
+### Wave 5 — Agent Monitor + Scoring + Explainability  *(SUPERSEDED by Wave M — see below)*
 
-**Scope:**
-- Agent Monitor dashboard: KPI strip (4 cards), agent cards grid, event log table
-- Agent status badges with pulse animations
-- Sparkline heartbeat bars per agent
-- Action queue inspector: ranked table with score details
-- Trigger schedule view: upcoming triggers table + "Fire Now"
-- Sub-agent pool monitor: runner pool utilization, delegations, dispatch plan swim lanes
-- Score explanation panel: 7-factor breakdown table, NL summary
-- Score history timeline chart (Recharts) with annotations
-- Score simulator ("what if" parameter sliders)
-- Recharts integration for all chart types (bar, line, area, pie)
+> **Status: Superseded 2026-05-03.** This wave shipped a stub
+> (`src/features/agent/AgentMonitorPage.tsx`, `src/features/scoring/ScoreExplainer.tsx`).
+> Full Agent Monitor v2 is delivered by **Wave M**, which retires Wave 5 stubs
+> in M-A-0 and replaces them with a 7-panel design under
+> `src/features/agent-monitor/`. Reusable bits (`useAgentData`, `ScoreExplainer`)
+> are migrated, not deleted.
+>
+> Reference docs: [`docs/agent/`](docs/agent/README.md),
+> [`docs/prd/03-agent-monitor.md`](docs/prd/03-agent-monitor.md),
+> [`wireframes-v2/pages/agent-monitor-v2.html`](wireframes-v2/pages/agent-monitor-v2.html).
 
-**Key files:**
-- `src/features/agent/` (AgentDashboard, AgentCard, ActionQueue, TriggerSchedule, SubAgentPool)
-- `src/features/scoring/` (ScoreExplainer, ScoreHistory, ScoreSimulator)
-- `src/components/common/KpiCard.tsx`, `src/components/common/SparklineBar.tsx`
+~~**Goal:** Agent monitoring dashboard, scoring inspector, and explainability views.~~
 
-**API integrations:** ~16 endpoints (agent status, action-queue, briefing, triggers, pool, scoring)
-**Tests:** KPI rendering, agent card states, chart data transformation, score simulator logic
-**Deliverable:** Full agent monitoring dashboard with live data, scoring inspection, and "what-if" simulation.
+~~**Scope:**~~
+- ~~Agent Monitor dashboard: KPI strip (4 cards), agent cards grid, event log table~~
+- ~~Agent status badges with pulse animations~~
+- ~~Sparkline heartbeat bars per agent~~
+- ~~Action queue inspector: ranked table with score details~~
+- ~~Trigger schedule view: upcoming triggers table + "Fire Now"~~
+- ~~Sub-agent pool monitor: runner pool utilization, delegations, dispatch plan swim lanes~~
+- ~~Score explanation panel: 7-factor breakdown table, NL summary~~
+- ~~Score history timeline chart (Recharts) with annotations~~
+- ~~Score simulator ("what if" parameter sliders)~~
+- ~~Recharts integration for all chart types (bar, line, area, pie)~~
+
+~~**Key files:**~~
+- ~~`src/features/agent/` (AgentDashboard, AgentCard, ActionQueue, TriggerSchedule, SubAgentPool)~~
+- ~~`src/features/scoring/` (ScoreExplainer, ScoreHistory, ScoreSimulator)~~
+- ~~`src/components/common/KpiCard.tsx`, `src/components/common/SparklineBar.tsx`~~
+
+---
+
+### Wave M — Agent Monitor v2 (Cockpit + Gateway)
+**Status:** M-A-2 complete (2026-05-03); M-A-3 next
+**Goal:** 7-panel tabbed Agent Monitor matching `wireframes-v2/pages/agent-monitor-v2.html`, built around plain-language summaries for the non-technical primary user.
+
+**Scope:** see [`docs/agent/02-wave-plan.md`](docs/agent/02-wave-plan.md) for full sub-requirement detail.
+
+**Phase A (cockpit + minimal backend):**
+- M-A: Foundation, Wave 5 retirement, navigation shell (7-panel left-nav, URL routing, sidebar badge, attention strip, shared empty/loading/error states, responsive guards)
+- M-B: Overview panel (4 KPI cards, today's glance strip, live SSE ticker with localStorage bridge)
+- M-E: Scheduling panel (next run card, trigger list, Run Now)
+- M-F: Skills panel (worker pool bar + mini-cards + recent jobs with friendly errors)
+- M-G: Scoring panel (task table + 7-factor breakdown + What-if Simulator)
+- M-H: Agents panel (pool KPIs + dispatch swim-lanes + heartbeat timeline; hidden when pool=0)
+
+**Phase B (requires gateway changes):**
+- M-C: Activity panel (full historical via `/agent/activity`, session grouping)
+- M-D: Comms panel (bilateral inbound/outbound via `/tasks/inbound-log` + `/tasks/outbound-log`)
+- Gateway B-1: Extend `AgentToolCallEvent` + wire across 5 agent files
+- Gateway B-2: `agent_session_log` Postgres table
+- Gateway B-3: `GET /agent/activity` (MinIO NDJSON reader + plain-language formatter)
+- Gateway B-4: `GET /agent/sessions`
+- Gateway B-5: `GET /comms/summary`
+- Gateway B-6: `GET /tasks/inbound-log` + `GET /tasks/outbound-log`
+- Gateway B-7: Fix MinIO write race (per-process file suffix)
+- Gateway B-8: Verify or add `POST /scoring/simulate`
+- Gateway B-9: Verify or add `GET /agents/delegations`
+
+**Phase C (deferred):** token/cost drill-down, MinIO retention, structured log viewer, session trace waterfall, LLM Cost Monitor.
+
+**Key files (cockpit):**
+- `src/features/agent-monitor/` (new — page, hooks, components, lib)
+- `src/app/routes.tsx` (add `/agent-monitor/:section` and `/agent-monitor/comms/:tab`)
+- `src/components/layout/Sidebar.tsx` (active state + badge)
+- `src/styles/themes.css` (channel badge tokens, heartbeat segment tokens)
+- `docs/prd/03-agent-monitor.md` (reconciled to v2)
+
+**Key files (gateway — graphclaw repo):**
+- `src/graphclaw/infra/logging/events.py` (extend `AgentToolCallEvent`)
+- `src/graphclaw/infra/logging/handlers/object_storage.py` (race fix)
+- `src/graphclaw/agent/{main_orchestrator,sub_agent_runner,comms_agent,inbound_agent,outbound_agent}.py` (tool call logging)
+- `src/graphclaw/agent/loop.py` (session log writer)
+- `src/graphclaw/agent/activity_formatter.py` (new — plain-language event formatter)
+- `src/graphclaw/api/{agent_activity,comms,tasks}.py` (new endpoints)
+- `migrations/<next>_agent_session_log.sql` (new table)
+
+**API integrations:** ~20 endpoints total (16 existing + 4 new).
+**Tests:** unit (vitest) per component/hook, E2E (Playwright) per panel, formatter snapshot tests parity-tested across cockpit + gateway via shared fixture.
 
 **Checklist:**
-- ☐ KPI strip component (4 cards with trend indicators)
-- ☐ Agent cards grid (status, heartbeat sparkline, stats)
-- ☐ Event log table with severity filtering, LIVE badge
-- ☐ Action queue inspector table
-- ☐ Trigger schedule view + Fire Now action
-- ☐ Sub-agent pool status cards
-- ☐ Delegations table
-- ☐ Dispatch plan swim-lane visualizer
-- ☐ Score explanation panel (7-factor breakdown)
-- ☐ Score history timeline (Recharts LineChart with annotations)
-- ☐ Score simulator with sliders + live preview
+- [x] M-A-0: Wave 5 retirement (move `useAgentData`, `ScoreExplainer`, delete old files)
+- [x] M-A-1: Route + page shell with URL-driven section + comms sub-tab
+- [x] M-A-2: Sidebar integration (active state + attention badge)
+- ☐ M-A-3: Attention Strip with localStorage dismiss
+- ☐ M-A-4: Shared EmptyPanel / PanelSkeleton / PanelError
+- ☐ M-A-5: Responsive breakpoints for KPI grid + Scoring 2-col + heartbeat
+- ☐ M-B-1: 4 KPI cards (Agent Status, Last Run, Next Run, Needs Attention)
+- ☐ M-B-2: Today's Glance Strip (5 chips)
+- ☐ M-B-3: Live Activity Ticker with SSE + localStorage bridge
+- ☐ M-C-1: Activity table with filters + load more
+- ☐ M-C-2: Session grouping toggle
+- ☐ M-C-3: SSE + poll hybrid for "today" range
+- ☐ M-D-1: Comms banner with date-range filter
+- ☐ M-D-2: Inbound tab (URL-bound)
+- ☐ M-D-3: Outbound tab (URL-bound)
+- ☐ M-D-4: ChannelBadge component + theme tokens
+- ☐ M-E-1: Next run card + Run Now
+- ☐ M-E-2: Trigger list table with snooze/resume
+- ☐ M-E-3: Run history (Phase B)
+- ☐ M-F-1: Worker pool bar + 4 mini-cards + sparklines
+- ☐ M-F-2: Recent jobs table with friendly errors
+- ☐ M-G-1: Task score table with row click
+- ☐ M-G-2: ScoreFactorBreakdown side panel (7 factors)
+- ☐ M-G-3: What-if Simulator modal (7 sliders)
+- ☐ M-H-1: Pool KPI cards
+- ☐ M-H-2: DispatchPlanViz swim-lanes
+- ☐ M-H-3: HeartbeatTimeline (30 segments desktop / 15 mobile)
+- ☐ M-H-4: Active delegations table
+- ☐ Gateway B-0: Migration numbering check
+- ☐ Gateway B-1: AgentToolCallEvent extended + wired in 5 agent files
+- ☐ Gateway B-2: agent_session_log migration + writer
+- ☐ Gateway B-3: /agent/activity endpoint
+- ☐ Gateway B-4: /agent/sessions endpoint
+- ☐ Gateway B-5: /comms/summary endpoint
+- ☐ Gateway B-6: /tasks/inbound-log + /tasks/outbound-log
+- ☐ Gateway B-7: MinIO write race fix
+- ☐ Gateway B-8: /scoring/simulate (verify or add)
+- ☐ Gateway B-9: /agents/delegations (verify or add)
+- ☐ PRD `docs/prd/03-agent-monitor.md` reconciled to v2
+- ☐ OpenAPI typegen run after each backend endpoint ships
 
 ---
 
@@ -1973,7 +2060,8 @@ See `build-plan.md` for detailed wave plan and checklists.
 - [ ] Wave 2: API Client + Auth + MSW
 - [ ] Wave 3: App Shell + Navigation
 - [ ] Wave 4: Graph Views + Tasks
-- [ ] Wave 5: Agent Monitor + Scoring
+- [ ] ~~Wave 5: Agent Monitor + Scoring~~ *(superseded by Wave M)*
+- [ ] Wave M: Agent Monitor v2 (Cockpit + Gateway) — see `docs/agent/`
 - [ ] Wave 6: Settings + Config
 - [ ] Wave 7: Skills + MCP + Approvals
 - [ ] Wave 8: Canvas Editor

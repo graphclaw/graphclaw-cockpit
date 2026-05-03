@@ -1,245 +1,255 @@
-# 03 — Agent Monitoring & Observability
+# 03 — Agent Monitor & Observability
 
-**Version:** 1.0 | **Date:** 2026-03-21 | **Status:** Draft
+**Version:** 2.0 | **Date:** 2026-05-03 | **Status:** Approved
 
-> **2026-05-02 design extension.** Surface for the comms / inbound / outbound triad must show: distillation events (task_entry written / memory_note written), outbound agent activity, scheduler-driven runs (FollowUpTrigger), pending escalations, and principal-name on every DB call (NFR-008). References:
-> - [graphclaw/docs/architecture/14-agent-triad.md](../../../graphclaw/docs/architecture/14-agent-triad.md)
-> - [graphclaw/docs/architecture/18-follow-up-cadence.md](../../../graphclaw/docs/architecture/18-follow-up-cadence.md)
-> - [graphclaw/docs/requirements/agent-triad-and-comms-substrate.md](../../../graphclaw/docs/requirements/agent-triad-and-comms-substrate.md) NFR-005, NFR-006, NFR-008
-
----
-
-## 3.1 Agent Activity Dashboard
-
-The agent dashboard is the primary observability surface. It answers: "What is the agent doing right now?"
-
-| Widget | Data Source | Refresh |
-|--------|-----------|---------|
-| **Agent Status** | `GET /app/v1/agent/status` | SSE `agent.status_changed` |
-| Current state (IDLE / RUNNING / ERROR) | | |
-| Last invocation timestamp | | |
-| Active session_id | | |
-| Current trigger type (SCHEDULED / INBOUND / ON_DEMAND) | | |
-| **Recent Activity Feed** | SSE stream | Real-time |
-| Last 20 events: trigger fired, task scored, state changed, skill started/completed, message sent | | |
+> **v2 redesign.** This supersedes v1.0 (2026-03-21). The original flat technical
+> dashboard is replaced by a **7-panel left-nav layout** built around plain-language
+> summaries for the non-technical primary user. Wireframe:
+> [`wireframes-v2/pages/agent-monitor-v2.html`](../../wireframes-v2/pages/agent-monitor-v2.html).
+>
+> **Companion design docs (in [`docs/agent/`](../agent/README.md)):**
+> - [00-design-overview.md](../agent/00-design-overview.md) — philosophy + IA
+> - [01-data-sources.md](../agent/01-data-sources.md) — where every field lives
+> - [02-wave-plan.md](../agent/02-wave-plan.md) — execution waves
+> - [03-component-spec.md](../agent/03-component-spec.md) — component contracts
+> - [04-api-contract.md](../agent/04-api-contract.md) — endpoint contracts
+> - [05-open-risks.md](../agent/05-open-risks.md) — risks and decisions
+>
+> **Backend companion (graphclaw repo):**
+> - [docs/requirements/agent-monitor-v2-backend.md](../../../graphclaw/docs/requirements/agent-monitor-v2-backend.md)
+> - [docs/architecture/20-agent-activity-logging.md](../../../graphclaw/docs/architecture/20-agent-activity-logging.md)
 
 ---
 
-## 3.2 Action Queue Inspector
+## 0. Audience and goals
 
-View the ranked action queue the agent produces each cycle — before it becomes a briefing.
+**Primary user:** non-technical knowledge worker managing daily tasks.
+**Secondary user:** admin / engineer (limited use here — most engineering observability is Phase C / CloudWatch).
 
-| Column | Source Field |
-|--------|-------------|
-| Rank | `ActionQueueEntry.rank` |
-| Task ID | `ActionQueueEntry.node_id` (clickable → graph) |
-| Score | `ActionQueueEntry.final_score` |
-| Recommended Action | `ActionQueueEntry.recommended_action` |
-| Autonomy Level | `ActionQueueEntry.autonomy_level` (SUGGEST / AUTONOMOUS / REQUIRE_APPROVAL) |
-| Top Factor | `ActionQueueEntry.explanation.factors[0]` |
-| Batched With | `ActionQueueEntry.batched_with` (grouped tasks) |
-
-**Endpoint:** `GET /app/v1/agent/action-queue`
-
-Users can:
-- Sort by score, rank, or autonomy level
-- Click a task to navigate to the graph node
-- Compare current queue with previous cycle (delta view)
+The monitor answers four questions in plain language:
+1. Is the agent healthy and what's it doing right now?
+2. What did it do for me today / this week?
+3. What messages did it process and send on my behalf?
+4. Why did it prioritise things this way?
 
 ---
 
-## 3.3 Scoring Inspector
+## 1. Information architecture
 
-Deep dive into why tasks are ranked the way they are.
+7 panels, left-nav layout (URL-driven, bookmarkable):
 
-### Per-Task Score Breakdown
+| # | Panel | Answers |
+|---|-------|---------|
+| 1 | Overview | "Is everything OK and what just happened?" |
+| 2 | Activity | "Show me the full timeline." |
+| 3 | Comms | "What messages came in and what did the agent send?" |
+| 4 | Scheduling | "When is the next run? Run it now if I want." |
+| 5 | Skills | "Are skill workers healthy? Anything failing?" |
+| 6 | Scoring | "Why is this task at the top of the queue?" |
+| 7 | Agents | "What sub-agents are running? Are they alive?" |
 
-For any task, display the 7-factor scoring breakdown:
-
-| Factor | Weight | Raw Score | Weighted | Plain English |
-|--------|--------|-----------|----------|---------------|
-| W1: Timeline Urgency | 0.25 | 0.85 | 0.213 | "Deadline in 3 days with 2 days effort — almost no slack" |
-| W2: Dependency Weight | 0.20 | 0.60 | 0.120 | "4 downstream tasks depend on this" |
-| W3: Critical Path | 0.20 | 1.00 | 0.200 | "On the critical path for Q3 Launch (P1)" |
-| W4: Blocker | 0.15 | 0.00 | 0.000 | "No blockers" |
-| W5: Human Override | 0.10 | 0.00 | 0.000 | "No override set" |
-| W6: Resource Risk | 0.05 | 0.70 | 0.035 | "Alex hasn't responded to last follow-up" |
-| W7: Constraint Pressure | 0.05 | 0.30 | 0.015 | "Budget constraint at 80% threshold" |
-
-**Modifiers applied:**
-- Critical path multiplier: 1.5×
-- Chain urgency rollup: +0.12 from downstream deadline
-
-**Final Score:** 0.876 → **Rank #1**
-
-**Endpoint:** `GET /app/v1/scoring/tasks/{task_id}`
-
-### Score History
-
-Timeline chart of `computed_priority` over time for any task:
-- X-axis: timestamp of each scoring pass
-- Y-axis: final score
-- Hover: shows which factors changed and by how much (delta view)
-- Annotations: state changes, inbound updates, manual overrides marked on timeline
-
-**Endpoint:** `GET /app/v1/scoring/tasks/{task_id}/history`
-
-### Score Simulator
-
-Power users can ask "what if?" questions:
-- Modify a task's deadline, assigned resource, or state hypothetically
-- See how the score would change without actually making the modification
-- Useful for planning: "If I move this deadline by 3 days, does it stay #1?"
-
-**Endpoint:** `POST /app/v1/scoring/simulate`
+Routes: `/agent-monitor`, `/agent-monitor/:section`, `/agent-monitor/comms/:tab`.
 
 ---
 
-## 3.4 Trigger Schedule View
+## 2. Panel: Overview
 
-| Column | Description |
-|--------|-------------|
-| Trigger ID | Unique identifier |
-| Type | SCHEDULED / EVENT / INBOUND / ON_DEMAND |
-| Next Fire Time | When the trigger will next execute |
-| Target | User / org the trigger is for |
-| Status | ACTIVE / PAUSED / FIRED |
-| Last Fired | Timestamp of last execution |
+**Components:** Attention Strip · 4 KPI cards · Today's Glance Strip · Live Activity Ticker
 
-**Features:**
-- Next 10 upcoming triggers sorted by fire time
-- Today's daily briefing status: PENDING / GENERATED / SENT
-- Follow-up timing details per task (computed fire time, reason, configurable delay)
-- Manual trigger: "Fire Now" button for any trigger
+### 2.1 Attention Strip
+Surfaces **only when there's something wrong**. Sources:
+- Failed skill jobs in last 24h (`/skills/workers`).
+- Stale heartbeats > 300s (`/agents/pool/runners`).
+- Pending escalations (`escalation_queue`).
 
-**Endpoints:**
-- `GET /app/v1/agent/triggers/schedule`
-- `GET /app/v1/agent/triggers/{trigger_id}`
-- `POST /app/v1/agent/triggers/{trigger_id}/fire`
+Each row: severity icon, plain-language text, task chip, dismiss `×` (24h localStorage TTL).
 
----
+### 2.2 KPI cards
+| Card | Source |
+|------|--------|
+| Agent Status (Running / Idle / Error + queue depth) | `GET /agent/status` |
+| Last Run (X mins ago + tasks scored) | `GET /agent/status` |
+| Next Run (in X mins + trigger description) | `GET /agent/triggers/schedule` |
+| Needs Attention (count + breakdown) | composed |
 
-## 3.5 Inbound Processing Log
+Poll cadence: 30s.
 
-Recent inbound messages and how the resolver handled them:
+### 2.3 Today's Glance Strip
+5 chips: Messages received · Replies sent · Skills run (ok/failed) · Tasks scored · Runs today.
+Source: `GET /comms/summary` + `GET /skills/workers` + `GET /agent/status` + `GET /agent/sessions`.
 
-| Column | Source |
-|--------|--------|
-| Message ID | `InboundResult.message_id` |
-| Channel | email / api / cli / web |
-| Timestamp | `received_at` |
-| Matched Task | `TaskResolution.task_id` (clickable) |
-| Matched By | TASK_ID / VECTOR_SEARCH |
-| Confidence | HIGH / MEDIUM / LOW with score |
-| Signal | DONE / IN_PROGRESS / BLOCKED / DELAYED / UNKNOWN |
-| Action Taken | state_update_published / unmatched / followup_needed |
-
-Useful for debugging: "Why didn't the agent pick up my email update?"
+### 2.4 Live Activity Ticker
+- Subscribes to SSE `/app/v1/events`.
+- Ring buffer 20, persisted to localStorage so reload doesn't lose today's events.
+- Each row: time · coloured dot (event type) · plain-language message · task chip.
+- "View full activity history →" links to Activity panel.
 
 ---
 
-## 3.6 Skill Execution Monitor
+## 3. Panel: Activity
 
-| Widget | Data |
-|--------|------|
-| **Worker Pool** | Total workers, active, idle, failed. Per-worker: worker_id, state, current_job_id, last_heartbeat |
-| **Active Jobs** | Running jobs: job_id, skill_name, task_id, started_at, elapsed time |
-| **Completed Jobs** | Recent completions: skill_name, task_id, status (COMPLETED/FAILED/TIMEOUT), tokens_used, cost_usd, duration |
-| **Heartbeat Health** | Per-worker heartbeat status. Red if last_heartbeat > 900s (timeout threshold) |
+**Components:** Filter bar · Session group rows (toggle) · Data table
 
-**Endpoint:** `GET /app/v1/skills/workers`
+### 3.1 Filters
+- Time: Last hour · Today · Last 7 days
+- Type: All · Decisions · Communications · Skills · Errors only
+- Group by: Time (default) · Session
 
----
+### 3.2 Data source
+- **Live (today):** SSE events translated client-side via `formatEvent.ts`.
+- **Historical:** `GET /agent/activity?from=&to=&type=&limit=&cursor=` (Phase B endpoint, reads MinIO NDJSON).
+- **Session grouping:** `GET /agent/sessions` returns runs from `agent_session_log` table.
 
-## 3.7 Structured Log Viewer
-
-Per-user structured log stream filtered by `session_id`:
-
-- Renders structured JSON log entries in a readable table/tree format
-- Fields: timestamp, level (INFO/WARN/ERROR), container, event_type, message
-- Filterable by: level, container, event_type, session_id, date range
-- Search within log messages
-- Auto-refresh toggle (tail mode)
-
-Log entries come from CloudWatch log groups: `/workgraph/agent-runtime/USER-{id}` and shared container log groups.
+### 3.3 Row content
+Time (HH:MM:SS) · plain-language message · task chip · status badge.
+Failed rows: red row background, inline "Details" link → drawer with raw event JSON.
+Pagination: "Load more" using opaque cursor.
 
 ---
 
-## 3.8 Session Trace View
+## 4. Panel: Comms
 
-Distributed trace visualization for a single `session_id`:
+**Components:** Banner counts · Inbound / Outbound sub-tabs (URL-bound) · Channel badges
 
-- Shows the full lifecycle of one agent invocation across all containers
-- Timeline (waterfall): trigger-engine → channel-gateway → inbound-processor → agent-loop → skill-worker → outbound
-- Per-span: container name, duration, key events
-- Click any span → drill into structured logs for that container + session_id
+### 4.1 Banner
+Today's received vs sent counts; date-range selector (Today / 7d / 30d).
+Source: `GET /comms/summary`.
 
----
+### 4.2 Inbound tab (`/agent-monitor/comms/inbound`)
+Source: `GET /tasks/inbound-log`.
+Columns: Time · Channel badge · From (display name) · Message preview · Task chip · Action taken.
+Underlying data: flattened `TaskNode.update_log[]` for user's tasks.
 
-## 3.7a Sub-Agent Pool Monitor
+### 4.3 Outbound tab (`/agent-monitor/comms/outbound`)
+Source: `GET /tasks/outbound-log`.
+Columns: Time · Channel badge · To (display name) · Subject/summary · Task chip · Status.
+Underlying data: `CheckinNode` records linked to user's tasks.
 
-Dedicated panel showing the state of all running sub-agents delegated by the orchestrator.
-
-### Runner Pool Status
-
-| Widget | Data Source |
-|--------|------------|
-| **Pool Utilization** | Active / Total slots (e.g. 3 / 4). Progress bar turns amber at 75%, red at 100%. | `GET /app/v1/agents/pool/status` |
-| **Queue Depth** | Jobs waiting in `AGENT_JOBS` broker queue for a free runner slot | `GET /app/v1/agents/pool/status` |
-| **Per-Runner Status** | runner_id, state (IDLE/RUNNING/COMPLETED/FAILED), current agent_id, current task_id, elapsed time, last_heartbeat | `GET /app/v1/agents/pool/runners` |
-
-### Active Delegations Table
-
-| Column | Source |
-|--------|--------|
-| Agent ID | `AgentUpdateEvent.agent_id` |
-| Task ID | `AgentUpdateEvent.task_id` (clickable → graph node) |
-| Session | `AgentUpdateEvent.session_id` |
-| Batch ID | `AgentUpdateEvent.batch_id` (groups parallel tier) |
-| Status | RUNNING / COMPLETED / BLOCKED / QUEUED |
-| Started | `AgentTaskStartedEvent.emitted_at` |
-| Last Heartbeat | `AgentHeartbeatEvent.emitted_at` — red if stale > 300s |
-| Duration | Elapsed since started |
-| Progress | Latest `AgentTaskProgressEvent.message` |
-
-**Endpoint:** `GET /app/v1/agents/delegations`
-
-### Dispatch Plan Visualizer
-
-When multiple tasks are delegated in one orchestrator turn, shows the `AgentDispatchPlanner` output:
-- Tier 1 (parallel) → Tier 2 → Tier 3 shown as horizontal swim lanes
-- Dependencies rendered as arrows between tier boxes
-- Each box: task_id, agent_id, status badge
-- Completed tiers greyed out; active tier highlighted; pending tiers dimmed
-
-**Endpoint:** `GET /app/v1/agents/dispatch-plan/{session_id}`
-
-### Heartbeat Health Timeline
-
-Per-agent heartbeat signal over time (last 30 minutes):
-- Green = heartbeat received within 60s
-- Amber = 60–300s stale
-- Red = > 300s (BLOCKED escalation triggered)
-- Shows escalation events as markers on timeline
-
-**Endpoint:** SSE `agent.heartbeat` events on `/app/v1/events`
+### 4.4 Display name resolution priority
+1. `agent_channel_identities[recipient_hashed].display_name`
+2. `TaskNode.counterparty.display_name`
+3. `User-{lastFourCharsOfHash}` fallback
 
 ---
 
-## 3.9 LLM Cost Monitor
+## 5. Panel: Scheduling
 
-| Metric | Granularity |
-|--------|-------------|
-| Total tokens used | Per day, per week, per month |
-| Total cost (USD) | Per day, per week, per month |
-| Cost per skill | Breakdown by skill_name |
-| Cost per user | If multi-user org |
-| Cost per model | Breakdown by model string |
-| Token budget remaining | If admin-configured budget limits |
+**Components:** Next run card · Trigger list table · Run history (Phase B)
 
-Charts:
-- Bar chart: daily cost over last 30 days
-- Pie chart: cost distribution by skill
-- Line chart: cost trend with projection
+### 5.1 Next run card
+Most imminent trigger from `GET /agent/triggers/schedule`.
+"Run Now" → `POST /agent/triggers/{id}/fire`.
 
-**Data source:** `LLMResponse.cost_usd` and `LLMResponse.tokens_used` from skill execution results.
+### 5.2 Trigger list
+Columns: Trigger · Type · Schedule · Last fired · Next fire · Status · action button.
+Snoozed → "Resume" button. Inline expand on row click.
+
+### 5.3 Run history (Phase B)
+Last 10 runs from `GET /agent/sessions`.
+
+---
+
+## 6. Panel: Skills
+
+**Components:** Pool utilisation bar · 4 worker mini-cards · Recent jobs table
+
+### 6.1 Pool utilisation
+Bar coloured green (<75%) / amber (75–90%) / red (>90%). Active / total label.
+
+### 6.2 Worker mini-cards
+Up to 4 in 2×2 grid; "Show all" link expands.
+Each: skill name, task chip, sparkline (10 bars heartbeat), state colour (Running green / Idle grey / Failed red / Stale amber).
+
+### 6.3 Recent jobs
+Last 20 from `GET /skills/workers` completed_jobs.
+Columns: Time · Skill · Task · Duration · Tokens · Status.
+Cost columns deliberately not surfaced (provider gap, Phase C).
+Failed rows: red background + plain-language error (mapping in `lib/formatSkillError.ts`).
+
+---
+
+## 7. Panel: Scoring
+
+**Components:** 7-factor scoring transparency.
+
+### 7.1 Task score table
+Source: `GET /agent/action-queue`.
+Columns: Rank · Task title + chip · Score bar (0–1) · Recommended action · Autonomy.
+Top row highlighted; click → loads factor panel on right.
+
+### 7.2 Factor breakdown side panel
+Source: `GET /scoring/tasks/{task_id}`.
+Lists all 7 factors with weight + raw score + mini progress bar:
+1. Timeline urgency (×0.25)
+2. Dependency weight (×0.20)
+3. Critical path (×0.20)
+4. Blocker status (×0.15)
+5. Human override (×0.10)
+6. Resource risk (×0.05)
+7. Constraint pressure (×0.05)
+
+Plain-language explanation sentence above factors.
+
+### 7.3 What-if Simulator
+Source: `POST /scoring/simulate` (verify exists; B-8 if not).
+Modal with 7 sliders (one per factor); live debounced score preview.
+Banner: "Preview only — no changes are saved."
+
+---
+
+## 8. Panel: Agents
+
+Hidden when `total_runners == 0`. Otherwise:
+
+### 8.1 Pool KPIs
+4 cards: Active runners (X/Y) · Queue depth · Avg duration · Stale heartbeats.
+
+### 8.2 Dispatch Plan
+Source: `GET /agents/dispatch-plan/{session_id}` for most recent active session.
+Tier 1 → 2 → 3 swim-lanes. States: Running / Completed / Pending / Blocked.
+
+### 8.3 Heartbeat timeline
+Source: `GET /agents/pool/runners`.
+Per-runner bar of 30 segments (1/minute, 15 below 768px).
+Green ≤ 60s · Amber 60–300s · Red > 300s · Empty (idle).
+
+### 8.4 Active delegations
+Source: `GET /agents/delegations` (verify exists; B-9 if not).
+Columns: Agent · Task · Session · Status · Started · Last heartbeat · Duration.
+Stale rows amber; BLOCKED red.
+
+---
+
+## 9. Phase split
+
+| Phase | Scope |
+|-------|-------|
+| **A** | M-A foundation, M-B Overview, M-E Scheduling, M-F Skills, M-G Scoring, M-H Agents (uses existing endpoints + `/agent/activity` per user decision) |
+| **B** | M-C Activity full historical, M-D Comms full bilateral, session log, race fix, triad-wide tool-call wiring |
+| **C** | Token/cost drill-down, MinIO retention worker, structured log viewer, session trace waterfall, LLM Cost Monitor |
+
+---
+
+## 10. Out of scope (Phase C — superseded sections from v1)
+
+The following sections in v1 are deferred to Phase C and **not** part of this build:
+
+| v1 section | New disposition |
+|------------|-----------------|
+| 3.7 Structured Log Viewer | Phase C — admin only (CloudWatch / NDJSON browser) |
+| 3.8 Session Trace View | Phase C — distributed tracing |
+| 3.9 LLM Cost Monitor | Phase C — blocked by `cost_usd = 0.0` provider gap |
+
+When provider cost wiring lands and admin separation is built out, these return as a separate "Agent Monitor — Admin" surface or as a dashboard in Settings.
+
+---
+
+## 11. References
+
+- Wireframe: [`wireframes-v2/pages/agent-monitor-v2.html`](../../wireframes-v2/pages/agent-monitor-v2.html)
+- Build wave: **Wave M** in [`build-plan.md`](../../build-plan.md) (supersedes Wave 5)
+- Backend requirements: [`graphclaw/docs/requirements/agent-monitor-v2-backend.md`](../../../graphclaw/docs/requirements/agent-monitor-v2-backend.md)
+- Backend architecture: [`graphclaw/docs/architecture/20-agent-activity-logging.md`](../../../graphclaw/docs/architecture/20-agent-activity-logging.md)
+- Agent triad context: [`graphclaw/docs/architecture/14-agent-triad.md`](../../../graphclaw/docs/architecture/14-agent-triad.md)
+- Follow-up cadence (drives Scheduling panel): [`graphclaw/docs/architecture/18-follow-up-cadence.md`](../../../graphclaw/docs/architecture/18-follow-up-cadence.md)
+- Sub-agent orchestration (drives Agents panel): [`graphclaw/docs/architecture/11-sub-agent-orchestration.md`](../../../graphclaw/docs/architecture/11-sub-agent-orchestration.md)

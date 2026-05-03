@@ -1,7 +1,6 @@
 /**
  * Central API hooks — every TanStack Query hook that talks to the backend.
- * All calls use the raw fetch with the Bearer token from localStorage
- * (same pattern as the existing useAgentData / useGraphData hooks).
+ * All calls use the raw fetch with the Bearer token from localStorage.
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 

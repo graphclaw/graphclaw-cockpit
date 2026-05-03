@@ -1,27 +1,39 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-interface ScoreFactor {
-  name: string;
+export interface ScoreFactor {
+  name:
+    | 'Timeline urgency'
+    | 'Dependency weight'
+    | 'Critical path'
+    | 'Blocker status'
+    | 'Human override'
+    | 'Resource risk'
+    | 'Constraint pressure';
   weight: number;
-  value: number;
+  rawScore: number;
 }
 
-interface ScoreExplainerProps {
+interface ScoreFactorBreakdownProps {
   score: number;
   factors?: ScoreFactor[];
+  summary?: string;
 }
 
 const DEFAULT_FACTORS: ScoreFactor[] = [
-  { name: 'Urgency', weight: 0.20, value: 0.85 },
-  { name: 'Importance', weight: 0.20, value: 0.70 },
-  { name: 'Dependencies', weight: 0.15, value: 0.60 },
-  { name: 'Recency', weight: 0.10, value: 0.90 },
-  { name: 'Effort', weight: 0.10, value: 0.45 },
-  { name: 'Alignment', weight: 0.15, value: 0.80 },
-  { name: 'Capacity', weight: 0.10, value: 0.55 },
+  { name: 'Timeline urgency', weight: 0.25, rawScore: 0.85 },
+  { name: 'Dependency weight', weight: 0.2, rawScore: 0.7 },
+  { name: 'Critical path', weight: 0.2, rawScore: 0.6 },
+  { name: 'Blocker status', weight: 0.15, rawScore: 0.4 },
+  { name: 'Human override', weight: 0.1, rawScore: 0.5 },
+  { name: 'Resource risk', weight: 0.05, rawScore: 0.35 },
+  { name: 'Constraint pressure', weight: 0.05, rawScore: 0.45 },
 ];
 
-export function ScoreExplainer({ score, factors = DEFAULT_FACTORS }: ScoreExplainerProps) {
+export function ScoreFactorBreakdown({
+  score,
+  factors = DEFAULT_FACTORS,
+  summary,
+}: ScoreFactorBreakdownProps) {
   return (
     <Card>
       <CardHeader>
@@ -33,19 +45,20 @@ export function ScoreExplainer({ score, factors = DEFAULT_FACTORS }: ScoreExplai
       <CardContent>
         <div className="space-y-3">
           {factors.map((factor) => {
-            const contribution = factor.weight * factor.value;
+            const weightedScore = factor.weight * factor.rawScore;
+
             return (
               <div key={factor.name} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-[var(--text-secondary)]">{factor.name}</span>
                   <span className="font-mono text-xs text-[var(--text-tertiary)]">
-                    {factor.weight.toFixed(2)} &times; {factor.value.toFixed(2)} = {contribution.toFixed(3)}
+                    {factor.weight.toFixed(2)} x {factor.rawScore.toFixed(2)} = {weightedScore.toFixed(3)}
                   </span>
                 </div>
                 <div className="h-1.5 rounded-full bg-[var(--bg-inset)]">
                   <div
                     className="h-full rounded-full bg-[var(--brand-primary)]"
-                    style={{ width: `${factor.value * 100}%` }}
+                    style={{ width: `${factor.rawScore * 100}%` }}
                   />
                 </div>
               </div>
@@ -54,9 +67,12 @@ export function ScoreExplainer({ score, factors = DEFAULT_FACTORS }: ScoreExplai
         </div>
 
         <div className="mt-4 rounded-[var(--radius-md)] bg-[var(--bg-inset)] p-3 text-sm text-[var(--text-secondary)]">
-          This task scores <strong className="text-[var(--text-primary)]">{score.toFixed(2)}</strong> because it has
-          high urgency and alignment, with moderate importance. The lower effort and capacity scores suggest it may
-          require more resources than currently available.
+          {summary ?? (
+            <>
+              This task scores <strong className="text-[var(--text-primary)]">{score.toFixed(2)}</strong> based on
+              timeline urgency, dependency pressure, and current blocking signals.
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

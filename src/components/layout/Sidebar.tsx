@@ -2,6 +2,7 @@ import { useLocation, Link } from 'react-router';
 import { useThemeStore } from '@/stores/theme';
 import { useAuthStore } from '@/stores/auth';
 import { useSkills } from '@/lib/api-hooks';
+import { useAttentionItems } from '@/features/agent-monitor/hooks/useAttentionItems';
 import {
   LayoutDashboard,
   CheckSquare,
@@ -46,7 +47,7 @@ const WORKSPACE_NAV: NavItem[] = [
 ];
 
 const INTELLIGENCE_NAV: NavItem[] = [
-  { label: 'Agent Monitor', icon: Cpu, path: '/agent-monitor', badge: { count: 7, color: 'var(--state-progress)' } },
+  { label: 'Agent Monitor', icon: Cpu, path: '/agent-monitor' },
   { label: 'Chat', icon: MessageCircle, path: '/chat' },
   { label: 'Skills', icon: Puzzle, path: '/skills' },
   { label: 'MCP Registry', icon: Plug, path: '/mcp' },
@@ -72,6 +73,7 @@ const PAGE_ALIASES: Record<string, string> = {
 function isActive(currentPath: string, itemPath: string): boolean {
   const resolved = PAGE_ALIASES[currentPath] ?? currentPath;
   if (itemPath === '/') return resolved === '/';
+  if (itemPath === '/agent-monitor') return resolved.startsWith('/agent-monitor');
   return resolved.startsWith(itemPath);
 }
 
@@ -81,6 +83,7 @@ export function Sidebar() {
   const toggleSidebar = useThemeStore((s) => s.toggleSidebar);
   const role = useAuthStore((s) => s.role);
   const { data: skills = [] } = useSkills();
+  const { count: attentionCount } = useAttentionItems();
   const disabledSkillCount = skills.filter((s) => !s.enabled).length;
 
   return (
@@ -122,6 +125,10 @@ export function Sidebar() {
               )}
               {section.items.map((item) => {
                 const active = isActive(location.pathname, item.path);
+                const isAgentMonitorItem = item.path === '/agent-monitor';
+                const badgeCount = isAgentMonitorItem ? attentionCount : item.badge?.count;
+                const badgeColor = isAgentMonitorItem ? 'var(--state-blocked)' : item.badge?.color;
+
                 return (
                   <Link
                     key={item.path}
@@ -137,12 +144,13 @@ export function Sidebar() {
                     {!collapsed && (
                       <>
                         <span className="flex-1 truncate">{item.label}</span>
-                        {item.badge && (
+                        {badgeCount != null && badgeCount > 0 && badgeColor && (
                           <span
+                            data-testid={isAgentMonitorItem ? 'sidebar-agent-monitor-badge' : undefined}
                             className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white"
-                            style={{ backgroundColor: item.badge.color }}
+                            style={{ backgroundColor: badgeColor }}
                           >
-                            {item.badge.count}
+                            {badgeCount}
                           </span>
                         )}
                         {item.path === '/skills' && disabledSkillCount > 0 && (

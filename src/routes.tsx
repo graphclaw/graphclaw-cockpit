@@ -27,7 +27,7 @@ const WorkforcePage = lazy(() =>
   import('@/features/workforce/WorkforcePage').then((m) => ({ default: m.WorkforcePage })),
 );
 const AgentMonitorPage = lazy(() =>
-  import('@/features/agent/AgentMonitorPage').then((m) => ({ default: m.AgentMonitorPage })),
+  import('@/features/agent-monitor/AgentMonitorPage').then((m) => ({ default: m.AgentMonitorPage })),
 );
 const ChannelsPage = lazy(() =>
   import('@/features/settings/ChannelsPage').then((m) => ({ default: m.ChannelsPage })),
@@ -165,7 +165,9 @@ export function AppRoutes() {
                         <Route path="graph-explorer" element={<GraphExplorerPage />} />
 
                         {/* Intelligence */}
-                        <Route path="agent-monitor" element={<AgentMonitorPage />} />
+                        <Route path="agent-monitor" element={<Navigate to="/agent-monitor/overview" replace />} />
+                        <Route path="agent-monitor/comms/:tab" element={<AgentMonitorPage />} />
+                        <Route path="agent-monitor/:section" element={<AgentMonitorPage />} />
                         <Route path="chat" element={<ChatPage />} />
                         <Route path="skills" element={<SkillsPage />} />
                         <Route path="mcp" element={<McpRegistryPage />} />
