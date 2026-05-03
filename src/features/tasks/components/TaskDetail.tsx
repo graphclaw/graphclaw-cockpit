@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { TaskItem } from '@/features/graph/hooks/useGraphData';
+import { CounterpartyConversations } from './CounterpartyConversations';
 
 interface TaskDetailProps {
   task: TaskItem;
@@ -65,6 +66,11 @@ export function TaskDetail({ task, onClose }: TaskDetailProps) {
           <Button size="sm" variant="outline">
             Edit
           </Button>
+        </div>
+
+        {/* Counterparty Conversations (FR-UI-001) */}
+        <div className="border-t border-[var(--border-default)] pt-4">
+          <CounterpartyConversations />
         </div>
       </div>
     </div>
