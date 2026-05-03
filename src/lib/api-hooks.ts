@@ -75,6 +75,14 @@ async function apiFetch<T>(path: string): Promise<T> {
   return apiRequest<T>(path, 'GET');
 }
 
+async function apiFetchOptional<T>(path: string): Promise<T | null> {
+  try {
+    return await apiFetch<T>(path);
+  } catch {
+    return null;
+  }
+}
+
 async function apiPost<T>(path: string, body?: unknown): Promise<T> {
   return apiRequest<T>(path, 'POST', body);
 }
@@ -322,6 +330,10 @@ export interface AgentStatus {
   last_cycle_at: string | null;
   queue_depth: number;
   agent_version: string;
+  tasks_scored?: number;
+  tasksScored?: number;
+  last_cycle_tasks_scored?: number;
+  tasks_completed?: number;
 }
 
 export function useAgentStatus() {
@@ -400,6 +412,73 @@ export function useAgentTriggers() {
     queryKey: ['agent', 'triggers'],
     queryFn: () => apiFetch<AgentTrigger[]>('/app/v1/agent/triggers/schedule'),
     refetchInterval: 30_000,
+  });
+}
+
+export interface CommsSummary {
+  date?: string;
+  received?: number;
+  sent?: number;
+  matched?: number;
+  unmatched?: number;
+  messages_received?: number;
+  messagesReceived?: number;
+  replies_sent?: number;
+  repliesSent?: number;
+}
+
+export function useCommsSummary(date?: string) {
+  const query = date ? `?date=${encodeURIComponent(date)}` : '';
+
+  return useQuery({
+    queryKey: ['agent', 'comms-summary', date ?? 'today'],
+    queryFn: () => apiFetchOptional<CommsSummary>(`/app/v1/comms/summary${query}`),
+    refetchInterval: 30_000,
+    retry: false,
+  });
+}
+
+export interface AgentSessionItem {
+  sessionId?: string;
+  startedAt?: string;
+  completedAt?: string;
+  status?: string;
+}
+
+export interface AgentSessionsResponse {
+  items?: AgentSessionItem[];
+  nextCursor?: number | string | null;
+  total?: number;
+}
+
+export function useAgentSessions(limit = 20) {
+  return useQuery({
+    queryKey: ['agent', 'sessions', limit],
+    queryFn: () => apiFetchOptional<AgentSessionsResponse>(`/app/v1/agent/sessions?limit=${limit}`),
+    refetchInterval: 30_000,
+    retry: false,
+  });
+}
+
+export interface SkillWorkerJob {
+  status?: string;
+  completed_at?: string;
+  completedAt?: string;
+  ended_at?: string;
+  finished_at?: string;
+}
+
+export interface SkillWorkersResponse {
+  completed_jobs?: SkillWorkerJob[];
+  jobs?: SkillWorkerJob[];
+}
+
+export function useSkillWorkers() {
+  return useQuery({
+    queryKey: ['agent', 'skills-workers'],
+    queryFn: () => apiFetchOptional<SkillWorkersResponse>('/app/v1/skills/workers'),
+    refetchInterval: 30_000,
+    retry: false,
   });
 }
 

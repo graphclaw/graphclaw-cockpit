@@ -4,6 +4,7 @@ import { Activity, Bot, CalendarClock, MessageSquare, Radar, Sigma } from 'lucid
 import type { LucideIcon } from 'lucide-react';
 import { AttentionStrip } from './components/AttentionStrip';
 import { EmptyPanel } from './components/EmptyPanel';
+import { GlanceStrip } from './components/GlanceStrip';
 import { OverviewKpiStrip } from './components/OverviewKpiStrip';
 
 type Section = 'overview' | 'activity' | 'comms' | 'scheduling' | 'skills' | 'scoring' | 'agents';
@@ -277,6 +278,9 @@ export function AgentMonitorPage() {
                 {isOverviewSection && (
                   <div className="mb-4">
                     <OverviewKpiStrip />
+                    <div className="mt-3">
+                      <GlanceStrip />
+                    </div>
                   </div>
                 )}
 

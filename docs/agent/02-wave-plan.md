@@ -243,6 +243,28 @@ All cards use `<KpiCard />` (existing shared component). Poll cadence: 30s. Firs
 
 ### M-B-2 — Today's Glance Strip
 
+**Kickoff notes (2026-05-03):**
+- Scope for this step: implement the 5-chip overview strip directly under KPI cards.
+- Data wiring decisions:
+  - `Messages received` and `Replies sent` come from `/app/v1/comms/summary`, with `—` fallback when endpoint/field is unavailable.
+  - `Skills run` is computed from today's `completed_jobs` in `/app/v1/skills/workers` (split ok/failed).
+  - `Tasks scored` comes from `/app/v1/agent/status` with tolerant field parsing (`tasks_scored` + compatibility keys).
+  - `Runs today` comes from `/app/v1/agent/sessions`, with `—` fallback when endpoint is unavailable.
+- Edge cases validated before coding:
+  - missing optional endpoints in Phase A must not show panel-level errors,
+  - mixed snake_case/camelCase payload keys should still map correctly,
+  - date boundaries should use UTC day start/end for "today" counters.
+- Failure modes to guard:
+  - hard failure when `/comms/summary` or `/agent/sessions` returns 404/501,
+  - counting stale skill jobs from prior days,
+  - layout collapse on narrow screens.
+
+**Completion notes (2026-05-03):**
+- Implemented `GlanceStrip` with 5 chips and responsive wrapping directly under the KPI strip.
+- Added `useGlanceMetrics` to compose metrics from `/agent/status`, `/skills/workers`, `/comms/summary`, and `/agent/sessions` with tolerant payload parsing and Phase A fallbacks.
+- Added optional API hooks for comms summary, sessions, and skills workers in `api-hooks.ts` to keep polling behavior centralized.
+- Verification passed: focused unit tests (`GlanceStrip`, `AgentMonitorPage`, `OverviewKpiStrip`), `npm run typecheck`, focused eslint, and Playwright `e2e/agent/agent-monitor.spec.ts`.
+
 **File:** `components/GlanceStrip.tsx`
 
 5 chips with icon + value + label. Phase A fallback: Messages received and Replies sent show `—` until B-5 ships.
