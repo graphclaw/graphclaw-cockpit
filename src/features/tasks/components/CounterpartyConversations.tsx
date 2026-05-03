@@ -60,7 +60,6 @@ function ThreadMessages({ counterpartyId, channel, threadId }: ThreadMessagesPro
     <ul className="flex flex-col gap-1.5 pb-1" data-testid={`messages-${threadId}`}>
       {messages.map((msg, i) => (
         <li
-          // eslint-disable-next-line react/no-array-index-key
           key={`${threadId}-${i}`}
           className={`flex gap-2 rounded-[var(--radius-sm)] px-2 py-1.5 ${
             msg.direction === 'out'

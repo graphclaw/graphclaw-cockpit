@@ -2,6 +2,7 @@ import { useLocation, Link } from 'react-router';
 import { ThemePicker } from '@/components/common/ThemePicker';
 import { Bell, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth';
+import { OrgSwitcher } from '@/features/auth/OrgSwitcher';
 
 const ROUTE_LABELS: Record<string, string> = {
   '/': 'Dashboard',
@@ -85,6 +86,8 @@ export function Topbar() {
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-2">
+        <OrgSwitcher />
+
         <button
           className="relative flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] text-[var(--text-secondary)] hover:bg-[var(--bg-inset)] hover:text-[var(--text-primary)] transition-colors"
           aria-label="Notifications"

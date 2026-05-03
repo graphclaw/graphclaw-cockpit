@@ -13,8 +13,10 @@ interface AuthState {
   displayName: string | null;
   email: string | null;
   isAuthenticated: boolean;
+  activeOrgId: string | null;
   setTokens: (access: string, refresh: string) => void;
   setUser: (userId: string, role: UserRole, displayName?: string, email?: string) => void;
+  setActiveOrgId: (orgId: string) => void;
   logout: () => void;
 }
 
@@ -28,6 +30,7 @@ export const useAuthStore = create<AuthState>()(
       displayName: null,
       email: null,
       isAuthenticated: false,
+      activeOrgId: null,
       setTokens: (access, refresh) => {
         logger.info('auth.login');
         localStorage.setItem('gc-access-token', access);
@@ -36,6 +39,7 @@ export const useAuthStore = create<AuthState>()(
       },
       setUser: (userId, role, displayName, email) =>
         set({ userId, role, displayName: displayName ?? null, email: email ?? null }),
+      setActiveOrgId: (orgId) => set({ activeOrgId: orgId }),
       logout: () => {
         logger.info('auth.logout');
         localStorage.removeItem('gc-access-token');
@@ -48,6 +52,7 @@ export const useAuthStore = create<AuthState>()(
           displayName: null,
           email: null,
           isAuthenticated: false,
+          activeOrgId: null,
         });
       },
     }),
