@@ -725,6 +725,29 @@ New files:
 - ☐ Import SKILL.md file upload
 - ☐ Dirty-state tracking with navigation guard
 
+**FR-POL-002 — Policies Editor** ✅ COMPLETE (commit c885807)
+- `src/features/intelligence/PoliciesPanel.tsx` — 4-policy card list (delegation, escalation, counterparty_etiquette, reply_tone)
+- `src/features/intelligence/PolicyEditor.tsx` — side-by-side structured form (frontmatter) + Markdown body editor + preview toggle
+- Added `Policies` tab to `IntelligenceLayout.tsx` (ShieldCheck icon, `policies` path)
+- Hooks: `usePolicy`, `useSavePolicy` in `src/lib/api-hooks.ts`
+- Route: `intelligence/policies` in `src/routes.tsx`
+- Tests: `PoliciesPanel.test.tsx` (4 passing)
+
+**FR-UI-001 — CounterpartyConversations** ✅ COMPLETE (commit a3342ad)
+- `src/features/tasks/components/CounterpartyConversations.tsx` — accordion list of counterparties → threads → messages
+- Integrated into `TaskDetail.tsx` as a section below task actions
+- Hooks: `useConversations`, `useConversationThreads`, `useConversationMessages` in `src/lib/api-hooks.ts`
+- Backend prerequisite: `GET /app/v1/conversations[/{cp}/{channel}/{thread}]` (graphclaw commit 954e317)
+- Tests: `CounterpartyConversations.test.tsx` (4 passing)
+
+**FR-UI-002 — OrgSwitcher** ✅ COMPLETE (commit 94e3647)
+- `src/features/auth/OrgSwitcher.tsx` — dropdown in Topbar for multi-org context switching
+- `activeOrgId` + `setActiveOrgId` added to `src/stores/auth.ts` (persisted via Zustand)
+- Injected into `src/components/layout/Topbar.tsx`
+- Hook: `useUserOrgs` in `src/lib/api-hooks.ts`
+- Backend prerequisite: `GET /app/v1/user/orgs` (graphclaw commit 954e317)
+- Tests: `OrgSwitcher.test.tsx` (3 passing)
+
 ---
 
 ### Wave 10 — Chat Interface + Real-Time
