@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { AttentionStrip } from './components/AttentionStrip';
 
 type Section = 'overview' | 'activity' | 'comms' | 'scheduling' | 'skills' | 'scoring' | 'agents';
 type MonitorGroup = 'Monitor' | 'Advanced';
@@ -163,6 +164,8 @@ export function AgentMonitorPage() {
           </header>
 
           <div className="space-y-4 p-6">
+            {activeSection === 'overview' && <AttentionStrip />}
+
             <div
               className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4"
               data-testid={`agent-monitor-panel-${activeSection}`}

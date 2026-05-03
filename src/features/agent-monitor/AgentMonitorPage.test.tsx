@@ -2,8 +2,31 @@ import { screen, waitFor } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { renderWithProviders } from '@/test/utils';
 import { AgentMonitorPage } from '@/features/agent-monitor/AgentMonitorPage';
+import { useAttentionItems } from '@/features/agent-monitor/hooks/useAttentionItems';
+
+vi.mock('@/features/agent-monitor/hooks/useAttentionItems', () => ({
+  useAttentionItems: vi.fn(() => ({
+    count: 0,
+    items: [],
+    failedSkillCount: 0,
+    staleRunnerCount: 0,
+    isLoading: false,
+  })),
+}));
+
+const mockUseAttentionItems = vi.mocked(useAttentionItems);
 
 describe('AgentMonitorPage', () => {
+  beforeEach(() => {
+    mockUseAttentionItems.mockReturnValue({
+      count: 0,
+      items: [],
+      failedSkillCount: 0,
+      staleRunnerCount: 0,
+      isLoading: false,
+    });
+  });
+
   function renderAt(path: string) {
     return renderWithProviders(
       <Routes>

@@ -112,6 +112,17 @@ grep -rn "AgentMonitorPage" src/
 
 ### M-A-3 — Attention Strip
 
+**Kickoff notes (2026-05-03):**
+- Scope for this step: ship `AttentionStrip` UI and localStorage dismiss handling, wired to live failed-skill and stale-heartbeat signals from `useAttentionItems()`.
+- Edge cases validated before coding:
+  - strip should not render when all issues are dismissed or when no issues exist,
+  - dismiss state must survive reload and expire after 24h,
+  - malformed localStorage payload must fail safely without crashing the page.
+- Failure modes to guard:
+  - duplicate alert rows from unstable IDs when polling refreshes,
+  - stale dismiss entries growing forever if not pruned,
+  - strip appearing outside Overview panel and conflicting with shell layout.
+
 **File:** `src/features/agent-monitor/components/AttentionStrip.tsx` (new)
 
 **Sources (Phase A):**
