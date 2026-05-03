@@ -4,6 +4,7 @@ import { Activity, Bot, CalendarClock, MessageSquare, Radar, Sigma } from 'lucid
 import type { LucideIcon } from 'lucide-react';
 import { AttentionStrip } from './components/AttentionStrip';
 import { EmptyPanel } from './components/EmptyPanel';
+import { OverviewKpiStrip } from './components/OverviewKpiStrip';
 
 type Section = 'overview' | 'activity' | 'comms' | 'scheduling' | 'skills' | 'scoring' | 'agents';
 type MonitorGroup = 'Monitor' | 'Advanced';
@@ -274,13 +275,8 @@ export function AgentMonitorPage() {
                 data-testid={`agent-monitor-panel-${activeSection}`}
               >
                 {isOverviewSection && (
-                  <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4" data-testid="agent-monitor-kpi-grid-placeholder">
-                    {Array.from({ length: 4 }).map((_, index) => (
-                      <div
-                        key={`kpi-placeholder-${index}`}
-                        className="h-16 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-inset)]"
-                      />
-                    ))}
+                  <div className="mb-4">
+                    <OverviewKpiStrip />
                   </div>
                 )}
 

@@ -14,6 +14,10 @@ vi.mock('@/features/agent-monitor/hooks/useAttentionItems', () => ({
   })),
 }));
 
+vi.mock('@/features/agent-monitor/components/OverviewKpiStrip', () => ({
+  OverviewKpiStrip: () => <div data-testid="agent-monitor-kpi-strip" />,
+}));
+
 const mockUseAttentionItems = vi.mocked(useAttentionItems);
 
 describe('AgentMonitorPage', () => {
@@ -76,7 +80,7 @@ describe('AgentMonitorPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('agent-monitor-mobile-banner')).toBeInTheDocument();
-      expect(screen.getByTestId('agent-monitor-kpi-grid-placeholder')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-kpi-strip')).toBeInTheDocument();
     });
   });
 

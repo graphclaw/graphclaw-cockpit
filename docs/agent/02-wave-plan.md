@@ -216,6 +216,22 @@ docker compose up -d # in another
 
 ### M-B-1 — KPI cards (4)
 
+**Kickoff notes (2026-05-03):**
+- Scope for this step: implement the 4-card Overview KPI strip with real data sources (`/agent/status`, `/agent/triggers/schedule`, attention composition).
+- Edge cases validated before coding:
+  - missing `last_cycle_at` should render a safe fallback,
+  - trigger payloads without `next_fire_at` must not crash next-run rendering,
+  - each card should fail independently and expose a retry action.
+- Failure modes to guard:
+  - coupling all cards to one loading state (causing unnecessary blanking),
+  - stale polling cadence mismatch with wave contract (30s),
+  - fallback text becoming ambiguous for non-technical users.
+
+**Completion notes (2026-05-03):**
+- Implemented `OverviewKpiStrip` with 4 cards wired to live hooks (`useAgentStatus`, `useAgentTriggers`, `useAttentionItems`) and independent loading/error rendering.
+- Updated `useAgentStatus` and `useAgentTriggers` poll cadence to 30s and expanded trigger typing for `next_fire_at` parsing.
+- Verification run passed: focused vitest suites (`OverviewKpiStrip`, `AgentMonitorPage`, `AttentionStrip`, `PanelStates`, `Sidebar`), `npm run typecheck`, focused eslint, and Playwright `e2e/agent/agent-monitor.spec.ts`.
+
 | Card | Source | Display rules |
 |------|--------|--------------|
 | Agent Status | `/agent/status` running + queue_depth | `● Running` (green pulse) / `◉ Idle` (grey) / `✕ Error` (red); subtext: "Scoring N tasks now" or "Last active X mins ago" |

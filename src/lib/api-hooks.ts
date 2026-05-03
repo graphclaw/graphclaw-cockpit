@@ -328,7 +328,7 @@ export function useAgentStatus() {
   return useQuery({
     queryKey: ['agent', 'status'],
     queryFn: () => apiFetch<AgentStatus>('/app/v1/agent/status'),
-    refetchInterval: 10_000,
+    refetchInterval: 30_000,
   });
 }
 
@@ -389,13 +389,17 @@ export interface AgentTrigger {
   name: string;
   schedule: string;
   enabled: boolean;
+  next_fire_at?: string;
+  nextFireAt?: string;
   last_fired?: string;
+  lastFired?: string;
 }
 
 export function useAgentTriggers() {
   return useQuery({
     queryKey: ['agent', 'triggers'],
     queryFn: () => apiFetch<AgentTrigger[]>('/app/v1/agent/triggers/schedule'),
+    refetchInterval: 30_000,
   });
 }
 
