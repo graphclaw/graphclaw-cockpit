@@ -190,7 +190,7 @@ export interface TaskItem {
   state: string;
   score: number;
   priority?: string;
-  assignee?: string;
+  assigned_to?: string;
   goal_id?: string;
   parent_id?: string;
   task_type?: string;
@@ -604,7 +604,7 @@ export interface AdminMember {
   user_id: string;
   email: string;
   role: string;
-  status: string;
+  member_status: string;
   joined_at: string;
 }
 

@@ -47,7 +47,7 @@ export function PeoplePage() {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <Badge variant="outline">{member.status}</Badge>
+                <Badge variant="outline">{member.member_status}</Badge>
                 <span className="text-xs text-[var(--text-tertiary)]">
                   Joined {new Date(member.joined_at).toLocaleDateString()}
                 </span>

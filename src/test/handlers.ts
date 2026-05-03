@@ -94,6 +94,22 @@ export const handlers = [
     });
   }),
 
+  // Admin: members list
+  http.get('/app/v1/admin/members', () => {
+    return HttpResponse.json([
+      { user_id: 'Alice Chen', email: 'alice.chen@example.com', role: 'MEMBER', member_status: 'ACTIVE', joined_at: '2026-01-01T00:00:00Z' },
+      { user_id: 'Bob Kumar', email: 'bob.kumar@example.com', role: 'MEMBER', member_status: 'ACTIVE', joined_at: '2026-01-02T00:00:00Z' },
+      { user_id: 'Dave Smith', email: 'dave.smith@example.com', role: 'ADMIN', member_status: 'INVITED', joined_at: '2026-01-03T00:00:00Z' },
+    ]);
+  }),
+
+  // Agents: sub-agent pool
+  http.get('/app/v1/agents', () => {
+    return HttpResponse.json([
+      { agent_id: 'agent-alpha', name: 'Agent-Alpha', state: 'IDLE', description: '', version: '1', created_at: '', updated_at: '', config: {}, tags: [] },
+    ]);
+  }),
+
   // Graph: resources list
   http.get('/app/v1/graph/resources', () => {
     return HttpResponse.json({

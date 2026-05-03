@@ -21,7 +21,7 @@ describe('useWorkforceData', () => {
     server.use(
       http.get('/app/v1/admin/members', () =>
         HttpResponse.json([
-          { user_id: 'USER-001', email: 'alice@example.com', role: 'member', status: 'active', joined_at: '' },
+          { user_id: 'USER-001', email: 'alice@example.com', role: 'member', member_status: 'ACTIVE', joined_at: '' },
         ]),
       ),
       http.get('/app/v1/agents', () => HttpResponse.json([])),
@@ -50,7 +50,7 @@ describe('useWorkforceData', () => {
     server.use(
       http.get('/app/v1/admin/members', () =>
         HttpResponse.json([
-          { user_id: 'USER-001', email: 'alice@example.com', role: 'member', status: 'active', joined_at: '' },
+          { user_id: 'USER-001', email: 'alice@example.com', role: 'member', member_status: 'ACTIVE', joined_at: '' },
         ]),
       ),
       http.get('/app/v1/agents', () =>
@@ -77,7 +77,7 @@ describe('useWorkforceData', () => {
     server.use(
       http.get('/app/v1/admin/members', () =>
         HttpResponse.json([
-          { user_id: 'USER-001', email: 'alice@example.com', role: 'member', status: 'active', joined_at: '' },
+          { user_id: 'USER-001', email: 'alice@example.com', role: 'member', member_status: 'ACTIVE', joined_at: '' },
         ]),
       ),
       http.get('/app/v1/agents', () => HttpResponse.json([])),
@@ -107,7 +107,7 @@ describe('useWorkforceData', () => {
     server.use(
       http.get('/app/v1/admin/members', () =>
         HttpResponse.json([
-          { user_id: 'USER-001', email: 'alice@example.com', role: 'member', status: 'active', joined_at: '' },
+          { user_id: 'USER-001', email: 'alice@example.com', role: 'member', member_status: 'ACTIVE', joined_at: '' },
         ]),
       ),
       http.get('/app/v1/agents', () => HttpResponse.json([])),

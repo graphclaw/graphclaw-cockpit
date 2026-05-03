@@ -100,13 +100,9 @@ export function useWorkforceData() {
 
   const allTasks: TaskItem[] = tasksQuery.data?.items ?? [];
 
-  // Group tasks by assignee. The backend stores the field as "assigned_to";
-  // the TaskItem interface maps it as "assignee". Handle both shapes.
   const byAssignee: Record<string, TaskItem[]> = {};
   for (const t of allTasks) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw = t as any;
-    const key: string | undefined = t.assignee ?? (raw.assigned_to as string | undefined);
+    const key = t.assigned_to;
     if (key) {
       byAssignee[key] = byAssignee[key] ?? [];
       byAssignee[key].push(t);

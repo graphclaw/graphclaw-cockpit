@@ -93,8 +93,8 @@ export function MembersPage() {
                 >
                   {member.role}
                 </span>
-                <Badge variant={member.status === 'active' ? 'default' : 'outline'}>
-                  {member.status}
+                <Badge variant={member.member_status === 'ACTIVE' ? 'default' : 'outline'}>
+                  {member.member_status}
                 </Badge>
                 <div className="flex justify-end">
                   <Button size="sm" variant="ghost" title="Actions">

@@ -23,7 +23,7 @@ function taskToRow(task: TaskItem, depth: number, kind: RowKind): TimelineRow {
     depth,
     state: task.state,
     priority: task.priority,
-    assignee: task.assignee,
+    assignee: task.assigned_to,
     taskType: task.task_type,
     parentId: task.parent_id ?? task.goal_id,
     childIds: [],

@@ -37,7 +37,7 @@ export interface TaskItem {
   state: string;
   score: number;
   priority?: string;
-  assignee?: string;
+  assigned_to?: string;
   goal_id?: string;
 }
 
