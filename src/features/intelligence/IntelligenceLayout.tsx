@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Navigate, useMatch } from 'react-router';
-import { User, Brain, BookOpen, Tags, Wrench } from 'lucide-react';
+import { User, Brain, BookOpen, Tags, Wrench, ShieldCheck } from 'lucide-react';
 import { createContext, useContext, useState } from 'react';
 import { useIntelligenceAgents } from '@/lib/api-hooks';
 import { useAuthStore } from '@/stores/auth';
@@ -10,6 +10,7 @@ const INTELLIGENCE_TABS = [
   { label: 'Episodic Memory', path: 'episodic-memory', icon: BookOpen },
   { label: 'Semantic Memory', path: 'semantic-memory', icon: Tags },
   { label: 'Skill Authoring', path: 'skill-authoring', icon: Wrench },
+  { label: 'Policies', path: 'policies', icon: ShieldCheck },
 ];
 
 // Shared context so child pages can read the selected agentId

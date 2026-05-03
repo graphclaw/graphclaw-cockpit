@@ -89,6 +89,11 @@ const SkillAuthoringPage = lazy(() =>
     default: m.SkillAuthoringPage,
   })),
 );
+const PoliciesPanel = lazy(() =>
+  import('@/features/intelligence/PoliciesPanel').then((m) => ({
+    default: m.PoliciesPanel,
+  })),
+);
 const ChatPage = lazy(() =>
   import('@/features/chat/ChatPage').then((m) => ({ default: m.ChatPage })),
 );
@@ -171,6 +176,7 @@ export function AppRoutes() {
                           <Route path="episodic-memory" element={<EpisodicMemoryPage />} />
                           <Route path="semantic-memory" element={<SemanticMemoryPage />} />
                           <Route path="skill-authoring" element={<SkillAuthoringPage />} />
+                          <Route path="policies" element={<PoliciesPanel />} />
                         </Route>
 
                         {/* Settings */}

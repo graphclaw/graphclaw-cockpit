@@ -1512,3 +1512,128 @@ export function useAppConfig() {
     staleTime: 10 * 60_000,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Policies (FR-POL-002)
+// ---------------------------------------------------------------------------
+
+export type PolicyName =
+  | 'delegation'
+  | 'escalation'
+  | 'counterparty_etiquette'
+  | 'reply_tone';
+
+export interface PolicyResponse {
+  frontmatter: Record<string, unknown>;
+  body: string;
+  version: string;
+}
+
+export interface PolicyWriteRequest {
+  frontmatter: Record<string, unknown>;
+  body: string;
+  expected_version?: string;
+}
+
+export function usePolicy(agentId: string, policyName: PolicyName) {
+  return useQuery({
+    queryKey: ['intelligence', 'policies', agentId, policyName],
+    queryFn: () =>
+      apiFetch<PolicyResponse>(`/app/v1/agents/${agentId}/policies/${policyName}`),
+    enabled: !!agentId && !!policyName,
+  });
+}
+
+export function useSavePolicy(agentId: string, policyName: PolicyName) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (req: PolicyWriteRequest) =>
+      apiPut<{ version: string }>(
+        `/app/v1/agents/${agentId}/policies/${policyName}`,
+        req,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({
+        queryKey: ['intelligence', 'policies', agentId, policyName],
+      });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Conversations (FR-UI-001)
+// ---------------------------------------------------------------------------
+
+export interface CounterpartySummary {
+  counterparty_id: string;
+  last_activity_at: string | null;
+  channels: string[];
+  thread_count: number;
+}
+
+export interface ThreadSummary {
+  channel: string;
+  thread_id: string;
+  message_count: number;
+  last_message_at: string | null;
+}
+
+export interface ConversationMessage {
+  direction: 'out' | 'in';
+  role: string;
+  content: string;
+  timestamp: string | null;
+  task_id: string | null;
+  channel: string | null;
+  counterparty_id: string | null;
+}
+
+export function useConversations() {
+  return useQuery({
+    queryKey: ['conversations'],
+    queryFn: () => apiFetch<CounterpartySummary[]>('/app/v1/conversations'),
+  });
+}
+
+export function useConversationThreads(counterpartyId: string) {
+  return useQuery({
+    queryKey: ['conversations', counterpartyId, 'threads'],
+    queryFn: () =>
+      apiFetch<ThreadSummary[]>(`/app/v1/conversations/${counterpartyId}`),
+    enabled: !!counterpartyId,
+  });
+}
+
+export function useConversationMessages(
+  counterpartyId: string,
+  channel: string,
+  threadId: string,
+) {
+  return useQuery({
+    queryKey: ['conversations', counterpartyId, channel, threadId],
+    queryFn: () =>
+      apiFetch<ConversationMessage[]>(
+        `/app/v1/conversations/${counterpartyId}/${channel}/${threadId}?reverse=true`,
+      ),
+    enabled: !!counterpartyId && !!channel && !!threadId,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// User / Orgs (FR-UI-002)
+// ---------------------------------------------------------------------------
+
+export interface OrgSummary {
+  org_id: string;
+  name: string;
+  role: string;
+  domain: string | null;
+}
+
+export function useUserOrgs() {
+  return useQuery({
+    queryKey: ['user', 'orgs'],
+    queryFn: () => apiFetch<OrgSummary[]>('/app/v1/user/orgs'),
+    staleTime: 5 * 60_000,
+  });
+}
