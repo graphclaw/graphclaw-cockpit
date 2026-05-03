@@ -562,7 +562,7 @@ New files:
 ---
 
 ### Wave M — Agent Monitor v2 (Cockpit + Gateway)
-**Status:** M-A-3 complete (2026-05-03); M-A-4 next
+**Status:** M-A-4 complete (2026-05-03); M-A-5 next
 **Goal:** 7-panel tabbed Agent Monitor matching `wireframes-v2/pages/agent-monitor-v2.html`, built around plain-language summaries for the non-technical primary user.
 
 **Scope:** see [`docs/agent/02-wave-plan.md`](docs/agent/02-wave-plan.md) for full sub-requirement detail.
@@ -614,7 +614,7 @@ New files:
 - [x] M-A-1: Route + page shell with URL-driven section + comms sub-tab
 - [x] M-A-2: Sidebar integration (active state + attention badge)
 - [x] M-A-3: Attention Strip with localStorage dismiss
-- ☐ M-A-4: Shared EmptyPanel / PanelSkeleton / PanelError
+- [x] M-A-4: Shared EmptyPanel / PanelSkeleton / PanelError
 - ☐ M-A-5: Responsive breakpoints for KPI grid + Scoring 2-col + heartbeat
 - ☐ M-B-1: 4 KPI cards (Agent Status, Last Run, Next Run, Needs Attention)
 - ☐ M-B-2: Today's Glance Strip (5 chips)

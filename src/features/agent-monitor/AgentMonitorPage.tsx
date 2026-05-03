@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { Activity, Bot, CalendarClock, MessageSquare, Radar, Sigma } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { AttentionStrip } from './components/AttentionStrip';
+import { EmptyPanel } from './components/EmptyPanel';
 
 type Section = 'overview' | 'activity' | 'comms' | 'scheduling' | 'skills' | 'scoring' | 'agents';
 type MonitorGroup = 'Monitor' | 'Advanced';
@@ -10,6 +13,12 @@ interface SectionConfig {
   key: Section;
   group: MonitorGroup;
   label: string;
+  subtitle: string;
+}
+
+interface EmptyStateConfig {
+  icon: LucideIcon;
+  title: string;
   subtitle: string;
 }
 
@@ -60,6 +69,44 @@ const SECTION_CONFIG: SectionConfig[] = [
 
 const SECTION_KEYS = new Set<Section>(SECTION_CONFIG.map((item) => item.key));
 
+const EMPTY_STATE_BY_SECTION: Record<Section, EmptyStateConfig> = {
+  overview: {
+    icon: Radar,
+    title: 'Overview data is not available yet.',
+    subtitle: 'KPI cards and daily highlights will populate as panel integrations land.',
+  },
+  activity: {
+    icon: Activity,
+    title: 'No activity yet today.',
+    subtitle: 'Agent runs will appear here in real time.',
+  },
+  comms: {
+    icon: MessageSquare,
+    title: 'No inbound messages yet.',
+    subtitle: 'Incoming emails and replies will land here.',
+  },
+  scheduling: {
+    icon: CalendarClock,
+    title: 'No active triggers.',
+    subtitle: 'Set one up in Settings > Triggers.',
+  },
+  skills: {
+    icon: Bot,
+    title: 'No recent skill runs.',
+    subtitle: 'Worker activity and job outcomes will be listed here.',
+  },
+  scoring: {
+    icon: Sigma,
+    title: 'Action queue is empty.',
+    subtitle: 'Agent has no recommendations right now.',
+  },
+  agents: {
+    icon: Bot,
+    title: 'No sub-agents are running right now.',
+    subtitle: 'Delegations and heartbeat bars will appear when the pool is active.',
+  },
+};
+
 function isCommsTab(value: string | undefined): value is CommsTab {
   return value === 'inbound' || value === 'outbound';
 }
@@ -106,6 +153,17 @@ export function AgentMonitorPage() {
   const activeSection = getSectionFromRoute(params.section, location.pathname);
   const sectionConfig = getSectionConfig(activeSection);
   const commsTab: CommsTab = isCommsTab(params.tab) ? params.tab : 'inbound';
+  const panelEmptyState =
+    activeSection === 'comms'
+      ? {
+          icon: MessageSquare,
+          title: commsTab === 'inbound' ? 'No inbound messages yet.' : 'No outbound messages yet.',
+          subtitle:
+            commsTab === 'inbound'
+              ? 'Incoming emails and replies will land here.'
+              : 'When the agent sends a follow-up it will appear here.',
+        }
+      : EMPTY_STATE_BY_SECTION[activeSection];
 
   useEffect(() => {
     if (location.pathname.startsWith('/agent-monitor/comms/') && !isCommsTab(params.tab)) {
@@ -170,9 +228,11 @@ export function AgentMonitorPage() {
               className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4"
               data-testid={`agent-monitor-panel-${activeSection}`}
             >
-              <p className="text-sm text-[var(--text-secondary)]">
-                {sectionConfig.label} panel scaffold is ready for Wave M implementation.
-              </p>
+              <EmptyPanel
+                icon={panelEmptyState.icon}
+                title={panelEmptyState.title}
+                subtitle={panelEmptyState.subtitle}
+              />
 
               {activeSection === 'comms' && (
                 <div className="mt-3 inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--bg-inset)] px-2 py-1 text-xs text-[var(--text-secondary)]">

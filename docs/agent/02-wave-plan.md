@@ -145,6 +145,17 @@ grep -rn "AgentMonitorPage" src/
 
 ### M-A-4 — Shared empty / loading / error states
 
+**Kickoff notes (2026-05-03):**
+- Scope for this step: add shared `EmptyPanel`, `PanelSkeleton`, and `PanelError` components and replace shell placeholders with panel-specific empty-state copy.
+- Edge cases validated before coding:
+  - comms empty text must switch correctly between inbound and outbound routes,
+  - panel wrappers must preserve existing `data-testid` selectors,
+  - agent panel empty behavior should not break current nav-shell flow.
+- Failure modes to guard:
+  - introducing shared components that hardcode copy and block panel-level customization,
+  - accessibility regressions on action buttons and retry flows,
+  - stale placeholder text remaining in the shell after component swap.
+
 **Files (all new):**
 - `components/EmptyPanel.tsx`
 - `components/PanelSkeleton.tsx`
