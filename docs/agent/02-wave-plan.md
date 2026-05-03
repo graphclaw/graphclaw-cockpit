@@ -175,6 +175,17 @@ grep -rn "AgentMonitorPage" src/
 
 ### M-A-5 — Responsive guards
 
+**Kickoff notes (2026-05-03):**
+- Scope for this step: apply shell-level responsive behavior for mobile warning banner, scoring layout collapse, and heartbeat segment density fallback in placeholder UI.
+- Edge cases validated before coding:
+  - left nav must remain usable when layout collapses to a single column,
+  - responsive classes should not break existing route/test selectors,
+  - scoring layout should stay single-column below xl and split only on wide screens.
+- Failure modes to guard:
+  - forcing fixed widths that cause horizontal overflow on small screens,
+  - rendering all heartbeat segments on mobile and reducing readability,
+  - introducing breakpoint logic that conflicts with upcoming M-B panel composition.
+
 | Breakpoint | Behaviour |
 |-----------|-----------|
 | ≥ 1280px | KPI grid `repeat(4, 1fr)` |

@@ -70,4 +70,22 @@ describe('AgentMonitorPage', () => {
       expect(screen.getByText('outbound')).toBeInTheDocument();
     });
   });
+
+  it('renders responsive helper banner and KPI placeholders on overview', async () => {
+    renderAt('/agent-monitor/overview');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('agent-monitor-mobile-banner')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-kpi-grid-placeholder')).toBeInTheDocument();
+    });
+  });
+
+  it('renders scoring split-layout container', async () => {
+    renderAt('/agent-monitor/scoring');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('agent-monitor-scoring-layout')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-panel-scoring')).toBeInTheDocument();
+    });
+  });
 });

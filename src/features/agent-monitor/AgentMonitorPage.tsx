@@ -153,6 +153,9 @@ export function AgentMonitorPage() {
   const activeSection = getSectionFromRoute(params.section, location.pathname);
   const sectionConfig = getSectionConfig(activeSection);
   const commsTab: CommsTab = isCommsTab(params.tab) ? params.tab : 'inbound';
+  const isOverviewSection = activeSection === 'overview';
+  const isScoringSection = activeSection === 'scoring';
+  const isAgentsSection = activeSection === 'agents';
   const panelEmptyState =
     activeSection === 'comms'
       ? {
@@ -176,10 +179,20 @@ export function AgentMonitorPage() {
     }
   }, [location.pathname, navigate, params.section, params.tab]);
 
+  function renderHeartbeatSegments() {
+    return Array.from({ length: 30 }).map((_, index) => (
+      <span
+        key={`heartbeat-placeholder-${index}`}
+        className={`h-1.5 w-2 rounded-sm bg-[var(--bg-inset)] ${index >= 15 ? 'hidden md:inline-block' : 'inline-block'}`}
+        data-testid="agent-monitor-heartbeat-segment"
+      />
+    ));
+  }
+
   return (
     <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)]">
-      <div className="flex min-h-[calc(100vh-11rem)]">
-        <aside className="w-[196px] shrink-0 border-r border-[var(--border-default)] bg-[var(--bg-surface)] p-2">
+      <div className="flex min-h-[calc(100vh-11rem)] flex-col md:flex-row">
+        <aside className="w-full border-b border-[var(--border-default)] bg-[var(--bg-surface)] p-2 md:w-[196px] md:shrink-0 md:border-b-0 md:border-r">
           {(['Monitor', 'Advanced'] as MonitorGroup[]).map((group, index) => {
             const entries = SECTION_CONFIG.filter((item) => item.group === group);
 
@@ -222,25 +235,80 @@ export function AgentMonitorPage() {
           </header>
 
           <div className="space-y-4 p-6">
+            <div
+              className="rounded-[var(--radius-md)] border border-[var(--state-delayed)] bg-[var(--state-delayed-light)] px-3 py-2 text-xs text-[var(--text-secondary)] md:hidden"
+              data-testid="agent-monitor-mobile-banner"
+            >
+              Agent Monitor is best on a wider screen - open on desktop.
+            </div>
+
             {activeSection === 'overview' && <AttentionStrip />}
 
-            <div
-              className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4"
-              data-testid={`agent-monitor-panel-${activeSection}`}
-            >
-              <EmptyPanel
-                icon={panelEmptyState.icon}
-                title={panelEmptyState.title}
-                subtitle={panelEmptyState.subtitle}
-              />
-
-              {activeSection === 'comms' && (
-                <div className="mt-3 inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--bg-inset)] px-2 py-1 text-xs text-[var(--text-secondary)]">
-                  <span>Comms tab:</span>
-                  <span className="font-semibold text-[var(--text-primary)]">{commsTab}</span>
+            {isScoringSection ? (
+              <div
+                className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_380px]"
+                data-testid="agent-monitor-scoring-layout"
+              >
+                <div
+                  className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4"
+                  data-testid="agent-monitor-panel-scoring"
+                >
+                  <EmptyPanel
+                    icon={panelEmptyState.icon}
+                    title={panelEmptyState.title}
+                    subtitle={panelEmptyState.subtitle}
+                  />
                 </div>
-              )}
-            </div>
+
+                <div className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
+                  <EmptyPanel
+                    icon={Sigma}
+                    title="No factor breakdown selected."
+                    subtitle="Choose a task from the score table to inspect factor details."
+                  />
+                </div>
+              </div>
+            ) : (
+              <div
+                className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4"
+                data-testid={`agent-monitor-panel-${activeSection}`}
+              >
+                {isOverviewSection && (
+                  <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4" data-testid="agent-monitor-kpi-grid-placeholder">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={`kpi-placeholder-${index}`}
+                        className="h-16 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-inset)]"
+                      />
+                    ))}
+                  </div>
+                )}
+
+                <EmptyPanel
+                  icon={panelEmptyState.icon}
+                  title={panelEmptyState.title}
+                  subtitle={panelEmptyState.subtitle}
+                />
+
+                {activeSection === 'comms' && (
+                  <div className="mt-3 inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--bg-inset)] px-2 py-1 text-xs text-[var(--text-secondary)]">
+                    <span>Comms tab:</span>
+                    <span className="font-semibold text-[var(--text-primary)]">{commsTab}</span>
+                  </div>
+                )}
+
+                {isAgentsSection && (
+                  <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-3">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wider text-[var(--text-tertiary)]">
+                      Heartbeat placeholder
+                    </p>
+                    <div className="flex flex-wrap gap-1" data-testid="agent-monitor-heartbeat-placeholder">
+                      {renderHeartbeatSegments()}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="rounded-[var(--radius-lg)] border border-dashed border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
               <p className="text-sm text-[var(--text-tertiary)]">
