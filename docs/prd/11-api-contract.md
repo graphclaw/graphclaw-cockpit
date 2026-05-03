@@ -2,6 +2,13 @@
 
 **Version:** 1.0 | **Date:** 2026-03-21 | **Status:** Draft
 
+> **2026-05-02 design extension.** New API surfaces: `GET /conversations/{counterparty_id}` (FR-STORE-001), `POST /agent-channels` and CRUD (FR-IN-003), `/admin/lifecycle/{cancel-purge,confirm-purge,right-to-erasure,legal-hold}` (FR-DEL-004..007), `/admin/cross-tenant/rebuild` (FR-AE-001), `/admin/triggers/follow_up` (FR-SCHED-001), policies REST (`/agents/{agent_id}/policies/{name}` GET/PUT — FR-POL-001), `/identity/resolve_user` (FR-ID-002), `/identity/merge_resource` (FR-ID-004). References:
+> - [graphclaw/docs/architecture/14-agent-triad.md](../../../graphclaw/docs/architecture/14-agent-triad.md)
+> - [graphclaw/docs/architecture/15-user-identity-and-onboarding.md](../../../graphclaw/docs/architecture/15-user-identity-and-onboarding.md)
+> - [graphclaw/docs/architecture/16-cross-user-conversations.md](../../../graphclaw/docs/architecture/16-cross-user-conversations.md)
+> - [graphclaw/docs/architecture/17-cross-tenant-task-projection.md](../../../graphclaw/docs/architecture/17-cross-tenant-task-projection.md)
+> - [graphclaw/docs/requirements/agent-triad-and-comms-substrate.md](../../../graphclaw/docs/requirements/agent-triad-and-comms-substrate.md) (full FR list)
+
 ---
 
 ## 11.1 Conventions

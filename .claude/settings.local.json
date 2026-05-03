@@ -46,7 +46,18 @@
       "Bash(python -c \"from graphclaw.auth.routes import router; print\\('OK'\\)\")",
       "Bash(python -m py_compile src/graphclaw/db/age/repository.py src/graphclaw/db/base.py src/graphclaw/gateway/seeding.py src/graphclaw/agent/tool_registry.py)",
       "Bash(python -m py_compile src/graphclaw/agent/main_orchestrator.py)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(docker restart *)",
+      "Bash(git -C /c/Users/abhis/Projects/graphclaw diff src/graphclaw/gateway/rate_limiter.py)",
+      "Bash(git -C /c/Users/abhis/Projects/graphclaw add src/graphclaw/gateway/rate_limiter.py)",
+      "Bash(git -C /c/Users/abhis/Projects/graphclaw commit -m ' *)",
+      "Bash(python -m pytest tests/ -x -q --tb=short -k \"task\")",
+      "Bash(python -m pytest tests/ -x -q --tb=short --ignore=tests/test_a2a -k \"task or graph or node\")",
+      "Read(//c/Users/abhis/Projects/**)",
+      "PowerShell(c:\\\\Users\\\\abhis\\\\Projects\\\\graphclaw\\\\.venv\\\\Scripts\\\\pip install isort)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\abhis\\Projects"
     ]
   }
 }

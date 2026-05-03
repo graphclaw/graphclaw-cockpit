@@ -8,6 +8,15 @@
 **Backend Project:** `C:/Users/abhis/Projects/graphclaw`
 **Domain:** graphclaw.ai
 
+> **2026-05-02 cross-cutting design extension** — the comms / inbound / outbound triad, multi-channel chat, counterparty conversations, identity/onboarding, cross-tenant task projection, per-user policies, and the No-Delete data-lifecycle principle. Affected PRDs: 02, 03, 05, 09, 11, 12, 13, 15. Banners on each PRD link to the relevant arch + requirements docs.
+>
+> **Requirements bundle** (in `graphclaw/docs/requirements/`):
+> - [agent-triad-and-comms-substrate.md](../../../graphclaw/docs/requirements/agent-triad-and-comms-substrate.md) — actionable spec
+> - [build-readiness.md](../../../graphclaw/docs/requirements/build-readiness.md) — **read first before Wave 0** (PR sequence, rollout, verification matrix, API shapes, risks, open questions)
+> - [review-the-design-plans-squishy-eagle.md](../../../graphclaw/docs/requirements/review-the-design-plans-squishy-eagle.md) — design-conversation trail (the *why*)
+>
+> **New architecture docs (graphclaw repo)**: [13-tenancy-model](../../../graphclaw/docs/architecture/13-tenancy-model.md), [14-agent-triad](../../../graphclaw/docs/architecture/14-agent-triad.md), [15-user-identity-and-onboarding](../../../graphclaw/docs/architecture/15-user-identity-and-onboarding.md), [16-cross-user-conversations](../../../graphclaw/docs/architecture/16-cross-user-conversations.md), [17-cross-tenant-task-projection](../../../graphclaw/docs/architecture/17-cross-tenant-task-projection.md), [18-follow-up-cadence](../../../graphclaw/docs/architecture/18-follow-up-cadence.md), [19-data-lifecycle-and-deletion-policy](../../../graphclaw/docs/architecture/19-data-lifecycle-and-deletion-policy.md).
+
 ---
 
 ## Document Map

@@ -2,6 +2,11 @@
 
 **Version:** 1.0 | **Date:** 2026-03-21 | **Status:** Draft
 
+> **2026-05-02 design extension.** Admin gains: directory-policy controls (org-level `directory_visibility`), legal-hold panel (FR-DEL-007), pending-purge view + cancel (FR-DEL-004), Right-to-Erasure flow (FR-DEL-006), org archive with member-handling choices (FR-DEL-009), service-principal status indicator (admin/agent/migration). References:
+> - [graphclaw/docs/architecture/19-data-lifecycle-and-deletion-policy.md](../../../graphclaw/docs/architecture/19-data-lifecycle-and-deletion-policy.md) (foundational)
+> - [graphclaw/docs/architecture/13-tenancy-model.md](../../../graphclaw/docs/architecture/13-tenancy-model.md)
+> - [graphclaw/docs/requirements/agent-triad-and-comms-substrate.md](../../../graphclaw/docs/requirements/agent-triad-and-comms-substrate.md) FR-DEL-004..009, FR-GRAPH-006
+
 ---
 
 ## 9.1 Access Control

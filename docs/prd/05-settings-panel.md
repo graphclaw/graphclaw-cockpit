@@ -2,6 +2,12 @@
 
 **Version:** 1.0 | **Date:** 2026-03-21 | **Status:** Draft
 
+> **2026-05-02 design extension.** Settings extends with: `OrganizationNode.settings.directory_visibility` controls (FR-GRAPH-006), AgentChannelIdentity admin per channel (FR-IN-003), per-user `discoverability` override, channel-stickiness window (`channel_stickiness_hours` default 48 — FR-GRAPH-005), multi-agent management (FR-AM-001), SaaS multi-org switcher. References:
+> - [graphclaw/docs/architecture/13-tenancy-model.md](../../../graphclaw/docs/architecture/13-tenancy-model.md)
+> - [graphclaw/docs/architecture/14-agent-triad.md](../../../graphclaw/docs/architecture/14-agent-triad.md)
+> - [graphclaw/docs/architecture/15-user-identity-and-onboarding.md](../../../graphclaw/docs/architecture/15-user-identity-and-onboarding.md)
+> - [graphclaw/docs/requirements/agent-triad-and-comms-substrate.md](../../../graphclaw/docs/requirements/agent-triad-and-comms-substrate.md) FR-IN-003, FR-AM-001, FR-UI-002, FR-GRAPH-005, FR-GRAPH-006
+
 ---
 
 ## 5.1 Channel Configuration

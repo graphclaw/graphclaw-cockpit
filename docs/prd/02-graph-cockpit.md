@@ -2,6 +2,11 @@
 
 **Version:** 1.0 | **Date:** 2026-03-21 | **Status:** Draft
 
+> **2026-05-02 design extension.** Add a parent **org switcher** above the workspace switcher for SaaS multi-org users (FR-UI-002). Task views must surface "Assigned by others" section sourced from `list_external_assignments_for_me()` (see PRD 12). References:
+> - [graphclaw/docs/architecture/13-tenancy-model.md](../../../graphclaw/docs/architecture/13-tenancy-model.md)
+> - [graphclaw/docs/architecture/17-cross-tenant-task-projection.md](../../../graphclaw/docs/architecture/17-cross-tenant-task-projection.md)
+> - [graphclaw/docs/requirements/agent-triad-and-comms-substrate.md](../../../graphclaw/docs/requirements/agent-triad-and-comms-substrate.md) FR-UI-002, FR-XT-002, FR-XT-004
+
 ---
 
 ## 2.1 Five Key Views

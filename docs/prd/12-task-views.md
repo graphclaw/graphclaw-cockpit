@@ -2,6 +2,11 @@
 
 **Version:** 1.0 | **Date:** 2026-03-21 | **Status:** Draft
 
+> **2026-05-02 design extension.** Task detail must surface counterparty conversations linked via CheckinNode separate from owner-discussion (FR-UI-001). Distinguish locally-owned tasks vs `list_external_assignments_for_me` projections; add "Request access" flow for external task full-detail. Briefing renders by entity (canonical name + parenthetical aliases) — FR-BRF-001. References:
+> - [graphclaw/docs/architecture/16-cross-user-conversations.md](../../../graphclaw/docs/architecture/16-cross-user-conversations.md)
+> - [graphclaw/docs/architecture/17-cross-tenant-task-projection.md](../../../graphclaw/docs/architecture/17-cross-tenant-task-projection.md)
+> - [graphclaw/docs/requirements/agent-triad-and-comms-substrate.md](../../../graphclaw/docs/requirements/agent-triad-and-comms-substrate.md) FR-UI-001, FR-XT-002, FR-XT-004, FR-BRF-001
+
 ---
 
 ## 12.1 View Switcher

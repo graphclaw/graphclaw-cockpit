@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html data-page="agent-monitor" lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Monitor v2 — GraphClaw Cockpit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/tokens.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ================================================================
+   Agent Monitor v2 — Full page styles (self-contained wireframe)
+   ================================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: var(--font-sans); font-size: 16px; }
+body { background: var(--bg-page); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+
+/* ── App Shell ──────────────────────────────────────────────────── */
+.app-shell { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── Sidebar ────────────────────────────────────────────────────── */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  height: 56px; flex-shrink: 0;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #7C3AED 100%);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 13px; flex-shrink: 0;
+}
+.logo-text { font-size: var(--text-body); font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+.logo-sub { font-size: 10px; color: var(--text-tertiary); }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2) 0; }
+.nav-section {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  padding: var(--space-3) var(--space-4) var(--space-1);
+}
+.nav-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  margin: 1px var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer; text-decoration: none;
+  color: var(--text-secondary);
+  font-size: var(--text-body-sm); font-weight: 500;
+  transition: background 100ms, color 100ms;
+}
+.nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+.nav-item .ni { display: flex; align-items: center; flex-shrink: 0; width: 18px; height: 18px; }
+.nav-badge {
+  margin-left: auto; background: var(--state-blocked); color: white;
+  font-size: 10px; font-weight: 700;
+  padding: 1px 5px; border-radius: 9999px;
+  min-width: 18px; text-align: center;
+}
+.sidebar-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-4); }
+.sidebar-footer { padding: var(--space-2); border-top: 1px solid var(--border-default); }
+.user-row {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2); border-radius: var(--radius-md); cursor: pointer;
+}
+.user-row:hover { background: var(--bg-inset); }
+.avatar {
+  width: 28px; height: 28px; border-radius: 9999px;
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: 600; flex-shrink: 0;
+}
+.user-name { font-size: var(--text-body-sm); font-weight: 600; color: var(--text-primary); }
+.user-role { font-size: 10px; color: var(--text-tertiary); }
+
+/* ── Main Layout ────────────────────────────────────────────────── */
+.main-layout { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow: hidden; }
+
+/* ── Topbar ─────────────────────────────────────────────────────── */
+.topbar {
+  height: 56px; background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex; align-items: center;
+  padding: 0 var(--space-5); gap: var(--space-4); flex-shrink: 0;
+}
+.breadcrumb { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-body-sm); }
+.breadcrumb a { color: var(--text-tertiary); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text-primary); }
+.breadcrumb .sep { color: var(--text-tertiary); margin: 0 2px; }
+.breadcrumb .current { color: var(--text-primary); font-weight: 500; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; }
+.icon-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); border: none; background: transparent;
+  cursor: pointer; color: var(--icon-secondary);
+  transition: background 100ms;
+}
+.icon-btn:hover { background: var(--bg-inset); color: var(--text-primary); }
+.divider-v { width: 1px; height: 20px; background: var(--border-default); margin: 0 var(--space-1); }
+.topbar-avatar {
+  width: 28px; height: 28px; border-radius: 9999px;
+  background: linear-gradient(135deg, #7C3AED, #0EA5E9);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: 600; cursor: pointer;
+}
+
+/* ── Monitor Body (left nav + content) ─────────────────────────── */
+.monitor-body { display: flex; flex: 1; overflow: hidden; }
+
+/* ── Monitor Left Nav ───────────────────────────────────────────── */
+.mon-nav {
+  width: 196px; flex-shrink: 0;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-default);
+  overflow-y: auto; padding: var(--space-3) var(--space-2);
+  display: flex; flex-direction: column; gap: 1px;
+}
+.mon-nav-label {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-tertiary); padding: 0 var(--space-2) var(--space-2);
+  display: block;
+}
+.mon-nav-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 7px var(--space-2); border-radius: var(--radius-md);
+  cursor: pointer; color: var(--text-secondary);
+  font-size: var(--text-body-sm); font-weight: 500;
+  text-decoration: none;
+  transition: background 100ms, color 100ms;
+  border: none; background: transparent; width: 100%; text-align: left;
+}
+.mon-nav-item:hover { background: var(--bg-inset); color: var(--text-primary); }
+.mon-nav-item.active { background: var(--brand-primary-light); color: var(--brand-primary); }
+.mon-nav-badge {
+  margin-left: auto; background: var(--state-blocked); color: white;
+  font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 9999px;
+  min-width: 18px; text-align: center; flex-shrink: 0;
+}
+.mon-nav-badge.amber { background: var(--state-delayed); }
+.mon-nav-badge.green { background: var(--state-progress); }
+.mon-nav-divider { height: 1px; background: var(--border-default); margin: var(--space-2) var(--space-1); }
+
+/* ── Monitor Content Area ───────────────────────────────────────── */
+.mon-content { flex: 1; overflow-y: auto; background: var(--bg-page); min-width: 0; }
+.mon-panel { display: none; }
+.mon-panel.active { display: block; }
+
+/* ── Shared Components ──────────────────────────────────────────── */
+
+/* Attention Strip */
+.attention-strip {
+  background: #FFFBEB;
+  border-bottom: 1px solid rgba(245,158,11,0.3);
+  padding: var(--space-2) var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-1);
+}
+.attention-row {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-body-sm);
+}
+.attention-icon { color: var(--state-delayed); flex-shrink: 0; }
+.attention-row.critical .attention-icon { color: var(--state-blocked); }
+.attention-text { flex: 1; color: var(--text-primary); }
+.attention-link {
+  font-size: var(--text-caption); font-weight: 600;
+  color: var(--text-link); cursor: pointer; white-space: nowrap;
+  text-decoration: none;
+}
+.attention-dismiss { color: var(--text-tertiary); cursor: pointer; margin-left: var(--space-2); }
+[data-theme="dark"] .attention-strip { background: rgba(245,158,11,0.08); border-bottom-color: rgba(245,158,11,0.2); }
+
+/* Panel Header */
+.panel-hdr {
+  padding: var(--space-5) var(--space-6) var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface); flex-shrink: 0;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.panel-title { font-size: 1.25rem; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; }
+.panel-subtitle { font-size: var(--text-body-sm); color: var(--text-secondary); margin-top: 2px; }
+.panel-actions { display: flex; align-items: center; gap: var(--space-2); }
+
+/* Panel Body */
+.panel-body { padding: var(--space-5) var(--space-6); }
+
+/* KPI Cards */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+.kpi-card {
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg); padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-1); display: flex; flex-direction: column; gap: var(--space-2);
+  transition: box-shadow 150ms, transform 150ms; cursor: default;
+}
+.kpi-card:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.kpi-hdr { display: flex; align-items: center; justify-content: space-between; }
+.kpi-label { font-size: var(--text-body-sm); color: var(--text-secondary); font-weight: 500; }
+.kpi-icon { width: 32px; height: 32px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; }
+.kpi-icon.blue { background: var(--state-active-light); color: var(--state-active); }
+.kpi-icon.green { background: var(--state-progress-light); color: var(--state-progress); }
+.kpi-icon.amber { background: var(--state-delayed-light); color: var(--state-delayed); }
+.kpi-icon.red { background: var(--state-blocked-light); color: var(--state-blocked); }
+.kpi-val { font-size: 28px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.03em; line-height: 1; }
+.kpi-val sub { font-size: var(--text-body); font-weight: 400; color: var(--text-secondary); vertical-align: baseline; margin-left: 3px; }
+.kpi-ftr { display: flex; align-items: center; gap: var(--space-2); }
+.kpi-trend { font-size: var(--text-caption); font-weight: 500; display: flex; align-items: center; gap: 3px; }
+.kpi-trend.up { color: var(--state-progress); }
+.kpi-trend.down { color: var(--state-blocked); }
+.kpi-note { font-size: var(--text-caption); color: var(--text-tertiary); }
+
+/* Status + pulse */
+.pulse-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--state-progress); position: relative; flex-shrink: 0;
+}
+.pulse-dot::after {
+  content: ''; position: absolute; inset: -3px; border-radius: 50%;
+  background: var(--state-progress); opacity: 0.3;
+  animation: pulse-ring 2s ease-out infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.4; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.pulse-dot.red { background: var(--state-blocked); }
+.pulse-dot.red::after { background: var(--state-blocked); }
+.pulse-dot.grey { background: var(--state-complete); }
+.pulse-dot.grey::after { display: none; }
+.pulse-dot.amber { background: var(--state-delayed); }
+.pulse-dot.amber::after { background: var(--state-delayed); }
+
+/* Today glance strip */
+.glance-strip {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-5);
+  display: flex; align-items: center; gap: var(--space-6);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-1);
+}
+.glance-item { display: flex; align-items: center; gap: var(--space-2); }
+.glance-icon { width: 28px; height: 28px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.glance-icon.blue { background: var(--state-active-light); color: var(--state-active); }
+.glance-icon.green { background: var(--state-progress-light); color: var(--state-progress); }
+.glance-icon.amber { background: var(--state-delayed-light); color: var(--state-delayed); }
+.glance-icon.purple { background: var(--state-review-light); color: var(--state-review); }
+.glance-text .val { font-size: var(--text-body); font-weight: 700; color: var(--text-primary); }
+.glance-text .lbl { font-size: var(--text-caption); color: var(--text-secondary); }
+.glance-sep { width: 1px; height: 32px; background: var(--border-default); }
+
+/* Live Activity Ticker */
+.ticker-card {
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-1); overflow: hidden;
+}
+.ticker-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface);
+}
+.ticker-title { font-size: var(--text-body-sm); font-weight: 600; color: var(--text-primary); }
+@keyframes blink { 50% { opacity: 0.4; } }
+.live-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 22px; padding: 0 var(--space-2);
+  background: var(--state-blocked-light);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 9999px; font-size: 11px;
+  font-weight: 600; color: var(--state-blocked);
+}
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--state-blocked); animation: blink 1.4s ease-in-out infinite; }
+.ticker-row {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding: var(--space-2-5, 10px) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 100ms; cursor: pointer;
+  font-size: var(--text-body-sm);
+}
+.ticker-row:last-child { border-bottom: none; }
+.ticker-row:hover { background: var(--bg-inset); }
+.ticker-time { font-size: var(--text-caption); color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace; white-space: nowrap; padding-top: 1px; min-width: 44px; }
+.ticker-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.ticker-dot.green { background: var(--state-progress); }
+.ticker-dot.blue { background: var(--state-active); }
+.ticker-dot.amber { background: var(--state-delayed); }
+.ticker-dot.red { background: var(--state-blocked); }
+.ticker-dot.grey { background: var(--state-complete); }
+.ticker-dot.purple { background: var(--state-review); }
+.ticker-msg { flex: 1; color: var(--text-secondary); line-height: 1.4; }
+.ticker-msg strong { color: var(--text-primary); font-weight: 500; }
+.ticker-task { font-size: var(--text-caption); font-family: 'JetBrains Mono', monospace; color: var(--text-tertiary); white-space: nowrap; padding-top: 1px; }
+.ticker-footer {
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-surface-alt);
+  text-align: center;
+}
+.ticker-footer a { font-size: var(--text-caption); color: var(--text-link); font-weight: 500; text-decoration: none; }
+.ticker-footer a:hover { color: var(--text-link-hover); text-decoration: underline; }
+
+/* Section card */
+.section-card {
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-1);
+  overflow: hidden; margin-bottom: var(--space-5);
+}
+.section-card-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-default);
+}
+.section-card-title { font-size: var(--text-body); font-weight: 600; color: var(--text-primary); }
+.section-card-actions { display: flex; align-items: center; gap: var(--space-2); }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--space-2); font-family: var(--font-sans);
+  font-weight: 500; border-radius: var(--radius-md);
+  border: 1.5px solid transparent; cursor: pointer;
+  transition: background 150ms, color 150ms, box-shadow 150ms;
+  text-decoration: none; user-select: none; white-space: nowrap;
+}
+.btn-sm { height: 28px; padding: 0 var(--space-3); font-size: var(--text-body-sm); }
+.btn-xs { height: 24px; padding: 0 var(--space-2); font-size: var(--text-caption); }
+.btn-primary { background: var(--brand-primary); color: white; border-color: var(--brand-primary); }
+.btn-primary:hover { background: var(--brand-primary-hover); border-color: var(--brand-primary-hover); }
+.btn-ghost { background: transparent; color: var(--text-secondary); border-color: var(--border-default); }
+.btn-ghost:hover { background: var(--bg-inset); color: var(--text-primary); border-color: var(--border-strong); }
+
+/* Filter bar */
+.filter-bar { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--border-default); background: var(--bg-surface-alt); }
+.filter-label { font-size: var(--text-body-sm); color: var(--text-tertiary); font-weight: 500; }
+.filter-select {
+  height: 30px; padding: 0 var(--space-4) 0 var(--space-3);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md); background: var(--bg-surface);
+  font-size: var(--text-body-sm); font-family: var(--font-sans);
+  color: var(--text-secondary); cursor: pointer; outline: none;
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center;
+}
+.filter-select:focus { border-color: var(--brand-primary); }
+
+/* Tabs */
+.tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border-default); background: var(--bg-surface); padding: 0 var(--space-5); }
+.tab {
+  padding: var(--space-3) var(--space-4); font-size: var(--text-body-sm); font-weight: 500;
+  color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; white-space: nowrap;
+  transition: color 100ms, border-color 100ms;
+  background: transparent; border-left: none; border-right: none; border-top: none;
+  font-family: var(--font-sans);
+}
+.tab:hover { color: var(--text-primary); }
+.tab.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+
+/* Data table */
+.data-table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: var(--text-body-sm); }
+.data-table th {
+  padding: var(--space-2) var(--space-4); text-align: left;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); background: var(--bg-surface-alt);
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: var(--space-2-5, 10px) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--bg-inset); }
+.data-table tbody tr.error-row td { background: var(--state-blocked-light); }
+.data-table tbody tr.error-row:hover td { background: rgba(239,68,68,0.1); }
+
+/* Badges */
+.badge {
+  display: inline-flex; align-items: center;
+  height: 20px; padding: 0 7px;
+  border-radius: var(--radius-sm); font-size: 11px;
+  font-weight: 600; letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.badge-success { background: var(--state-progress-light); color: var(--state-progress); }
+.badge-error { background: var(--state-blocked-light); color: var(--state-blocked); }
+.badge-warn { background: var(--state-delayed-light); color: var(--state-delayed); }
+.badge-info { background: var(--state-active-light); color: var(--state-active); }
+.badge-neutral { background: var(--bg-inset); color: var(--text-secondary); }
+.badge-purple { background: var(--state-review-light); color: var(--state-review); }
+
+/* Mono text */
+.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-tertiary); }
+.task-chip {
+  display: inline-flex; align-items: center;
+  background: var(--bg-inset); border-radius: var(--radius-sm);
+  padding: 1px 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace;
+  color: var(--text-link); white-space: nowrap; cursor: pointer;
+}
+.task-chip:hover { background: var(--brand-primary-light); }
+
+/* Session group row */
+.session-row {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface-alt);
+  cursor: pointer; transition: background 100ms;
+}
+.session-row:hover { background: var(--bg-inset); }
+.session-row-icon { width: 28px; height: 28px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--state-active); background: var(--state-active-light); }
+.session-row-meta { flex: 1; }
+.session-row-title { font-size: var(--text-body-sm); font-weight: 600; color: var(--text-primary); }
+.session-row-sub { font-size: var(--text-caption); color: var(--text-secondary); margin-top: 1px; }
+.session-chips { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+.session-chip {
+  display: flex; align-items: center; gap: 3px;
+  font-size: 11px; color: var(--text-tertiary);
+}
+
+/* Sparkline */
+.sparkline { display: flex; align-items: flex-end; gap: 2px; height: 20px; }
+.sp-bar { flex: 1; border-radius: 2px 2px 0 0; background: var(--state-progress); opacity: 0.6; min-height: 2px; }
+.sp-bar.dead { background: var(--state-complete); opacity: 0.3; }
+.sp-bar.hi { background: var(--state-delayed); opacity: 0.9; }
+
+/* Worker pool bar */
+.pool-bar-wrap { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.pool-bar-bg { flex: 1; height: 8px; background: var(--bg-inset); border-radius: 4px; overflow: hidden; }
+.pool-bar-fill { height: 100%; border-radius: 4px; background: var(--state-progress); transition: width 300ms; }
+.pool-bar-fill.amber { background: var(--state-delayed); }
+.pool-bar-fill.red { background: var(--state-blocked); }
+.pool-bar-label { font-size: var(--text-body-sm); font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+
+/* Heartbeat row */
+.hb-row { display: flex; align-items: center; gap: var(--space-2); margin-bottom: 6px; }
+.hb-name { font-size: var(--text-body-sm); font-weight: 500; color: var(--text-primary); min-width: 120px; }
+.hb-bar-wrap { flex: 1; display: flex; gap: 2px; }
+.hb-seg { flex: 1; height: 16px; border-radius: 2px; background: var(--state-progress); opacity: 0.7; }
+.hb-seg.stale { background: var(--state-delayed); opacity: 0.8; }
+.hb-seg.dead { background: var(--state-blocked); opacity: 0.7; }
+.hb-seg.empty { background: var(--bg-inset); }
+.hb-age { font-size: var(--text-caption); font-family: 'JetBrains Mono', monospace; color: var(--text-tertiary); white-space: nowrap; min-width: 48px; text-align: right; }
+
+/* Score bar */
+.score-bar-wrap { display: flex; align-items: center; gap: var(--space-3); }
+.score-bar-bg { flex: 1; height: 6px; background: var(--bg-inset); border-radius: 3px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 3px; background: var(--brand-primary); }
+.score-val { font-size: var(--text-body-sm); font-weight: 600; color: var(--text-primary); min-width: 36px; text-align: right; }
+
+/* Dispatch swim lanes */
+.dispatch-lanes { padding: var(--space-4) var(--space-5); }
+.dispatch-tier-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: var(--space-2); }
+.dispatch-lane { display: flex; gap: var(--space-3); margin-bottom: var(--space-3); align-items: stretch; }
+.dispatch-agent {
+  flex: 1; min-height: 52px; border-radius: var(--radius-md);
+  border: 1px solid var(--border-default); background: var(--bg-surface);
+  padding: var(--space-2) var(--space-3);
+  display: flex; flex-direction: column; justify-content: center;
+}
+.dispatch-agent.running { border-color: var(--state-progress); background: var(--state-progress-light); }
+.dispatch-agent.completed { opacity: 0.5; }
+.dispatch-agent.pending { border-style: dashed; opacity: 0.6; }
+.dispatch-agent.blocked { border-color: var(--state-blocked); background: var(--state-blocked-light); }
+.da-name { font-size: var(--text-body-sm); font-weight: 600; color: var(--text-primary); }
+.da-task { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-tertiary); }
+.da-status { font-size: 11px; color: var(--state-progress); font-weight: 500; margin-top: 2px; }
+.da-status.blocked { color: var(--state-blocked); }
+
+/* Comms bilateral */
+.comms-banner {
+  display: flex; align-items: center; gap: var(--space-6);
+  padding: var(--space-3) var(--space-5);
+  background: var(--bg-surface-alt); border-bottom: 1px solid var(--border-default);
+}
+.comms-stat { display: flex; align-items: center; gap: var(--space-2); }
+.comms-stat-icon { width: 28px; height: 28px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; }
+.comms-stat-icon.in { background: var(--state-active-light); color: var(--state-active); }
+.comms-stat-icon.out { background: var(--state-progress-light); color: var(--state-progress); }
+.comms-stat-val { font-size: var(--text-body); font-weight: 700; color: var(--text-primary); }
+.comms-stat-lbl { font-size: var(--text-caption); color: var(--text-secondary); }
+
+/* Empty state */
+.empty-state { padding: var(--space-10) var(--space-5); text-align: center; }
+.empty-icon { margin: 0 auto var(--space-3); width: 40px; height: 40px; border-radius: var(--radius-xl); background: var(--bg-inset); display: flex; align-items: center; justify-content: center; color: var(--icon-tertiary); }
+.empty-title { font-size: var(--text-body); font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-1); }
+.empty-sub { font-size: var(--text-body-sm); color: var(--text-secondary); }
+
+/* Scoring factor row */
+.factor-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); }
+.factor-row:last-child { border-bottom: none; }
+.factor-name { font-size: var(--text-body-sm); font-weight: 500; color: var(--text-primary); min-width: 180px; }
+.factor-score { min-width: 36px; font-size: var(--text-body-sm); font-weight: 600; color: var(--text-primary); text-align: right; }
+.factor-weight { font-size: var(--text-caption); color: var(--text-tertiary); min-width: 40px; text-align: center; }
+.factor-explain { flex: 1; font-size: var(--text-caption); color: var(--text-secondary); }
+
+/* Channel badge */
+.ch-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 20px; padding: 0 7px;
+  border-radius: var(--radius-full); font-size: 11px; font-weight: 600;
+}
+.ch-email { background: #EFF6FF; color: #3B82F6; }
+.ch-cli { background: #F5F3FF; color: #7C3AED; }
+.ch-api { background: #ECFDF5; color: #059669; }
+.ch-web { background: #FFFBEB; color: #D97706; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--neutral-300); border-radius: 9999px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ═══════════════════════════════════════════════
+       SIDEBAR
+  ════════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">GC</div>
+      <div>
+        <div class="logo-text">GraphClaw</div>
+        <div class="logo-sub">Cockpit</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Workspace</div>
+      <a class="nav-item" href="#">
+        <span class="ni"><i data-lucide="target" size="16"></i></span> Goals
+      </a>
+      <a class="nav-item" href="#">
+        <span class="ni"><i data-lucide="folder" size="16"></i></span> Projects
+      </a>
+      <a class="nav-item" href="#">
+        <span class="ni"><i data-lucide="check-square" size="16"></i></span> My Tasks
+      </a>
+      <a class="nav-item" href="#">
+        <span class="ni"><i data-lucide="users" size="16"></i></span> Workforce
+      </a>
+      <a class="nav-item" href="#">
+        <span class="ni"><i data-lucide="git-branch" size="16"></i></span> Graph Explorer
+      </a>
+      <a class="nav-item" href="#">
+        <span class="ni"><i data-lucide="calendar" size="16"></i></span> Timeline
+      </a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Intelligence</div>
+      <a class="nav-item active" href="#">
+        <span class="ni"><i data-lucide="activity" size="16"></i></span> Agent Monitor
+        <span class="nav-badge">2</span>
+      </a>
+      <a class="nav-item" href="#">
+        <span class="ni"><i data-lucide="brain" size="16"></i></span> Intelligence Hub
+      </a>
+      <a class="nav-item" href="#">
+        <span class="ni"><i data-lucide="message-square" size="16"></i></span> Chat
+      </a>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Settings</div>
+      <a class="nav-item" href="#">
+        <span class="ni"><i data-lucide="settings" size="16"></i></span> Settings
+      </a>
+      <a class="nav-item" href="#">
+        <span class="ni"><i data-lucide="shield" size="16"></i></span> Admin
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar">AB</div>
+        <div>
+          <div class="user-name">Abhishek G.</div>
+          <div class="user-role">Owner</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════
+       MAIN LAYOUT
+  ════════════════════════════════════════════════ -->
+  <div class="main-layout">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <nav class="breadcrumb">
+        <a href="#">Home</a>
+        <span class="sep">/</span>
+        <span class="current">Agent Monitor</span>
+      </nav>
+      <div class="topbar-actions">
+        <button class="icon-btn" title="Notifications" style="position:relative">
+          <i data-lucide="bell" size="16"></i>
+          <span style="position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--state-blocked);border-radius:50%;border:1.5px solid var(--bg-surface)"></span>
+        </button>
+        <button class="icon-btn" title="Toggle theme" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">
+          <i data-lucide="sun" size="16"></i>
+        </button>
+        <div class="divider-v"></div>
+        <div class="topbar-avatar">AB</div>
+      </div>
+    </header>
+
+    <!-- Monitor body -->
+    <div class="monitor-body">
+
+      <!-- ══ Monitor Left Nav ══ -->
+      <nav class="mon-nav">
+        <span class="mon-nav-label">Monitor</span>
+
+        <button class="mon-nav-item active" onclick="showPanel('overview')">
+          <i data-lucide="layout-dashboard" size="15"></i> Overview
+        </button>
+        <button class="mon-nav-item" onclick="showPanel('activity')">
+          <i data-lucide="list" size="15"></i> Activity
+        </button>
+        <button class="mon-nav-item" onclick="showPanel('comms')">
+          <i data-lucide="mail" size="15"></i> Comms
+        </button>
+        <button class="mon-nav-item" onclick="showPanel('scheduling')">
+          <i data-lucide="clock" size="15"></i> Scheduling
+        </button>
+        <button class="mon-nav-item" onclick="showPanel('skills')">
+          <i data-lucide="zap" size="15"></i> Skills
+          <span class="mon-nav-badge amber">1</span>
+        </button>
+        <div class="mon-nav-divider"></div>
+        <span class="mon-nav-label" style="margin-top:var(--space-1)">Advanced</span>
+        <button class="mon-nav-item" onclick="showPanel('scoring')">
+          <i data-lucide="bar-chart-2" size="15"></i> Scoring
+        </button>
+        <button class="mon-nav-item" onclick="showPanel('agents')">
+          <i data-lucide="cpu" size="15"></i> Agents
+          <span class="mon-nav-badge green">7</span>
+        </button>
+      </nav>
+
+      <!-- ══ Monitor Content ══ -->
+      <main class="mon-content">
+
+        <!-- ════════════════════════════════════════
+             PANEL 1: OVERVIEW
+        ════════════════════════════════════════ -->
+        <div class="mon-panel active" id="panel-overview">
+
+          <!-- Attention strip (shown when issues exist) -->
+          <div class="attention-strip">
+            <div class="attention-row critical">
+              <span class="attention-icon"><i data-lucide="alert-circle" size="14"></i></span>
+              <span class="attention-text">Research skill failed on <strong>#TK-4821</strong> — tried 3 times and couldn't complete</span>
+              <a class="attention-link" href="#">View task →</a>
+              <span class="attention-dismiss"><i data-lucide="x" size="13"></i></span>
+            </div>
+            <div class="attention-row">
+              <span class="attention-icon"><i data-lucide="clock" size="14"></i></span>
+              <span class="attention-text">No reply from Alex in 5 days on <strong>#TK-4799</strong> (Q3 budget approval) — follow-up scheduled for tomorrow</span>
+              <a class="attention-link" href="#">View task →</a>
+              <span class="attention-dismiss"><i data-lucide="x" size="13"></i></span>
+            </div>
+          </div>
+
+          <div class="panel-body">
+
+            <!-- KPI Row -->
+            <div class="kpi-row">
+              <div class="kpi-card">
+                <div class="kpi-hdr">
+                  <span class="kpi-label">Agent Status</span>
+                  <div class="kpi-icon green"><i data-lucide="cpu" size="16"></i></div>
+                </div>
+                <div class="kpi-val" style="display:flex;align-items:center;gap:8px;font-size:20px">
+                  <div class="pulse-dot"></div> Running
+                </div>
+                <div class="kpi-ftr">
+                  <span class="kpi-note">Scoring 14 tasks now</span>
+                </div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-hdr">
+                  <span class="kpi-label">Last Run</span>
+                  <div class="kpi-icon blue"><i data-lucide="refresh-cw" size="16"></i></div>
+                </div>
+                <div class="kpi-val" style="font-size:22px">3 <sub>mins ago</sub></div>
+                <div class="kpi-ftr">
+                  <span class="kpi-trend up"><i data-lucide="trending-up" size="11"></i> 14 tasks scored</span>
+                </div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-hdr">
+                  <span class="kpi-label">Next Run</span>
+                  <div class="kpi-icon amber"><i data-lucide="timer" size="16"></i></div>
+                </div>
+                <div class="kpi-val" style="font-size:22px">7 <sub>mins</sub></div>
+                <div class="kpi-ftr">
+                  <span class="kpi-note">Daily briefing · 09:00</span>
+                </div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-hdr">
+                  <span class="kpi-label">Needs Attention</span>
+                  <div class="kpi-icon red"><i data-lucide="alert-triangle" size="16"></i></div>
+                </div>
+                <div class="kpi-val" style="font-size:22px;color:var(--state-blocked)">2</div>
+                <div class="kpi-ftr">
+                  <span class="kpi-note" style="color:var(--text-error)">1 failed skill · 1 no reply</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Today at a Glance -->
+            <div class="glance-strip">
+              <div class="glance-item">
+                <div class="glance-icon blue"><i data-lucide="inbox" size="14"></i></div>
+                <div class="glance-text">
+                  <div class="val">3</div>
+                  <div class="lbl">Messages received</div>
+                </div>
+              </div>
+              <div class="glance-sep"></div>
+              <div class="glance-item">
+                <div class="glance-icon green"><i data-lucide="send" size="14"></i></div>
+                <div class="glance-text">
+                  <div class="val">2</div>
+                  <div class="lbl">Replies sent</div>
+                </div>
+              </div>
+              <div class="glance-sep"></div>
+              <div class="glance-item">
+                <div class="glance-icon purple"><i data-lucide="zap" size="14"></i></div>
+                <div class="glance-text">
+                  <div class="val">8</div>
+                  <div class="lbl">Skills run (7 ok, 1 failed)</div>
+                </div>
+              </div>
+              <div class="glance-sep"></div>
+              <div class="glance-item">
+                <div class="glance-icon amber"><i data-lucide="bar-chart-2" size="14"></i></div>
+                <div class="glance-text">
+                  <div class="val">47</div>
+                  <div class="lbl">Tasks scored</div>
+                </div>
+              </div>
+              <div class="glance-sep"></div>
+              <div class="glance-item">
+                <div class="glance-icon blue" style="background:var(--state-review-light);color:var(--state-review)"><i data-lucide="git-merge" size="14"></i></div>
+                <div class="glance-text">
+                  <div class="val">4</div>
+                  <div class="lbl">Runs today</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Activity Ticker -->
+            <div class="ticker-card">
+              <div class="ticker-hdr">
+                <span class="ticker-title">Recent Activity</span>
+                <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+              </div>
+              <div class="ticker-row">
+                <span class="ticker-time">14:32</span>
+                <div class="ticker-dot green"></div>
+                <span class="ticker-msg">Scored <strong>14 tasks</strong> — top priority: Competitive analysis (Notion vs Linear)</span>
+                <span class="ticker-task">#TK-4821</span>
+              </div>
+              <div class="ticker-row">
+                <span class="ticker-time">14:31</span>
+                <div class="ticker-dot blue"></div>
+                <span class="ticker-msg">Sent follow-up email to <strong>Alex</strong>: "Quick update on Q3 budget — can you confirm?"</span>
+                <span class="ticker-task">#TK-4799</span>
+              </div>
+              <div class="ticker-row">
+                <span class="ticker-time">14:28</span>
+                <div class="ticker-dot green"></div>
+                <span class="ticker-msg">Research skill completed — pulled competitor data (45s, 1,200 tokens)</span>
+                <span class="ticker-task">#TK-4821</span>
+              </div>
+              <div class="ticker-row">
+                <span class="ticker-time">14:28</span>
+                <div class="ticker-dot purple"></div>
+                <span class="ticker-msg">Research skill started for competitive analysis task</span>
+                <span class="ticker-task">#TK-4821</span>
+              </div>
+              <div class="ticker-row">
+                <span class="ticker-time">13:55</span>
+                <div class="ticker-dot blue"></div>
+                <span class="ticker-msg">Received email from <strong>Sarah</strong>: "Budget approved for Q4" — linked to task</span>
+                <span class="ticker-task">#TK-4799</span>
+              </div>
+              <div class="ticker-row">
+                <span class="ticker-time">13:50</span>
+                <div class="ticker-dot grey"></div>
+                <span class="ticker-msg">Agent run started — triggered by <strong>daily schedule</strong></span>
+                <span class="ticker-task">—</span>
+              </div>
+              <div class="ticker-footer">
+                <a href="#" onclick="showPanel('activity')">View full activity history →</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════
+             PANEL 2: ACTIVITY
+        ════════════════════════════════════════ -->
+        <div class="mon-panel" id="panel-activity">
+          <div class="panel-hdr">
+            <div>
+              <div class="panel-title">Activity</div>
+              <div class="panel-subtitle">Everything the agent has done, in plain language</div>
+            </div>
+            <div class="panel-actions">
+              <button class="btn btn-ghost btn-sm"><i data-lucide="download" size="13"></i> Export</button>
+            </div>
+          </div>
+          <div class="filter-bar">
+            <span class="filter-label">Time:</span>
+            <select class="filter-select">
+              <option>Last hour</option>
+              <option selected>Today</option>
+              <option>Last 7 days</option>
+            </select>
+            <span class="filter-label" style="margin-left:var(--space-2)">Type:</span>
+            <select class="filter-select">
+              <option>All events</option>
+              <option>Decisions</option>
+              <option>Communications</option>
+              <option>Skills</option>
+              <option>Errors only</option>
+            </select>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:var(--space-2)">
+              <span style="font-size:var(--text-caption);color:var(--text-tertiary)">Group by:</span>
+              <button class="btn btn-ghost btn-xs">Session</button>
+              <button class="btn btn-ghost btn-xs" style="background:var(--bg-inset)">Time</button>
+            </div>
+          </div>
+
+          <!-- Session group header -->
+          <div class="session-row">
+            <div class="session-row-icon"><i data-lucide="play-circle" size="15"></i></div>
+            <div class="session-row-meta">
+              <div class="session-row-title">Run at 14:28 — triggered by daily schedule</div>
+              <div class="session-row-sub">45 seconds · 8 tool calls · 1 skill · 1 message sent · 1,820 tokens</div>
+            </div>
+            <div class="session-chips">
+              <span class="session-chip"><i data-lucide="wrench" size="11"></i> 8 tools</span>
+              <span class="session-chip"><i data-lucide="zap" size="11"></i> 1 skill</span>
+              <span class="session-chip"><i data-lucide="send" size="11"></i> 1 sent</span>
+            </div>
+            <i data-lucide="chevron-down" size="14" style="color:var(--text-tertiary)"></i>
+          </div>
+
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>What happened</th>
+                  <th>Task</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="mono">14:32:07</span></td>
+                  <td>Scored 14 tasks — top priority: <em>Competitive analysis (Notion vs Linear)</em></td>
+                  <td><a class="task-chip" href="#">#TK-4821</a></td>
+                  <td><span class="badge badge-success">Done</span></td>
+                </tr>
+                <tr>
+                  <td><span class="mono">14:31:44</span></td>
+                  <td>Sent follow-up email to <strong>Alex</strong>: "Quick update on Q3 budget — can you confirm?"</td>
+                  <td><a class="task-chip" href="#">#TK-4799</a></td>
+                  <td><span class="badge badge-success">Sent</span></td>
+                </tr>
+                <tr>
+                  <td><span class="mono">14:28:51</span></td>
+                  <td>Research skill completed — competitor data retrieved (45s · 1,200 tokens)</td>
+                  <td><a class="task-chip" href="#">#TK-4821</a></td>
+                  <td><span class="badge badge-success">Done</span></td>
+                </tr>
+                <tr>
+                  <td><span class="mono">14:28:04</span></td>
+                  <td>Research skill started for competitive analysis</td>
+                  <td><a class="task-chip" href="#">#TK-4821</a></td>
+                  <td><span class="badge badge-info">Running</span></td>
+                </tr>
+                <tr class="error-row">
+                  <td><span class="mono">12:14:30</span></td>
+                  <td>Research skill failed — timed out after 60s on 3rd attempt. <a href="#" style="font-size:11px;color:var(--text-link)">Details</a></td>
+                  <td><a class="task-chip" href="#">#TK-4821</a></td>
+                  <td><span class="badge badge-error">Failed</span></td>
+                </tr>
+                <tr>
+                  <td><span class="mono">13:55:10</span></td>
+                  <td>Received email from <strong>Sarah</strong>: "Budget approved for Q4" — matched to task, scored + updated</td>
+                  <td><a class="task-chip" href="#">#TK-4799</a></td>
+                  <td><span class="badge badge-success">Matched</span></td>
+                </tr>
+                <tr>
+                  <td><span class="mono">13:50:00</span></td>
+                  <td>Agent run started — triggered by daily schedule</td>
+                  <td>—</td>
+                  <td><span class="badge badge-neutral">Trigger</span></td>
+                </tr>
+                <tr>
+                  <td><span class="mono">09:00:00</span></td>
+                  <td>Daily briefing sent to you — 3 tasks highlighted, 1 approval needed</td>
+                  <td>—</td>
+                  <td><span class="badge badge-success">Sent</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:var(--space-3) var(--space-5);text-align:center;border-top:1px solid var(--border-default);background:var(--bg-surface-alt)">
+            <button class="btn btn-ghost btn-sm">Load more events</button>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════
+             PANEL 3: COMMS
+        ════════════════════════════════════════ -->
+        <div class="mon-panel" id="panel-comms">
+          <div class="panel-hdr">
+            <div>
+              <div class="panel-title">Communications</div>
+              <div class="panel-subtitle">All messages received and sent by the agent on your behalf</div>
+            </div>
+          </div>
+          <div class="comms-banner">
+            <div class="comms-stat">
+              <div class="comms-stat-icon in"><i data-lucide="inbox" size="14"></i></div>
+              <div>
+                <div class="comms-stat-val">3</div>
+                <div class="comms-stat-lbl">Received today</div>
+              </div>
+            </div>
+            <div class="glance-sep"></div>
+            <div class="comms-stat">
+              <div class="comms-stat-icon out"><i data-lucide="send" size="14"></i></div>
+              <div>
+                <div class="comms-stat-val">2</div>
+                <div class="comms-stat-lbl">Sent today</div>
+              </div>
+            </div>
+            <div class="glance-sep"></div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:var(--space-2)">
+              <select class="filter-select">
+                <option>Today</option>
+                <option>Last 7 days</option>
+                <option>Last 30 days</option>
+              </select>
+            </div>
+          </div>
+          <div class="tab-bar">
+            <button class="tab active">Inbound</button>
+            <button class="tab">Outbound</button>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Channel</th>
+                  <th>From</th>
+                  <th>Message</th>
+                  <th>Task linked</th>
+                  <th>Action taken</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="mono">13:55</span></td>
+                  <td><span class="ch-badge ch-email"><i data-lucide="mail" size="10"></i> Email</span></td>
+                  <td style="font-weight:500;color:var(--text-primary)">Sarah K.</td>
+                  <td style="color:var(--text-secondary);max-width:260px">"Budget has been approved for Q4. Please proceed with the…"</td>
+                  <td><a class="task-chip" href="#">#TK-4799</a></td>
+                  <td><span class="badge badge-success">Scored + updated</span></td>
+                </tr>
+                <tr>
+                  <td><span class="mono">11:20</span></td>
+                  <td><span class="ch-badge ch-email"><i data-lucide="mail" size="10"></i> Email</span></td>
+                  <td style="font-weight:500;color:var(--text-primary)">Alex M.</td>
+                  <td style="color:var(--text-secondary);max-width:260px">"Still working on the analysis — should have it by EOD…"</td>
+                  <td><a class="task-chip" href="#">#TK-4801</a></td>
+                  <td><span class="badge badge-info">Marked in-progress</span></td>
+                </tr>
+                <tr>
+                  <td><span class="mono">09:15</span></td>
+                  <td><span class="ch-badge ch-cli"><i data-lucide="terminal" size="10"></i> CLI</span></td>
+                  <td style="font-weight:500;color:var(--text-primary)">You</td>
+                  <td style="color:var(--text-secondary);max-width:260px">"Skip the Monday briefing this week"</td>
+                  <td>—</td>
+                  <td><span class="badge badge-warn">Trigger snoozed</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════
+             PANEL 4: SCHEDULING
+        ════════════════════════════════════════ -->
+        <div class="mon-panel" id="panel-scheduling">
+          <div class="panel-hdr">
+            <div>
+              <div class="panel-title">Scheduling</div>
+              <div class="panel-subtitle">When the agent runs, and why</div>
+            </div>
+            <div class="panel-actions">
+              <button class="btn btn-primary btn-sm"><i data-lucide="play" size="13"></i> Run Now</button>
+            </div>
+          </div>
+          <div class="panel-body">
+
+            <!-- Next run card -->
+            <div class="section-card" style="margin-bottom:var(--space-5)">
+              <div class="section-card-hdr">
+                <span class="section-card-title">Next scheduled run</span>
+              </div>
+              <div style="padding:var(--space-4) var(--space-5);display:flex;align-items:center;gap:var(--space-5)">
+                <div style="width:60px;height:60px;border-radius:var(--radius-xl);background:var(--state-active-light);display:flex;align-items:center;justify-content:center;color:var(--state-active);flex-shrink:0">
+                  <i data-lucide="clock" size="28"></i>
+                </div>
+                <div>
+                  <div style="font-size:var(--text-heading);font-weight:700;color:var(--text-primary)">Daily briefing in 7 minutes</div>
+                  <div style="font-size:var(--text-body-sm);color:var(--text-secondary);margin-top:4px">Fires every day at 09:00 · Will score all tasks and send you a summary</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active triggers -->
+            <div class="section-card">
+              <div class="section-card-hdr">
+                <span class="section-card-title">Active triggers</span>
+                <div class="section-card-actions">
+                  <button class="btn btn-ghost btn-xs">Manage triggers →</button>
+                </div>
+              </div>
+              <div class="data-table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Trigger</th>
+                      <th>Type</th>
+                      <th>Schedule</th>
+                      <th>Last fired</th>
+                      <th>Next fire</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style="font-weight:500;color:var(--text-primary)">Daily Briefing</td>
+                      <td><span class="badge badge-info">Scheduled</span></td>
+                      <td><span class="mono">09:00 daily</span></td>
+                      <td><span class="mono">09:00 today</span></td>
+                      <td><span class="mono">Tomorrow 09:00</span></td>
+                      <td><span class="badge badge-success">Active</span></td>
+                      <td><button class="btn btn-ghost btn-xs">Fire now</button></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight:500;color:var(--text-primary)">Inbound Email</td>
+                      <td><span class="badge badge-neutral">Inbound</span></td>
+                      <td style="color:var(--text-tertiary)">On message receipt</td>
+                      <td><span class="mono">13:55 today</span></td>
+                      <td style="color:var(--text-tertiary)">On next email</td>
+                      <td><span class="badge badge-success">Active</span></td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight:500;color:var(--text-primary)">Follow-up: #TK-4799</td>
+                      <td><span class="badge badge-warn">Follow-up</span></td>
+                      <td><span class="mono">+5 days no reply</span></td>
+                      <td style="color:var(--text-tertiary)">Not yet fired</td>
+                      <td><span class="mono">Tomorrow 09:00</span></td>
+                      <td><span class="badge badge-warn">Pending</span></td>
+                      <td><button class="btn btn-ghost btn-xs">Fire now</button></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight:500;color:var(--text-primary)">Weekly Digest</td>
+                      <td><span class="badge badge-info">Scheduled</span></td>
+                      <td><span class="mono">Monday 08:00</span></td>
+                      <td><span class="mono">Last Monday</span></td>
+                      <td><span class="mono">Next Monday</span></td>
+                      <td><span class="badge badge-neutral">Snoozed</span></td>
+                      <td><button class="btn btn-ghost btn-xs">Resume</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════
+             PANEL 5: SKILLS
+        ════════════════════════════════════════ -->
+        <div class="mon-panel" id="panel-skills">
+          <div class="panel-hdr">
+            <div>
+              <div class="panel-title">Skills & Workers</div>
+              <div class="panel-subtitle">Skill execution health — what ran, what failed, what's running now</div>
+            </div>
+          </div>
+          <div class="panel-body">
+
+            <!-- Worker pool -->
+            <div class="section-card" style="margin-bottom:var(--space-5)">
+              <div class="section-card-hdr">
+                <span class="section-card-title">Worker pool</span>
+                <span style="font-size:var(--text-caption);color:var(--text-secondary)">4 of 8 active</span>
+              </div>
+              <div style="padding:var(--space-4) var(--space-5)">
+                <div class="pool-bar-wrap" style="margin-bottom:var(--space-3)">
+                  <span class="pool-bar-label">4/8 workers</span>
+                  <div class="pool-bar-bg"><div class="pool-bar-fill" style="width:50%"></div></div>
+                  <span style="font-size:var(--text-body-sm);color:var(--state-progress);font-weight:600">Healthy</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3)">
+                  <div style="background:var(--state-progress-light);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3)">
+                    <div style="font-size:11px;font-weight:600;color:var(--state-progress)">W-01 · Running</div>
+                    <div class="mono" style="margin-top:2px">research · #TK-4821</div>
+                    <div class="sparkline" style="margin-top:var(--space-2)">
+                      <div class="sp-bar" style="height:60%"></div><div class="sp-bar" style="height:80%"></div><div class="sp-bar" style="height:70%"></div><div class="sp-bar" style="height:90%"></div><div class="sp-bar" style="height:75%"></div><div class="sp-bar" style="height:100%"></div>
+                    </div>
+                  </div>
+                  <div style="background:var(--state-progress-light);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3)">
+                    <div style="font-size:11px;font-weight:600;color:var(--state-progress)">W-02 · Running</div>
+                    <div class="mono" style="margin-top:2px">email-draft · #TK-4799</div>
+                    <div class="sparkline" style="margin-top:var(--space-2)">
+                      <div class="sp-bar" style="height:40%"></div><div class="sp-bar" style="height:60%"></div><div class="sp-bar" style="height:55%"></div><div class="sp-bar" style="height:70%"></div><div class="sp-bar" style="height:65%"></div><div class="sp-bar" style="height:80%"></div>
+                    </div>
+                  </div>
+                  <div style="background:var(--bg-inset);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);opacity:0.6">
+                    <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">W-03 · Idle</div>
+                    <div class="mono" style="margin-top:2px;color:var(--text-tertiary)">waiting for work</div>
+                    <div class="sparkline" style="margin-top:var(--space-2)">
+                      <div class="sp-bar dead" style="height:30%"></div><div class="sp-bar dead" style="height:20%"></div><div class="sp-bar dead" style="height:25%"></div><div class="sp-bar dead" style="height:0%"></div><div class="sp-bar dead" style="height:0%"></div><div class="sp-bar dead" style="height:0%"></div>
+                    </div>
+                  </div>
+                  <div style="background:var(--state-blocked-light);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3)">
+                    <div style="font-size:11px;font-weight:600;color:var(--state-blocked)">W-04 · Failed</div>
+                    <div class="mono" style="margin-top:2px">research · #TK-4821</div>
+                    <div class="sparkline" style="margin-top:var(--space-2)">
+                      <div class="sp-bar" style="height:50%"></div><div class="sp-bar" style="height:70%"></div><div class="sp-bar hi" style="height:100%"></div><div class="sp-bar dead" style="height:0%"></div><div class="sp-bar dead" style="height:0%"></div><div class="sp-bar dead" style="height:0%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent job history -->
+            <div class="section-card">
+              <div class="section-card-hdr">
+                <span class="section-card-title">Recent skill runs</span>
+              </div>
+              <div class="data-table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Skill</th>
+                      <th>Task</th>
+                      <th>Duration</th>
+                      <th>Tokens</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="mono">14:28</span></td>
+                      <td style="font-weight:500;color:var(--text-primary)">research</td>
+                      <td><a class="task-chip" href="#">#TK-4821</a></td>
+                      <td><span class="mono">45s</span></td>
+                      <td><span class="mono">1,200</span></td>
+                      <td><span class="badge badge-success">Done</span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="mono">14:15</span></td>
+                      <td style="font-weight:500;color:var(--text-primary)">email-draft</td>
+                      <td><a class="task-chip" href="#">#TK-4799</a></td>
+                      <td><span class="mono">8s</span></td>
+                      <td><span class="mono">340</span></td>
+                      <td><span class="badge badge-success">Done</span></td>
+                    </tr>
+                    <tr class="error-row">
+                      <td><span class="mono">12:14</span></td>
+                      <td style="font-weight:500;color:var(--text-primary)">research</td>
+                      <td><a class="task-chip" href="#">#TK-4821</a></td>
+                      <td><span class="mono">60s</span></td>
+                      <td>—</td>
+                      <td><span class="badge badge-error">Failed · timed out</span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="mono">09:02</span></td>
+                      <td style="font-weight:500;color:var(--text-primary)">briefing</td>
+                      <td>—</td>
+                      <td><span class="mono">12s</span></td>
+                      <td><span class="mono">2,100</span></td>
+                      <td><span class="badge badge-success">Done</span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="mono">09:01</span></td>
+                      <td style="font-weight:500;color:var(--text-primary)">scoring</td>
+                      <td>—</td>
+                      <td><span class="mono">3s</span></td>
+                      <td><span class="mono">450</span></td>
+                      <td><span class="badge badge-success">Done</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════
+             PANEL 6: SCORING
+        ════════════════════════════════════════ -->
+        <div class="mon-panel" id="panel-scoring">
+          <div class="panel-hdr">
+            <div>
+              <div class="panel-title">Scoring</div>
+              <div class="panel-subtitle">Why the agent prioritised tasks this way — full factor breakdown</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 380px;gap:var(--space-5);padding:var(--space-5) var(--space-6)">
+
+            <!-- Task list -->
+            <div class="section-card" style="margin-bottom:0">
+              <div class="section-card-hdr">
+                <span class="section-card-title">Task scores — last run</span>
+              </div>
+              <div class="data-table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Task</th>
+                      <th>Score</th>
+                      <th>Recommended action</th>
+                      <th>Autonomy</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="background:var(--brand-primary-light)">
+                      <td style="font-weight:700;color:var(--brand-primary)">1</td>
+                      <td style="font-weight:500;color:var(--text-primary)">Competitive analysis: Notion vs Linear <a class="task-chip" href="#" style="margin-left:4px">#TK-4821</a></td>
+                      <td>
+                        <div class="score-bar-wrap">
+                          <div class="score-bar-bg"><div class="score-bar-fill" style="width:87%"></div></div>
+                          <span class="score-val">0.87</span>
+                        </div>
+                      </td>
+                      <td><span class="badge badge-info">Start</span></td>
+                      <td><span class="badge badge-neutral">Suggest</span></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight:600;color:var(--text-secondary)">2</td>
+                      <td style="font-weight:500">Q3 budget approval sign-off <a class="task-chip" href="#" style="margin-left:4px">#TK-4799</a></td>
+                      <td>
+                        <div class="score-bar-wrap">
+                          <div class="score-bar-bg"><div class="score-bar-fill" style="width:72%"></div></div>
+                          <span class="score-val">0.72</span>
+                        </div>
+                      </td>
+                      <td><span class="badge badge-warn">Follow up</span></td>
+                      <td><span class="badge badge-success">Auto</span></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight:600;color:var(--text-secondary)">3</td>
+                      <td style="font-weight:500">Sprint planning coordination <a class="task-chip" href="#" style="margin-left:4px">#TK-4855</a></td>
+                      <td>
+                        <div class="score-bar-wrap">
+                          <div class="score-bar-bg"><div class="score-bar-fill" style="width:61%"></div></div>
+                          <span class="score-val">0.61</span>
+                        </div>
+                      </td>
+                      <td><span class="badge badge-neutral">Monitor</span></td>
+                      <td><span class="badge badge-neutral">Suggest</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Factor breakdown panel -->
+            <div class="section-card" style="margin-bottom:0">
+              <div class="section-card-hdr">
+                <span class="section-card-title">Factor breakdown — #TK-4821</span>
+              </div>
+              <div style="padding:var(--space-4) var(--space-4)">
+                <div style="font-size:var(--text-body-sm);color:var(--text-secondary);margin-bottom:var(--space-3)">
+                  Combined score: <strong style="color:var(--brand-primary)">0.87</strong> — this task is due Thursday and is on the critical path for the Q3 launch.
+                </div>
+                <div class="factor-row">
+                  <div class="factor-name">Timeline urgency</div>
+                  <div class="factor-weight">×0.25</div>
+                  <div style="flex:1"><div class="score-bar-bg"><div class="score-bar-fill" style="width:92%"></div></div></div>
+                  <div class="factor-score">0.92</div>
+                </div>
+                <div class="factor-row">
+                  <div class="factor-name">Dependency weight</div>
+                  <div class="factor-weight">×0.20</div>
+                  <div style="flex:1"><div class="score-bar-bg"><div class="score-bar-fill" style="width:80%"></div></div></div>
+                  <div class="factor-score">0.80</div>
+                </div>
+                <div class="factor-row">
+                  <div class="factor-name">Critical path</div>
+                  <div class="factor-weight">×0.20</div>
+                  <div style="flex:1"><div class="score-bar-bg"><div class="score-bar-fill" style="width:100%"></div></div></div>
+                  <div class="factor-score">1.00</div>
+                </div>
+                <div class="factor-row">
+                  <div class="factor-name">Blocker status</div>
+                  <div class="factor-weight">×0.15</div>
+                  <div style="flex:1"><div class="score-bar-bg"><div class="score-bar-fill" style="width:0%"></div></div></div>
+                  <div class="factor-score">0.00</div>
+                </div>
+                <div class="factor-row">
+                  <div class="factor-name">Human override</div>
+                  <div class="factor-weight">×0.10</div>
+                  <div style="flex:1"><div class="score-bar-bg"><div class="score-bar-fill" style="width:50%"></div></div></div>
+                  <div class="factor-score">0.50</div>
+                </div>
+                <div class="factor-row">
+                  <div class="factor-name">Resource risk</div>
+                  <div class="factor-weight">×0.05</div>
+                  <div style="flex:1"><div class="score-bar-bg"><div class="score-bar-fill" style="width:60%"></div></div></div>
+                  <div class="factor-score">0.60</div>
+                </div>
+                <div class="factor-row">
+                  <div class="factor-name">Constraint pressure</div>
+                  <div class="factor-weight">×0.05</div>
+                  <div style="flex:1"><div class="score-bar-bg"><div class="score-bar-fill" style="width:40%"></div></div></div>
+                  <div class="factor-score">0.40</div>
+                </div>
+                <div style="margin-top:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--border-default)">
+                  <button class="btn btn-ghost btn-sm" style="width:100%"><i data-lucide="sliders" size="13"></i> Open What-if Simulator</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════
+             PANEL 7: AGENTS (Sub-agent Delegation)
+        ════════════════════════════════════════ -->
+        <div class="mon-panel" id="panel-agents">
+          <div class="panel-hdr">
+            <div>
+              <div class="panel-title">Agents &amp; Delegation</div>
+              <div class="panel-subtitle">Sub-agent pool — what each agent is doing and its health</div>
+            </div>
+          </div>
+          <div class="panel-body">
+
+            <!-- Pool stats row -->
+            <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:var(--space-5)">
+              <div class="kpi-card">
+                <div class="kpi-hdr"><span class="kpi-label">Active runners</span><div class="kpi-icon green"><i data-lucide="cpu" size="16"></i></div></div>
+                <div class="kpi-val">7<sub>/12</sub></div>
+                <div class="kpi-ftr"><span class="kpi-note">5 idle, 0 failed</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-hdr"><span class="kpi-label">Queue depth</span><div class="kpi-icon blue"><i data-lucide="list" size="16"></i></div></div>
+                <div class="kpi-val">4</div>
+                <div class="kpi-ftr"><span class="kpi-note">Jobs waiting for runner</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-hdr"><span class="kpi-label">Avg duration</span><div class="kpi-icon amber"><i data-lucide="timer" size="16"></i></div></div>
+                <div class="kpi-val">38<sub>s</sub></div>
+                <div class="kpi-ftr"><span class="kpi-trend up"><i data-lucide="trending-up" size="11"></i> −0.3s from last hour</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-hdr"><span class="kpi-label">Stale heartbeats</span><div class="kpi-icon green"><i data-lucide="heart" size="16"></i></div></div>
+                <div class="kpi-val" style="color:var(--state-progress)">0</div>
+                <div class="kpi-ftr"><span class="kpi-note">All runners reporting in</span></div>
+              </div>
+            </div>
+
+            <!-- Dispatch Plan -->
+            <div class="section-card" style="margin-bottom:var(--space-5)">
+              <div class="section-card-hdr">
+                <span class="section-card-title">Dispatch plan — current batch</span>
+                <span class="mono" style="font-size:11px">batch-3f8a2c1d</span>
+              </div>
+              <div class="dispatch-lanes">
+                <div class="dispatch-tier-label">Tier 1 — Parallel (completed)</div>
+                <div class="dispatch-lane">
+                  <div class="dispatch-agent completed">
+                    <div class="da-name">research-agent</div>
+                    <div class="da-task">#TK-4821</div>
+                    <div class="da-status">✓ Completed 45s</div>
+                  </div>
+                  <div class="dispatch-agent completed">
+                    <div class="da-name">data-analyst</div>
+                    <div class="da-task">#TK-4843</div>
+                    <div class="da-status">✓ Completed 62s</div>
+                  </div>
+                  <div class="dispatch-agent completed">
+                    <div class="da-name">email-agent</div>
+                    <div class="da-task">#TK-4799</div>
+                    <div class="da-status">✓ Completed 8s</div>
+                  </div>
+                </div>
+                <div class="dispatch-tier-label">Tier 2 — Running now</div>
+                <div class="dispatch-lane">
+                  <div class="dispatch-agent running">
+                    <div class="da-name">summarizer-agent</div>
+                    <div class="da-task">#TK-4821 · depends on Tier 1</div>
+                    <div class="da-status">● Running 12s</div>
+                  </div>
+                  <div class="dispatch-agent running">
+                    <div class="da-name">scheduler-agent</div>
+                    <div class="da-task">#TK-4855 · sprint planning</div>
+                    <div class="da-status">● Running 29s</div>
+                  </div>
+                </div>
+                <div class="dispatch-tier-label">Tier 3 — Pending</div>
+                <div class="dispatch-lane">
+                  <div class="dispatch-agent pending">
+                    <div class="da-name">writer-agent</div>
+                    <div class="da-task">#TK-4821 · after Tier 2</div>
+                    <div class="da-status" style="color:var(--text-tertiary)">Waiting…</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Heartbeat monitor -->
+            <div class="section-card">
+              <div class="section-card-hdr">
+                <span class="section-card-title">Heartbeat monitor — last 30 minutes</span>
+                <span style="font-size:var(--text-caption);color:var(--text-tertiary)">Green = reporting · Amber = 60–300s stale · Red = blocked</span>
+              </div>
+              <div style="padding:var(--space-4) var(--space-5)">
+                <div class="hb-row">
+                  <div class="hb-name">research-agent</div>
+                  <div class="hb-bar-wrap">
+                    <div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div>
+                    <div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div>
+                  </div>
+                  <div class="hb-age" style="color:var(--state-progress)">12s</div>
+                </div>
+                <div class="hb-row">
+                  <div class="hb-name">email-agent</div>
+                  <div class="hb-bar-wrap">
+                    <div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div>
+                    <div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div>
+                  </div>
+                  <div class="hb-age" style="color:var(--text-tertiary)">Idle</div>
+                </div>
+                <div class="hb-row">
+                  <div class="hb-name">summarizer-agent</div>
+                  <div class="hb-bar-wrap">
+                    <div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg stale"></div><div class="hb-seg stale"></div><div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div><div class="hb-seg"></div>
+                    <div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div><div class="hb-seg empty"></div>
+                  </div>
+                  <div class="hb-age" style="color:var(--state-progress)">8s</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+    </div><!-- end monitor-body -->
+  </div><!-- end main-layout -->
+</div><!-- end app-shell -->
+
+<script>
+  lucide.createIcons();
+
+  function showPanel(name) {
+    document.querySelectorAll('.mon-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.mon-nav-item').forEach(b => b.classList.remove('active'));
+    const panel = document.getElementById('panel-' + name);
+    if (panel) panel.classList.add('active');
+    const btn = [...document.querySelectorAll('.mon-nav-item')]
+      .find(b => b.textContent.trim().toLowerCase().startsWith(name === 'overview' ? 'over' : name === 'scheduling' ? 'sched' : name));
+    if (btn) btn.classList.add('active');
+  }
+
+  // Tab switching (Comms panel)
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      this.closest('.tab-bar').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

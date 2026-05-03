@@ -2,6 +2,11 @@
 
 **Version:** 1.0 | **Date:** 2026-03-21 | **Status:** Draft
 
+> **2026-05-02 design extension.** Web chat is **one channel of many**. The comms agent maintains unified context across cockpit, WhatsApp, Telegram, email; replies flow back on the originating channel; counterparty conversations are visible but stored **separately** from owner-self chat under `{user_id}/conversations/{counterparty_id}/{channel}/{thread_id}.jsonl` (FR-STORE-001). Web chat is processed through the **same** InboundIntelligenceAgent distillation as other channels (FR-CA-002). References:
+> - [graphclaw/docs/architecture/14-agent-triad.md](../../../graphclaw/docs/architecture/14-agent-triad.md)
+> - [graphclaw/docs/architecture/16-cross-user-conversations.md](../../../graphclaw/docs/architecture/16-cross-user-conversations.md)
+> - [graphclaw/docs/requirements/agent-triad-and-comms-substrate.md](../../../graphclaw/docs/requirements/agent-triad-and-comms-substrate.md) FR-CA-001, FR-CA-002, FR-STORE-001
+
 ---
 
 ## 13.1 Design Principle

@@ -2,6 +2,18 @@
 
 **Version:** 1.0 | **Date:** 2026-04-12 | **Status:** Complete | **Wave:** G
 
+> **2026-05-02 design extension.** The Intelligence Hub gains:
+> - **Policies left-nav item** (FR-POL-002) — editor for `delegation.md`, `escalation.md`, `counterparty_etiquette.md`, `reply_tone.md` with structured form on YAML frontmatter + markdown body editor
+> - **Onboarding-completion state** on the Profile editor (resumable FSM — FR-ID-001)
+> - **Aliases display** on entity profiles (FR-GRAPH-002)
+> - **Counterparty-tagged memory notes** in working/episodic views
+> - **Onboarding wizard companion in cockpit chat** (FR-ID-001)
+>
+> Working memory accumulates from all three agents (comms / inbound / outbound) and all channels. References:
+> - [graphclaw/docs/architecture/14-agent-triad.md](../../../graphclaw/docs/architecture/14-agent-triad.md)
+> - [graphclaw/docs/architecture/15-user-identity-and-onboarding.md](../../../graphclaw/docs/architecture/15-user-identity-and-onboarding.md)
+> - [graphclaw/docs/requirements/agent-triad-and-comms-substrate.md](../../../graphclaw/docs/requirements/agent-triad-and-comms-substrate.md) FR-POL-001, FR-POL-002, FR-ID-001, FR-GRAPH-002
+
 ---
 
 ## 15.0 Overview

@@ -2,6 +2,11 @@
 
 **Version:** 1.0 | **Date:** 2026-03-21 | **Status:** Draft
 
+> **2026-05-02 design extension.** Surface for the comms / inbound / outbound triad must show: distillation events (task_entry written / memory_note written), outbound agent activity, scheduler-driven runs (FollowUpTrigger), pending escalations, and principal-name on every DB call (NFR-008). References:
+> - [graphclaw/docs/architecture/14-agent-triad.md](../../../graphclaw/docs/architecture/14-agent-triad.md)
+> - [graphclaw/docs/architecture/18-follow-up-cadence.md](../../../graphclaw/docs/architecture/18-follow-up-cadence.md)
+> - [graphclaw/docs/requirements/agent-triad-and-comms-substrate.md](../../../graphclaw/docs/requirements/agent-triad-and-comms-substrate.md) NFR-005, NFR-006, NFR-008
+
 ---
 
 ## 3.1 Agent Activity Dashboard
