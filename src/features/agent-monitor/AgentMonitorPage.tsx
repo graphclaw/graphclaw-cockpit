@@ -11,6 +11,7 @@ import { InboundCommsTable } from './components/InboundCommsTable';
 import { LiveTicker } from './components/LiveTicker';
 import { OutboundCommsTable } from './components/OutboundCommsTable';
 import { OverviewKpiStrip } from './components/OverviewKpiStrip';
+import { SchedulingNextRunCard } from './components/SchedulingNextRunCard';
 
 type Section = 'overview' | 'activity' | 'comms' | 'scheduling' | 'skills' | 'scoring' | 'agents';
 type MonitorGroup = 'Monitor' | 'Advanced';
@@ -300,6 +301,8 @@ export function AgentMonitorPage() {
                       <OutboundCommsTable />
                     )}
                   </div>
+                ) : activeSection === 'scheduling' ? (
+                  <SchedulingNextRunCard />
                 ) : !isOverviewSection && (
                   <EmptyPanel
                     icon={panelEmptyState.icon}

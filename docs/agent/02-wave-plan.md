@@ -528,9 +528,33 @@ Unknown channels: neutral grey.
 
 ### M-E-1 — Next run card
 
+**Kickoff notes (2026-05-03):**
+- Scope for this step: render scheduling panel "Next run" card and support manual `Run Now` trigger fire action.
+- Data wiring decisions:
+  - consume trigger schedule via existing `useAgentTriggers()` and pick earliest `next_fire_at` / `nextFireAt`,
+  - invoke `POST /app/v1/agent/triggers/{id}/fire` through a dedicated mutation hook and invalidate status/trigger queries after success.
+- Edge cases validated before coding:
+  - empty trigger list should render an explicit no-schedule state,
+  - triggers with invalid `nextFireAt` should not crash sorting/formatting,
+  - clicking Run Now while mutation pending should prevent duplicate requests.
+- Failure modes to guard:
+  - scheduling route still showing generic empty panel instead of card,
+  - success path without user feedback (toast),
+  - missing trigger id causing broken POST path.
+
 - First upcoming trigger from `/agent/triggers/schedule`.
 - "Run Now" → `POST /app/v1/agent/triggers/{id}/fire` (existing endpoint).
 - Toast on success; ticker should pick up new run.
+
+**Closeout notes (2026-05-03):**
+- Added `SchedulingNextRunCard` to `/agent-monitor/scheduling` with next-trigger selection, relative next-run display, and trigger metadata.
+- Added `useFireAgentTrigger()` mutation hook and wired Run Now action to `POST /app/v1/agent/triggers/{id}/fire`.
+- Added success/failure toast feedback on Run Now and pending-state button disable to prevent duplicate submissions.
+- Preserved forward placeholder text for pending M-E-2/M-E-3 scheduling features.
+- Validation:
+  - Unit: `SchedulingNextRunCard.test.tsx` for schedule render, empty fallback, and Run Now mutation call.
+  - Page integration: `AgentMonitorPage.test.tsx` includes scheduling route assertion.
+  - E2E: `e2e/agent/agent-monitor.spec.ts` adds scheduling route browser check for next-run card and Run Now control.
 
 ### M-E-2 — Trigger list table
 

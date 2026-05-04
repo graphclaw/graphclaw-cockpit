@@ -24,6 +24,15 @@ test.describe('Agent Monitor', () => {
     await expect(page.locator('[data-testid="activity-view-session"]')).toHaveAttribute('title', 'Coming soon');
   });
 
+  test('scheduling route renders next run card and run now control', async ({ page }) => {
+    await page.goto('/agent-monitor/scheduling');
+
+    const schedulingPanel = page.locator('[data-testid="agent-monitor-panel-scheduling"]');
+    await expect(schedulingPanel).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="scheduling-next-run-card"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="scheduling-run-now-button"]')).toBeVisible({ timeout: 10000 });
+  });
+
   test('comms tab route resolves to comms section and preserves tab', async ({ page }) => {
     await page.goto('/agent-monitor/comms/outbound');
     await expect(page).toHaveURL(/\/agent-monitor\/comms\/outbound$/);

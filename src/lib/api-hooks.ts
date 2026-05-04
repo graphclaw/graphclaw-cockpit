@@ -398,6 +398,7 @@ export function useActionQueue() {
 
 export interface AgentTrigger {
   trigger_id: string;
+  triggerId?: string;
   name: string;
   schedule: string;
   enabled: boolean;
@@ -412,6 +413,19 @@ export function useAgentTriggers() {
     queryKey: ['agent', 'triggers'],
     queryFn: () => apiFetch<AgentTrigger[]>('/app/v1/agent/triggers/schedule'),
     refetchInterval: 30_000,
+  });
+}
+
+export function useFireAgentTrigger() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (triggerId: string) =>
+      apiPost(`/app/v1/agent/triggers/${encodeURIComponent(triggerId)}/fire`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent', 'triggers'] });
+      void qc.invalidateQueries({ queryKey: ['agent', 'status'] });
+    },
   });
 }
 

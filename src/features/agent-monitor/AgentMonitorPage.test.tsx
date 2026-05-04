@@ -42,6 +42,10 @@ vi.mock('@/features/agent-monitor/components/OutboundCommsTable', () => ({
   OutboundCommsTable: () => <div data-testid="agent-monitor-outbound-log" />,
 }));
 
+vi.mock('@/features/agent-monitor/components/SchedulingNextRunCard', () => ({
+  SchedulingNextRunCard: () => <div data-testid="agent-monitor-scheduling-card" />,
+}));
+
 const mockUseAttentionItems = vi.mocked(useAttentionItems);
 
 describe('AgentMonitorPage', () => {
@@ -130,6 +134,15 @@ describe('AgentMonitorPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('agent-monitor-scoring-layout')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-panel-scoring')).toBeInTheDocument();
+    });
+  });
+
+  it('renders scheduling panel card on scheduling route', async () => {
+    renderAt('/agent-monitor/scheduling');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('agent-monitor-panel-scheduling')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-scheduling-card')).toBeInTheDocument();
     });
   });
 });
