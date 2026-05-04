@@ -2,7 +2,7 @@
  * Central API hooks — every TanStack Query hook that talks to the backend.
  * All calls use the raw fetch with the Bearer token from localStorage.
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { logoutAndRedirectToLogin, recoverAuthSession } from '@/lib/auth-session';
 
@@ -479,6 +479,57 @@ export function useSkillWorkers() {
     queryFn: () => apiFetchOptional<SkillWorkersResponse>('/app/v1/skills/workers'),
     refetchInterval: 30_000,
     retry: false,
+  });
+}
+
+export type AgentActivityType = 'all' | 'decisions' | 'comms' | 'skills' | 'errors';
+
+export interface AgentActivityItem {
+  timestamp: string;
+  event_type: string;
+  message: string;
+  task_id?: string | null;
+  status?: string | null;
+  session_id?: string | null;
+  raw?: Record<string, unknown> | null;
+}
+
+export interface AgentActivityResponse {
+  items: AgentActivityItem[];
+  next_cursor: string | null;
+}
+
+export interface AgentActivityParams {
+  from: string;
+  to: string;
+  type: AgentActivityType;
+  limit?: number;
+}
+
+function buildActivityQueryString(params: AgentActivityParams, cursor?: string | null): string {
+  const queryParams = new URLSearchParams();
+  queryParams.set('from', params.from);
+  queryParams.set('to', params.to);
+  queryParams.set('type', params.type);
+  queryParams.set('limit', String(params.limit ?? 50));
+  if (cursor) {
+    queryParams.set('cursor', cursor);
+  }
+  return queryParams.toString();
+}
+
+export function useInfiniteAgentActivity(params: AgentActivityParams, enabled = true) {
+  return useInfiniteQuery({
+    queryKey: ['agent', 'activity', params],
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam }) => {
+      const query = buildActivityQueryString(params, pageParam);
+      return apiFetch<AgentActivityResponse>(`/app/v1/agent/activity?${query}`);
+    },
+    getNextPageParam: (lastPage) => lastPage.next_cursor,
+    enabled,
+    retry: false,
+    refetchInterval: 60_000,
   });
 }
 

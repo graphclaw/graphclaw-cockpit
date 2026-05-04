@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { Activity, Bot, CalendarClock, MessageSquare, Radar, Sigma } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { AttentionStrip } from './components/AttentionStrip';
+import { ActivityFeed } from './components/ActivityFeed';
 import { EmptyPanel } from './components/EmptyPanel';
 import { GlanceStrip } from './components/GlanceStrip';
 import { LiveTicker } from './components/LiveTicker';
@@ -157,6 +158,7 @@ export function AgentMonitorPage() {
   const sectionConfig = getSectionConfig(activeSection);
   const commsTab: CommsTab = isCommsTab(params.tab) ? params.tab : 'inbound';
   const isOverviewSection = activeSection === 'overview';
+  const isActivitySection = activeSection === 'activity';
   const isScoringSection = activeSection === 'scoring';
   const isAgentsSection = activeSection === 'agents';
   const panelEmptyState =
@@ -284,7 +286,9 @@ export function AgentMonitorPage() {
                   </div>
                 )}
 
-                {!isOverviewSection && (
+                {isActivitySection ? (
+                  <ActivityFeed />
+                ) : !isOverviewSection && (
                   <EmptyPanel
                     icon={panelEmptyState.icon}
                     title={panelEmptyState.title}

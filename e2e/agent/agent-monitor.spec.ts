@@ -12,6 +12,16 @@ test.describe('Agent Monitor', () => {
     await expect(page.locator('[data-testid="agent-monitor-panel-scoring"]')).toBeVisible({ timeout: 10000 });
   });
 
+  test('activity route renders feed and filters', async ({ page }) => {
+    await page.goto('/agent-monitor/activity');
+
+    const activityPanel = page.locator('[data-testid="agent-monitor-panel-activity"]');
+    await expect(activityPanel).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="agent-monitor-activity-feed"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="activity-filter-time"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="activity-filter-type"]')).toBeVisible({ timeout: 10000 });
+  });
+
   test('comms tab route resolves to comms section and preserves tab', async ({ page }) => {
     await page.goto('/agent-monitor/comms/outbound');
     await expect(page).toHaveURL(/\/agent-monitor\/comms\/outbound$/);

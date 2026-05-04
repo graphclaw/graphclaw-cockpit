@@ -319,6 +319,32 @@ All cards use `<KpiCard />` (existing shared component). Poll cadence: 30s. Firs
 
 ### M-C-1 — Activity table
 
+**Kickoff notes (2026-05-03):**
+- Scope for this step: deliver Activity panel table with filter bar, server-backed pagination, and error-row details affordance.
+- Dependency decision: Gateway B-3 (`GET /app/v1/agent/activity`) is not present in current backend routes, so this step includes implementing B-3 first, then wiring cockpit M-C-1.
+- Data contract for this step:
+  - query params: `from`, `to`, `type`, `limit`, `cursor`,
+  - response: `{ items, nextCursor }` with newest-first ordering,
+  - row fields consumed by cockpit: `timestamp`, `eventType`, `message`, `taskId`, `status`, optional `raw`.
+- Edge cases validated before coding:
+  - invalid/partial NDJSON lines must be skipped safely,
+  - ranges over 7 days must fail with explicit 400 contract error,
+  - missing task id should render `—` without breaking row layout.
+- Failure modes to guard:
+  - expensive full-prefix scans in MinIO for each request,
+  - cursor decode failures causing 500s instead of safe 400s,
+  - event type filters drifting from agreed taxonomy (all/decisions/comms/skills/errors).
+
+**Closeout notes (2026-05-04):**
+- Delivered `ActivityFeed` table with time/type filters, failed-row details drawer, and server cursor pagination.
+- Delivered `useActivityFeed` hook built on `useInfiniteAgentActivity` with `from`/`to` bounds for last hour, today, and last 7 days.
+- Completed dependency `Gateway B-3` in backend (`GET /app/v1/agent/activity`) with MinIO NDJSON reader + plain-language formatter.
+- Validated against live stack:
+  - CLI API smoke returned `200` for `/app/v1/agent/activity` with expected envelope.
+  - Manual browser auth (Dev Token) succeeded and `/agent-monitor/activity` rendered filter bar + table/empty states.
+  - Playwright `e2e/agent/agent-monitor.spec.ts` passed with activity route assertions.
+  - Injected MinIO test record was surfaced by `/agent/activity` in the selected time window.
+
 **Files:** `components/ActivityFeed.tsx`, `hooks/useActivityFeed.ts`
 
 - Hook params: `{ from, to, type, limit, cursor }` → `GET /app/v1/agent/activity`.

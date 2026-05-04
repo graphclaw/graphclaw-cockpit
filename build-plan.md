@@ -562,7 +562,7 @@ New files:
 ---
 
 ### Wave M — Agent Monitor v2 (Cockpit + Gateway)
-**Status:** M-B-3 complete (2026-05-03)
+**Status:** M-C-1 + Gateway B-3 complete (2026-05-04)
 **Goal:** 7-panel tabbed Agent Monitor matching `wireframes-v2/pages/agent-monitor-v2.html`, built around plain-language summaries for the non-technical primary user.
 
 **Scope:** see [`docs/agent/02-wave-plan.md`](docs/agent/02-wave-plan.md) for full sub-requirement detail.
@@ -619,7 +619,7 @@ New files:
 - [x] M-B-1: 4 KPI cards (Agent Status, Last Run, Next Run, Needs Attention)
 - [x] M-B-2: Today's Glance Strip (5 chips)
 - [x] M-B-3: Live Activity Ticker with SSE + localStorage bridge
-- ☐ M-C-1: Activity table with filters + load more
+- [x] M-C-1: Activity table with filters + load more
 - ☐ M-C-2: Session grouping toggle
 - ☐ M-C-3: SSE + poll hybrid for "today" range
 - ☐ M-D-1: Comms banner with date-range filter
@@ -641,7 +641,7 @@ New files:
 - ☐ Gateway B-0: Migration numbering check
 - ☐ Gateway B-1: AgentToolCallEvent extended + wired in 5 agent files
 - ☐ Gateway B-2: agent_session_log migration + writer
-- ☐ Gateway B-3: /agent/activity endpoint
+- [x] Gateway B-3: /agent/activity endpoint
 - ☐ Gateway B-4: /agent/sessions endpoint
 - ☐ Gateway B-5: /comms/summary endpoint
 - ☐ Gateway B-6: /tasks/inbound-log + /tasks/outbound-log

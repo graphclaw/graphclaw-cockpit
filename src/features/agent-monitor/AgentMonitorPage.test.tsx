@@ -26,6 +26,10 @@ vi.mock('@/features/agent-monitor/components/LiveTicker', () => ({
   LiveTicker: () => <div data-testid="agent-monitor-live-ticker" />,
 }));
 
+vi.mock('@/features/agent-monitor/components/ActivityFeed', () => ({
+  ActivityFeed: () => <div data-testid="agent-monitor-activity-feed" />,
+}));
+
 const mockUseAttentionItems = vi.mocked(useAttentionItems);
 
 describe('AgentMonitorPage', () => {
@@ -70,6 +74,7 @@ describe('AgentMonitorPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('agent-monitor-panel-activity')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-nav-activity')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-activity-feed')).toBeInTheDocument();
     });
   });
 
