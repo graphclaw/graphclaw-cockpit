@@ -29,6 +29,8 @@ test.describe('Agent Monitor', () => {
     await expect(page).toHaveURL(/\/agent-monitor\/comms\/outbound$/);
     const commsPanel = page.locator('[data-testid="agent-monitor-panel-comms"]');
     await expect(commsPanel).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="comms-summary-banner"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="comms-summary-range"]')).toBeVisible({ timeout: 10000 });
     await expect(commsPanel.getByText(/^outbound$/)).toBeVisible({ timeout: 10000 });
   });
 });

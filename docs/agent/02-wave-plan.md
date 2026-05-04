@@ -408,6 +408,17 @@ All cards use `<KpiCard />` (existing shared component). Poll cadence: 30s. Firs
 - Time range selector (Today / 7d / 30d).
 - Phase A fallback: `—` for received until B-5 ships.
 
+**Closeout notes (2026-05-03):**
+- Added `CommsSummaryBanner` component to the Comms panel with:
+  - stats cards for `Received` and `Sent`,
+  - range selector (`Today`, `7d`, `30d`),
+  - phase fallback messaging when summary API data is unavailable.
+- Wired banner into `/agent-monitor/comms/*` section above existing empty-state scaffold.
+- Validation:
+  - Unit: `CommsSummaryBanner.test.tsx` (counts, fallback, selector state).
+  - Page integration: `AgentMonitorPage.test.tsx` confirms banner presence on comms routes.
+  - E2E: `agent-monitor.spec.ts` checks banner + selector visibility in outbound comms route.
+
 ### M-D-2 — Inbound tab
 
 **URL:** `/agent-monitor/comms/inbound`

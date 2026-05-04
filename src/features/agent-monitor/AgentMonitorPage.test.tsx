@@ -30,6 +30,10 @@ vi.mock('@/features/agent-monitor/components/ActivityFeed', () => ({
   ActivityFeed: () => <div data-testid="agent-monitor-activity-feed" />,
 }));
 
+vi.mock('@/features/agent-monitor/components/CommsSummaryBanner', () => ({
+  CommsSummaryBanner: () => <div data-testid="agent-monitor-comms-summary" />,
+}));
+
 const mockUseAttentionItems = vi.mocked(useAttentionItems);
 
 describe('AgentMonitorPage', () => {
@@ -83,6 +87,7 @@ describe('AgentMonitorPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('agent-monitor-panel-comms')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-comms-summary')).toBeInTheDocument();
       expect(screen.getByText('Comms tab:')).toBeInTheDocument();
       expect(screen.getByText('outbound')).toBeInTheDocument();
     });
