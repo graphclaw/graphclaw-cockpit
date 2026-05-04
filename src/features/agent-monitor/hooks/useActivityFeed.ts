@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { formatTickerEvent, type SupportedTickerEventType } from '@/features/agent-monitor/lib/formatEvent';
 import {
   useAgentSessions,
   useInfiniteAgentActivity,
@@ -12,6 +13,16 @@ interface ActivityBounds {
   from: string;
   to: string;
 }
+
+const LIVE_EVENT_TYPES: SupportedTickerEventType[] = [
+  'task.scored',
+  'skill.completed',
+  'briefing.ready',
+  'task.state_changed',
+  'approval.pending',
+];
+
+const LIVE_BUFFER_LIMIT = 100;
 
 function getBounds(range: ActivityTimeRange, now = new Date()): ActivityBounds {
   const to = now;
@@ -37,6 +48,77 @@ function getBounds(range: ActivityTimeRange, now = new Date()): ActivityBounds {
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object';
+}
+
+function itemKey(item: AgentActivityItem): string {
+  return [item.timestamp, item.event_type, item.task_id ?? '', item.session_id ?? '', item.message].join('|');
+}
+
+function mergeUniqueItems(items: AgentActivityItem[]): AgentActivityItem[] {
+  const unique: AgentActivityItem[] = [];
+  const seen = new Set<string>();
+
+  for (const item of items) {
+    const key = itemKey(item);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    unique.push(item);
+  }
+
+  return unique;
+}
+
+function liveStatus(eventType: SupportedTickerEventType, payload: Record<string, unknown>): string {
+  if (eventType === 'task.state_changed') {
+    return 'running';
+  }
+
+  if (eventType === 'briefing.ready') {
+    return 'trigger';
+  }
+
+  if (eventType === 'skill.completed') {
+    const status = readString(payload.status)?.toUpperCase();
+    if (status === 'FAILED' || status === 'ERROR' || status === 'TIMEOUT') {
+      return 'failed';
+    }
+  }
+
+  return 'done';
+}
+
+function readString(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function toLiveItem(
+  eventType: SupportedTickerEventType,
+  payload: Record<string, unknown>,
+): AgentActivityItem | null {
+  const formatted = formatTickerEvent(eventType, payload);
+  if (!formatted) {
+    return null;
+  }
+
+  return {
+    timestamp: formatted.timestamp,
+    event_type: formatted.eventType,
+    message: formatted.message,
+    task_id: formatted.taskId ?? null,
+    status: liveStatus(eventType, payload),
+    session_id: readString(payload.session_id) ?? readString(payload.sessionId),
+    raw: payload,
+  };
+}
+
 export interface UseActivityFeedResult {
   items: AgentActivityItem[];
   isLoading: boolean;
@@ -52,14 +134,6 @@ export interface UseActivityFeedResult {
 export interface ActivitySessionMeta {
   sessionId: string;
   triggerType: string;
-}
-
-function readString(value: unknown): string | null {
-  if (typeof value !== 'string') {
-    return null;
-  }
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
 }
 
 function toSessionMeta(raw: Record<string, unknown>): ActivitySessionMeta | null {
@@ -98,10 +172,97 @@ export function useActivityFeed(
     true,
   );
 
-  const items = useMemo(
+  const [liveItems, setLiveItems] = useState<AgentActivityItem[]>([]);
+  const pendingItemsRef = useRef<AgentActivityItem[]>([]);
+  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const pagedItems = useMemo(
     () => (query.data?.pages ?? []).flatMap((page) => page.items),
     [query.data?.pages],
   );
+
+  useEffect(() => {
+    if (timeRange !== 'today') {
+      setLiveItems([]);
+      pendingItemsRef.current = [];
+      if (flushTimerRef.current) {
+        clearTimeout(flushTimerRef.current);
+        flushTimerRef.current = null;
+      }
+    }
+  }, [timeRange]);
+
+  useEffect(() => {
+    if (timeRange !== 'today' || typeof EventSource === 'undefined') {
+      return;
+    }
+
+    const source = new EventSource('/app/v1/events');
+    const handlers: Array<[SupportedTickerEventType, (event: MessageEvent<string>) => void]> = [];
+
+    const scheduleFlush = () => {
+      if (flushTimerRef.current) {
+        return;
+      }
+
+      flushTimerRef.current = setTimeout(() => {
+        flushTimerRef.current = null;
+        if (pendingItemsRef.current.length === 0) {
+          return;
+        }
+
+        const nextItems = pendingItemsRef.current;
+        pendingItemsRef.current = [];
+
+        setLiveItems((previous) =>
+          mergeUniqueItems([...nextItems, ...previous]).slice(0, LIVE_BUFFER_LIMIT),
+        );
+      }, 1000);
+    };
+
+    LIVE_EVENT_TYPES.forEach((eventType) => {
+      const handler = (event: MessageEvent<string>) => {
+        try {
+          const payload = JSON.parse(event.data) as unknown;
+          if (!isRecord(payload)) {
+            return;
+          }
+
+          const liveItem = toLiveItem(eventType, payload);
+          if (!liveItem) {
+            return;
+          }
+
+          pendingItemsRef.current = [liveItem, ...pendingItemsRef.current];
+          scheduleFlush();
+        } catch {
+          // Ignore malformed SSE payloads.
+        }
+      };
+
+      handlers.push([eventType, handler]);
+      source.addEventListener(eventType, handler as EventListener);
+    });
+
+    return () => {
+      handlers.forEach(([eventType, handler]) => {
+        source.removeEventListener(eventType, handler as EventListener);
+      });
+      source.close();
+      pendingItemsRef.current = [];
+      if (flushTimerRef.current) {
+        clearTimeout(flushTimerRef.current);
+        flushTimerRef.current = null;
+      }
+    };
+  }, [timeRange]);
+
+  const items = useMemo(() => {
+    if (timeRange !== 'today' || liveItems.length === 0) {
+      return pagedItems;
+    }
+    return mergeUniqueItems([...liveItems, ...pagedItems]);
+  }, [liveItems, pagedItems, timeRange]);
 
   const sessionMetaById = useMemo<Record<string, ActivitySessionMeta>>(() => {
     const rawItems = sessionsQuery.data?.items;

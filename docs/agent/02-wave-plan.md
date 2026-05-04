@@ -378,6 +378,15 @@ All cards use `<KpiCard />` (existing shared component). Poll cadence: 30s. Firs
 - While "Today" filter active: SSE events also append live to top of table (debounced 1s).
 - Other ranges: poll-only (60s).
 
+**Closeout notes (2026-05-03):**
+- Implemented SSE subscription for Activity feed when `timeRange === 'today'`.
+- Live events are buffered and appended to the top of the table with a 1-second debounce to avoid row churn.
+- Existing paged server results remain the baseline; live and paged items are merged with duplicate suppression.
+- Non-today ranges (`last-hour`, `last-7-days`) clear live buffers and run poll-only behavior.
+- Validation:
+  - Unit: new `useActivityFeed.test.ts` verifies today-mode SSE append and non-today poll-only fallback.
+  - Regression: `ActivityFeed.test.tsx` and `agent-monitor.spec.ts` remain green.
+
 ### M-C verification
 
 - "Last 7 days" filter loads from MinIO via gateway.
