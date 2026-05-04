@@ -15,7 +15,10 @@
     "test:e2e:puppeteer": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config e2e-puppeteer/jest.config.cjs",
     "test:e2e:puppeteer:ci": "CI=true node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config e2e-puppeteer/jest.config.cjs --forceExit --bail",
     "seed:puppeteer": "npx tsx e2e-puppeteer/fixtures/seed-all.ts",
-    "teardown:puppeteer": "npx tsx e2e-puppeteer/fixtures/teardown-all.ts"
+    "teardown:puppeteer": "npx tsx e2e-puppeteer/fixtures/teardown-all.ts",
+    "regen-inventory": "node scripts/regen-inventory.mjs",
+    "check-headers": "node scripts/check-test-headers.mjs",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@dagrejs/dagre": "^3.0.0",

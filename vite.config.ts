@@ -25,5 +25,25 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: true,
     exclude: ['node_modules', 'dist', 'e2e'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        'e2e/**',
+        'src/test/**',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/types/**',
+      ],
+      thresholds: {
+        lines: 60,
+        branches: 60,
+        functions: 60,
+        statements: 60,
+      },
+    },
   },
 });
