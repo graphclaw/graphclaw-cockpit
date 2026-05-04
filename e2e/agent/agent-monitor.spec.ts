@@ -20,6 +20,8 @@ test.describe('Agent Monitor', () => {
     await expect(page.locator('[data-testid="agent-monitor-activity-feed"]')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[data-testid="activity-filter-time"]')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[data-testid="activity-filter-type"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="activity-view-session"]')).toBeDisabled({ timeout: 10000 });
+    await expect(page.locator('[data-testid="activity-view-session"]')).toHaveAttribute('title', 'Coming soon');
   });
 
   test('comms tab route resolves to comms section and preserves tab', async ({ page }) => {

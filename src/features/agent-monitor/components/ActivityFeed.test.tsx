@@ -26,6 +26,8 @@ describe('ActivityFeed', () => {
       isLoading: false,
       isLoadingMore: false,
       error: null,
+      sessionViewAvailable: false,
+      sessionMetaById: {},
       hasNextPage: true,
       loadMore: vi.fn().mockResolvedValue(undefined),
       refetch: vi.fn().mockResolvedValue(undefined),
@@ -57,6 +59,8 @@ describe('ActivityFeed', () => {
       isLoading: false,
       isLoadingMore: false,
       error: null,
+      sessionViewAvailable: false,
+      sessionMetaById: {},
       hasNextPage: false,
       loadMore: vi.fn().mockResolvedValue(undefined),
       refetch: vi.fn().mockResolvedValue(undefined),
@@ -65,5 +69,64 @@ describe('ActivityFeed', () => {
     renderWithProviders(<ActivityFeed />);
 
     expect(screen.getByText('No activity in this range.')).toBeInTheDocument();
+  });
+
+  it('disables session view toggle when session list is unavailable', () => {
+    renderWithProviders(<ActivityFeed />);
+
+    const sessionToggle = screen.getByTestId('activity-view-session');
+    expect(sessionToggle).toBeDisabled();
+    expect(sessionToggle).toHaveAttribute('title', 'Coming soon');
+  });
+
+  it('renders grouped session view and expands rows', async () => {
+    const user = userEvent.setup();
+
+    mockUseActivityFeed.mockReturnValue({
+      items: [
+        {
+          timestamp: '2026-05-03T14:32:07Z',
+          event_type: 'agent.tool_call',
+          message: 'Tool call completed.',
+          task_id: 'TK-4821',
+          status: 'done',
+          session_id: 'SES-001',
+          raw: { event_type: 'agent.tool_call' },
+        },
+        {
+          timestamp: '2026-05-03T14:31:07Z',
+          event_type: 'skill.completed',
+          message: 'Research completed.',
+          task_id: 'TK-4821',
+          status: 'done',
+          session_id: 'SES-001',
+          raw: { event_type: 'skill.completed' },
+        },
+      ],
+      isLoading: false,
+      isLoadingMore: false,
+      error: null,
+      sessionViewAvailable: true,
+      sessionMetaById: {
+        'SES-001': {
+          sessionId: 'SES-001',
+          triggerType: 'daily_briefing',
+        },
+      },
+      hasNextPage: false,
+      loadMore: vi.fn().mockResolvedValue(undefined),
+      refetch: vi.fn().mockResolvedValue(undefined),
+    });
+
+    renderWithProviders(<ActivityFeed />);
+
+    await user.click(screen.getByTestId('activity-view-session'));
+    expect(screen.getAllByTestId('activity-session-group')).toHaveLength(1);
+
+    await user.click(screen.getByTestId('activity-session-header'));
+    expect(screen.getByTestId('activity-session-table')).toBeInTheDocument();
+    expect(screen.getByText('Daily Briefing')).toBeInTheDocument();
+    expect(screen.getByText('Tools 1')).toBeInTheDocument();
+    expect(screen.getByText('Skills 1')).toBeInTheDocument();
   });
 });

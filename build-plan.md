@@ -562,7 +562,7 @@ New files:
 ---
 
 ### Wave M — Agent Monitor v2 (Cockpit + Gateway)
-**Status:** M-C-1 + Gateway B-3 complete (2026-05-04)
+**Status:** M-C-2 complete; M-C-3 next (2026-05-03)
 **Goal:** 7-panel tabbed Agent Monitor matching `wireframes-v2/pages/agent-monitor-v2.html`, built around plain-language summaries for the non-technical primary user.
 
 **Scope:** see [`docs/agent/02-wave-plan.md`](docs/agent/02-wave-plan.md) for full sub-requirement detail.
@@ -620,7 +620,7 @@ New files:
 - [x] M-B-2: Today's Glance Strip (5 chips)
 - [x] M-B-3: Live Activity Ticker with SSE + localStorage bridge
 - [x] M-C-1: Activity table with filters + load more
-- ☐ M-C-2: Session grouping toggle
+- [x] M-C-2: Session grouping toggle
 - ☐ M-C-3: SSE + poll hybrid for "today" range
 - ☐ M-D-1: Comms banner with date-range filter
 - ☐ M-D-2: Inbound tab (URL-bound)

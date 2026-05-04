@@ -361,6 +361,18 @@ All cards use `<KpiCard />` (existing shared component). Poll cadence: 30s. Firs
 - Click chevron → expands inline.
 - Phase A guard: if `useSessionList()` returns 501/empty, disable toggle with tooltip "Coming soon".
 
+**Closeout notes (2026-05-03):**
+- Added View toggle (`Time`/`Session`) to Activity filter bar.
+- Added session grouping mode that clusters consecutive records by `session_id` and renders group headers with chips:
+  - `Tools {n}` from `agent.tool_call` + `mcp.tool_call`
+  - `Skills {n}` from `skill.completed`
+  - `Sent {n}` from `agent.message` + `outbound.sent`
+- Added chevron expand/collapse per session group with inline table expansion.
+- Added Phase A guard: Session toggle is disabled and shows tooltip `Coming soon` when `/app/v1/agent/sessions` is unavailable/empty.
+- Validation:
+  - Unit: `ActivityFeed.test.tsx` expanded to cover disabled guard and grouped session rendering.
+  - E2E: `e2e/agent/agent-monitor.spec.ts` asserts disabled Session toggle with tooltip on Activity route.
+
 ### M-C-3 — SSE + poll hybrid
 
 - While "Today" filter active: SSE events also append live to top of table (debounced 1s).
