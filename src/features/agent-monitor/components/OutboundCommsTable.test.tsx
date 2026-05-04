@@ -34,6 +34,7 @@ describe('OutboundCommsTable', () => {
     renderWithProviders(<OutboundCommsTable />);
 
     expect(screen.getByTestId('outbound-log-table')).toBeInTheDocument();
+    expect(screen.getByTestId('channel-badge-email')).toBeInTheDocument();
     expect(screen.getByText('EMAIL')).toBeInTheDocument();
     expect(screen.getByText('Priya')).toBeInTheDocument();
     expect(screen.getByText('#TK-4822')).toBeInTheDocument();

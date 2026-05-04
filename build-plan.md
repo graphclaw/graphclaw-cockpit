@@ -562,7 +562,7 @@ New files:
 ---
 
 ### Wave M — Agent Monitor v2 (Cockpit + Gateway)
-**Status:** M-D-3 complete; M-D-4 next (2026-05-03)
+**Status:** M-D-4 complete; M-E-1 next (2026-05-03)
 **Goal:** 7-panel tabbed Agent Monitor matching `wireframes-v2/pages/agent-monitor-v2.html`, built around plain-language summaries for the non-technical primary user.
 
 **Scope:** see [`docs/agent/02-wave-plan.md`](docs/agent/02-wave-plan.md) for full sub-requirement detail.
@@ -625,7 +625,7 @@ New files:
 - [x] M-D-1: Comms banner with date-range filter
 - [x] M-D-2: Inbound tab (URL-bound)
 - [x] M-D-3: Outbound tab (URL-bound)
-- ☐ M-D-4: ChannelBadge component + theme tokens
+- [x] M-D-4: ChannelBadge component + theme tokens
 - ☐ M-E-1: Next run card + Run Now
 - ☐ M-E-2: Trigger list table with snooze/resume
 - ☐ M-E-3: Run history (Phase B)

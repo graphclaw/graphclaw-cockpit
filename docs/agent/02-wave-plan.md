@@ -473,6 +473,19 @@ All cards use `<KpiCard />` (existing shared component). Poll cadence: 30s. Firs
 
 **File:** `components/ChannelBadge.tsx`
 
+**Kickoff notes (2026-05-03):**
+- Scope for this step: introduce shared `ChannelBadge` and replace plain channel text in inbound/outbound comms tables.
+- Styling decision:
+  - add channel token vars to `src/styles/themes.css` for root + dark theme first (`email`, `cli`, `api`, `web`), with neutral fallback for unknown values.
+- Edge cases validated before coding:
+  - unknown channel strings should map to neutral badge style and uppercase fallback text,
+  - mixed casing in payload channel value should not affect variant selection,
+  - tables must remain readable in both light and dark themes.
+- Failure modes to guard:
+  - badge styles hardcoded in component without theme token usage,
+  - inbound/outbound tables diverging in badge rendering behavior,
+  - dark theme low-contrast badge text.
+
 Replaces hardcoded `.ch-email`/`.ch-cli`/`.ch-api`/`.ch-web` CSS from wireframe. Theme tokens added in `src/styles/themes.css`:
 
 ```css
@@ -489,6 +502,15 @@ Replaces hardcoded `.ch-email`/`.ch-cli`/`.ch-api`/`.ch-web` CSS from wireframe.
 ```
 
 Unknown channels: neutral grey.
+
+**Closeout notes (2026-05-03):**
+- Added shared `ChannelBadge` component for known channel variants (`email`, `cli`, `api`, `web`) plus neutral unknown fallback.
+- Added channel badge CSS variables in `src/styles/themes.css` for light (`:root`) and dark (`[data-theme='dark']`) themes.
+- Replaced plain-text channel cells in both `InboundCommsTable` and `OutboundCommsTable` with `ChannelBadge`.
+- Validation:
+  - Unit: `ChannelBadge.test.tsx` validates known, unknown, and missing-channel rendering.
+  - Regression: `InboundCommsTable.test.tsx`, `OutboundCommsTable.test.tsx`, and `AgentMonitorPage.test.tsx` all pass.
+  - E2E: `e2e/agent/agent-monitor.spec.ts` passes for comms route navigation and panel rendering.
 
 ### M-D verification
 

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Send } from 'lucide-react';
+import { ChannelBadge } from '@/features/agent-monitor/components/ChannelBadge';
 import { EmptyPanel } from '@/features/agent-monitor/components/EmptyPanel';
 import { PanelError } from '@/features/agent-monitor/components/PanelError';
 import { PanelSkeleton } from '@/features/agent-monitor/components/PanelSkeleton';
@@ -41,10 +42,8 @@ function shortTime(value: string | null): string {
   });
 }
 
-function channelLabel(item: OutboundLogItem): string {
-  return (
-    readFirstString(item.channel, item.channel_type, item.channelType)?.toUpperCase() ?? 'UNKNOWN'
-  );
+function channelValue(item: OutboundLogItem): string {
+  return readFirstString(item.channel, item.channel_type, item.channelType) ?? 'unknown';
 }
 
 function taskId(item: OutboundLogItem): string | null {
@@ -128,7 +127,9 @@ export function OutboundCommsTable() {
                   <td className="px-3 py-2 font-mono text-xs text-[var(--text-tertiary)]">
                     {shortTime(readFirstString(item.timestamp))}
                   </td>
-                  <td className="px-3 py-2 text-xs text-[var(--text-secondary)]">{channelLabel(item)}</td>
+                  <td className="px-3 py-2 text-xs text-[var(--text-secondary)]">
+                    <ChannelBadge channel={channelValue(item)} />
+                  </td>
                   <td className="px-3 py-2 text-xs text-[var(--text-secondary)]">{toDisplay(item)}</td>
                   <td className="px-3 py-2 text-[var(--text-secondary)]">{subjectSummary(item)}</td>
                   <td className="px-3 py-2 text-xs">

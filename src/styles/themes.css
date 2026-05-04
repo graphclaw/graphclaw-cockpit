@@ -76,6 +76,18 @@
   --text-link-hover: #0284c7;
   --text-on-brand: #ffffff;
 
+   /* --- Channel Badge Tokens --- */
+   --ch-email-bg: #eff6ff;
+   --ch-email-fg: #3b82f6;
+   --ch-cli-bg: #f5f3ff;
+   --ch-cli-fg: #7c3aed;
+   --ch-api-bg: #ecfdf5;
+   --ch-api-fg: #059669;
+   --ch-web-bg: #fffbeb;
+   --ch-web-fg: #d97706;
+   --ch-neutral-bg: #f1f5f9;
+   --ch-neutral-fg: #64748b;
+
   /* --- Semantic Icon --- */
   --icon-primary: #334155;
   --icon-secondary: #64748b;
@@ -165,6 +177,17 @@
   --text-link: #38bdf8;
   --text-link-hover: #7dd3fc;
   --text-on-brand: #0f172a;
+
+   --ch-email-bg: rgba(96, 165, 250, 0.16);
+   --ch-email-fg: #93c5fd;
+   --ch-cli-bg: rgba(192, 132, 252, 0.16);
+   --ch-cli-fg: #d8b4fe;
+   --ch-api-bg: rgba(52, 211, 153, 0.16);
+   --ch-api-fg: #86efac;
+   --ch-web-bg: rgba(251, 191, 36, 0.16);
+   --ch-web-fg: #fde68a;
+   --ch-neutral-bg: rgba(148, 163, 184, 0.14);
+   --ch-neutral-fg: #cbd5e1;
 
   --icon-primary: #e2e8f0;
   --icon-secondary: #94a3b8;
