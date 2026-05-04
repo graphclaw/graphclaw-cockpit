@@ -18,7 +18,9 @@
     "teardown:puppeteer": "npx tsx e2e-puppeteer/fixtures/teardown-all.ts",
     "regen-inventory": "node scripts/regen-inventory.mjs",
     "check-headers": "node scripts/check-test-headers.mjs",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "seed": "npx tsx e2e/seed/seed-all.ts",
+    "teardown": "npx tsx e2e/seed/teardown-all.ts"
   },
   "dependencies": {
     "@dagrejs/dagre": "^3.0.0",
