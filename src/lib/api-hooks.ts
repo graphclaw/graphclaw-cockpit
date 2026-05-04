@@ -580,6 +580,43 @@ export function useSkillWorkers() {
   });
 }
 
+export interface SkillWorkerStatus {
+  worker_id?: string;
+  workerId?: string;
+  state?: string;
+  current_job_id?: string | null;
+  currentJobId?: string | null;
+  last_heartbeat?: string | null;
+  lastHeartbeat?: string | null;
+  jobs_completed?: number;
+  jobsCompleted?: number;
+  jobs_failed?: number;
+  jobsFailed?: number;
+}
+
+export function useSkillWorkerStatuses() {
+  return useQuery({
+    queryKey: ['agent', 'skills-worker-statuses'],
+    queryFn: async () => {
+      const payload = await apiFetchOptional<SkillWorkerStatus[] | { workers?: SkillWorkerStatus[] }>(
+        '/app/v1/skills/workers',
+      );
+
+      if (Array.isArray(payload)) {
+        return payload;
+      }
+
+      if (payload && typeof payload === 'object' && Array.isArray(payload.workers)) {
+        return payload.workers;
+      }
+
+      return [] as SkillWorkerStatus[];
+    },
+    refetchInterval: 15_000,
+    retry: false,
+  });
+}
+
 export type AgentActivityType = 'all' | 'decisions' | 'comms' | 'skills' | 'errors';
 
 export interface AgentActivityItem {

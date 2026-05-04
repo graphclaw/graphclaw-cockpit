@@ -33,6 +33,14 @@ test.describe('Agent Monitor', () => {
     await expect(page.locator('[data-testid="scheduling-run-now-button"]')).toBeVisible({ timeout: 10000 });
   });
 
+  test('skills route renders worker pool panel', async ({ page }) => {
+    await page.goto('/agent-monitor/skills');
+
+    const skillsPanel = page.locator('[data-testid="agent-monitor-panel-skills"]');
+    await expect(skillsPanel).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="skills-worker-pool"]')).toBeVisible({ timeout: 10000 });
+  });
+
   test('comms tab route resolves to comms section and preserves tab', async ({ page }) => {
     await page.goto('/agent-monitor/comms/outbound');
     await expect(page).toHaveURL(/\/agent-monitor\/comms\/outbound$/);

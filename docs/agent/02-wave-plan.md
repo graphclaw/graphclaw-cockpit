@@ -582,10 +582,34 @@ Unknown channels: neutral grey.
 
 ### M-F-1 — Worker pool
 
+**Kickoff notes (2026-05-03):**
+- Scope for this step: ship skills worker pool utilisation bar and mini-card grid in the Skills panel.
+- Data wiring decision:
+  - backend `/app/v1/skills/workers` currently returns worker status snapshots (`worker_id`, `state`, `current_job_id`, `last_heartbeat`, counters) and does not expose heartbeat history buckets; sparkline rendering will use deterministic status/counter-derived bars as a Phase A fallback.
+- Edge cases validated before coding:
+  - empty worker list should render an explicit no-workers state,
+  - stale workers (`last_heartbeat > 900s`) should display amber accent and stale pill,
+  - pool size > 4 should collapse to 2x2 card view with Show all toggle.
+- Failure modes to guard:
+  - utilisation percentage divide-by-zero when no workers,
+  - stale heartbeat parsing crash on invalid timestamp,
+  - skills route still rendering generic empty panel.
+
 - `usePoolUtilBar()` from `/skills/workers`: green (<75%) / amber (75–90%) / red (>90%).
 - Up to 4 mini-cards (2×2 grid); "Show all" link expands.
 - Each card: skill name, task chip, sparkline (10 bars from heartbeat history).
 - Stale workers (last_heartbeat > 900s): amber border + "Stale" pill.
+
+**Closeout notes (2026-05-03):**
+- Added `SkillsWorkerPool` component and wired it to `/agent-monitor/skills` route.
+- Added `useSkillWorkerStatuses()` hook for `/app/v1/skills/workers` worker snapshot payloads.
+- Implemented utilisation bar with threshold colours (green/amber/red), 4-card default layout, and Show all/Show less toggle.
+- Implemented stale-worker detection using `last_heartbeat > 900s` and stale pill/amber border rendering.
+- Implemented 10-segment sparkline fallback derived from completion/failure counters because backend heartbeat history buckets are not currently exposed by `/skills/workers`.
+- Validation:
+  - Unit: `SkillsWorkerPool.test.tsx` covers utilisation thresholds, stale marker, and Show all toggle.
+  - Page integration: `AgentMonitorPage.test.tsx` includes skills route assertion.
+  - E2E: `e2e/agent/agent-monitor.spec.ts` includes skills route browser assertion.
 
 ### M-F-2 — Recent jobs table
 

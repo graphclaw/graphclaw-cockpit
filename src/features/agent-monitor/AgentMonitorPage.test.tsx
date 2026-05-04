@@ -46,6 +46,10 @@ vi.mock('@/features/agent-monitor/components/SchedulingNextRunCard', () => ({
   SchedulingNextRunCard: () => <div data-testid="agent-monitor-scheduling-card" />,
 }));
 
+vi.mock('@/features/agent-monitor/components/SkillsWorkerPool', () => ({
+  SkillsWorkerPool: () => <div data-testid="agent-monitor-skills-pool" />,
+}));
+
 const mockUseAttentionItems = vi.mocked(useAttentionItems);
 
 describe('AgentMonitorPage', () => {
@@ -143,6 +147,15 @@ describe('AgentMonitorPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('agent-monitor-panel-scheduling')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-scheduling-card')).toBeInTheDocument();
+    });
+  });
+
+  it('renders skills worker pool on skills route', async () => {
+    renderAt('/agent-monitor/skills');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('agent-monitor-panel-skills')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-skills-pool')).toBeInTheDocument();
     });
   });
 });
