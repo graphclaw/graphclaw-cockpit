@@ -7,6 +7,7 @@ import { ActivityFeed } from './components/ActivityFeed';
 import { CommsSummaryBanner } from './components/CommsSummaryBanner';
 import { EmptyPanel } from './components/EmptyPanel';
 import { GlanceStrip } from './components/GlanceStrip';
+import { InboundCommsTable } from './components/InboundCommsTable';
 import { LiveTicker } from './components/LiveTicker';
 import { OverviewKpiStrip } from './components/OverviewKpiStrip';
 
@@ -289,15 +290,25 @@ export function AgentMonitorPage() {
 
                 {isActivitySection ? (
                   <ActivityFeed />
-                ) : !isOverviewSection && (
+                ) : activeSection === 'comms' ? (
                   <div className="space-y-3">
-                    {activeSection === 'comms' && <CommsSummaryBanner />}
-                    <EmptyPanel
-                      icon={panelEmptyState.icon}
-                      title={panelEmptyState.title}
-                      subtitle={panelEmptyState.subtitle}
-                    />
+                    <CommsSummaryBanner />
+                    {commsTab === 'inbound' ? (
+                      <InboundCommsTable />
+                    ) : (
+                      <EmptyPanel
+                        icon={panelEmptyState.icon}
+                        title={panelEmptyState.title}
+                        subtitle={panelEmptyState.subtitle}
+                      />
+                    )}
                   </div>
+                ) : !isOverviewSection && (
+                  <EmptyPanel
+                    icon={panelEmptyState.icon}
+                    title={panelEmptyState.title}
+                    subtitle={panelEmptyState.subtitle}
+                  />
                 )}
 
                 {activeSection === 'comms' && (

@@ -427,6 +427,17 @@ All cards use `<KpiCard />` (existing shared component). Poll cadence: 30s. Firs
 - Columns: Time, Channel badge, From (display name), Message preview (60 char), Task chip, Action taken badge.
 - Click row → navigates to task detail.
 
+**Closeout notes (2026-05-03):**
+- Added inbound route panel rendering for `/agent-monitor/comms/inbound` using `InboundCommsTable`.
+- Added `useInboundLog({ from, to, limit })` API hook with optional fetch semantics.
+- Delivered table columns and row/task affordances for inbound audit:
+  - Time, Channel, From, Message preview, Task chip, Action.
+- Added empty-state fallback for unavailable/empty inbound data while preserving route structure.
+- Validation:
+  - Unit: `InboundCommsTable.test.tsx` for row + empty-state coverage.
+  - Page integration: `AgentMonitorPage.test.tsx` verifies inbound tab wiring.
+  - E2E: `agent-monitor.spec.ts` validates inbound route rendering with summary + panel content.
+
 ### M-D-3 — Outbound tab
 
 **URL:** `/agent-monitor/comms/outbound`

@@ -33,5 +33,16 @@ test.describe('Agent Monitor', () => {
     await expect(page.locator('[data-testid="comms-summary-range"]')).toBeVisible({ timeout: 10000 });
     await expect(commsPanel.getByText(/^outbound$/)).toBeVisible({ timeout: 10000 });
   });
+
+  test('inbound comms route renders inbound log panel', async ({ page }) => {
+    await page.goto('/agent-monitor/comms/inbound');
+    await expect(page).toHaveURL(/\/agent-monitor\/comms\/inbound$/);
+    const commsPanel = page.locator('[data-testid="agent-monitor-panel-comms"]');
+    await expect(commsPanel).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="comms-summary-banner"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="comms-summary-range"]')).toBeVisible({ timeout: 10000 });
+    await expect(commsPanel.getByText(/No inbound messages yet\.|Message preview/i)).toBeVisible({ timeout: 10000 });
+    await expect(commsPanel.getByText(/^inbound$/)).toBeVisible({ timeout: 10000 });
+  });
 });
 

@@ -438,6 +438,48 @@ export function useCommsSummary(date?: string) {
   });
 }
 
+export interface InboundLogItem {
+  timestamp?: string;
+  channel?: string;
+  channel_type?: string;
+  channelType?: string;
+  from?: string;
+  from_display?: string;
+  fromDisplay?: string;
+  message_preview?: string;
+  messagePreview?: string;
+  task_id?: string;
+  taskId?: string;
+  action_taken?: string;
+  actionTaken?: string;
+}
+
+export interface InboundLogResponse {
+  items?: InboundLogItem[];
+  next_cursor?: string | null;
+  nextCursor?: string | null;
+}
+
+export interface InboundLogParams {
+  from: string;
+  to: string;
+  limit?: number;
+}
+
+export function useInboundLog(params: InboundLogParams) {
+  const queryParams = new URLSearchParams();
+  queryParams.set('from', params.from);
+  queryParams.set('to', params.to);
+  queryParams.set('limit', String(params.limit ?? 50));
+
+  return useQuery({
+    queryKey: ['agent', 'inbound-log', params],
+    queryFn: () => apiFetchOptional<InboundLogResponse>(`/app/v1/tasks/inbound-log?${queryParams.toString()}`),
+    refetchInterval: 60_000,
+    retry: false,
+  });
+}
+
 export interface AgentSessionItem {
   sessionId?: string;
   startedAt?: string;
