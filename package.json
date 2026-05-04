@@ -20,7 +20,9 @@
     "check-headers": "node scripts/check-test-headers.mjs",
     "test:coverage": "vitest run --coverage",
     "seed": "npx tsx e2e/seed/seed-all.ts",
-    "teardown": "npx tsx e2e/seed/teardown-all.ts"
+    "teardown": "npx tsx e2e/seed/teardown-all.ts",
+    "sync-openapi": "curl -sf http://localhost:8000/openapi.json -o src/test/openapi.json && echo 'openapi.json updated'",
+    "test:contract": "vitest run src/test/contract/"
   },
   "dependencies": {
     "@dagrejs/dagre": "^3.0.0",

@@ -1,0 +1,6 @@
+{
+  "_comment": "Snapshot of backend OpenAPI spec. Refresh with: npm run sync-openapi",
+  "openapi": "3.1.0",
+  "info": { "title": "GraphClaw", "version": "0.1.0" },
+  "paths": {}
+}
