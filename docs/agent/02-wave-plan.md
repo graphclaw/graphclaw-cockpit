@@ -440,10 +440,34 @@ All cards use `<KpiCard />` (existing shared component). Poll cadence: 30s. Firs
 
 ### M-D-3 — Outbound tab
 
+**Kickoff notes (2026-05-03):**
+- Scope for this step: deliver outbound comms table for `/agent-monitor/comms/outbound` with route-bound rendering and resilient empty/error fallbacks.
+- Data wiring decision:
+  - consume `/app/v1/tasks/outbound-log` via `useOutboundLog({ from, to, limit })`, defaulting to today's UTC range and optional semantics when backend payload is unavailable.
+- Edge cases validated before coding:
+  - missing `toDisplay` and `subject` should render safe placeholder values,
+  - missing `taskId` should render `-` and keep row non-navigable,
+  - invalid timestamps should render `--:--:--` without row crash.
+- Failure modes to guard:
+  - panel crash on partial snake_case/camelCase response keys,
+  - outbound route silently falling back to inbound content,
+  - clickable row navigation firing when no task id exists.
+
 **URL:** `/agent-monitor/comms/outbound`
 
 - `useOutboundLog({ from, to })` → `GET /app/v1/tasks/outbound-log`.
 - Columns: Time, Channel badge, To (display name resolved per B-6 priority list), Subject/summary, Task chip, Status.
+
+**Closeout notes (2026-05-03):**
+- Added outbound route panel rendering for `/agent-monitor/comms/outbound` using `OutboundCommsTable`.
+- Added `useOutboundLog({ from, to, limit })` API hook in shared hooks with optional fetch semantics and 60s polling.
+- Delivered table columns and row/task affordances for outbound audit:
+  - Time, Channel, To, Subject/Summary, Task chip, Status.
+- Added empty-state fallback for unavailable/empty outbound data while preserving route structure.
+- Validation:
+  - Unit: `OutboundCommsTable.test.tsx` for row + empty-state coverage.
+  - Page integration: `AgentMonitorPage.test.tsx` verifies outbound tab wiring.
+  - E2E: `e2e/agent/agent-monitor.spec.ts` validates outbound route rendering with summary + panel content.
 
 ### M-D-4 — Channel badge component
 

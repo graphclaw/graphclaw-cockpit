@@ -480,6 +480,48 @@ export function useInboundLog(params: InboundLogParams) {
   });
 }
 
+export interface OutboundLogItem {
+  timestamp?: string;
+  channel?: string;
+  channel_type?: string;
+  channelType?: string;
+  to?: string;
+  to_display?: string;
+  toDisplay?: string;
+  subject?: string;
+  summary?: string;
+  task_id?: string;
+  taskId?: string;
+  status?: string;
+}
+
+export interface OutboundLogResponse {
+  items?: OutboundLogItem[];
+  next_cursor?: string | null;
+  nextCursor?: string | null;
+}
+
+export interface OutboundLogParams {
+  from: string;
+  to: string;
+  limit?: number;
+}
+
+export function useOutboundLog(params: OutboundLogParams) {
+  const queryParams = new URLSearchParams();
+  queryParams.set('from', params.from);
+  queryParams.set('to', params.to);
+  queryParams.set('limit', String(params.limit ?? 50));
+
+  return useQuery({
+    queryKey: ['agent', 'outbound-log', params],
+    queryFn: () =>
+      apiFetchOptional<OutboundLogResponse>(`/app/v1/tasks/outbound-log?${queryParams.toString()}`),
+    refetchInterval: 60_000,
+    retry: false,
+  });
+}
+
 export interface AgentSessionItem {
   sessionId?: string;
   startedAt?: string;

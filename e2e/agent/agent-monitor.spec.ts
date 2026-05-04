@@ -31,6 +31,7 @@ test.describe('Agent Monitor', () => {
     await expect(commsPanel).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[data-testid="comms-summary-banner"]')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[data-testid="comms-summary-range"]')).toBeVisible({ timeout: 10000 });
+    await expect(commsPanel.getByText(/No outbound messages yet\.|Subject\/Summary|Status/i)).toBeVisible({ timeout: 10000 });
     await expect(commsPanel.getByText(/^outbound$/)).toBeVisible({ timeout: 10000 });
   });
 

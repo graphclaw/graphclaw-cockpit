@@ -9,6 +9,7 @@ import { EmptyPanel } from './components/EmptyPanel';
 import { GlanceStrip } from './components/GlanceStrip';
 import { InboundCommsTable } from './components/InboundCommsTable';
 import { LiveTicker } from './components/LiveTicker';
+import { OutboundCommsTable } from './components/OutboundCommsTable';
 import { OverviewKpiStrip } from './components/OverviewKpiStrip';
 
 type Section = 'overview' | 'activity' | 'comms' | 'scheduling' | 'skills' | 'scoring' | 'agents';
@@ -296,11 +297,7 @@ export function AgentMonitorPage() {
                     {commsTab === 'inbound' ? (
                       <InboundCommsTable />
                     ) : (
-                      <EmptyPanel
-                        icon={panelEmptyState.icon}
-                        title={panelEmptyState.title}
-                        subtitle={panelEmptyState.subtitle}
-                      />
+                      <OutboundCommsTable />
                     )}
                   </div>
                 ) : !isOverviewSection && (
