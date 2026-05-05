@@ -654,6 +654,17 @@ Unknown channels: neutral grey.
 - Click row → loads factor breakdown in side panel.
 - Sortable by rank / score / autonomy.
 
+**Closeout notes (2026-05-05):**
+- Added `ScoringTaskTable` and wired it into the scoring panel left column (`/agent-monitor/scoring`).
+- Table sources live data from `useActionQueue()` (`/app/v1/agent/action-queue`) and renders rank, task id + context chip, score bar, recommended action, and autonomy badges.
+- Implemented sortable headers for rank, score, and autonomy, including direction toggles.
+- Implemented top-row highlight and selected-row handoff state in `AgentMonitorPage` to prepare M-G-2 factor panel integration.
+- Added explicit empty state (`scoring-task-table-empty`) for no queued actions.
+- Validation:
+  - Component: `ScoringTaskTable.test.tsx`
+  - Integration: `AgentMonitorPage.test.tsx` scoring route assertion
+  - E2E: `e2e/agent/agent-monitor.spec.ts` scoring route now verifies table or explicit empty state.
+
 ### M-G-2 — Factor breakdown side panel (right column 380px)
 
 **File:** `components/ScoreFactorBreakdown.tsx` (refactor of moved `ScoreExplainer.tsx`)

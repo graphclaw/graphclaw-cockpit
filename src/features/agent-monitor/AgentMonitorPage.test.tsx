@@ -63,6 +63,10 @@ vi.mock('@/features/agent-monitor/components/SchedulingNextRunCard', () => ({
   SchedulingNextRunCard: () => <div data-testid="agent-monitor-scheduling-card" />,
 }));
 
+vi.mock('@/features/agent-monitor/components/ScoringTaskTable', () => ({
+  ScoringTaskTable: () => <div data-testid="agent-monitor-scoring-table" />,
+}));
+
 vi.mock('@/features/agent-monitor/components/SkillsWorkerPool', () => ({
   SkillsWorkerPool: () => <div data-testid="agent-monitor-skills-pool" />,
 }));
@@ -159,6 +163,7 @@ describe('AgentMonitorPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('agent-monitor-scoring-layout')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-panel-scoring')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-scoring-table')).toBeInTheDocument();
     });
   });
 

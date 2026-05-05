@@ -27,6 +27,15 @@ test.describe('Agent Monitor', () => {
   test('section route renders matching panel', async ({ page }) => {
     await page.goto('/agent-monitor/scoring');
     await expect(page.locator('[data-testid="agent-monitor-panel-scoring"]')).toBeVisible({ timeout: 10000 });
+
+    const scoreTable = page.locator('[data-testid="scoring-task-table"]');
+    const scoreTableEmpty = page.locator('[data-testid="scoring-task-table-empty"]');
+
+    await expect
+      .poll(async () => (await scoreTable.isVisible()) || (await scoreTableEmpty.isVisible()), {
+        timeout: 10000,
+      })
+      .toBeTruthy();
   });
 
   test('activity route renders feed and filters', async ({ page }) => {

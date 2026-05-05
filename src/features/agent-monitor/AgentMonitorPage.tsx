@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { Activity, Bot, CalendarClock, MessageSquare, Radar, Sigma } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -11,6 +11,7 @@ import { InboundCommsTable } from './components/InboundCommsTable';
 import { LiveTicker } from './components/LiveTicker';
 import { OutboundCommsTable } from './components/OutboundCommsTable';
 import { OverviewKpiStrip } from './components/OverviewKpiStrip';
+import { ScoringTaskTable } from './components/ScoringTaskTable';
 import { SchedulingNextRunCard } from './components/SchedulingNextRunCard';
 import { SkillsRecentJobsTable } from './components/SkillsRecentJobsTable';
 import { SkillsWorkerPool } from './components/SkillsWorkerPool';
@@ -161,6 +162,7 @@ export function AgentMonitorPage() {
   const params = useParams<{ section?: string; tab?: string }>();
 
   const activeSection = getSectionFromRoute(params.section, location.pathname);
+  const [selectedScoringTaskId, setSelectedScoringTaskId] = useState<string | null>(null);
   const sectionConfig = getSectionConfig(activeSection);
   const commsTab: CommsTab = isCommsTab(params.tab) ? params.tab : 'inbound';
   const isOverviewSection = activeSection === 'overview';
@@ -264,10 +266,9 @@ export function AgentMonitorPage() {
                   className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4"
                   data-testid="agent-monitor-panel-scoring"
                 >
-                  <EmptyPanel
-                    icon={panelEmptyState.icon}
-                    title={panelEmptyState.title}
-                    subtitle={panelEmptyState.subtitle}
+                  <ScoringTaskTable
+                    selectedTaskId={selectedScoringTaskId}
+                    onSelectTask={(taskId) => setSelectedScoringTaskId(taskId)}
                   />
                 </div>
 
@@ -275,7 +276,11 @@ export function AgentMonitorPage() {
                   <EmptyPanel
                     icon={Sigma}
                     title="No factor breakdown selected."
-                    subtitle="Choose a task from the score table to inspect factor details."
+                    subtitle={
+                      selectedScoringTaskId
+                        ? `Task ${selectedScoringTaskId} selected. Factor breakdown lands in M-G-2.`
+                        : 'Choose a task from the score table to inspect factor details.'
+                    }
                   />
                 </div>
               </div>
