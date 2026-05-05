@@ -1,3 +1,20 @@
+/**
+ * GC-E-SKL-W50-001 - validates core agent monitor routes in browser.
+ *
+ * Scenario: The Agent Monitor route shell resolves to the right section panel,
+ * and the skills section exposes both worker utilization and recent job state.
+ *
+ * PRD: docs/prd/03-agent-monitor.md
+ * Build wave: W50
+ * Layer: L5 E2E
+ * Owner: frontend-team
+ * Last reviewed: 2026-05-05
+ *
+ * Cases covered:
+ *  - route redirect and section panel rendering
+ *  - comms inbound/outbound tab route behavior
+ *  - skills worker pool and recent jobs section visibility
+ */
 import { test, expect } from '../fixtures/auth.fixture';
 
 test.describe('Agent Monitor', () => {
@@ -33,12 +50,21 @@ test.describe('Agent Monitor', () => {
     await expect(page.locator('[data-testid="scheduling-run-now-button"]')).toBeVisible({ timeout: 10000 });
   });
 
-  test('skills route renders worker pool panel', async ({ page }) => {
+  test('skills route renders worker pool panel and recent jobs section', async ({ page }) => {
     await page.goto('/agent-monitor/skills');
 
     const skillsPanel = page.locator('[data-testid="agent-monitor-panel-skills"]');
     await expect(skillsPanel).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[data-testid="skills-worker-pool"]')).toBeVisible({ timeout: 10000 });
+
+    const jobsTable = page.locator('[data-testid="skills-recent-jobs"]');
+    const jobsEmpty = page.locator('[data-testid="skills-recent-jobs-empty"]');
+
+    await expect
+      .poll(async () => (await jobsTable.isVisible()) || (await jobsEmpty.isVisible()), {
+        timeout: 10000,
+      })
+      .toBeTruthy();
   });
 
   test('comms tab route resolves to comms section and preserves tab', async ({ page }) => {

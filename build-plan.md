@@ -32,6 +32,47 @@ The GraphClaw Cockpit has a complete backend API (131 routes, 1451 tests) and 26
 
 ---
 
+## Testing Framework Alignment (2026-05)
+
+This build plan now follows the unified testing harness documented in:
+- `TESTING.md`
+- `docs/testing/test-strategy.md`
+- `docs/testing/contributing-tests.md`
+- `../graphclaw/docs/testing/master-strategy.md`
+
+### Required test layers for cockpit work
+
+| Layer | Scope | Location | Gate |
+|-------|-------|----------|------|
+| **L1 Unit** | Pure logic/helpers | co-located `*.test.ts(x)` | Every PR |
+| **L2 Component** | React rendering/interaction | co-located `*.test.tsx` with `renderWithProviders` | Every PR |
+| **L3 Contract** | MSW handlers vs OpenAPI | `src/test/contract/handlers.contract.test.ts` | Every PR |
+| **L5 E2E** | Browser journeys | `e2e/**/*.spec.ts` (Playwright + Docker) | Every PR |
+
+### Wave-level testing rules
+
+For every requirement-sized implementation (for example `M-F-2`):
+1. Add/update tests in the correct layer(s) from the table above.
+2. Use frontend test conventions from `docs/testing/test-strategy.md`:
+  - `renderWithProviders` for component tests,
+  - MSW handler updates when API calls change,
+  - Playwright fixtures and accessible locator priority for E2E.
+3. Add/maintain test file headers and test IDs for any new tests.
+4. Update inventory indexes (`src/test/inventory.md`, `e2e/inventory.md`) after adding tests.
+5. Run focused tests during development, then run quality gate before commit.
+
+### Commit quality gate (cockpit)
+
+Required before each requirement commit:
+- `npm run typecheck`
+- `npm run lint`
+- `npm test`
+- `npm run test:e2e` (targeted spec(s) for changed flows)
+
+Coverage baseline remains 60% for lines/branches/functions/statements and increases each release.
+
+---
+
 ## Project Directory Structure
 
 ```
@@ -562,7 +603,7 @@ New files:
 ---
 
 ### Wave M — Agent Monitor v2 (Cockpit + Gateway)
-**Status:** M-F-1 complete; M-E-2 blocked (missing resume endpoint); M-F-2 next (2026-05-03)
+**Status:** M-F-2 complete; M-E-2 blocked (missing resume endpoint); M-G-1 next (2026-05-05)
 **Goal:** 7-panel tabbed Agent Monitor matching `wireframes-v2/pages/agent-monitor-v2.html`, built around plain-language summaries for the non-technical primary user.
 
 **Scope:** see [`docs/agent/02-wave-plan.md`](docs/agent/02-wave-plan.md) for full sub-requirement detail.
@@ -607,7 +648,7 @@ New files:
 - `migrations/<next>_agent_session_log.sql` (new table)
 
 **API integrations:** ~20 endpoints total (16 existing + 4 new).
-**Tests:** unit (vitest) per component/hook, E2E (Playwright) per panel, formatter snapshot tests parity-tested across cockpit + gateway via shared fixture.
+**Tests:** unit/component (Vitest + RTL), contract (MSW vs OpenAPI), and E2E (Playwright) per panel, with inventory + header maintenance per `TESTING.md`.
 
 **Checklist:**
 - [x] M-A-0: Wave 5 retirement (move `useAgentData`, `ScoreExplainer`, delete old files)
@@ -630,7 +671,7 @@ New files:
 - ☐ M-E-2: Trigger list table with snooze/resume
 - ☐ M-E-3: Run history (Phase B)
 - [x] M-F-1: Worker pool bar + 4 mini-cards + sparklines
-- ☐ M-F-2: Recent jobs table with friendly errors
+- [x] M-F-2: Recent jobs table with friendly errors
 - ☐ M-G-1: Task score table with row click
 - ☐ M-G-2: ScoreFactorBreakdown side panel (7 factors)
 - ☐ M-G-3: What-if Simulator modal (7 sliders)

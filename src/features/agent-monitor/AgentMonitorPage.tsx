@@ -12,6 +12,7 @@ import { LiveTicker } from './components/LiveTicker';
 import { OutboundCommsTable } from './components/OutboundCommsTable';
 import { OverviewKpiStrip } from './components/OverviewKpiStrip';
 import { SchedulingNextRunCard } from './components/SchedulingNextRunCard';
+import { SkillsRecentJobsTable } from './components/SkillsRecentJobsTable';
 import { SkillsWorkerPool } from './components/SkillsWorkerPool';
 
 type Section = 'overview' | 'activity' | 'comms' | 'scheduling' | 'skills' | 'scoring' | 'agents';
@@ -305,7 +306,10 @@ export function AgentMonitorPage() {
                 ) : activeSection === 'scheduling' ? (
                   <SchedulingNextRunCard />
                 ) : activeSection === 'skills' ? (
-                  <SkillsWorkerPool />
+                  <div className="space-y-3">
+                    <SkillsWorkerPool />
+                    <SkillsRecentJobsTable />
+                  </div>
                 ) : !isOverviewSection && (
                   <EmptyPanel
                     icon={panelEmptyState.icon}

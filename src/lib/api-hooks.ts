@@ -559,7 +559,27 @@ export function useAgentSessions(limit = 20) {
 }
 
 export interface SkillWorkerJob {
+  job_id?: string;
+  jobId?: string;
+  skill_id?: string;
+  skillId?: string;
+  skill_name?: string;
+  skillName?: string;
+  task_id?: string;
+  taskId?: string;
   status?: string;
+  error?: unknown;
+  error_message?: string;
+  errorMessage?: string;
+  message?: string;
+  result?: string;
+  summary?: string;
+  tokens?: number | string;
+  tokens_used?: number | string;
+  token_count?: number | string;
+  total_tokens?: number | string;
+  duration_seconds?: number | string;
+  durationSeconds?: number | string;
   completed_at?: string;
   completedAt?: string;
   ended_at?: string;

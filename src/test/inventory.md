@@ -2,13 +2,15 @@
 
 | ID | Scenario (1 line) | File |
 |---|---|---|
+| GC-S-SKL-W50-001 | Skills panel should show the most recent completed jobs and convert backend f... | [../features/agent-monitor/components/SkillsRecentJobsTable.test.tsx](../features/agent-monitor/components/SkillsRecentJobsTable.test.tsx) |
+| GC-S-TSK-W50-001 | URL-driven navigation should render the expected panel components, including ... | [../features/agent-monitor/AgentMonitorPage.test.tsx](../features/agent-monitor/AgentMonitorPage.test.tsx) |
+| GC-U-SKL-W50-001 | Failed skill jobs should show concise human-readable error text in the skills... | [../features/agent-monitor/lib/formatSkillError.test.ts](../features/agent-monitor/lib/formatSkillError.test.ts) |
 | TODO | (no header) ThemePicker.test.tsx | [../components/common/ThemePicker.test.tsx](../components/common/ThemePicker.test.tsx) |
 | TODO | (no header) Sidebar.test.tsx | [../components/layout/Sidebar.test.tsx](../components/layout/Sidebar.test.tsx) |
 | TODO | (no header) Topbar.test.tsx | [../components/layout/Topbar.test.tsx](../components/layout/Topbar.test.tsx) |
 | TODO | (no header) AuditPage.test.tsx | [../features/admin/AuditPage.test.tsx](../features/admin/AuditPage.test.tsx) |
 | TODO | (no header) FeaturesPage.test.tsx | [../features/admin/FeaturesPage.test.tsx](../features/admin/FeaturesPage.test.tsx) |
 | TODO | (no header) MembersPage.test.tsx | [../features/admin/MembersPage.test.tsx](../features/admin/MembersPage.test.tsx) |
-| TODO | (no header) AgentMonitorPage.test.tsx | [../features/agent-monitor/AgentMonitorPage.test.tsx](../features/agent-monitor/AgentMonitorPage.test.tsx) |
 | TODO | (no header) ActivityFeed.test.tsx | [../features/agent-monitor/components/ActivityFeed.test.tsx](../features/agent-monitor/components/ActivityFeed.test.tsx) |
 | TODO | (no header) AttentionStrip.test.tsx | [../features/agent-monitor/components/AttentionStrip.test.tsx](../features/agent-monitor/components/AttentionStrip.test.tsx) |
 | TODO | (no header) ChannelBadge.test.tsx | [../features/agent-monitor/components/ChannelBadge.test.tsx](../features/agent-monitor/components/ChannelBadge.test.tsx) |
@@ -52,4 +54,4 @@
 | TODO | (no header) theme.test.ts | [../stores/theme.test.ts](../stores/theme.test.ts) |
 | TODO | (no header) timeline.test.ts | [../stores/timeline.test.ts](../stores/timeline.test.ts) |
 
-_Last regenerated: 2026-05-04 by `scripts/regen-inventory.mjs`._
+_Last regenerated: 2026-05-05 by `scripts/regen-inventory.mjs`._

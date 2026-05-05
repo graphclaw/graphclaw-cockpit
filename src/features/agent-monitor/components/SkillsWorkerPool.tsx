@@ -219,8 +219,6 @@ export function SkillsWorkerPool() {
           {expanded ? 'Show less' : `Show all (${workers.length})`}
         </button>
       )}
-
-      <p className="text-xs text-[var(--text-tertiary)]">Recent jobs table lands in M-F-2.</p>
     </div>
   );
 }

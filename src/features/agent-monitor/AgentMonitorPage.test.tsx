@@ -1,3 +1,20 @@
+/**
+ * GC-S-TSK-W50-001 - routes agent monitor sections to matching panel content.
+ *
+ * Scenario: URL-driven navigation should render the expected panel components,
+ * including comms tabs and skills panel subsections.
+ *
+ * PRD: docs/prd/03-agent-monitor.md
+ * Build wave: W50
+ * Layer: L2 Component
+ * Owner: frontend-team
+ * Last reviewed: 2026-05-05
+ *
+ * Cases covered:
+ *  - renders all primary nav routes and panel shells
+ *  - maps comms inbound/outbound routes correctly
+ *  - renders scheduling and skills panel components
+ */
 import { screen, waitFor } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { renderWithProviders } from '@/test/utils';
@@ -48,6 +65,10 @@ vi.mock('@/features/agent-monitor/components/SchedulingNextRunCard', () => ({
 
 vi.mock('@/features/agent-monitor/components/SkillsWorkerPool', () => ({
   SkillsWorkerPool: () => <div data-testid="agent-monitor-skills-pool" />,
+}));
+
+vi.mock('@/features/agent-monitor/components/SkillsRecentJobsTable', () => ({
+  SkillsRecentJobsTable: () => <div data-testid="agent-monitor-skills-recent-jobs" />,
 }));
 
 const mockUseAttentionItems = vi.mocked(useAttentionItems);
@@ -156,6 +177,7 @@ describe('AgentMonitorPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('agent-monitor-panel-skills')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-skills-pool')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-skills-recent-jobs')).toBeInTheDocument();
     });
   });
 });

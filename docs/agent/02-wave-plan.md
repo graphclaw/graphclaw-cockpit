@@ -622,6 +622,17 @@ Unknown channels: neutral grey.
   - `ValidationError` → "input validation failed"
   - fallback → first 80 chars of error message
 
+**Closeout notes (2026-05-05):**
+- Added `SkillsRecentJobsTable` and wired it below `SkillsWorkerPool` in `AgentMonitorPage` for `/agent-monitor/skills`.
+- Data source uses `/app/v1/skills/workers` via `useSkillWorkers()`, rendering `completed_jobs` (or `jobs`) sorted by latest completion timestamp and capped to 20 rows.
+- Added plain-language mapper `formatSkillError()` with TimeoutError, ToolNotFound, ValidationError, and 80-char fallback behavior.
+- Added explicit empty state (`skills-recent-jobs-empty`) when worker snapshots do not include recent job history.
+- Validation:
+  - Unit: `formatSkillError.test.ts`
+  - Component: `SkillsRecentJobsTable.test.tsx`
+  - Integration: `AgentMonitorPage.test.tsx` skills route assertions
+  - E2E: `e2e/agent/agent-monitor.spec.ts` skills route now verifies worker pool plus recent jobs presence/empty state.
+
 ### M-F verification
 
 - Failed job → red row with friendly error message.
