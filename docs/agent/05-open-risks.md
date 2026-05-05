@@ -16,11 +16,11 @@ This document captures every known risk, gap, or open decision for Wave M. New r
 **Status:** Open until both formatters merge.
 
 ### R-2 — MinIO write race (Gap 6 from brainstorm)
-**Severity:** High before B-7, Low after.
+**Severity:** Low (B-7 delivered).
 **Description:** `ObjectStorageHandler._append_to_s3` does GET-then-PUT without locking. Concurrent processes (multiple gateway workers) can clobber each other's batches. Activity feed reads from these files.
 **Mitigation:** Fixed in B-7 by including `pid + 6-char uuid` in file path. Reader globs `{HH}00Z*.jsonl` and merges by timestamp.
 **Owner:** Backend.
-**Status:** Will be closed when B-7 merges.
+**Status:** Closed (B-7 merged on 2026-05-05).
 
 ### R-3 — Schema assumptions unverified
 **Severity:** Medium

@@ -870,6 +870,12 @@ Detailed contracts in [04-api-contract.md](04-api-contract.md). Architecture in 
 - Outbound rows map `outbound.sent` event fields into channel/to/subject/summary/task/status columns with fallback defaults.
 - Validation added in `graphclaw/tests/test_api/test_tasks_logs_api.py` for pagination behavior, field mapping, invalid range rejection, and auth enforcement.
 
+**B-7 closeout notes (2026-05-05):**
+- Updated `graphclaw/src/graphclaw/infra/logging/handlers/object_storage.py::_compute_path` to emit per-process log object keys.
+- New file-key format now includes a process-local suffix: `{HH}00Z-{pid}-{suffix}.jsonl`.
+- This prevents cross-process read-modify-write collisions when multiple workers flush the same hourly partition.
+- Added/updated validation in `graphclaw/tests/test_infra/test_logging/test_object_storage_handler.py` for suffix shape and per-handler path stability.
+
 ---
 
 ## 10. Cross-cutting concerns (apply to every wave)
