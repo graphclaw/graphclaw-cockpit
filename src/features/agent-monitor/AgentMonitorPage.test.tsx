@@ -51,6 +51,10 @@ vi.mock('@/features/agent-monitor/components/AgentsPoolKpis', () => ({
   AgentsPoolKpis: () => <div data-testid="agent-monitor-agents-kpis" />,
 }));
 
+vi.mock('@/features/agent-monitor/components/HeartbeatTimeline', () => ({
+  HeartbeatTimeline: () => <div data-testid="agent-monitor-heartbeat-timeline" />,
+}));
+
 vi.mock('@/features/agent-monitor/components/CommsSummaryBanner', () => ({
   CommsSummaryBanner: () => <div data-testid="agent-monitor-comms-summary" />,
 }));
@@ -201,7 +205,7 @@ describe('AgentMonitorPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('agent-monitor-panel-agents')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-agents-kpis')).toBeInTheDocument();
-      expect(screen.getByTestId('agent-monitor-heartbeat-placeholder')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-heartbeat-timeline')).toBeInTheDocument();
     });
   });
 });

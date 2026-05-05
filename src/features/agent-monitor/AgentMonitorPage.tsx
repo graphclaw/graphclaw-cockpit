@@ -12,6 +12,7 @@ import { InboundCommsTable } from './components/InboundCommsTable';
 import { LiveTicker } from './components/LiveTicker';
 import { OutboundCommsTable } from './components/OutboundCommsTable';
 import { OverviewKpiStrip } from './components/OverviewKpiStrip';
+import { HeartbeatTimeline } from './components/HeartbeatTimeline';
 import { ScoreFactorBreakdown } from './components/ScoreFactorBreakdown';
 import { ScoringTaskTable } from './components/ScoringTaskTable';
 import { SchedulingNextRunCard } from './components/SchedulingNextRunCard';
@@ -194,16 +195,6 @@ export function AgentMonitorPage() {
     }
   }, [location.pathname, navigate, params.section, params.tab]);
 
-  function renderHeartbeatSegments() {
-    return Array.from({ length: 30 }).map((_, index) => (
-      <span
-        key={`heartbeat-placeholder-${index}`}
-        className={`h-1.5 w-2 rounded-sm bg-[var(--bg-inset)] ${index >= 15 ? 'hidden md:inline-block' : 'inline-block'}`}
-        data-testid="agent-monitor-heartbeat-segment"
-      />
-    ));
-  }
-
   return (
     <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)]">
       <div className="flex min-h-[calc(100vh-11rem)] flex-col md:flex-row">
@@ -328,12 +319,7 @@ export function AgentMonitorPage() {
 
                 {isAgentsSection && (
                   <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-3">
-                    <p className="mb-2 text-xs font-medium uppercase tracking-wider text-[var(--text-tertiary)]">
-                      Heartbeat placeholder
-                    </p>
-                    <div className="flex flex-wrap gap-1" data-testid="agent-monitor-heartbeat-placeholder">
-                      {renderHeartbeatSegments()}
-                    </div>
+                    <HeartbeatTimeline />
                   </div>
                 )}
               </div>

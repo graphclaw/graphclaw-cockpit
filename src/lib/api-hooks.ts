@@ -750,6 +750,43 @@ export function useAgentPoolStatus() {
   });
 }
 
+export interface AgentPoolRunner {
+  runner_id?: string;
+  runnerId?: string;
+  agent_id?: string;
+  agentId?: string;
+  agent_name?: string;
+  agentName?: string;
+  state?: string;
+  last_heartbeat?: string | null;
+  lastHeartbeat?: string | null;
+  heartbeat_age_seconds?: number | string;
+  heartbeatAgeSeconds?: number | string;
+}
+
+export function useAgentPoolRunners() {
+  return useQuery({
+    queryKey: ['agent', 'pool-runners'],
+    queryFn: async () => {
+      const payload = await apiFetchOptional<AgentPoolRunner[] | { runners?: AgentPoolRunner[] }>(
+        '/app/v1/agents/pool/runners',
+      );
+
+      if (Array.isArray(payload)) {
+        return payload;
+      }
+
+      if (payload && typeof payload === 'object' && Array.isArray(payload.runners)) {
+        return payload.runners;
+      }
+
+      return [] as AgentPoolRunner[];
+    },
+    refetchInterval: 15_000,
+    retry: false,
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Scoring
 // ---------------------------------------------------------------------------

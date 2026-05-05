@@ -756,6 +756,11 @@ Unknown channels: neutral grey.
 - Tier 1 → Tier 2 → Tier 3 swim-lanes.
 - States: Running (green), Completed (greyed + ✓), Pending (dashed), Blocked (red).
 
+**Blocker notes (2026-05-05):**
+- Backend source scan found no `GET /app/v1/agents/dispatch-plan/{session_id}` route under `graphclaw/src/graphclaw/api/**/*.py`.
+- `GET /app/v1/agents/delegations` remains pending backend wave B-9.
+- M-H-2 remains blocked until these endpoints are available.
+
 ### M-H-3 — Heartbeat timeline
 
 **File:** `components/HeartbeatTimeline.tsx`
@@ -763,6 +768,16 @@ Unknown channels: neutral grey.
 - Per-runner row, 30 segments at desktop (15 below 768px).
 - 1 segment per minute, last N minutes.
 - Green ≤ 60s, Amber 60–300s, Red > 300s, Empty (grey) = idle.
+
+**Closeout notes (2026-05-05):**
+- Added `useAgentPoolRunners()` hook with flexible payload normalization for optional `GET /app/v1/agents/pool/runners` responses (array or `{ runners: [...] }`).
+- Added `HeartbeatTimeline` component with per-runner rows, 30-segment timeline, and mobile 15-segment visibility.
+- Implemented heartbeat age coloring thresholds: green (<=60s), amber (<=300s), red (>300s), and empty state for idle/no heartbeat.
+- Added fallback row shells from `useAgents()` when runners payload is unavailable.
+- Validation:
+  - Component: `HeartbeatTimeline.test.tsx`
+  - Integration: `AgentMonitorPage.test.tsx`
+  - E2E: `e2e/agent/agent-monitor.spec.ts` agents route timeline assertion
 
 ### M-H-4 — Active delegations table
 
