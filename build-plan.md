@@ -679,7 +679,7 @@ New files:
 - [x] M-H-2: DispatchPlanViz swim-lanes
 - [x] M-H-3: HeartbeatTimeline (30 segments desktop / 15 mobile)
 - [x] M-H-4: Active delegations table
-- ☐ Gateway B-0: Migration numbering check
+- [x] Gateway B-0: Migration numbering check
 - ☐ Gateway B-1: AgentToolCallEvent extended + wired in 5 agent files
 - ☐ Gateway B-2: agent_session_log migration + writer
 - [x] Gateway B-3: /agent/activity endpoint

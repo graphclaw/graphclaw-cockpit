@@ -851,6 +851,11 @@ Detailed contracts in [04-api-contract.md](04-api-contract.md). Architecture in 
 | B-8 | Verify or add `POST /scoring/simulate` | M-G-3 |
 | B-9 | Verify or add `GET /agents/delegations` | M-H-4 |
 
+**B-0 closeout notes (2026-05-05):**
+- Verified migration catalogue source of truth in `graphclaw/src/graphclaw/migrations/catalogue.py`.
+- Current highest version is `0022` (`wave10_distillation_outbox`).
+- Reserved next-free slot for upcoming B-2 session-log schema work: `0023`.
+
 **B-4 closeout notes (2026-05-05):**
 - Added backend `GET /app/v1/agent/sessions` in `graphclaw/src/graphclaw/api/agent_activity.py`.
 - Implemented 7-day bounded range filtering, offset cursor pagination, and per-session aggregation from MinIO NDJSON logs.
