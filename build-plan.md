@@ -603,7 +603,7 @@ New files:
 ---
 
 ### Wave M — Agent Monitor v2 (Cockpit + Gateway)
-**Status:** M-H-4 complete; M-E-2 blocked (missing resume endpoint); M-H-2 blocked (missing dispatch/delegations endpoints); Gateway B-9 next (2026-05-05)
+**Status:** M-H-4 complete; Gateway B-9 complete; M-E-2 blocked (missing resume endpoint); M-H-2 blocked (missing dispatch-plan endpoint) (2026-05-05)
 **Goal:** 7-panel tabbed Agent Monitor matching `wireframes-v2/pages/agent-monitor-v2.html`, built around plain-language summaries for the non-technical primary user.
 
 **Scope:** see [`docs/agent/02-wave-plan.md`](docs/agent/02-wave-plan.md) for full sub-requirement detail.
@@ -688,7 +688,7 @@ New files:
 - ☐ Gateway B-6: /tasks/inbound-log + /tasks/outbound-log
 - ☐ Gateway B-7: MinIO write race fix
 - [x] Gateway B-8: /scoring/simulate (verified existing endpoint)
-- ☐ Gateway B-9: /agents/delegations (verify or add)
+- [x] Gateway B-9: /agents/delegations (added endpoint in backend)
 - ☐ PRD `docs/prd/03-agent-monitor.md` reconciled to v2
 - ☐ OpenAPI typegen run after each backend endpoint ships
 

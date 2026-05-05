@@ -758,8 +758,8 @@ Unknown channels: neutral grey.
 
 **Blocker notes (2026-05-05):**
 - Backend source scan found no `GET /app/v1/agents/dispatch-plan/{session_id}` route under `graphclaw/src/graphclaw/api/**/*.py`.
-- `GET /app/v1/agents/delegations` remains pending backend wave B-9.
-- M-H-2 remains blocked until these endpoints are available.
+- `GET /app/v1/agents/delegations` was added in backend wave B-9; active delegations now available.
+- M-H-2 remains blocked only on `GET /app/v1/agents/dispatch-plan/{session_id}`.
 
 ### M-H-3 — Heartbeat timeline
 
@@ -792,6 +792,7 @@ Unknown channels: neutral grey.
 - Added `ActiveDelegationsTable` component with all required columns, status badges, session truncation, and heartbeat/duration formatting.
 - Implemented row-level highlights for stale heartbeat (`>300s`, amber) and blocked statuses (`BLOCKED`, red).
 - Added empty-state fallback when delegations payload is unavailable or empty.
+- Backend dependency B-9 satisfied by adding `GET /app/v1/agents/delegations` in `graphclaw/src/graphclaw/api/agents.py`.
 - Validation:
   - Component: `ActiveDelegationsTable.test.tsx`
   - Integration: `AgentMonitorPage.test.tsx`
