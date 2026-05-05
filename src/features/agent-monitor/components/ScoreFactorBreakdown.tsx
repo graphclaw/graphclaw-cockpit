@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Sigma } from 'lucide-react';
 import { EmptyPanel } from '@/features/agent-monitor/components/EmptyPanel';
 import { PanelError } from '@/features/agent-monitor/components/PanelError';
 import { PanelSkeleton } from '@/features/agent-monitor/components/PanelSkeleton';
+import { WhatIfSimulator } from '@/features/agent-monitor/components/WhatIfSimulator';
 import { type TaskScore, useTaskScore } from '@/lib/api-hooks';
 
 type CanonicalFactorName =
@@ -115,6 +117,7 @@ function sortedFactors(payload: TaskScore) {
 }
 
 export function ScoreFactorBreakdown({ taskId }: ScoreFactorBreakdownProps) {
+  const [simulatorOpen, setSimulatorOpen] = useState(false);
   const query = useTaskScore(taskId ?? '');
 
   if (!taskId) {
@@ -168,6 +171,15 @@ export function ScoreFactorBreakdown({ taskId }: ScoreFactorBreakdownProps) {
         {summary}
       </div>
 
+      <button
+        type="button"
+        onClick={() => setSimulatorOpen(true)}
+        className="inline-flex rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-inset)] hover:text-[var(--text-primary)]"
+        data-testid="score-what-if-open"
+      >
+        Open What-if Simulator
+      </button>
+
       <div className="space-y-3">
         {factors.map((factor) => {
           const displayName = normalizeFactorName(factor.factor_name);
@@ -190,6 +202,13 @@ export function ScoreFactorBreakdown({ taskId }: ScoreFactorBreakdownProps) {
           );
         })}
       </div>
+
+      <WhatIfSimulator
+        taskId={payload.task_id}
+        baseline={payload}
+        open={simulatorOpen}
+        onOpenChange={setSimulatorOpen}
+      />
     </div>
   );
 }

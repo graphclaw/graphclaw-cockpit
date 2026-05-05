@@ -38,6 +38,11 @@ test.describe('Agent Monitor', () => {
       .toBeTruthy();
 
     await expect(page.getByText('No factor breakdown selected.')).toBeVisible({ timeout: 10000 });
+
+    if (await page.locator('[data-testid="scoring-task-row-top"]').isVisible()) {
+      await page.locator('[data-testid="scoring-task-row-top"]').click();
+      await expect(page.locator('[data-testid="score-what-if-open"]')).toBeVisible({ timeout: 10000 });
+    }
   });
 
   test('activity route renders feed and filters', async ({ page }) => {

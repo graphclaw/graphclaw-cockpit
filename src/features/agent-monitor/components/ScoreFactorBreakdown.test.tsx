@@ -22,6 +22,10 @@ import { ScoreFactorBreakdown } from '@/features/agent-monitor/components/ScoreF
 
 vi.mock('@/lib/api-hooks', () => ({
   useTaskScore: vi.fn(),
+  useSimulateTaskScore: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 const mockUseTaskScore = vi.mocked(useTaskScore);
@@ -92,5 +96,6 @@ describe('ScoreFactorBreakdown', () => {
     expect(screen.getByText('Dependency weight')).toBeInTheDocument();
     expect(screen.getByText('This task is urgent and blocks multiple downstream items.')).toBeInTheDocument();
     expect(screen.getByText('0.87')).toBeInTheDocument();
+    expect(screen.getByTestId('score-what-if-open')).toBeInTheDocument();
   });
 });

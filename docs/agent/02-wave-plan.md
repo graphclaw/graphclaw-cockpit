@@ -704,6 +704,17 @@ Unknown channels: neutral grey.
 
 **Backend dependency:** verify `/scoring/simulate` exists; add via B-8 if missing.
 
+**Closeout notes (2026-05-05):**
+- Added `useSimulateTaskScore()` hook and request/response normalization for `POST /app/v1/scoring/simulate`.
+- Added `WhatIfSimulator` modal with seven factor controls and 300ms debounced preview requests.
+- Added preview banner copy (`Preview only - no changes are saved.`) and delta line (`Score would change from X -> Y (+/-Z)`).
+- Wired modal launcher into `ScoreFactorBreakdown` (`score-what-if-open`) for selected scoring tasks.
+- Verified backend support in `graphclaw/src/graphclaw/api/scoring.py` (`/simulate` route).
+- Validation:
+  - Component: `WhatIfSimulator.test.tsx`
+  - Integration: `ScoreFactorBreakdown.test.tsx`, `AgentMonitorPage.test.tsx`
+  - E2E: `e2e/agent/agent-monitor.spec.ts` scoring route remains green with simulator entrypoint assertion when queue rows exist.
+
 ### M-G verification
 
 - Click task row → factor panel updates.

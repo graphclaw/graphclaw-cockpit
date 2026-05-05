@@ -790,6 +790,38 @@ export function useTaskScoreHistory(taskId: string) {
   });
 }
 
+export interface SimulateScoreRequest {
+  task_id: string;
+  modified_weights?: Record<string, number>;
+  modified_factors?: Record<string, number>;
+}
+
+interface RawSimulateScoreResponse {
+  task_id?: string;
+  node_id?: string;
+  final_score: number;
+  factors: TaskScore['factors'];
+  summary?: string;
+  explanation?: string;
+}
+
+export function useSimulateTaskScore() {
+  return useMutation({
+    mutationFn: async (body: SimulateScoreRequest): Promise<TaskScore> => {
+      const raw = await apiPost<RawSimulateScoreResponse>('/app/v1/scoring/simulate', body);
+
+      return {
+        task_id: raw.task_id ?? raw.node_id ?? body.task_id,
+        final_score: raw.final_score,
+        factors: raw.factors,
+        scored_at: new Date().toISOString(),
+        summary: raw.summary,
+        explanation: raw.explanation,
+      };
+    },
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Settings — Channels
 // ---------------------------------------------------------------------------
