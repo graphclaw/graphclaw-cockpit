@@ -112,6 +112,13 @@ test.describe('Agent Monitor', () => {
     const agentsPanel = page.locator('[data-testid="agent-monitor-panel-agents"]');
     await expect(agentsPanel).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[data-testid="agents-pool-kpis"]')).toBeVisible({ timeout: 10000 });
+    await expect
+      .poll(async () => {
+        const tableVisible = await page.locator('[data-testid="active-delegations-table"]').isVisible();
+        const emptyVisible = await page.locator('[data-testid="active-delegations-empty"]').isVisible();
+        return tableVisible || emptyVisible;
+      }, { timeout: 10000 })
+      .toBeTruthy();
     await expect(page.locator('[data-testid="heartbeat-timeline"]')).toBeVisible({ timeout: 10000 });
   });
 });

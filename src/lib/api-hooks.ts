@@ -787,6 +787,53 @@ export function useAgentPoolRunners() {
   });
 }
 
+export interface AgentDelegation {
+  agent_id?: string;
+  agentId?: string;
+  task_id?: string;
+  taskId?: string;
+  session_id?: string;
+  sessionId?: string;
+  status?: string;
+  started_at?: string | null;
+  startedAt?: string | null;
+  last_heartbeat?: string | null;
+  lastHeartbeat?: string | null;
+  heartbeat_age_seconds?: number | string;
+  heartbeatAgeSeconds?: number | string;
+  duration_seconds?: number | string;
+  durationSeconds?: number | string;
+}
+
+export function useAgentDelegations() {
+  return useQuery({
+    queryKey: ['agent', 'delegations'],
+    queryFn: async () => {
+      const payload = await apiFetchOptional<
+        AgentDelegation[] | { items?: AgentDelegation[]; delegations?: AgentDelegation[] }
+      >('/app/v1/agents/delegations');
+
+      if (Array.isArray(payload)) {
+        return payload;
+      }
+
+      if (payload && typeof payload === 'object') {
+        if (Array.isArray(payload.items)) {
+          return payload.items;
+        }
+
+        if (Array.isArray(payload.delegations)) {
+          return payload.delegations;
+        }
+      }
+
+      return [] as AgentDelegation[];
+    },
+    refetchInterval: 15_000,
+    retry: false,
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Scoring
 // ---------------------------------------------------------------------------

@@ -787,6 +787,16 @@ Unknown channels: neutral grey.
 - Heartbeat age > 300s → amber row.
 - Status BLOCKED → red row.
 
+**Closeout notes (2026-05-05):**
+- Added `useAgentDelegations()` hook for optional `GET /app/v1/agents/delegations` with response normalization for array, `{ items }`, and `{ delegations }` payload shapes.
+- Added `ActiveDelegationsTable` component with all required columns, status badges, session truncation, and heartbeat/duration formatting.
+- Implemented row-level highlights for stale heartbeat (`>300s`, amber) and blocked statuses (`BLOCKED`, red).
+- Added empty-state fallback when delegations payload is unavailable or empty.
+- Validation:
+  - Component: `ActiveDelegationsTable.test.tsx`
+  - Integration: `AgentMonitorPage.test.tsx`
+  - E2E: `e2e/agent/agent-monitor.spec.ts` agents route assertion for delegations section
+
 ### M-H verification
 
 - Empty pool: panel hidden / placeholder shown.

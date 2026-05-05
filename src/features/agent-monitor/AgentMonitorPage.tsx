@@ -4,6 +4,7 @@ import { Activity, Bot, CalendarClock, MessageSquare, Radar, Sigma } from 'lucid
 import type { LucideIcon } from 'lucide-react';
 import { AttentionStrip } from './components/AttentionStrip';
 import { ActivityFeed } from './components/ActivityFeed';
+import { ActiveDelegationsTable } from './components/ActiveDelegationsTable';
 import { AgentsPoolKpis } from './components/AgentsPoolKpis';
 import { CommsSummaryBanner } from './components/CommsSummaryBanner';
 import { EmptyPanel } from './components/EmptyPanel';
@@ -301,7 +302,10 @@ export function AgentMonitorPage() {
                     <SkillsRecentJobsTable />
                   </div>
                 ) : isAgentsSection ? (
-                  <AgentsPoolKpis />
+                  <div className="space-y-3">
+                    <AgentsPoolKpis />
+                    <ActiveDelegationsTable />
+                  </div>
                 ) : !isOverviewSection && (
                   <EmptyPanel
                     icon={panelEmptyState.icon}
