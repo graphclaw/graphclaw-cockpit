@@ -13,6 +13,7 @@
  * Cases covered:
  *  - route redirect and section panel rendering
  *  - comms inbound/outbound tab route behavior
+ *  - scheduling next-run and run-history visibility
  *  - skills worker pool and recent jobs section visibility
  */
 import { test, expect } from '../fixtures/auth.fixture';
@@ -64,6 +65,13 @@ test.describe('Agent Monitor', () => {
     await expect(schedulingPanel).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[data-testid="scheduling-next-run-card"]')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[data-testid="scheduling-run-now-button"]')).toBeVisible({ timeout: 10000 });
+    await expect
+      .poll(async () => {
+        const tableVisible = await page.locator('[data-testid="scheduling-run-history"]').isVisible();
+        const emptyVisible = await page.locator('[data-testid="scheduling-run-history-empty"]').isVisible();
+        return tableVisible || emptyVisible;
+      }, { timeout: 10000 })
+      .toBeTruthy();
   });
 
   test('skills route renders worker pool panel and recent jobs section', async ({ page }) => {

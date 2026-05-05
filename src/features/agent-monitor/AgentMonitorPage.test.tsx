@@ -13,7 +13,8 @@
  * Cases covered:
  *  - renders all primary nav routes and panel shells
  *  - maps comms inbound/outbound routes correctly
- *  - renders scheduling and skills panel components
+ *  - renders scheduling panel next-run and run-history components
+ *  - renders skills panel components
  */
 import { screen, waitFor } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
@@ -77,6 +78,10 @@ vi.mock('@/features/agent-monitor/components/OutboundCommsTable', () => ({
 
 vi.mock('@/features/agent-monitor/components/SchedulingNextRunCard', () => ({
   SchedulingNextRunCard: () => <div data-testid="agent-monitor-scheduling-card" />,
+}));
+
+vi.mock('@/features/agent-monitor/components/SchedulingRunHistoryTable', () => ({
+  SchedulingRunHistoryTable: () => <div data-testid="agent-monitor-scheduling-history" />,
 }));
 
 vi.mock('@/features/agent-monitor/components/ScoringTaskTable', () => ({
@@ -194,6 +199,7 @@ describe('AgentMonitorPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('agent-monitor-panel-scheduling')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-scheduling-card')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-scheduling-history')).toBeInTheDocument();
     });
   });
 

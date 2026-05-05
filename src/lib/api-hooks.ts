@@ -537,22 +537,138 @@ export function useOutboundLog(params: OutboundLogParams) {
 }
 
 export interface AgentSessionItem {
+  session_id?: string;
   sessionId?: string;
+  started_at?: string;
   startedAt?: string;
+  completed_at?: string;
   completedAt?: string;
+  trigger_type?: string;
+  triggerType?: string;
+  tool_call_count?: number | string;
+  toolCallCount?: number | string;
+  skill_count?: number | string;
+  skillCount?: number | string;
+  messages_sent?: number | string;
+  messagesSent?: number | string;
+  messages_received?: number | string;
+  messagesReceived?: number | string;
+  input_tokens?: number | string;
+  inputTokens?: number | string;
+  output_tokens?: number | string;
+  outputTokens?: number | string;
   status?: string;
 }
 
 export interface AgentSessionsResponse {
   items?: AgentSessionItem[];
+  next_cursor?: number | string | null;
   nextCursor?: number | string | null;
   total?: number;
 }
 
-export function useAgentSessions(limit = 20) {
+export interface AgentSessionsQueryParams {
+  limit?: number;
+  cursor?: number;
+  from?: string;
+  to?: string;
+}
+
+function toSafeAgentSessionsLimit(limit: unknown, fallback: number): number {
+  if (typeof limit === 'number' && Number.isFinite(limit)) {
+    return Math.max(1, Math.min(50, Math.floor(limit)));
+  }
+
+  if (typeof limit === 'string' && limit.trim() !== '') {
+    const parsed = Number(limit);
+    if (Number.isFinite(parsed)) {
+      return Math.max(1, Math.min(50, Math.floor(parsed)));
+    }
+  }
+
+  return fallback;
+}
+
+function toSafeCursor(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
+    return Math.floor(value);
+  }
+
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed) && parsed >= 0) {
+      return Math.floor(parsed);
+    }
+  }
+
+  return undefined;
+}
+
+function normalizeAgentSessionsParams(
+  limitOrParams: number | AgentSessionsQueryParams,
+  defaultLimit: number,
+): AgentSessionsQueryParams {
+  if (typeof limitOrParams === 'number') {
+    return { limit: toSafeAgentSessionsLimit(limitOrParams, defaultLimit) };
+  }
+
+  return {
+    limit: toSafeAgentSessionsLimit(limitOrParams.limit, defaultLimit),
+    cursor: toSafeCursor(limitOrParams.cursor),
+    from: limitOrParams.from,
+    to: limitOrParams.to,
+  };
+}
+
+function buildAgentSessionsPath(params: AgentSessionsQueryParams): string {
+  const queryParams = new URLSearchParams();
+  queryParams.set('limit', String(params.limit ?? 20));
+
+  if (params.cursor !== undefined) {
+    queryParams.set('cursor', String(params.cursor));
+  }
+
+  if (params.from) {
+    queryParams.set('from', params.from);
+  }
+
+  if (params.to) {
+    queryParams.set('to', params.to);
+  }
+
+  return `/app/v1/agent/sessions?${queryParams.toString()}`;
+}
+
+export function useAgentSessions(limitOrParams: number | AgentSessionsQueryParams = 20) {
+  const params = normalizeAgentSessionsParams(limitOrParams, 20);
+
   return useQuery({
-    queryKey: ['agent', 'sessions', limit],
-    queryFn: () => apiFetchOptional<AgentSessionsResponse>(`/app/v1/agent/sessions?limit=${limit}`),
+    queryKey: ['agent', 'sessions', params],
+    queryFn: () => apiFetchOptional<AgentSessionsResponse>(buildAgentSessionsPath(params)),
+    refetchInterval: 30_000,
+    retry: false,
+  });
+}
+
+export function useInfiniteAgentSessions(params: Omit<AgentSessionsQueryParams, 'cursor'> = {}) {
+  const baseParams = normalizeAgentSessionsParams(params, 10);
+
+  return useInfiniteQuery({
+    queryKey: ['agent', 'sessions', 'infinite', baseParams],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => {
+      const pageCursor = toSafeCursor(pageParam) ?? 0;
+      return apiFetchOptional<AgentSessionsResponse>(
+        buildAgentSessionsPath({ ...baseParams, cursor: pageCursor }),
+      );
+    },
+    getNextPageParam: (lastPage) => {
+      if (!lastPage) {
+        return undefined;
+      }
+
+      return toSafeCursor(lastPage.nextCursor ?? lastPage.next_cursor);
+    },
     refetchInterval: 30_000,
     retry: false,
   });

@@ -564,8 +564,28 @@ Unknown channels: neutral grey.
 
 ### M-E-3 — Run history (Phase B)
 
+**Kickoff notes (2026-05-05):**
+- Scope for this step: replace placeholder with production-backed run history table for Scheduling panel.
+- Data wiring decisions:
+  - consume `GET /app/v1/agent/sessions` via paginated sessions hook,
+  - display session timing, trigger type, calls/messages counts, token totals, and status,
+  - keep trigger list (M-E-2) deferred until resume endpoint exists.
+- Edge cases validated before coding:
+  - endpoint can return empty list and should render explicit empty panel,
+  - mixed snake/camel payload shapes should normalize without runtime crashes,
+  - pagination cursor should safely disable Load more when `nextCursor` is absent.
+
 - `useSessionList({ limit: 10 })` → `GET /app/v1/agent/sessions`.
 - Phase A fallback: derive from `last_fired_at` of each trigger.
+
+**Closeout notes (2026-05-05):**
+- Added `SchedulingRunHistoryTable` and mounted it under `/agent-monitor/scheduling` below `SchedulingNextRunCard`.
+- Added `useInfiniteAgentSessions()` in `src/lib/api-hooks.ts` with offset cursor support and optional range params.
+- Updated scheduling copy to reflect M-E-3 shipped and M-E-2 still pending.
+- Validation:
+  - Unit: `SchedulingRunHistoryTable.test.tsx` for row render, empty fallback, and Load more pagination action.
+  - Page integration: `AgentMonitorPage.test.tsx` now asserts scheduling history component presence.
+  - E2E: `e2e/agent/agent-monitor.spec.ts` scheduling route now asserts run history section (table or empty) visibility.
 
 ### M-E verification
 

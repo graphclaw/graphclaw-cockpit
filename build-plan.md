@@ -603,7 +603,7 @@ New files:
 ---
 
 ### Wave M — Agent Monitor v2 (Cockpit + Gateway)
-**Status:** M-H panel complete; Gateway B-4 and B-9 complete; M-E-2 blocked (missing resume endpoint); M-E-3 next (2026-05-05)
+**Status:** M-H panel complete; M-E-3 complete; Gateway B-4 and B-9 complete; M-E-2 blocked (missing resume endpoint) (2026-05-05)
 **Goal:** 7-panel tabbed Agent Monitor matching `wireframes-v2/pages/agent-monitor-v2.html`, built around plain-language summaries for the non-technical primary user.
 
 **Scope:** see [`docs/agent/02-wave-plan.md`](docs/agent/02-wave-plan.md) for full sub-requirement detail.
@@ -669,7 +669,7 @@ New files:
 - [x] M-D-4: ChannelBadge component + theme tokens
 - [x] M-E-1: Next run card + Run Now
 - ☐ M-E-2: Trigger list table with snooze/resume
-- ☐ M-E-3: Run history (Phase B)
+- [x] M-E-3: Run history (Phase B)
 - [x] M-F-1: Worker pool bar + 4 mini-cards + sparklines
 - [x] M-F-2: Recent jobs table with friendly errors
 - [x] M-G-1: Task score table with row click

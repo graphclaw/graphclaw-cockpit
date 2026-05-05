@@ -150,7 +150,7 @@ export function SchedulingNextRunCard() {
         </button>
 
         <span className="text-xs text-[var(--text-tertiary)]">
-          Trigger list and run history ship in M-E-2 and M-E-3.
+          Trigger list ships in M-E-2. Recent run history is shown below.
         </span>
       </div>
     </div>

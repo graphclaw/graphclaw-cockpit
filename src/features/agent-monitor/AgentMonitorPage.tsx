@@ -18,6 +18,7 @@ import { HeartbeatTimeline } from './components/HeartbeatTimeline';
 import { ScoreFactorBreakdown } from './components/ScoreFactorBreakdown';
 import { ScoringTaskTable } from './components/ScoringTaskTable';
 import { SchedulingNextRunCard } from './components/SchedulingNextRunCard';
+import { SchedulingRunHistoryTable } from './components/SchedulingRunHistoryTable';
 import { SkillsRecentJobsTable } from './components/SkillsRecentJobsTable';
 import { SkillsWorkerPool } from './components/SkillsWorkerPool';
 
@@ -296,7 +297,10 @@ export function AgentMonitorPage() {
                     )}
                   </div>
                 ) : activeSection === 'scheduling' ? (
-                  <SchedulingNextRunCard />
+                  <div className="space-y-3">
+                    <SchedulingNextRunCard />
+                    <SchedulingRunHistoryTable />
+                  </div>
                 ) : activeSection === 'skills' ? (
                   <div className="space-y-3">
                     <SkillsWorkerPool />
