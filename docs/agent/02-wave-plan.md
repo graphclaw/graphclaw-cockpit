@@ -735,6 +735,18 @@ Unknown channels: neutral grey.
 
 4 cards: Active runners (X/Y), Queue depth, Avg duration, Stale heartbeats. Stale > 0 → red.
 
+**Closeout notes (2026-05-05):**
+- Added `useAgentPoolStatus()` hook for `GET /app/v1/agents/pool/status` with optional payload handling.
+- Added `AgentsPoolKpis` component and wired it into `/agent-monitor/agents` panel.
+- Implemented fallback derivations when pool-status fields are missing:
+  - active/total from `useAgents()` (`/app/v1/agents`),
+  - queue depth from `useAgentStatus()` (`/app/v1/agent/status`).
+- Implemented stale-heartbeat alert styling when stale count > 0.
+- Validation:
+  - Component: `AgentsPoolKpis.test.tsx`
+  - Integration: `AgentMonitorPage.test.tsx` agents route assertion
+  - E2E: `e2e/agent/agent-monitor.spec.ts` agents route assertion
+
 ### M-H-2 — Dispatch Plan visualisation
 
 **File:** `components/DispatchPlanViz.tsx`

@@ -7,6 +7,7 @@
 | GC-S-SCO-W50-003 | The what-if modal should expose all seven controls and send a debounced `/sco... | [../features/agent-monitor/components/WhatIfSimulator.test.tsx](../features/agent-monitor/components/WhatIfSimulator.test.tsx) |
 | GC-S-SKL-W50-001 | Skills panel should show the most recent completed jobs and convert backend f... | [../features/agent-monitor/components/SkillsRecentJobsTable.test.tsx](../features/agent-monitor/components/SkillsRecentJobsTable.test.tsx) |
 | GC-S-TSK-W50-001 | URL-driven navigation should render the expected panel components, including ... | [../features/agent-monitor/AgentMonitorPage.test.tsx](../features/agent-monitor/AgentMonitorPage.test.tsx) |
+| GC-S-WRK-W50-001 | Agents panel should show pool KPI cards from pool status data and gracefully ... | [../features/agent-monitor/components/AgentsPoolKpis.test.tsx](../features/agent-monitor/components/AgentsPoolKpis.test.tsx) |
 | GC-U-SKL-W50-001 | Failed skill jobs should show concise human-readable error text in the skills... | [../features/agent-monitor/lib/formatSkillError.test.ts](../features/agent-monitor/lib/formatSkillError.test.ts) |
 | TODO | (no header) ThemePicker.test.tsx | [../components/common/ThemePicker.test.tsx](../components/common/ThemePicker.test.tsx) |
 | TODO | (no header) Sidebar.test.tsx | [../components/layout/Sidebar.test.tsx](../components/layout/Sidebar.test.tsx) |

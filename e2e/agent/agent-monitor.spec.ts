@@ -104,5 +104,15 @@ test.describe('Agent Monitor', () => {
     await expect(commsPanel.getByText(/No inbound messages yet\.|Message preview/i)).toBeVisible({ timeout: 10000 });
     await expect(commsPanel.getByText(/^inbound$/)).toBeVisible({ timeout: 10000 });
   });
+
+  test('agents route renders pool KPIs and heartbeat section', async ({ page }) => {
+    await page.goto('/agent-monitor/agents');
+    await expect(page).toHaveURL(/\/agent-monitor\/agents$/);
+
+    const agentsPanel = page.locator('[data-testid="agent-monitor-panel-agents"]');
+    await expect(agentsPanel).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="agents-pool-kpis"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="agent-monitor-heartbeat-placeholder"]')).toBeVisible({ timeout: 10000 });
+  });
 });
 

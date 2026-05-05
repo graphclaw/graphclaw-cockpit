@@ -47,6 +47,10 @@ vi.mock('@/features/agent-monitor/components/ActivityFeed', () => ({
   ActivityFeed: () => <div data-testid="agent-monitor-activity-feed" />,
 }));
 
+vi.mock('@/features/agent-monitor/components/AgentsPoolKpis', () => ({
+  AgentsPoolKpis: () => <div data-testid="agent-monitor-agents-kpis" />,
+}));
+
 vi.mock('@/features/agent-monitor/components/CommsSummaryBanner', () => ({
   CommsSummaryBanner: () => <div data-testid="agent-monitor-comms-summary" />,
 }));
@@ -188,6 +192,16 @@ describe('AgentMonitorPage', () => {
       expect(screen.getByTestId('agent-monitor-panel-skills')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-skills-pool')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-skills-recent-jobs')).toBeInTheDocument();
+    });
+  });
+
+  it('renders agents pool KPI strip on agents route', async () => {
+    renderAt('/agent-monitor/agents');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('agent-monitor-panel-agents')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-agents-kpis')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-heartbeat-placeholder')).toBeInTheDocument();
     });
   });
 });

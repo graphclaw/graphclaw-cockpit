@@ -726,6 +726,30 @@ export function useAgents() {
   });
 }
 
+export interface AgentPoolStatus {
+  total_runners?: number | string;
+  totalRunners?: number | string;
+  active_runners?: number | string;
+  activeRunners?: number | string;
+  queue_depth?: number | string;
+  queueDepth?: number | string;
+  avg_duration_seconds?: number | string;
+  avgDurationSeconds?: number | string;
+  average_duration_seconds?: number | string;
+  avg_run_duration_seconds?: number | string;
+  stale_heartbeats?: number | string;
+  staleHeartbeats?: number | string;
+}
+
+export function useAgentPoolStatus() {
+  return useQuery({
+    queryKey: ['agent', 'pool-status'],
+    queryFn: () => apiFetchOptional<AgentPoolStatus>('/app/v1/agents/pool/status'),
+    refetchInterval: 15_000,
+    retry: false,
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Scoring
 // ---------------------------------------------------------------------------
