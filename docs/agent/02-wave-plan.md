@@ -857,6 +857,12 @@ Detailed contracts in [04-api-contract.md](04-api-contract.md). Architecture in 
 - Session payload includes start/end timestamps, trigger type, tool/skill/message counters, token totals, and status.
 - Validation added in `graphclaw/tests/test_api/test_agent_activity_api.py` for aggregation and pagination behavior.
 
+**B-5 closeout notes (2026-05-05):**
+- Added backend `GET /app/v1/comms/summary` in `graphclaw/src/graphclaw/api/comms.py`.
+- Implemented user-scoped daily aggregation from MinIO NDJSON logs with counters for `received`, `sent`, `matched`, and `unmatched`.
+- Treated `inbound.processed` as inbound source of truth and derived unmatched counts from action values (`unmatched`, `manual_match_required`).
+- Validation added in `graphclaw/tests/test_api/test_comms_summary_api.py` for date-filtered counts, default-date behavior, and auth enforcement.
+
 ---
 
 ## 10. Cross-cutting concerns (apply to every wave)
