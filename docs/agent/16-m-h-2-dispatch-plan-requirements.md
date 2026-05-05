@@ -23,10 +23,10 @@ Deliver dispatch tier swim-lanes for the Agents panel (`/agent-monitor/agents`).
 
 ## Blocker
 
-- As of 2026-05-05, backend source scan in `graphclaw/src/graphclaw/api/**/*.py` shows no `GET /app/v1/agents/dispatch-plan/{session_id}` endpoint.
-- `GET /app/v1/agents/delegations` is now available after backend wave B-9; dispatch-plan remains the sole blocker.
+- Resolved on 2026-05-05 by adding backend `GET /app/v1/agents/dispatch-plan/{session_id}`.
+- `GET /app/v1/agents/delegations` is already available from backend wave B-9.
 
 ## Status
 
 - Planned: 2026-05-05
-- Blocked pending backend endpoints (B-9 + dispatch-plan route)
+- Completed: 2026-05-05

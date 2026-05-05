@@ -756,10 +756,17 @@ Unknown channels: neutral grey.
 - Tier 1 → Tier 2 → Tier 3 swim-lanes.
 - States: Running (green), Completed (greyed + ✓), Pending (dashed), Blocked (red).
 
-**Blocker notes (2026-05-05):**
-- Backend source scan found no `GET /app/v1/agents/dispatch-plan/{session_id}` route under `graphclaw/src/graphclaw/api/**/*.py`.
-- `GET /app/v1/agents/delegations` was added in backend wave B-9; active delegations now available.
-- M-H-2 remains blocked only on `GET /app/v1/agents/dispatch-plan/{session_id}`.
+**Closeout notes (2026-05-05):**
+- Added backend `GET /app/v1/agents/dispatch-plan/{session_id}` endpoint in `graphclaw/src/graphclaw/api/agents.py`.
+- Extended `SubAgentPool` batch tracking (`current_jobs`) and added `get_dispatch_plan(session_id)` snapshot method to support tier/job visualization.
+- Added `useAgentDispatchPlan()` hook and `DispatchPlanViz` component in cockpit.
+- Implemented active session heuristic from `/agents/delegations` (first non-completed session).
+- Rendered tier swim-lanes and state styling for Running, Completed, Pending, and Blocked jobs.
+- Validation:
+  - Backend API: `tests/test_api/test_agents_delegations_route.py` (dispatch-plan coverage)
+  - Component: `DispatchPlanViz.test.tsx`
+  - Integration: `AgentMonitorPage.test.tsx`
+  - E2E: `e2e/agent/agent-monitor.spec.ts` agents route dispatch section assertion
 
 ### M-H-3 — Heartbeat timeline
 

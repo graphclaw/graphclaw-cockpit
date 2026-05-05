@@ -55,6 +55,10 @@ vi.mock('@/features/agent-monitor/components/ActiveDelegationsTable', () => ({
   ActiveDelegationsTable: () => <div data-testid="agent-monitor-active-delegations" />,
 }));
 
+vi.mock('@/features/agent-monitor/components/DispatchPlanViz', () => ({
+  DispatchPlanViz: () => <div data-testid="agent-monitor-dispatch-plan" />,
+}));
+
 vi.mock('@/features/agent-monitor/components/HeartbeatTimeline', () => ({
   HeartbeatTimeline: () => <div data-testid="agent-monitor-heartbeat-timeline" />,
 }));
@@ -209,6 +213,7 @@ describe('AgentMonitorPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('agent-monitor-panel-agents')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-agents-kpis')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-dispatch-plan')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-active-delegations')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-heartbeat-timeline')).toBeInTheDocument();
     });

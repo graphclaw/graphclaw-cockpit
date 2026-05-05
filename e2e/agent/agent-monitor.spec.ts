@@ -114,6 +114,13 @@ test.describe('Agent Monitor', () => {
     await expect(page.locator('[data-testid="agents-pool-kpis"]')).toBeVisible({ timeout: 10000 });
     await expect
       .poll(async () => {
+        const vizVisible = await page.locator('[data-testid="dispatch-plan-viz"]').isVisible();
+        const emptyVisible = await page.locator('[data-testid="dispatch-plan-viz-empty"]').isVisible();
+        return vizVisible || emptyVisible;
+      }, { timeout: 10000 })
+      .toBeTruthy();
+    await expect
+      .poll(async () => {
         const tableVisible = await page.locator('[data-testid="active-delegations-table"]').isVisible();
         const emptyVisible = await page.locator('[data-testid="active-delegations-empty"]').isVisible();
         return tableVisible || emptyVisible;

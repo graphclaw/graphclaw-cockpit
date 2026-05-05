@@ -7,6 +7,7 @@ import { ActivityFeed } from './components/ActivityFeed';
 import { ActiveDelegationsTable } from './components/ActiveDelegationsTable';
 import { AgentsPoolKpis } from './components/AgentsPoolKpis';
 import { CommsSummaryBanner } from './components/CommsSummaryBanner';
+import { DispatchPlanViz } from './components/DispatchPlanViz';
 import { EmptyPanel } from './components/EmptyPanel';
 import { GlanceStrip } from './components/GlanceStrip';
 import { InboundCommsTable } from './components/InboundCommsTable';
@@ -304,6 +305,7 @@ export function AgentMonitorPage() {
                 ) : isAgentsSection ? (
                   <div className="space-y-3">
                     <AgentsPoolKpis />
+                    <DispatchPlanViz />
                     <ActiveDelegationsTable />
                   </div>
                 ) : !isOverviewSection && (

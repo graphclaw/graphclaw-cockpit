@@ -9,6 +9,7 @@
 | GC-S-TSK-W50-001 | URL-driven navigation should render the expected panel components, including ... | [../features/agent-monitor/AgentMonitorPage.test.tsx](../features/agent-monitor/AgentMonitorPage.test.tsx) |
 | GC-S-TSK-W50-010 | Timeline rows should render from runner payload, color stale heartbeats, and ... | [../features/agent-monitor/components/HeartbeatTimeline.test.tsx](../features/agent-monitor/components/HeartbeatTimeline.test.tsx) |
 | GC-S-TSK-W50-011 | Agents delegations table should show key columns and row emphasis for stale h... | [../features/agent-monitor/components/ActiveDelegationsTable.test.tsx](../features/agent-monitor/components/ActiveDelegationsTable.test.tsx) |
+| GC-S-TSK-W50-012 | Dispatch plan panel should resolve an active session from delegations, fetch ... | [../features/agent-monitor/components/DispatchPlanViz.test.tsx](../features/agent-monitor/components/DispatchPlanViz.test.tsx) |
 | GC-S-WRK-W50-001 | Agents panel should show pool KPI cards from pool status data and gracefully ... | [../features/agent-monitor/components/AgentsPoolKpis.test.tsx](../features/agent-monitor/components/AgentsPoolKpis.test.tsx) |
 | GC-U-SKL-W50-001 | Failed skill jobs should show concise human-readable error text in the skills... | [../features/agent-monitor/lib/formatSkillError.test.ts](../features/agent-monitor/lib/formatSkillError.test.ts) |
 | TODO | (no header) ThemePicker.test.tsx | [../components/common/ThemePicker.test.tsx](../components/common/ThemePicker.test.tsx) |

@@ -834,6 +834,62 @@ export function useAgentDelegations() {
   });
 }
 
+export interface DispatchPlanJob {
+  agent_id?: string;
+  agentId?: string;
+  task_id?: string;
+  taskId?: string;
+  batch_id?: string;
+  batchId?: string;
+  status?: string;
+}
+
+export interface DispatchPlanTier {
+  tier?: number | string;
+  batch_id?: string;
+  batchId?: string;
+  total_count?: number | string;
+  totalCount?: number | string;
+  completed_count?: number | string;
+  completedCount?: number | string;
+  status?: string;
+  jobs?: DispatchPlanJob[];
+}
+
+export interface DispatchPlanResponse {
+  session_id?: string;
+  sessionId?: string;
+  tiers?: DispatchPlanTier[];
+}
+
+export function useAgentDispatchPlan(sessionId: string | null) {
+  return useQuery({
+    queryKey: ['agent', 'dispatch-plan', sessionId ?? 'none'],
+    queryFn: async () => {
+      if (!sessionId) {
+        return [] as DispatchPlanTier[];
+      }
+
+      const payload = await apiFetchOptional<DispatchPlanResponse | DispatchPlanTier[]>(
+        `/app/v1/agents/dispatch-plan/${encodeURIComponent(sessionId)}`,
+      );
+
+      if (Array.isArray(payload)) {
+        return payload;
+      }
+
+      if (payload && typeof payload === 'object' && Array.isArray(payload.tiers)) {
+        return payload.tiers;
+      }
+
+      return [] as DispatchPlanTier[];
+    },
+    enabled: !!sessionId,
+    refetchInterval: 15_000,
+    retry: false,
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Scoring
 // ---------------------------------------------------------------------------
