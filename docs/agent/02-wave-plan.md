@@ -863,6 +863,13 @@ Detailed contracts in [04-api-contract.md](04-api-contract.md). Architecture in 
 - Treated `inbound.processed` as inbound source of truth and derived unmatched counts from action values (`unmatched`, `manual_match_required`).
 - Validation added in `graphclaw/tests/test_api/test_comms_summary_api.py` for date-filtered counts, default-date behavior, and auth enforcement.
 
+**B-6 closeout notes (2026-05-05):**
+- Added backend `GET /app/v1/tasks/inbound-log` and `GET /app/v1/tasks/outbound-log` in `graphclaw/src/graphclaw/api/tasks.py`.
+- Implemented user-scoped MinIO NDJSON pagination with opaque cursor semantics via `MinioLogReader`.
+- Inbound rows map `inbound.processed` event fields into dashboard-friendly columns (channel, fromDisplay, messagePreview, taskId, actionTaken, signal).
+- Outbound rows map `outbound.sent` event fields into channel/to/subject/summary/task/status columns with fallback defaults.
+- Validation added in `graphclaw/tests/test_api/test_tasks_logs_api.py` for pagination behavior, field mapping, invalid range rejection, and auth enforcement.
+
 ---
 
 ## 10. Cross-cutting concerns (apply to every wave)
