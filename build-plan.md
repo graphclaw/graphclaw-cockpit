@@ -603,7 +603,7 @@ New files:
 ---
 
 ### Wave M — Agent Monitor v2 (Cockpit + Gateway)
-**Status:** M-H-2 complete; M-H panel complete; Gateway B-9 complete; M-E-2 blocked (missing resume endpoint) (2026-05-05)
+**Status:** M-H panel complete; Gateway B-4 and B-9 complete; M-E-2 blocked (missing resume endpoint); M-E-3 next (2026-05-05)
 **Goal:** 7-panel tabbed Agent Monitor matching `wireframes-v2/pages/agent-monitor-v2.html`, built around plain-language summaries for the non-technical primary user.
 
 **Scope:** see [`docs/agent/02-wave-plan.md`](docs/agent/02-wave-plan.md) for full sub-requirement detail.
@@ -683,7 +683,7 @@ New files:
 - ☐ Gateway B-1: AgentToolCallEvent extended + wired in 5 agent files
 - ☐ Gateway B-2: agent_session_log migration + writer
 - [x] Gateway B-3: /agent/activity endpoint
-- ☐ Gateway B-4: /agent/sessions endpoint
+- [x] Gateway B-4: /agent/sessions endpoint
 - ☐ Gateway B-5: /comms/summary endpoint
 - ☐ Gateway B-6: /tasks/inbound-log + /tasks/outbound-log
 - ☐ Gateway B-7: MinIO write race fix

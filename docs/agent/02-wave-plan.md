@@ -831,6 +831,12 @@ Detailed contracts in [04-api-contract.md](04-api-contract.md). Architecture in 
 | B-8 | Verify or add `POST /scoring/simulate` | M-G-3 |
 | B-9 | Verify or add `GET /agents/delegations` | M-H-4 |
 
+**B-4 closeout notes (2026-05-05):**
+- Added backend `GET /app/v1/agent/sessions` in `graphclaw/src/graphclaw/api/agent_activity.py`.
+- Implemented 7-day bounded range filtering, offset cursor pagination, and per-session aggregation from MinIO NDJSON logs.
+- Session payload includes start/end timestamps, trigger type, tool/skill/message counters, token totals, and status.
+- Validation added in `graphclaw/tests/test_api/test_agent_activity_api.py` for aggregation and pagination behavior.
+
 ---
 
 ## 10. Cross-cutting concerns (apply to every wave)
