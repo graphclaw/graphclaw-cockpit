@@ -888,6 +888,14 @@ Detailed contracts in [04-api-contract.md](04-api-contract.md). Architecture in 
 - Added MCP-client bridge emission (`graphclaw/src/graphclaw/mcp/client.py`) so direct MCP calls also produce normalized `agent.tool_call` events.
 - Added unit coverage in `graphclaw/tests/test_agent/test_loop.py` and `graphclaw/tests/test_agent/test_sub_agent_orchestration.py` for failure/success metadata and retry attempt logging.
 
+**B-2 closeout notes (2026-05-05):**
+- Added migration `0023` (`wave11_agent_session_log`) in `graphclaw/src/graphclaw/migrations/catalogue.py`.
+- Migration creates `agent_session_log` plus `idx_agent_session_log_user_started` and grants for `agent_principal` / `admin_principal`.
+- Added run-cycle writer hooks in `graphclaw/src/graphclaw/agent/main_orchestrator.py`:
+  - start insert (`status='running'`) before non-cached cycle execution
+  - completion update (`status='completed'|'failed'`) in `finally` for robust lifecycle closure
+- Added unit coverage in `graphclaw/tests/test_agent/test_loop.py` asserting insert/update writes during `run_cycle`.
+
 ---
 
 ## 10. Cross-cutting concerns (apply to every wave)
