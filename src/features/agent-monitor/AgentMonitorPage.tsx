@@ -11,6 +11,7 @@ import { InboundCommsTable } from './components/InboundCommsTable';
 import { LiveTicker } from './components/LiveTicker';
 import { OutboundCommsTable } from './components/OutboundCommsTable';
 import { OverviewKpiStrip } from './components/OverviewKpiStrip';
+import { ScoreFactorBreakdown } from './components/ScoreFactorBreakdown';
 import { ScoringTaskTable } from './components/ScoringTaskTable';
 import { SchedulingNextRunCard } from './components/SchedulingNextRunCard';
 import { SkillsRecentJobsTable } from './components/SkillsRecentJobsTable';
@@ -273,15 +274,7 @@ export function AgentMonitorPage() {
                 </div>
 
                 <div className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
-                  <EmptyPanel
-                    icon={Sigma}
-                    title="No factor breakdown selected."
-                    subtitle={
-                      selectedScoringTaskId
-                        ? `Task ${selectedScoringTaskId} selected. Factor breakdown lands in M-G-2.`
-                        : 'Choose a task from the score table to inspect factor details.'
-                    }
-                  />
+                  <ScoreFactorBreakdown taskId={selectedScoringTaskId} />
                 </div>
               </div>
             ) : (

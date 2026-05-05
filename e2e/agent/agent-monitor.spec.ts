@@ -36,6 +36,8 @@ test.describe('Agent Monitor', () => {
         timeout: 10000,
       })
       .toBeTruthy();
+
+    await expect(page.getByText('No factor breakdown selected.')).toBeVisible({ timeout: 10000 });
   });
 
   test('activity route renders feed and filters', async ({ page }) => {

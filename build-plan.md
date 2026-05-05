@@ -603,7 +603,7 @@ New files:
 ---
 
 ### Wave M — Agent Monitor v2 (Cockpit + Gateway)
-**Status:** M-G-1 complete; M-E-2 blocked (missing resume endpoint); M-G-2 next (2026-05-05)
+**Status:** M-G-2 complete; M-E-2 blocked (missing resume endpoint); M-G-3 next (2026-05-05)
 **Goal:** 7-panel tabbed Agent Monitor matching `wireframes-v2/pages/agent-monitor-v2.html`, built around plain-language summaries for the non-technical primary user.
 
 **Scope:** see [`docs/agent/02-wave-plan.md`](docs/agent/02-wave-plan.md) for full sub-requirement detail.
@@ -673,7 +673,7 @@ New files:
 - [x] M-F-1: Worker pool bar + 4 mini-cards + sparklines
 - [x] M-F-2: Recent jobs table with friendly errors
 - [x] M-G-1: Task score table with row click
-- ☐ M-G-2: ScoreFactorBreakdown side panel (7 factors)
+- [x] M-G-2: ScoreFactorBreakdown side panel (7 factors)
 - ☐ M-G-3: What-if Simulator modal (7 sliders)
 - ☐ M-H-1: Pool KPI cards
 - ☐ M-H-2: DispatchPlanViz swim-lanes

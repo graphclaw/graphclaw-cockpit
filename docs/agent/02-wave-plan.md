@@ -674,6 +674,17 @@ Unknown channels: neutral grey.
 - Plain-language explanation sentence above (uses `explanation` field).
 - Below 1024px viewport: collapses below table.
 
+**Closeout notes (2026-05-05):**
+- Refactored `ScoreFactorBreakdown` to accept `taskId` and lazily load `GET /app/v1/scoring/tasks/{task_id}` via `useTaskScore(taskId)`.
+- Implemented panel states for no selection, loading, API error, and missing factor payload.
+- Implemented factor-name normalization and ordered rendering for the canonical 7-factor list, with weight/raw/weighted values and mini bars per factor.
+- Added plain-language summary resolution from `explanation`, then `summary`, then fallback sentence from factor `plain_english` text.
+- Wired scoring side panel in `AgentMonitorPage` to selected rows from `ScoringTaskTable`.
+- Validation:
+  - Component: `ScoreFactorBreakdown.test.tsx`
+  - Integration: `AgentMonitorPage.test.tsx` scoring layout assertions
+  - E2E: `e2e/agent/agent-monitor.spec.ts` scoring route includes side-panel placeholder assertion.
+
 ### M-G-3 — What-if Simulator modal
 
 **File:** `components/WhatIfSimulator.tsx`

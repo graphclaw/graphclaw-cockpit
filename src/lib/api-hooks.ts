@@ -760,6 +760,8 @@ export function useUpdateScoringWeights() {
 
 export interface TaskScore {
   task_id: string;
+  explanation?: string;
+  summary?: string;
   final_score: number;
   factors: {
     factor_name: string;
