@@ -881,6 +881,13 @@ Detailed contracts in [04-api-contract.md](04-api-contract.md). Architecture in 
 - This prevents cross-process read-modify-write collisions when multiple workers flush the same hourly partition.
 - Added/updated validation in `graphclaw/tests/test_infra/test_logging/test_object_storage_handler.py` for suffix shape and per-handler path stability.
 
+**B-1 closeout notes (2026-05-05):**
+- Extended `AgentToolCallEvent` in `graphclaw/src/graphclaw/infra/logging/events.py` with `session_id`, `task_id`, `success`, and `attempt`.
+- Wired structured `agent.tool_call` emission in main tool dispatch (`graphclaw/src/graphclaw/agent/main_orchestrator.py`) for both success and failure outcomes.
+- Wired per-attempt `agent.tool_call` logging in delegated runner retries (`graphclaw/src/graphclaw/agent/sub_agent_runner.py`) including retry attempt number.
+- Added MCP-client bridge emission (`graphclaw/src/graphclaw/mcp/client.py`) so direct MCP calls also produce normalized `agent.tool_call` events.
+- Added unit coverage in `graphclaw/tests/test_agent/test_loop.py` and `graphclaw/tests/test_agent/test_sub_agent_orchestration.py` for failure/success metadata and retry attempt logging.
+
 ---
 
 ## 10. Cross-cutting concerns (apply to every wave)
