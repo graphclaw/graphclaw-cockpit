@@ -178,7 +178,7 @@ export const handlers = [
   }),
 
   // MCP Registry: delete
-  http.delete('/app/v1/mcp-servers/:serverId', () => {
+  http.delete('/app/v1/mcp-servers/:server_id', () => {
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -211,9 +211,9 @@ export const handlers = [
   }),
 
   // Skills: toggle
-  http.patch('/app/v1/skills/:skillId', ({ params }) => {
+  http.patch('/app/v1/skills/:skill_id', ({ params }) => {
     return HttpResponse.json({
-      skill_id: params.skillId,
+      skill_id: params.skill_id,
       skill_name: 'email-triage',
       version: '1.2.0',
       enabled: true,
@@ -225,7 +225,7 @@ export const handlers = [
   }),
 
   // Skills: uninstall
-  http.delete('/app/v1/skills/:skillId', () => {
+  http.delete('/app/v1/skills/:skill_id', () => {
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -275,7 +275,7 @@ export const handlers = [
   }),
 
   // Skills: remove source
-  http.delete('/app/v1/skills/sources/:sourceUri', () => {
+  http.delete('/app/v1/skills/sources/:source_uri', () => {
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -327,10 +327,10 @@ export const handlers = [
   }),
 
   // Authored skills: update
-  http.put('/app/v1/intelligence/skills/authored/:skillId', async ({ params, request }) => {
+  http.put('/app/v1/intelligence/skills/authored/:skill_id', async ({ params, request }) => {
     const body = await request.json() as Record<string, string>;
     return HttpResponse.json({
-      skill_id: params.skillId,
+      skill_id: params.skill_id,
       name: body.name ?? 'updated-skill',
       version: body.version ?? '0.1.0',
       description: body.description ?? '',
@@ -339,7 +339,7 @@ export const handlers = [
   }),
 
   // Authored skills: delete
-  http.delete('/app/v1/intelligence/skills/authored/:skillId', () => {
+  http.delete('/app/v1/intelligence/skills/authored/:skill_id', () => {
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -349,10 +349,10 @@ export const handlers = [
   }),
 
   // Authored skills: fork
-  http.post('/app/v1/intelligence/skills/authored/:skillId/fork', ({ params }) => {
+  http.post('/app/v1/intelligence/skills/authored/:skill_id/fork', ({ params }) => {
     return HttpResponse.json({
       skill_id: `fork-${Date.now()}`,
-      name: `${String(params.skillId)}-fork`,
+      name: `${String(params.skill_id)}-fork`,
       version: '0.1.0',
       description: 'Forked skill',
       created_at: new Date().toISOString(),
@@ -382,54 +382,37 @@ export const handlers = [
   }),
 
   // Intelligence: agent profile GET
-  http.get('/app/v1/intelligence/agents/:agentId/profile', ({ params }) => {
+  http.get('/app/v1/intelligence/agents/:agent_id/profile', ({ params }) => {
     return HttpResponse.json({
-      agent_id: params.agentId,
-      content: `# Agent: ${String(params.agentId)}\n\nNo profile defined yet.`,
+      agent_id: params.agent_id,
+      content: `# Agent: ${String(params.agent_id)}\n\nNo profile defined yet.`,
     });
   }),
 
-  // Intelligence: agent profile PUT (handles empty agentId from test context)
-  http.put('/app/v1/intelligence/agents/:agentId/profile', async ({ params, request }) => {
+  // Intelligence: agent profile PUT
+  http.put('/app/v1/intelligence/agents/:agent_id/profile', async ({ params, request }) => {
     const body = await request.json() as Record<string, string>;
-    return HttpResponse.json({ agent_id: params.agentId, content: body.content ?? '' });
-  }),
-
-  // Intelligence: agent profile PUT with empty segment (test fallback)
-  http.put('/app/v1/intelligence/agents//profile', async ({ request }) => {
-    const body = await request.json() as Record<string, string>;
-    return HttpResponse.json({ agent_id: '', content: body.content ?? '' });
+    return HttpResponse.json({ agent_id: params.agent_id, content: body.content ?? '' });
   }),
 
   // Intelligence: working memory GET
-  http.get('/app/v1/intelligence/agents/:agentId/memory/working', () => {
+  http.get('/app/v1/intelligence/agents/:agent_id/memory/working', () => {
     return HttpResponse.json({ content: '' });
   }),
 
   // Intelligence: working memory PUT
-  http.put('/app/v1/intelligence/agents/:agentId/memory/working', async ({ request }) => {
+  http.put('/app/v1/intelligence/agents/:agent_id/memory/working', async ({ request }) => {
     const body = await request.json() as Record<string, string>;
     return HttpResponse.json({ content: body.content ?? '' });
   }),
 
   // Intelligence: working memory archive list
-  http.get('/app/v1/intelligence/agents/:agentId/memory/working/archives', () => {
+  http.get('/app/v1/intelligence/agents/:agent_id/memory/working/archive', () => {
     return HttpResponse.json([]);
   }),
 
-  // Intelligence: working memory compact
-  http.post('/app/v1/intelligence/agents/:agentId/memory/working/compact', async ({ request }) => {
-    const body = await request.json() as Record<string, unknown>;
-    return HttpResponse.json({
-      context_before_chars: 1000,
-      context_after_chars: 100,
-      reduction_pct: 90,
-      summary: body.summary ?? '',
-    });
-  }),
-
   // Intelligence: semantic memory list
-  http.get('/app/v1/intelligence/agents/:agentId/memory/semantic', () => {
+  http.get('/app/v1/intelligence/agents/:agent_id/memory/semantic', () => {
     return HttpResponse.json({ entries: [
       { key: 'knowledge', size_chars: 200 },
       { key: 'task-scoring', size_chars: 150 },
@@ -437,23 +420,23 @@ export const handlers = [
   }),
 
   // Intelligence: semantic topic GET
-  http.get('/app/v1/intelligence/agents/:agentId/memory/semantic/:topic', ({ params }) => {
+  http.get('/app/v1/intelligence/agents/:agent_id/memory/semantic/:topic', ({ params }) => {
     return HttpResponse.json({ topic: params.topic, content: `# ${String(params.topic)}\n\n` });
   }),
 
   // Intelligence: semantic topic PUT
-  http.put('/app/v1/intelligence/agents/:agentId/memory/semantic/:topic', async ({ params, request }) => {
+  http.put('/app/v1/intelligence/agents/:agent_id/memory/semantic/:topic', async ({ params, request }) => {
     const body = await request.json() as Record<string, string>;
     return HttpResponse.json({ topic: params.topic, content: body.content ?? '' });
   }),
 
   // Intelligence: semantic topic DELETE
-  http.delete('/app/v1/intelligence/agents/:agentId/memory/semantic/:topic', () => {
+  http.delete('/app/v1/intelligence/agents/:agent_id/memory/semantic/:topic', () => {
     return new HttpResponse(null, { status: 204 });
   }),
 
   // Intelligence: episodic memory list
-  http.get('/app/v1/intelligence/agents/:agentId/memory/episodic', () => {
+  http.get('/app/v1/intelligence/agents/:agent_id/memory/episodic', () => {
     return HttpResponse.json([
       { name: 'sprint-12-planning.md', status: 'active', content: '# Sprint 12 planning\n\nSession notes.' },
       { name: 'bug-triage.md', status: 'active', content: '# Bug triage\n\nNotes.' },
@@ -461,7 +444,57 @@ export const handlers = [
   }),
 
   // Intelligence: episodic entry archive
-  http.post('/app/v1/intelligence/agents/:agentId/memory/episodic/:entryName/archive', ({ params }) => {
-    return HttpResponse.json({ name: params.entryName, status: 'archived' });
+  http.post('/app/v1/intelligence/agents/:agent_id/memory/episodic/:entry_name/archive', ({ params }) => {
+    return HttpResponse.json({ name: params.entry_name, status: 'archived' });
+  }),
+
+  // Admin: feature flags
+  http.get('/app/v1/admin/features', () => {
+    return HttpResponse.json({
+      enable_agent_canvas: true,
+      enable_mcp_integration: true,
+      enable_skill_marketplace: false,
+      enable_multi_channel: false,
+      enable_a2a: false,
+      extra: {},
+    });
+  }),
+
+  // Admin: audit log
+  http.get('/app/v1/admin/audit-log', () => {
+    return HttpResponse.json([
+      {
+        timestamp: '2026-05-01T10:00:00Z',
+        actor: 'alice@example.com',
+        action: 'member.invite',
+        resource: 'bob@example.com',
+        result: 'success',
+      },
+      {
+        timestamp: '2026-05-01T11:00:00Z',
+        actor: 'alice@example.com',
+        action: 'task.state_change',
+        resource: 'TSK-001',
+        result: 'success',
+      },
+    ]);
+  }),
+
+  // Settings: scoring weights
+  http.get('/app/v1/settings/scoring-weights', () => {
+    return HttpResponse.json({
+      W1_timeline: 0.20,
+      W2_dependencies: 0.15,
+      W3_critical_path: 0.15,
+      W4_blocker: 0.15,
+      W5_override: 0.10,
+      W6_resource_risk: 0.15,
+      W7_constraint: 0.10,
+    });
+  }),
+
+  // Chat: message history
+  http.get('/app/v1/chat/messages', () => {
+    return HttpResponse.json({ messages: [], next_cursor: null });
   }),
 ];

@@ -558,9 +558,33 @@ Unknown channels: neutral grey.
 
 ### M-E-2 — Trigger list table
 
+**Kickoff notes (2026-05-05):**
+- Scope for this step: replace Scheduling placeholder copy with production trigger-list table and row-level snooze/resume controls.
+- Dependency: trigger resume endpoint was missing in `/app/v1/agent`; backend unblock tracked as B-10.
+- Data wiring decisions:
+  - consume rows from existing `useAgentTriggers()` (`GET /app/v1/agent/triggers/schedule`),
+  - add mutation hooks for trigger `snooze` and `resume`, each invalidating trigger/status queries,
+  - keep row expansion lightweight (inline details, no drawer).
+- Edge cases validated before coding:
+  - empty trigger list renders explicit empty state,
+  - invalid schedule timestamps do not crash row formatting,
+  - action buttons disable during pending mutations to prevent duplicate writes.
+
 - Columns: Trigger, Type badge, Schedule (mono), Last fired, Next fire, Status badge, action button.
 - Snoozed → "Resume" button (calls existing endpoint).
 - Inline expand on row click for trigger detail.
+
+**Closeout notes (2026-05-05):**
+- Added `SchedulingTriggerTable` and mounted it in `/agent-monitor/scheduling` between next-run card and run history.
+- Added trigger mutations in `src/lib/api-hooks.ts`:
+  - `useSnoozeAgentTrigger()` -> `POST /app/v1/agent/triggers/{id}/snooze`
+  - `useResumeAgentTrigger()` -> `POST /app/v1/agent/triggers/{id}/resume`
+- Implemented row normalization for mixed snake/camel payloads and explicit empty state (`scheduling-trigger-table-empty`).
+- Implemented row-level action safety: buttons disable while pending mutations to prevent duplicate writes.
+- Validation:
+  - Component: `SchedulingTriggerTable.test.tsx`
+  - Integration: `AgentMonitorPage.test.tsx` scheduling route assertion includes trigger table
+  - E2E: `e2e/agent/agent-monitor.spec.ts` scheduling route now asserts trigger table or empty state visibility
 
 ### M-E-3 — Run history (Phase B)
 
@@ -569,7 +593,7 @@ Unknown channels: neutral grey.
 - Data wiring decisions:
   - consume `GET /app/v1/agent/sessions` via paginated sessions hook,
   - display session timing, trigger type, calls/messages counts, token totals, and status,
-  - keep trigger list (M-E-2) deferred until resume endpoint exists.
+  - keep table independent from trigger controls to preserve clear separation between run history and schedule controls.
 - Edge cases validated before coding:
   - endpoint can return empty list and should render explicit empty panel,
   - mixed snake/camel payload shapes should normalize without runtime crashes,
@@ -581,7 +605,7 @@ Unknown channels: neutral grey.
 **Closeout notes (2026-05-05):**
 - Added `SchedulingRunHistoryTable` and mounted it under `/agent-monitor/scheduling` below `SchedulingNextRunCard`.
 - Added `useInfiniteAgentSessions()` in `src/lib/api-hooks.ts` with offset cursor support and optional range params.
-- Updated scheduling copy to reflect M-E-3 shipped and M-E-2 still pending.
+- Updated scheduling copy to reflect M-E-3 shipped; M-E-2 is now delivered with trigger table controls.
 - Validation:
   - Unit: `SchedulingRunHistoryTable.test.tsx` for row render, empty fallback, and Load more pagination action.
   - Page integration: `AgentMonitorPage.test.tsx` now asserts scheduling history component presence.
@@ -591,7 +615,7 @@ Unknown channels: neutral grey.
 
 - "Run Now" fires trigger; new session row appears in ticker within 2s.
 - Snooze + Resume cycle works.
-- Run history table populates when B-4 ships.
+- Run history table populates from `/app/v1/agent/sessions` (B-4).
 
 ---
 
@@ -834,7 +858,7 @@ Unknown channels: neutral grey.
 
 ---
 
-## 9. Backend (Gateway) Waves — B-1 to B-9
+## 9. Backend (Gateway) Waves — B-0 to B-10
 
 Detailed contracts in [04-api-contract.md](04-api-contract.md). Architecture in `graphclaw/docs/architecture/20-agent-activity-logging.md`. Summary:
 
@@ -850,6 +874,7 @@ Detailed contracts in [04-api-contract.md](04-api-contract.md). Architecture in 
 | B-7 | Fix MinIO write race in `_compute_path` | B-3 reliable |
 | B-8 | Verify or add `POST /scoring/simulate` | M-G-3 |
 | B-9 | Verify or add `GET /agents/delegations` | M-H-4 |
+| B-10 | Add `POST /agent/triggers/{id}/snooze` + `POST /agent/triggers/{id}/resume` | M-E-2 |
 
 **B-0 closeout notes (2026-05-05):**
 - Verified migration catalogue source of truth in `graphclaw/src/graphclaw/migrations/catalogue.py`.
@@ -895,6 +920,14 @@ Detailed contracts in [04-api-contract.md](04-api-contract.md). Architecture in 
   - start insert (`status='running'`) before non-cached cycle execution
   - completion update (`status='completed'|'failed'`) in `finally` for robust lifecycle closure
 - Added unit coverage in `graphclaw/tests/test_agent/test_loop.py` asserting insert/update writes during `run_cycle`.
+
+**B-10 closeout notes (2026-05-05):**
+- Added backend trigger mutation routes in `graphclaw/src/graphclaw/api/agent.py`:
+  - `POST /app/v1/agent/triggers/{trigger_id}/snooze`
+  - `POST /app/v1/agent/triggers/{trigger_id}/resume`
+- Snooze updates scheduler in-memory trigger config (`enabled=false`).
+- Resume re-enables trigger and recomputes `next_fire_at` for cron-based triggers.
+- Added API route coverage in `graphclaw/tests/test_api/test_agent_routes.py` for 503/404 and happy-path snooze/resume transitions.
 
 ---
 

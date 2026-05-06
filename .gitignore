@@ -12,4 +12,3 @@ test-results/
 coverage/
 .seed-manifest.json
 e2e/seed/.seed-manifest.json
-e2e-puppeteer/.seed-manifest.json

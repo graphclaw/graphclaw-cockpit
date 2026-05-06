@@ -24,7 +24,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: true,
-    exclude: ['node_modules', 'dist', 'e2e', 'e2e-puppeteer'],
+    exclude: ['node_modules', 'dist', 'e2e'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
@@ -39,10 +39,10 @@ export default defineConfig({
         '**/types/**',
       ],
       thresholds: {
-        lines: 60,
-        branches: 60,
-        functions: 60,
-        statements: 60,
+        lines: 80,
+        branches: 80,
+        functions: 80,
+        statements: 80,
       },
     },
   },

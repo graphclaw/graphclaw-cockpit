@@ -23,6 +23,8 @@ These are consumed as-is. The cockpit must not assume any field changes.
 | `GET /app/v1/agent/action-queue` | M-G Scoring task table | A |
 | `GET /app/v1/agent/triggers/schedule` | M-E Scheduling | A |
 | `POST /app/v1/agent/triggers/{id}/fire` | M-E Run Now | A |
+| `POST /app/v1/agent/triggers/{id}/snooze` | M-E-2 Trigger row action | B |
+| `POST /app/v1/agent/triggers/{id}/resume` | M-E-2 Trigger row action | B |
 | `GET /app/v1/skills/workers` | M-F Skills, Attention Strip | A |
 | `GET /app/v1/agents/pool/status` | M-H Pool KPIs | A |
 | `GET /app/v1/agents/pool/runners` | M-H Heartbeat, Attention Strip | A |

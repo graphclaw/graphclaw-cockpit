@@ -603,7 +603,7 @@ New files:
 ---
 
 ### Wave M — Agent Monitor v2 (Cockpit + Gateway)
-**Status:** M-H panel complete; M-E-3 complete; Gateway B-1, B-2, B-4, B-5, B-6, B-7, and B-9 complete; M-E-2 blocked (missing resume endpoint) (2026-05-05)
+**Status:** M-H panel complete; M-E-2/M-E-3 complete; Gateway B-1, B-2, B-4, B-5, B-6, B-7, B-9, and B-10 complete; PRD/typegen follow-ups complete; Wave 6 kickoff started (2026-05-06)
 **Goal:** 7-panel tabbed Agent Monitor matching `wireframes-v2/pages/agent-monitor-v2.html`, built around plain-language summaries for the non-technical primary user.
 
 **Scope:** see [`docs/agent/02-wave-plan.md`](docs/agent/02-wave-plan.md) for full sub-requirement detail.
@@ -628,6 +628,7 @@ New files:
 - Gateway B-7: Fix MinIO write race (per-process file suffix)
 - Gateway B-8: Verify or add `POST /scoring/simulate`
 - Gateway B-9: Verify or add `GET /agents/delegations`
+- Gateway B-10: Add trigger snooze/resume endpoints for Scheduling panel
 
 **Phase C (deferred):** token/cost drill-down, MinIO retention, structured log viewer, session trace waterfall, LLM Cost Monitor.
 
@@ -668,7 +669,7 @@ New files:
 - [x] M-D-3: Outbound tab (URL-bound)
 - [x] M-D-4: ChannelBadge component + theme tokens
 - [x] M-E-1: Next run card + Run Now
-- ☐ M-E-2: Trigger list table with snooze/resume
+- [x] M-E-2: Trigger list table with snooze/resume
 - [x] M-E-3: Run history (Phase B)
 - [x] M-F-1: Worker pool bar + 4 mini-cards + sparklines
 - [x] M-F-2: Recent jobs table with friendly errors
@@ -689,13 +690,19 @@ New files:
 - [x] Gateway B-7: MinIO write race fix
 - [x] Gateway B-8: /scoring/simulate (verified existing endpoint)
 - [x] Gateway B-9: /agents/delegations (added endpoint in backend)
-- ☐ PRD `docs/prd/03-agent-monitor.md` reconciled to v2
-- ☐ OpenAPI typegen run after each backend endpoint ships
+- [x] Gateway B-10: trigger snooze/resume endpoints
+- [x] PRD `docs/prd/03-agent-monitor.md` reconciled to v2
+- [x] OpenAPI typegen run after each backend endpoint ships
 
 ---
 
 ### Wave 6 — Settings Panel + Config + Secrets
 **Goal:** All 6 settings sub-pages wired to backend.
+
+**Kickoff notes (2026-05-06):**
+- Wave 6 is now active for planning-first execution.
+- Immediate focus for this pass: clear Wave M follow-up blockers so Wave 6 implementation can proceed on a green baseline.
+- First Wave 6 implementation slice remains pending after build/contract stabilization.
 
 **Scope:**
 - Settings layout with sub-navigation (6 items + Danger Zone)
@@ -718,6 +725,7 @@ New files:
 **Deliverable:** All settings pages functional — user can configure channels, LLM keys, scoring weights, triggers.
 
 **Checklist:**
+- [x] W6-0: Kickoff notes + tracker activation
 - ☐ Settings nested layout with sub-nav
 - ☐ Channels page (WhatsApp/Telegram/Email activation wizards)
 - ☐ LLM Providers page (provider cards, BYOK modal with masked input)
@@ -2103,7 +2111,7 @@ See `build-plan.md` for detailed wave plan and checklists.
 - [ ] Wave 4: Graph Views + Tasks
 - [ ] ~~Wave 5: Agent Monitor + Scoring~~ *(superseded by Wave M)*
 - [ ] Wave M: Agent Monitor v2 (Cockpit + Gateway) — see `docs/agent/`
-- [ ] Wave 6: Settings + Config
+- [ ] Wave 6: Settings + Config (kickoff started 2026-05-06)
 - [ ] Wave 7: Skills + MCP + Approvals
 - [ ] Wave 8: Canvas Editor
 - [ ] Wave 9: Intelligence Hub

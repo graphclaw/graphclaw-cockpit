@@ -19,6 +19,7 @@ import { ScoreFactorBreakdown } from './components/ScoreFactorBreakdown';
 import { ScoringTaskTable } from './components/ScoringTaskTable';
 import { SchedulingNextRunCard } from './components/SchedulingNextRunCard';
 import { SchedulingRunHistoryTable } from './components/SchedulingRunHistoryTable';
+import { SchedulingTriggerTable } from './components/SchedulingTriggerTable';
 import { SkillsRecentJobsTable } from './components/SkillsRecentJobsTable';
 import { SkillsWorkerPool } from './components/SkillsWorkerPool';
 
@@ -299,6 +300,7 @@ export function AgentMonitorPage() {
                 ) : activeSection === 'scheduling' ? (
                   <div className="space-y-3">
                     <SchedulingNextRunCard />
+                    <SchedulingTriggerTable />
                     <SchedulingRunHistoryTable />
                   </div>
                 ) : activeSection === 'skills' ? (

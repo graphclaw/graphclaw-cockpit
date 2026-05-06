@@ -18,7 +18,7 @@ describe('TaskTable', () => {
     renderWithProviders(<TaskTable />);
 
     await waitFor(() => {
-      expect(screen.getByText(/2 tasks/)).toBeInTheDocument();
+      expect(screen.getByText(/3 tasks/)).toBeInTheDocument();
     });
   });
 

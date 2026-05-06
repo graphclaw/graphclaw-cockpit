@@ -150,7 +150,7 @@ export function SchedulingNextRunCard() {
         </button>
 
         <span className="text-xs text-[var(--text-tertiary)]">
-          Trigger list ships in M-E-2. Recent run history is shown below.
+          Use the trigger table below to snooze or resume schedules.
         </span>
       </div>
     </div>

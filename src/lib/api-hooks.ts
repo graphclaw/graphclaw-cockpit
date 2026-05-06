@@ -400,11 +400,17 @@ export interface AgentTrigger {
   trigger_id: string;
   triggerId?: string;
   name: string;
-  schedule: string;
+  schedule?: string;
+  trigger_type?: string;
+  triggerType?: string;
+  cron_expression?: string;
+  cronExpression?: string;
   enabled: boolean;
   next_fire_at?: string;
   nextFireAt?: string;
+  last_fired_at?: string;
   last_fired?: string;
+  lastFiredAt?: string;
   lastFired?: string;
 }
 
@@ -422,6 +428,32 @@ export function useFireAgentTrigger() {
   return useMutation({
     mutationFn: (triggerId: string) =>
       apiPost(`/app/v1/agent/triggers/${encodeURIComponent(triggerId)}/fire`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent', 'triggers'] });
+      void qc.invalidateQueries({ queryKey: ['agent', 'status'] });
+    },
+  });
+}
+
+export function useSnoozeAgentTrigger() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (triggerId: string) =>
+      apiPost<AgentTrigger>(`/app/v1/agent/triggers/${encodeURIComponent(triggerId)}/snooze`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['agent', 'triggers'] });
+      void qc.invalidateQueries({ queryKey: ['agent', 'status'] });
+    },
+  });
+}
+
+export function useResumeAgentTrigger() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (triggerId: string) =>
+      apiPost<AgentTrigger>(`/app/v1/agent/triggers/${encodeURIComponent(triggerId)}/resume`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['agent', 'triggers'] });
       void qc.invalidateQueries({ queryKey: ['agent', 'status'] });

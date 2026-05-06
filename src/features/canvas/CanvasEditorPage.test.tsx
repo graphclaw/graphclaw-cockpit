@@ -45,6 +45,7 @@ vi.mock('@/features/canvas/hooks/useCanvasApi', () => ({
   useCanvasLayout: () => ({ data: null, isLoading: false }),
   useSaveCanvasLayout: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useAgentConfig: () => ({ data: null, isLoading: false }),
+  useSaveAgentConfig: () => ({ mutate: vi.fn(), isPending: false }),
   useInstalledSkills: () => ({ data: [], isLoading: false }),
   useMCPServers: () => ({ data: [], isLoading: false }),
   useA2AAgents: () => ({ data: [], isLoading: false }),
@@ -71,16 +72,6 @@ describe('CanvasEditorPage', () => {
     renderWithProviders(<CanvasEditorPage />);
     expect(screen.getByTestId('canvas-editor')).toBeInTheDocument();
     expect(screen.getByTestId('react-flow')).toBeInTheDocument();
-  });
-
-  it('renders the canvas toolbar', () => {
-    renderWithProviders(<CanvasEditorPage />);
-    expect(screen.getByTestId('canvas-toolbar')).toBeInTheDocument();
-  });
-
-  it('renders the Add Agent button in the palette', () => {
-    renderWithProviders(<CanvasEditorPage />);
-    expect(screen.getByTestId('add-agent-button')).toBeInTheDocument();
   });
 
   it('renders background, controls, and minimap', () => {

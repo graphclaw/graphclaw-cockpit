@@ -67,6 +67,13 @@ test.describe('Agent Monitor', () => {
     await expect(page.locator('[data-testid="scheduling-run-now-button"]')).toBeVisible({ timeout: 10000 });
     await expect
       .poll(async () => {
+        const tableVisible = await page.locator('[data-testid="scheduling-trigger-table"]').isVisible();
+        const emptyVisible = await page.locator('[data-testid="scheduling-trigger-table-empty"]').isVisible();
+        return tableVisible || emptyVisible;
+      }, { timeout: 10000 })
+      .toBeTruthy();
+    await expect
+      .poll(async () => {
         const tableVisible = await page.locator('[data-testid="scheduling-run-history"]').isVisible();
         const emptyVisible = await page.locator('[data-testid="scheduling-run-history-empty"]').isVisible();
         return tableVisible || emptyVisible;

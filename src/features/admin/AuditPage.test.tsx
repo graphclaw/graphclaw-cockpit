@@ -3,10 +3,10 @@ import { renderWithProviders } from '@/test/utils';
 import { AuditPage } from '@/features/admin/AuditPage';
 
 describe('AuditPage', () => {
-  it('renders audit log entries', () => {
+  it('renders audit log entries', async () => {
     renderWithProviders(<AuditPage />);
     expect(screen.getByText('Audit Log')).toBeInTheDocument();
-    expect(screen.getByText('member.invite')).toBeInTheDocument();
+    await screen.findByText('member.invite');
     expect(screen.getByText('task.state_change')).toBeInTheDocument();
   });
 

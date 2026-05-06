@@ -84,6 +84,10 @@ vi.mock('@/features/agent-monitor/components/SchedulingRunHistoryTable', () => (
   SchedulingRunHistoryTable: () => <div data-testid="agent-monitor-scheduling-history" />,
 }));
 
+vi.mock('@/features/agent-monitor/components/SchedulingTriggerTable', () => ({
+  SchedulingTriggerTable: () => <div data-testid="agent-monitor-scheduling-triggers" />,
+}));
+
 vi.mock('@/features/agent-monitor/components/ScoringTaskTable', () => ({
   ScoringTaskTable: () => <div data-testid="agent-monitor-scoring-table" />,
 }));
@@ -199,6 +203,7 @@ describe('AgentMonitorPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('agent-monitor-panel-scheduling')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-scheduling-card')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-monitor-scheduling-triggers')).toBeInTheDocument();
       expect(screen.getByTestId('agent-monitor-scheduling-history')).toBeInTheDocument();
     });
   });

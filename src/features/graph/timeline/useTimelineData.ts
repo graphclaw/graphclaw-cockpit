@@ -91,7 +91,7 @@ export function useTimelineData(): TimelineData {
         state: goal.state,
         score: 0,
         priority: goal.priority,
-        assignee: goal.assignee,
+        assigned_to: goal.assignee,
         task_type: 'COMPOSITE',
         progress: goal.progress,
         started_at: goal.started_at,

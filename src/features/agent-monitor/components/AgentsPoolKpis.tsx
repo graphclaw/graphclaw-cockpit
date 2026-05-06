@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { Activity, Clock3, Layers3, TimerReset } from 'lucide-react';
 import { PanelError } from '@/features/agent-monitor/components/PanelError';
 import { PanelSkeleton } from '@/features/agent-monitor/components/PanelSkeleton';
@@ -28,7 +29,7 @@ function activeState(state: string | undefined): boolean {
 interface KpiCardProps {
   label: string;
   value: string;
-  icon: JSX.Element;
+  icon: ReactNode;
   alert?: boolean;
   testId: string;
 }

@@ -11,8 +11,10 @@
 | GC-S-TSK-W50-011 | Agents delegations table should show key columns and row emphasis for stale h... | [../features/agent-monitor/components/ActiveDelegationsTable.test.tsx](../features/agent-monitor/components/ActiveDelegationsTable.test.tsx) |
 | GC-S-TSK-W50-012 | Dispatch plan panel should resolve an active session from delegations, fetch ... | [../features/agent-monitor/components/DispatchPlanViz.test.tsx](../features/agent-monitor/components/DispatchPlanViz.test.tsx) |
 | GC-S-TSK-W50-013 | Scheduling panel run history should render session rows from `/agent/sessions... | [../features/agent-monitor/components/SchedulingRunHistoryTable.test.tsx](../features/agent-monitor/components/SchedulingRunHistoryTable.test.tsx) |
+| GC-S-TSK-W50-014 | Scheduling panel trigger table should normalize trigger payloads, show active... | [../features/agent-monitor/components/SchedulingTriggerTable.test.tsx](../features/agent-monitor/components/SchedulingTriggerTable.test.tsx) |
 | GC-S-WRK-W50-001 | Agents panel should show pool KPI cards from pool status data and gracefully ... | [../features/agent-monitor/components/AgentsPoolKpis.test.tsx](../features/agent-monitor/components/AgentsPoolKpis.test.tsx) |
 | GC-U-SKL-W50-001 | Failed skill jobs should show concise human-readable error text in the skills... | [../features/agent-monitor/lib/formatSkillError.test.ts](../features/agent-monitor/lib/formatSkillError.test.ts) |
+| GC-K-API-W12-001 | Every MSW handler in src/test/handlers.ts should map to a real path+method in... | [contract/handlers.contract.test.ts](contract/handlers.contract.test.ts) |
 | TODO | (no header) ThemePicker.test.tsx | [../components/common/ThemePicker.test.tsx](../components/common/ThemePicker.test.tsx) |
 | TODO | (no header) Sidebar.test.tsx | [../components/layout/Sidebar.test.tsx](../components/layout/Sidebar.test.tsx) |
 | TODO | (no header) Topbar.test.tsx | [../components/layout/Topbar.test.tsx](../components/layout/Topbar.test.tsx) |

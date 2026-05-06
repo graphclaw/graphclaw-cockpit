@@ -1,6 +1,6 @@
 # 03 — Agent Monitor & Observability
 
-**Version:** 2.0 | **Date:** 2026-05-03 | **Status:** Approved
+**Version:** 2.1 | **Date:** 2026-05-06 | **Status:** Approved
 
 > **v2 redesign.** This supersedes v1.0 (2026-03-21). The original flat technical
 > dashboard is replaced by a **7-panel left-nav layout** built around plain-language
@@ -143,6 +143,9 @@ Most imminent trigger from `GET /agent/triggers/schedule`.
 ### 5.2 Trigger list
 Columns: Trigger · Type · Schedule · Last fired · Next fire · Status · action button.
 Snoozed → "Resume" button. Inline expand on row click.
+Row actions call:
+- `POST /app/v1/agent/triggers/{id}/snooze`
+- `POST /app/v1/agent/triggers/{id}/resume`
 
 ### 5.3 Run history (Phase B)
 Last 10 runs from `GET /agent/sessions`.
