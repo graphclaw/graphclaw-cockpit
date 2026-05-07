@@ -33,7 +33,7 @@ Consumes the FastAPI backend at ../graphclaw via /app/v1/ REST + SSE + WebSocket
 - Before commit: `npm run typecheck && npm run lint && npm run test`
 
 ## Key Files
-- `build-plan.md` — wave progress tracker (source of truth)
+- `docs/planning/build-plan.md` — wave progress tracker (source of truth)
 - `src/lib/api-client.ts` — openapi-fetch instance + auth
 - `src/lib/sse.ts` — SSE manager for /app/v1/events
 - `src/stores/theme.ts` — 6 themes + sidebar state
@@ -58,15 +58,15 @@ Consumes the FastAPI backend at ../graphclaw via /app/v1/ REST + SSE + WebSocket
 Follow these phases in order for every development task, without skipping steps.
 
 ### Phase 1 — Orient
-1. Read CLAUDE.md, build-plan.md, and the relevant PRD section(s) before touching code.
+1. Read CLAUDE.md, docs/planning/build-plan.md, and the relevant PRD section(s) before touching code.
 2. Read existing code in the area you will modify — understand what is already there.
 3. For UI work: review the relevant wireframe in wireframes-v2/pages/ before designing.
 
 ### Phase 2 — Requirements & Planning
-4. Document requirements in a .md file; cross-reference existing PRDs and build-plan.md.
+4. Document requirements in a .md file; cross-reference existing PRDs and docs/planning/build-plan.md.
 5. Validate completeness: identify edge cases, stress scenarios, and failure modes.
 6. Identify gaps and ambiguities — clarify key decisions with the user before proceeding. Do not assume.
-7. Update build-plan.md with the planned wave/task before writing any code.
+7. Update docs/planning/build-plan.md with the planned wave/task before writing any code.
 
 ### Phase 3 — Implementation
 8. Write code sequentially — do not spawn parallel sub-agents (risk of system instability).
@@ -85,5 +85,5 @@ Follow these phases in order for every development task, without skipping steps.
 
 ### Phase 5 — Commit & Close
 19. Run the full quality gate: `npm run typecheck && npm run lint && npm run test` — all must pass.
-20. Update build-plan.md and relevant docs to mark the wave/requirement complete.
+20. Update docs/planning/build-plan.md and relevant docs to mark the wave/requirement complete.
 21. Git commit per requirement and per wave using the format: `feat(wave-N): description`.

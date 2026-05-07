@@ -92,5 +92,5 @@ A contract test failure means either:
 
 Add to `src/test/inventory.md`:
 ```
-| GC-K-API-W12-001 | MSW handler conformance to OpenAPI spec | [contract/handlers.contract.test.ts](contract/handlers.contract.test.ts) |
+| GC-K-API-W12-001 | MSW handler conformance to OpenAPI spec | [src/test/contract/handlers.contract.test.ts](../../../src/test/contract/handlers.contract.test.ts) |
 ```

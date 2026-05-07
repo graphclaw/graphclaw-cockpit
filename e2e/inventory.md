@@ -18,7 +18,7 @@
 | TODO | (no header) timeline-view.spec.ts | [graph/timeline-view.spec.ts](graph/timeline-view.spec.ts) |
 | TODO | (no header) intelligence-hub.spec.ts | [intelligence/intelligence-hub.spec.ts](intelligence/intelligence-hub.spec.ts) |
 | TODO | (no header) mcp-registry.spec.ts | [marketplace/mcp-registry.spec.ts](marketplace/mcp-registry.spec.ts) |
-| TODO | (no header) skill-marketplace.spec.ts | [marketplace/skill-marketplace.spec.ts](marketplace/skill-marketplace.spec.ts) |
+| TODO | (no header) skill-marketplace.spec.ts | `marketplace/skill-marketplace.spec.ts` (pending) |
 | TODO | (no header) settings.spec.ts | [settings/settings.spec.ts](settings/settings.spec.ts) |
 
 _Last regenerated: 2026-05-05 by `scripts/regen-inventory.mjs`._

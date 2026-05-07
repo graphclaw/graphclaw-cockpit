@@ -48,6 +48,6 @@
 |----------|----------|---------|
 | **Backend API PRD** | `graphclaw/docs/cockpit-backend-api-prd.md` | All new backend endpoints required by the cockpit — the implementation backlog |
 | **Existing UI Requirements** | `graphclaw/docs/ui-requirements.md` | Original 470-line UI spec from the backend project (absorbed into this PRD) |
-| **Backend PRD** | `graphclaw/docs/task-graph-requirements.md` | Full backend PRD (v1.1, 8500+ lines) — §23 UX, §25 gaps, §31 security, §32 observability |
+| **Backend PRD** | `graphclaw/docs/graphclaw-requirements.md` | Full backend PRD (v1.3, 8500+ lines) — §23 UX, §25 gaps, §31 security, §32 observability |
 | **Architecture** | `graphclaw/docs/architecture.md` | Backend plugin architecture (DB, Gateway, LLM, Infra layers) |
 | **Build Plan** | `graphclaw/build-plan.md` | 6-phase backend build plan — Phase 4/5 include UI-relevant APIs |

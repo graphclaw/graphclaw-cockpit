@@ -2,7 +2,7 @@
 
 > **Status:** Design approved, ready to build · **Date:** 2026-05-03
 > **Wireframe:** [`wireframes-v2/pages/agent-monitor-v2.html`](../../wireframes-v2/pages/agent-monitor-v2.html)
-> **Build wave:** **Wave M** (supersedes Wave 5 in [`build-plan.md`](../../build-plan.md))
+> **Build wave:** **Wave M** (supersedes Wave 5 in [`docs/planning/build-plan.md`](../planning/build-plan.md))
 
 Agent Monitor is the operational transparency surface — it shows the non-technical primary user everything the agent is **doing** on their behalf (vs Intelligence Hub which shows what it **knows**).
 
@@ -27,7 +27,7 @@ The v2 redesign replaces the original flat technical event log with a **7-panel 
 
 **graphclaw-cockpit (this repo):**
 - [`docs/prd/03-agent-monitor.md`](../prd/03-agent-monitor.md) — product requirements (v2-reconciled)
-- [`build-plan.md`](../../build-plan.md) — execution wave tracker
+- [`docs/planning/build-plan.md`](../planning/build-plan.md) — execution wave tracker
 - [`wireframes-v2/pages/agent-monitor-v2.html`](../../wireframes-v2/pages/agent-monitor-v2.html) — pixel-level reference
 
 **graphclaw (gateway / backend):**

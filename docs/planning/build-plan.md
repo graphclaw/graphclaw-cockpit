@@ -2,7 +2,25 @@
 
 ## Context
 
-The GraphClaw Cockpit has a complete backend API (131 routes, 1451 tests) and 26 wireframe pages (Phase A–G) with a full design token system. This plan converts those wireframes into a production React SPA wired to the backend FastAPI gateway. The user prefers methodical wave-based delivery with tests at each stage and `build-plan.md` as the source of truth.
+The GraphClaw Cockpit has a complete backend API (with route and test totals tracked in `../../../graphclaw/docs/planning/build-plan.md`) and 26 wireframe pages (Phase A–G) with a full design token system. This plan converts those wireframes into a production React SPA wired to the backend FastAPI gateway. The user prefers methodical wave-based delivery with tests at each stage and `build-plan.md` as the source of truth.
+
+---
+
+## Documentation Reorganization Program (2026-05) 🔄 IN PROGRESS
+
+**Goal:** Consolidate and normalize cockpit documentation so both human users and coding agents can navigate one accurate source of truth with archive-first lifecycle management.
+
+**Scope:**
+- Align critical cross-repo references with backend canonical paths.
+- Introduce mirrored documentation taxonomy with shared governance model.
+- Establish `docs/archive/build-timeline.md` and `docs/redirects.md` as required migration artifacts.
+- Prepare active-vs-archive separation for wave docs under `docs/agent/`.
+
+**Tracking files:**
+- `docs/README.md`
+- `docs/governance/documentation-governance.md`
+- `docs/archive/build-timeline.md`
+- `docs/redirects.md`
 
 ---
 
@@ -577,9 +595,9 @@ New files:
 > `src/features/agent-monitor/`. Reusable bits (`useAgentData`, `ScoreExplainer`)
 > are migrated, not deleted.
 >
-> Reference docs: [`docs/agent/`](docs/agent/README.md),
-> [`docs/prd/03-agent-monitor.md`](docs/prd/03-agent-monitor.md),
-> [`wireframes-v2/pages/agent-monitor-v2.html`](wireframes-v2/pages/agent-monitor-v2.html).
+> Reference docs: [`docs/agent/`](../agent/README.md),
+> [`docs/prd/03-agent-monitor.md`](../prd/03-agent-monitor.md),
+> [`wireframes-v2/pages/agent-monitor-v2.html`](../../wireframes-v2/pages/agent-monitor-v2.html).
 
 ~~**Goal:** Agent monitoring dashboard, scoring inspector, and explainability views.~~
 
@@ -606,7 +624,7 @@ New files:
 **Status:** M-H panel complete; M-E-2/M-E-3 complete; Gateway B-1, B-2, B-4, B-5, B-6, B-7, B-9, and B-10 complete; PRD/typegen follow-ups complete; Wave 6 kickoff started (2026-05-06)
 **Goal:** 7-panel tabbed Agent Monitor matching `wireframes-v2/pages/agent-monitor-v2.html`, built around plain-language summaries for the non-technical primary user.
 
-**Scope:** see [`docs/agent/02-wave-plan.md`](docs/agent/02-wave-plan.md) for full sub-requirement detail.
+**Scope:** see [`docs/agent/02-wave-plan.md`](../agent/02-wave-plan.md) for full sub-requirement detail.
 
 **Phase A (cockpit + minimal backend):**
 - M-A: Foundation, Wave 5 retirement, navigation shell (7-panel left-nav, URL routing, sidebar badge, attention strip, shared empty/loading/error states, responsive guards)
@@ -2097,7 +2115,7 @@ docker compose --profile test run --rm e2e
 
 **`docs/prd/00-index.md`** — add row:
 ```markdown
-| 16 | [React Implementation](16-react-implementation.md) | Software stack, deployment, testing, wave delivery |
+| 16 | [React Implementation](../prd/16-react-implementation.md) | Software stack, deployment, testing, wave delivery |
 ```
 
 **`docs/design-plan.md`** — add Phase H section:

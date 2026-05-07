@@ -1,6 +1,6 @@
 # Testing — graphclaw-cockpit
 
-Quick reference for running tests. For the full cross-repo strategy see [graphclaw/docs/testing/master-strategy.md](../graphclaw/docs/testing/master-strategy.md). For frontend-specific details see [docs/testing/test-strategy.md](docs/testing/test-strategy.md).
+Quick reference for running tests. For the full cross-repo strategy see [graphclaw/docs/testing/master-strategy.md](../../../graphclaw/docs/testing/master-strategy.md). For frontend-specific details see [test-strategy.md](test-strategy.md).
 
 ## Commands
 
@@ -34,7 +34,7 @@ L5 E2E           e2e/specs/             Playwright + full Docker stack
 
 ## Adding a test
 
-See [docs/testing/contributing-tests.md](docs/testing/contributing-tests.md) for the decision tree (which layer → where the file goes → how to allocate a test ID → what the file header must contain).
+See [contributing-tests.md](contributing-tests.md) for the decision tree (which layer → where the file goes → how to allocate a test ID → what the file header must contain).
 
 ## Coverage
 

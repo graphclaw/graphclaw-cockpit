@@ -2,7 +2,7 @@
 
 > **Status:** Approved · **Date:** 2026-05-03
 
-This is the canonical execution plan for Wave M. It supersedes [Wave 5 in build-plan.md](../../build-plan.md) (the existing Agent Monitor stub).
+This is the canonical execution plan for Wave M. It supersedes [Wave 5 in docs/planning/build-plan.md](../planning/build-plan.md) (the existing Agent Monitor stub).
 
 ---
 

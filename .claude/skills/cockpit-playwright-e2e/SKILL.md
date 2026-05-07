@@ -153,7 +153,7 @@ node scripts/regen-inventory.mjs
 
 Manual entry format:
 ```
-| GC-E-INT-W16-004 | Save to MinIO persists content | [specs/intelligence/intelligence.spec.ts](specs/intelligence/intelligence.spec.ts) |
+| GC-E-INT-W16-004 | Save to MinIO persists content | [e2e/intelligence/intelligence-hub.spec.ts](../../../e2e/intelligence/intelligence-hub.spec.ts) |
 ```
 
 ---

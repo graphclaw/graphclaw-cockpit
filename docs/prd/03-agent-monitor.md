@@ -250,7 +250,7 @@ When provider cost wiring lands and admin separation is built out, these return 
 ## 11. References
 
 - Wireframe: [`wireframes-v2/pages/agent-monitor-v2.html`](../../wireframes-v2/pages/agent-monitor-v2.html)
-- Build wave: **Wave M** in [`build-plan.md`](../../build-plan.md) (supersedes Wave 5)
+- Build wave: **Wave M** in [`docs/planning/build-plan.md`](../planning/build-plan.md) (supersedes Wave 5)
 - Backend requirements: [`graphclaw/docs/requirements/agent-monitor-v2-backend.md`](../../../graphclaw/docs/requirements/agent-monitor-v2-backend.md)
 - Backend architecture: [`graphclaw/docs/architecture/20-agent-activity-logging.md`](../../../graphclaw/docs/architecture/20-agent-activity-logging.md)
 - Agent triad context: [`graphclaw/docs/architecture/14-agent-triad.md`](../../../graphclaw/docs/architecture/14-agent-triad.md)
