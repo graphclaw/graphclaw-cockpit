@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { Activity } from 'lucide-react';
 import { EmptyPanel } from '@/features/agent-monitor/components/EmptyPanel';
 import { PanelError } from '@/features/agent-monitor/components/PanelError';

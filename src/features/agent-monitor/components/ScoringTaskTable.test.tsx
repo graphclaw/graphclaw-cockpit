@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * GC-S-SCO-W50-001 - renders and sorts scoring queue task rows.
  *

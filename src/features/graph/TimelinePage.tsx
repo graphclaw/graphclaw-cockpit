@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // Timeline Hierarchical Gantt — main page (Wave 4b)
 import { useCallback, useRef, useState } from 'react';
 

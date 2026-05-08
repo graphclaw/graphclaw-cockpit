@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

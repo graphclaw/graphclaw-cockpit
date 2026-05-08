@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { Check, ChevronDown, Palette } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';

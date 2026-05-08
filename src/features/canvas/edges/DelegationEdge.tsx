@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * DelegationEdge — Animated cyan edge from Orchestrator → Sub-Agent (F6).
  */

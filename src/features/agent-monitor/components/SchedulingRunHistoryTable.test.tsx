@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * GC-S-TSK-W50-013 - renders scheduling run history with pagination controls.
  *

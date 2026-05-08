@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Central API hooks — every TanStack Query hook that talks to the backend.
  * All calls use the raw fetch with the Bearer token from localStorage.

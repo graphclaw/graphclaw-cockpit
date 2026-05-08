@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // Structured browser console logger with VITE_LOG_LEVEL filtering.
 // Outputs JSON lines matching the backend's JsonFormatter shape.
 

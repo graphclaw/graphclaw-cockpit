@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * ToolSetNode — Canvas node representing a tool set wired to an agent (F14).
  *

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * SkillNode — Canvas node representing a skill wired to an agent (F12).
  *

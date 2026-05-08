@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // Unit tests for timeline Zustand store (Wave 4b)
 import { describe, it, expect, beforeEach } from 'vitest';
 import { act } from '@testing-library/react';

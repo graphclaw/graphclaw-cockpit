@@ -57,7 +57,8 @@
       "PowerShell(c:\\\\Users\\\\abhis\\\\Projects\\\\graphclaw\\\\.venv\\\\Scripts\\\\pip install isort)"
     ],
     "additionalDirectories": [
-      "c:\\Users\\abhis\\Projects"
+      "c:\\Users\\abhis\\Projects",
+      "c:\\Users\\abhis\\Projects\\graphclaw-cockpit\\docs"
     ]
   }
 }

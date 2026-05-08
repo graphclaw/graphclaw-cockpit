@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { logger } from '@/lib/logger';
 import { useAuthStore, type UserRole } from '@/stores/auth';
 

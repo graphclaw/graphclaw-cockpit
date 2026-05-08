@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
 import { Plus, X, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';

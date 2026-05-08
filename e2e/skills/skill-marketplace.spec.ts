@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * GC-E-SKL-W18-002 — Skill Marketplace Full Feature
  *

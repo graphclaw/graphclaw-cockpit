@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * GC-E-CHT-W19-001 — Chat Streaming (SSE Token Display)
  *

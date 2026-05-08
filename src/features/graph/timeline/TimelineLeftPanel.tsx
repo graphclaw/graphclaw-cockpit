@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // Timeline Hierarchical Gantt — Left Panel hierarchy tree (Wave 4b)
 import { type RefObject } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';

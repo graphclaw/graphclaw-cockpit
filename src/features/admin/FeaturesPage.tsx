@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useAdminFeatures, useUpdateAdminFeatures, type FeatureFlags } from '@/lib/api-hooks';
 
 const FEATURE_META: {

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 const ATTENTION_DISMISS_STORAGE_KEY = 'gc:attention:dismissed';
 export const DEFAULT_ATTENTION_DISMISS_TTL_MS = 24 * 60 * 60 * 1000;
 

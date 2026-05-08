@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * GC-E-SKL-W50-001 - validates core agent monitor routes in browser.
  *

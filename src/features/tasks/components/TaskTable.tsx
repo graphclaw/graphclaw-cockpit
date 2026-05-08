@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTasks } from '@/features/graph/hooks/useGraphData';

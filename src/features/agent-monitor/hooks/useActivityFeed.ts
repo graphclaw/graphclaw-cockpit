@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatTickerEvent, type SupportedTickerEventType } from '@/features/agent-monitor/lib/formatEvent';
 import {

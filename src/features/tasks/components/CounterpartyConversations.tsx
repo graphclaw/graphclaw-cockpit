@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useState } from 'react';
 import { MessageSquare, ChevronDown, ChevronRight, ArrowDownLeft, ArrowUpRight, Loader2 } from 'lucide-react';
 import {

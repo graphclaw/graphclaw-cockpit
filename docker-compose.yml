@@ -27,7 +27,7 @@ services:
   # ─── Playwright E2E Runner (on-demand) ───
   # Run: docker compose --profile test run --rm e2e
   e2e:
-    image: mcr.microsoft.com/playwright:v1.48.0-noble
+    image: mcr.microsoft.com/playwright:v1.59.1-jammy
     profiles:
       - test
     depends_on:

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useState } from 'react';
 import { CytoscapeGraph, type GraphNode, type GraphEdge } from './components/CytoscapeGraph';
 import { ViewSwitcher } from './components/ViewSwitcher';

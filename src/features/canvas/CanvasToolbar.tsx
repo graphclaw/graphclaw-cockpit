@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * CanvasToolbar — Floating toolbar above the React Flow canvas (F9).
  *

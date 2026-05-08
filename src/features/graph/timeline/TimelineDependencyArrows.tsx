@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // Timeline Hierarchical Gantt — SVG dependency arrows (Wave 4b)
 import { type GanttBar } from './types';
 

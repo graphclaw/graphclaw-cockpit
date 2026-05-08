@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { formatTickerEvent } from '@/features/agent-monitor/lib/formatEvent';
 
 describe('formatTickerEvent', () => {

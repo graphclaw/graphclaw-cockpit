@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Graph Explorer — floating toolbar above the canvas.
  * Mode toggle (Select / Pan), Add Node, Add Edge, Show Labels, Layout select, Fit.

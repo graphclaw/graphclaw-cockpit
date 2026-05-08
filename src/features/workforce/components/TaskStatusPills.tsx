@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import type { TaskCounts } from '../hooks/useWorkforceData';
 
 interface TaskStatusPillsProps {

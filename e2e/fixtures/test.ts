@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Merged Playwright fixture export.
  *
@@ -19,6 +21,7 @@ import { loadManifest, seedAll } from '../seed/seed-all.js';
 import type { SeedManifest } from '../seed/manifest.types.js';
 
 export const TEST_USER_ID = 'USER-dev-001';
+const API_BASE_URL = process.env.API_URL || 'http://localhost:8000';
 
 type AllFixtures = {
   token: string;
@@ -32,7 +35,7 @@ export const test = base.extend<AllFixtures>({
   // ── Token — obtained once per test, 1s preamble to respect rate limit ──────
   token: async ({}, use) => {
     await new Promise<void>((resolve) => setTimeout(resolve, 1000));
-    const ctx = await base.request.newContext({ baseURL: 'http://localhost:8000' });
+    const ctx = await base.request.newContext({ baseURL: API_BASE_URL });
     const res = await ctx.post('/auth/dev-token', {
       data: { user_id: TEST_USER_ID },
       headers: { 'Content-Type': 'application/json' },
@@ -45,7 +48,7 @@ export const test = base.extend<AllFixtures>({
   // ── API — pre-authenticated Playwright request context ─────────────────────
   api: async ({ token }, use) => {
     const ctx = await base.request.newContext({
-      baseURL: 'http://localhost:8000',
+      baseURL: API_BASE_URL,
       extraHTTPHeaders: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',

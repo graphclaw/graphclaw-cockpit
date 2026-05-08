@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useEffect, useRef, useCallback } from 'react';
 import cytoscape, { type Core, type ElementDefinition } from 'cytoscape';
 // @ts-expect-error — cytoscape-dagre doesn't have proper types

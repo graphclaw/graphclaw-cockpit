@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import type { Page, BrowserContext } from '@playwright/test';
 
 export const APP_BASE = process.env.BASE_URL ?? 'http://localhost:3000';

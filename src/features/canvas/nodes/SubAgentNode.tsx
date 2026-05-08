@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * SubAgentNode — Canvas node representing a user-created sub-agent (F5).
  *

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useAuthStore, type UserRole } from '@/stores/auth';

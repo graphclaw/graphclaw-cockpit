@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useMemo } from 'react';
 import { History } from 'lucide-react';
 import { EmptyPanel } from '@/features/agent-monitor/components/EmptyPanel';

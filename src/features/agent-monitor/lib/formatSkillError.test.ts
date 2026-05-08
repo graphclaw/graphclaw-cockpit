@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * GC-U-SKL-W50-001 - maps raw skill errors to plain-language summaries.
  *

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { CalendarClock, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { PanelError } from '@/features/agent-monitor/components/PanelError';

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { test as base, expect } from '@playwright/test';
 
 base.describe('Authentication Flow', () => {

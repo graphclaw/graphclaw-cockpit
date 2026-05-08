@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * PropertyInspector — Right panel with 4 tabs when a node is selected (F16-F20).
  *

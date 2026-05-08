@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useQuery } from '@tanstack/react-query';
 import { useAdminMembers, useAgents, type TaskItem } from '@/lib/api-hooks';
 

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { http, HttpResponse } from 'msw';
 
 const mcpServers = [

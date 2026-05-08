@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * chat-stream.ts — Fetch-based SSE streaming for the chat transparency API.
  *

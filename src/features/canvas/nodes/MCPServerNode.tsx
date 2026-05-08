@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * MCPServerNode — Canvas node representing a registered MCP server (F13).
  *

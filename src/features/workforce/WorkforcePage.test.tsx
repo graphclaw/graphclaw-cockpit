@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { screen, waitFor, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 import { WorkforcePage } from './WorkforcePage';

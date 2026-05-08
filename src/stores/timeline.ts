@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // Timeline Gantt — Zustand store (Wave 4b)
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';

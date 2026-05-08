@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // Timeline Hierarchical Gantt — date math utilities using date-fns (Wave 4b)
 import {
   addDays,

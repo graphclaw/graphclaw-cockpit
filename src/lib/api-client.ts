@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import createClient, { type Middleware } from 'openapi-fetch';
 
 import { logoutAndRedirectToLogin, recoverAuthSession } from '@/lib/auth-session';

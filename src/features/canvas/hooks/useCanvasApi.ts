@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * useCanvasApi — TanStack Query hooks for Agent Canvas API calls (F2).
  *
@@ -95,6 +97,17 @@ export interface A2AAgentEntry {
   trust_status?: string;
 }
 
+interface RawA2AAgentEntry {
+  key_id?: string;
+  agent_name?: string;
+  revoked?: boolean;
+  agent_id?: string;
+  name?: string;
+  endpoint?: string;
+  capabilities?: string[];
+  trust_status?: string;
+}
+
 export interface CanvasLayout {
   nodes: Array<{ id: string; position: { x: number; y: number }; [k: string]: unknown }>;
   viewport: { x: number; y: number; zoom: number };
@@ -176,7 +189,22 @@ export function useMCPServerTools(serverId: string) {
 export function useA2AAgents() {
   return useQuery({
     queryKey: ['canvas', 'a2a-agents'],
-    queryFn: () => apiFetch<A2AAgentEntry[]>('/app/v1/a2a/agents'),
+    queryFn: () =>
+      apiFetch<RawA2AAgentEntry[]>('/app/v1/a2a/agents').then((items) =>
+        items
+          .filter((item) => !item.revoked)
+          .map(
+            (raw) =>
+              ({
+                agent_id: raw.agent_id ?? raw.key_id ?? '',
+                name: raw.name ?? raw.agent_name ?? '',
+                endpoint: raw.endpoint,
+                capabilities: raw.capabilities,
+                trust_status: raw.trust_status,
+              }) as A2AAgentEntry,
+          )
+          .filter((item) => item.agent_id.length > 0),
+      ),
     staleTime: 5 * 60_000,
   });
 }
@@ -240,6 +268,7 @@ export function useCreateAgentDefinition() {
       apiPost<AgentDefinition>('/app/v1/agents', payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['intelligence', 'agents'] });
+      qc.invalidateQueries({ queryKey: ['agents'] });
       qc.invalidateQueries({ queryKey: ['canvas'] });
     },
   });
@@ -261,6 +290,7 @@ export function useDeleteAgentDefinition() {
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['intelligence', 'agents'] });
+      qc.invalidateQueries({ queryKey: ['agents'] });
       qc.invalidateQueries({ queryKey: ['canvas'] });
     },
   });

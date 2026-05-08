@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import '@/styles/globals.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

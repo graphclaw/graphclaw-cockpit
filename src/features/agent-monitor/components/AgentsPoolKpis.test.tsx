@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * GC-S-WRK-W50-001 - renders agents pool KPI values and fallbacks.
  *

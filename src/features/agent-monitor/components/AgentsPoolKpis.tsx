@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { type ReactNode } from 'react';
 import { Activity, Clock3, Layers3, TimerReset } from 'lucide-react';
 import { PanelError } from '@/features/agent-monitor/components/PanelError';

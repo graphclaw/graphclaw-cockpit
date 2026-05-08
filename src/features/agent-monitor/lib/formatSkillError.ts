@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 function trimTo80(value: string): string {
   const normalized = value.trim();
   if (normalized.length <= 80) {

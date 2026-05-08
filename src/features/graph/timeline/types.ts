@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // Timeline Hierarchical Gantt — shared TypeScript interfaces (Wave 4b)
 
 export type ZoomLevel = 'week' | 'month' | 'quarter';

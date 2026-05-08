@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 export const TEST_USER_ID = 'USER-dev-001';
 export const API_BASE = process.env.API_URL ?? 'http://localhost:8000';
 export const APP_BASE = process.env.BASE_URL ?? 'http://localhost:3000';

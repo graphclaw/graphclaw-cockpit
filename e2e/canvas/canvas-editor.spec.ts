@@ -1,4 +1,21 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { test, expect, TEST_USER_ID } from '../fixtures/auth.fixture';
+
+type ApiContext = Parameters<Parameters<typeof test>[1]>[0]['api'];
+
+async function seedSubAgent(api: ApiContext, baseName: string) {
+  const name = `${baseName}-${Date.now()}`;
+  const res = await api.post('/app/v1/agents', {
+    data: {
+      name,
+      description: 'E2E seeded agent for canvas node interactions',
+    },
+  });
+  expect([200, 201]).toContain(res.status());
+  const body = (await res.json()) as { agent_id: string };
+  return { agentId: body.agent_id, name };
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -7,6 +24,16 @@ import { test, expect, TEST_USER_ID } from '../fixtures/auth.fixture';
 async function goToCanvas(page: import('@playwright/test').Page) {
   await page.goto('/canvas');
   await expect(page.locator('[data-testid="canvas-page"]')).toBeVisible({ timeout: 10_000 });
+}
+
+async function clickCanvasNode(page: import('@playwright/test').Page, nodeTestId: string) {
+  const fitViewBtn = page.getByRole('button', { name: /fit view/i }).first();
+  if (await fitViewBtn.isVisible().catch(() => false)) {
+    await fitViewBtn.click();
+  }
+  const node = page.getByTestId(nodeTestId);
+  await expect(node).toBeVisible({ timeout: 10_000 });
+  await node.click();
 }
 
 // ---------------------------------------------------------------------------
@@ -76,11 +103,15 @@ test.describe('palette — agents section', () => {
 
 test.describe('palette — resources section', () => {
   test('Skills sub-section shows installed skills', async ({ page, api }) => {
-    // Seed: install a test skill
+    // Seed: install a test skill source
     const installRes = await api.post('/app/v1/skills/sources', {
       data: { source_type: 'local', uri: 'e2e://test-source', name: 'E2E Test Source' },
     });
     expect(installRes.ok()).toBeTruthy();
+
+    const skillsRes = await api.get('/app/v1/skills');
+    expect(skillsRes.ok()).toBeTruthy();
+    const skillsBody = (await skillsRes.json()) as Array<{ skill_name?: string; name?: string }>;
 
     await goToCanvas(page);
 
@@ -88,22 +119,12 @@ test.describe('palette — resources section', () => {
     const skillsSection = page.locator('button', { hasText: /^Skills$/i }).last();
     await skillsSection.click();
 
-    // After expansion we should either see skill entries or "No skills installed"
-    // (empty-state is acceptable; what's not acceptable is a blank list showing
-    // items with no label — which was the bug before the skill_name fix)
-    const noSkills = page.locator('text=No skills installed');
-    const skillItems = page.locator('[data-testid^="wiring-skill-"]');
-
-    // One of the two conditions must be true
-    const hasNoSkillsMsg = await noSkills.isVisible().catch(() => false);
-    const hasItems = (await skillItems.count()) > 0;
-    expect(hasNoSkillsMsg || hasItems).toBeTruthy();
-
-    // If items exist, their name spans must not be empty (validates skill_name mapping)
-    if (hasItems) {
-      const firstItem = skillItems.first();
-      const label = await firstItem.locator('p.text-xs').first().textContent();
-      expect(label?.trim().length).toBeGreaterThan(0);
+    if (skillsBody.length === 0) {
+      await expect(page.locator('text=No skills installed')).toBeVisible({ timeout: 5_000 });
+    } else {
+      const firstSkillName = skillsBody[0]?.skill_name ?? skillsBody[0]?.name;
+      expect(firstSkillName).toBeTruthy();
+      await expect(page.locator(`text=${firstSkillName}`)).toBeVisible({ timeout: 8_000 });
     }
   });
 
@@ -160,34 +181,47 @@ test.describe('palette — resources section', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('canvas node interactions', () => {
-  test('clicking a node opens PropertyInspector', async ({ page }) => {
-    await goToCanvas(page);
-    // Wait for at least one React Flow node to appear
-    const rfNode = page.locator('.react-flow__node').first();
-    await expect(rfNode).toBeVisible({ timeout: 10_000 });
-    await rfNode.click();
-    await expect(page.locator('[data-testid="property-inspector"]')).toBeVisible({ timeout: 5_000 });
+  test('clicking a node opens PropertyInspector', async ({ page, api }) => {
+    const seeded = await seedSubAgent(api, 'e2e-canvas-node');
+    try {
+      await goToCanvas(page);
+      await clickCanvasNode(page, `rf__node-${seeded.agentId}`);
+      await expect(page.locator('[data-testid="property-inspector"]')).toBeVisible({ timeout: 5_000 });
+    } finally {
+      await api.delete(`/app/v1/agents/${seeded.agentId}?cleanup_runtime=true`).catch(() => undefined);
+    }
   });
 
-  test('PropertyInspector shows 4 tabs for agent nodes', async ({ page }) => {
-    await goToCanvas(page);
-    const rfNode = page.locator('.react-flow__node').first();
-    await rfNode.click();
-    const inspector = page.locator('[data-testid="property-inspector"]');
-    await expect(inspector).toBeVisible();
-    await expect(inspector.locator('[data-testid="inspector-tab-profile"]')).toBeVisible();
-    await expect(inspector.locator('[data-testid="inspector-tab-config"]')).toBeVisible();
-    await expect(inspector.locator('[data-testid="inspector-tab-wiring"]')).toBeVisible();
-    await expect(inspector.locator('[data-testid="inspector-tab-memory"]')).toBeVisible();
+  test('PropertyInspector shows 4 tabs for agent nodes', async ({ page, api }) => {
+    const seeded = await seedSubAgent(api, 'e2e-canvas-tabs');
+    try {
+      await goToCanvas(page);
+      await clickCanvasNode(page, `rf__node-${seeded.agentId}`);
+      const inspector = page.locator('[data-testid="property-inspector"]');
+      await expect(inspector).toBeVisible();
+      await expect(inspector.locator('[data-testid="inspector-tab-profile"]')).toBeVisible();
+      await expect(inspector.locator('[data-testid="inspector-tab-config"]')).toBeVisible();
+      await expect(inspector.locator('[data-testid="inspector-tab-wiring"]')).toBeVisible();
+      await expect(inspector.locator('[data-testid="inspector-tab-memory"]')).toBeVisible();
+    } finally {
+      await api.delete(`/app/v1/agents/${seeded.agentId}?cleanup_runtime=true`).catch(() => undefined);
+    }
   });
 
-  test('closing PropertyInspector via X hides it', async ({ page }) => {
-    await goToCanvas(page);
-    await page.locator('.react-flow__node').first().click();
-    const inspector = page.locator('[data-testid="property-inspector"]');
-    await expect(inspector).toBeVisible();
-    await inspector.locator('[data-testid="inspector-close"]').click();
-    await expect(inspector).not.toBeVisible();
+  test('closing PropertyInspector via X hides it', async ({ page, api }) => {
+    const seeded = await seedSubAgent(api, 'e2e-canvas-close');
+    try {
+      await goToCanvas(page);
+      const rfNode = page.getByTestId(`rf__node-${seeded.agentId}`);
+      await expect(rfNode).toBeVisible({ timeout: 10_000 });
+      await rfNode.click({ force: true });
+      const inspector = page.locator('[data-testid="property-inspector"]');
+      await expect(inspector).toBeVisible();
+      await inspector.locator('[data-testid="inspector-close"]').click();
+      await expect(inspector).not.toBeVisible();
+    } finally {
+      await api.delete(`/app/v1/agents/${seeded.agentId}?cleanup_runtime=true`).catch(() => undefined);
+    }
   });
 });
 
@@ -196,39 +230,45 @@ test.describe('canvas node interactions', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('wiring panel', () => {
-  test('Wiring tab renders after clicking node and switching to Wiring', async ({ page }) => {
-    await goToCanvas(page);
-    await page.locator('.react-flow__node').first().click();
-    const inspector = page.locator('[data-testid="property-inspector"]');
-    await inspector.locator('[data-testid="inspector-tab-wiring"]').click();
-    await expect(inspector.locator('[data-testid="inspector-wiring-panel"]')).toBeVisible({
-      timeout: 5_000,
-    });
+  test('Wiring tab renders after clicking node and switching to Wiring', async ({ page, api }) => {
+    const seeded = await seedSubAgent(api, 'e2e-canvas-wiring-tab');
+    try {
+      await goToCanvas(page);
+      await clickCanvasNode(page, `rf__node-${seeded.agentId}`);
+      const inspector = page.locator('[data-testid="property-inspector"]');
+      await expect(inspector).toBeVisible({ timeout: 5_000 });
+      await inspector.locator('[data-testid="inspector-tab-wiring"]').click();
+      await expect(inspector.locator('[data-testid="inspector-wiring-panel"]')).toBeVisible({
+        timeout: 5_000,
+      });
+    } finally {
+      await api.delete(`/app/v1/agents/${seeded.agentId}?cleanup_runtime=true`).catch(() => undefined);
+    }
   });
 
-  test('tool-set checkboxes are clickable and trigger API save', async ({ page }) => {
-    await goToCanvas(page);
+  test('tool-set checkboxes are clickable and trigger API save', async ({ page, api }) => {
+    const seeded = await seedSubAgent(api, 'e2e-canvas-toolset');
+    try {
+      await goToCanvas(page);
+      await clickCanvasNode(page, `rf__node-${seeded.agentId}`);
 
-    // Click the orchestrator node (first node, ORCH badge)
-    const orchNode = page.locator('.react-flow__node').filter({ hasText: 'ORCH' }).first();
-    await expect(orchNode).toBeVisible({ timeout: 10_000 });
-    await orchNode.click();
+      const inspector = page.locator('[data-testid="property-inspector"]');
+      await expect(inspector).toBeVisible({ timeout: 5_000 });
+      await inspector.locator('[data-testid="inspector-tab-wiring"]').click();
+      await expect(inspector.locator('[data-testid="inspector-wiring-panel"]')).toBeVisible();
 
-    const inspector = page.locator('[data-testid="property-inspector"]');
-    await inspector.locator('[data-testid="inspector-tab-wiring"]').click();
-    await expect(inspector.locator('[data-testid="inspector-wiring-panel"]')).toBeVisible();
+      const [configPut] = await Promise.all([
+        page.waitForResponse(
+          (r) => r.url().includes('/agents/') && r.url().includes('/config') && r.request().method() === 'PUT',
+          { timeout: 8_000 },
+        ),
+        inspector.locator('[data-testid="wiring-toolset-task_management"]').click(),
+      ]);
 
-    // Intercept the config PUT
-    const [configPut] = await Promise.all([
-      page.waitForResponse(
-        (r) => r.url().includes('/agents/') && r.url().includes('/config') && r.request().method() === 'PUT',
-        { timeout: 8_000 },
-      ),
-      inspector.locator('[data-testid="wiring-toolset-task_management"]').click(),
-    ]);
-
-    // Wiring save must succeed (2xx), not 404
-    expect(configPut.status()).toBeLessThan(300);
+      expect(configPut.status()).toBeLessThan(300);
+    } finally {
+      await api.delete(`/app/v1/agents/${seeded.agentId}?cleanup_runtime=true`).catch(() => undefined);
+    }
   });
 
   test('MCP server wiring checkbox toggles without error', async ({ page, api }) => {
@@ -243,26 +283,30 @@ test.describe('wiring panel', () => {
     });
     const { server_id: serverId } = (await regRes.json()) as { server_id: string };
 
-    await goToCanvas(page);
-    await page.locator('.react-flow__node').filter({ hasText: 'ORCH' }).first().click();
+    const seeded = await seedSubAgent(api, 'e2e-canvas-mcp');
+    try {
+      await goToCanvas(page);
+      await clickCanvasNode(page, `rf__node-${seeded.agentId}`);
 
-    const inspector = page.locator('[data-testid="property-inspector"]');
-    await inspector.locator('[data-testid="inspector-tab-wiring"]').click();
+      const inspector = page.locator('[data-testid="property-inspector"]');
+      await expect(inspector).toBeVisible({ timeout: 5_000 });
+      await inspector.locator('[data-testid="inspector-tab-wiring"]').click();
 
-    const mcpCheckbox = inspector.locator(`[data-testid="wiring-mcp-${serverId}"]`);
-    await expect(mcpCheckbox).toBeVisible({ timeout: 5_000 });
+      const mcpCheckbox = inspector.locator(`[data-testid="wiring-mcp-${serverId}"]`);
+      await expect(mcpCheckbox).toBeVisible({ timeout: 5_000 });
 
-    const [putRes] = await Promise.all([
-      page.waitForResponse(
-        (r) => r.url().includes('/config') && r.request().method() === 'PUT',
-        { timeout: 8_000 },
-      ),
-      mcpCheckbox.click(),
-    ]);
-    expect(putRes.status()).toBeLessThan(300);
-
-    // Cleanup
-    await api.delete(`/app/v1/mcp-servers/${serverId}`);
+      const [putRes] = await Promise.all([
+        page.waitForResponse(
+          (r) => r.url().includes('/config') && r.request().method() === 'PUT',
+          { timeout: 8_000 },
+        ),
+        mcpCheckbox.click(),
+      ]);
+      expect(putRes.status()).toBeLessThan(300);
+    } finally {
+      await api.delete(`/app/v1/mcp-servers/${serverId}`).catch(() => undefined);
+      await api.delete(`/app/v1/agents/${seeded.agentId}?cleanup_runtime=true`).catch(() => undefined);
+    }
   });
 });
 
@@ -278,20 +322,22 @@ test.describe('add-agent dialog', () => {
     const dialog = page.locator('[role="dialog"]');
     await expect(dialog).toBeVisible({ timeout: 5_000 });
 
-    await dialog.locator('input[placeholder*="name" i], input[id*="name" i]').first().fill('e2e-test-agent');
+    const agentName = `e2e-test-agent-${Date.now()}`;
+    await dialog.locator('[data-testid="agent-name-input"]').fill(agentName);
+    await dialog.locator('[data-testid="agent-description-input"]').fill('E2E created agent');
 
     const [createRes] = await Promise.all([
       page.waitForResponse(
         (r) => r.url().includes('/app/v1/agents') && r.request().method() === 'POST',
         { timeout: 10_000 },
       ),
-      dialog.getByRole('button', { name: /create|add|save/i }).click(),
+      dialog.locator('[data-testid="create-agent-submit"]').click(),
     ]);
-    expect(createRes.status()).toBe(201);
+    expect([200, 201]).toContain(createRes.status());
 
     const body = (await createRes.json()) as { agent_id: string };
     // New agent node should appear on canvas
-    await expect(page.locator(`.react-flow__node`).filter({ hasText: 'e2e-test-agent' })).toBeVisible({
+    await expect(page.getByTestId(`rf__node-${body.agent_id}`)).toBeVisible({
       timeout: 8_000,
     });
 
@@ -315,7 +361,7 @@ test.describe('A2A external agent node', () => {
     await goToCanvas(page);
 
     // External agent node should be visible
-    const externalNode = page.locator('.react-flow__node').filter({ hasText: 'e2e-a2a-node' });
+    const externalNode = page.getByTestId(`rf__node-a2a-${keyId}`);
     await expect(externalNode).toBeVisible({ timeout: 10_000 });
 
     // Click and verify panel shows (no "External agent not found" error)

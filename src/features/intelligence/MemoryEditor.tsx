@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 

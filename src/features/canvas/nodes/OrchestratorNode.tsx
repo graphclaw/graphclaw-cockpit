@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * OrchestratorNode — Canvas node representing the main orchestrator agent (F4).
  *

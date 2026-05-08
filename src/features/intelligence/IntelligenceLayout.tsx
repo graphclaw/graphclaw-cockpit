@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { NavLink, Outlet, Navigate, useMatch } from 'react-router';
 import { User, Brain, BookOpen, Tags, Wrench, ShieldCheck } from 'lucide-react';
 import { createContext, useContext, useState } from 'react';

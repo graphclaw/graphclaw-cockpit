@@ -1,5 +1,7 @@
 # GraphClaw Cockpit
 
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 > Web-based command center for the GraphClaw task graph management system.
 
 ## Overview
@@ -61,6 +63,10 @@ All APIs are served by the GraphClaw backend project at `C:/Users/abhis/Projects
 All pages are wired via `data-page` attribute + `assets/nav.js` injection.
 Sidebar: full 220px expanded ↔ 56px icon rail (collapsible, persisted to localStorage).
 Theme picker: Light, Dark, Solarized Light, Solarized Dark, Midnight Blue, High Contrast.
+
+## License
+
+Copyright 2026 Abhishek Gupta. Licensed under the [Apache License 2.0](LICENSE).
 
 ### Evaluation Summary (Baseline)
 - **Overall**: 4.03 / 5.0 — All 20 content pages PASS

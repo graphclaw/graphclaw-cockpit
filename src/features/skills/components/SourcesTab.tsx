@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useState } from 'react';
 import { Plus, Trash2, Globe, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';

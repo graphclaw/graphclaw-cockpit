@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { type ReactElement } from 'react';
 import { render, type RenderOptions } from '@testing-library/react';
 import { QueryClientProvider } from '@tanstack/react-query';

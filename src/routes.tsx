@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { lazy, Suspense } from 'react';
 import { Route, Routes, Navigate } from 'react-router';
 import { AppShell } from '@/components/layout/AppShell';

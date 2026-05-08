@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useState, useRef, useEffect } from 'react';
 import { Building2, ChevronDown, Check, Loader2 } from 'lucide-react';
 import { useUserOrgs } from '@/lib/api-hooks';

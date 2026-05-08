@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useMemo, useState } from 'react';
 import { MessageSquare } from 'lucide-react';
 import { useCommsSummary, type CommsSummary } from '@/lib/api-hooks';

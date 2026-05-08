@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // Timeline Hierarchical Gantt — Gantt Area (time axis + bars) (Wave 4b)
 import { type RefObject, useMemo } from 'react';
 

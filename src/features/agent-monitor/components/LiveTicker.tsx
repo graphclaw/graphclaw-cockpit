@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { Link } from 'react-router';
 import { useLiveTickerEvents } from '@/features/agent-monitor/hooks/useLiveTickerEvents';
 import type { TickerDotColor } from '@/features/agent-monitor/lib/formatEvent';

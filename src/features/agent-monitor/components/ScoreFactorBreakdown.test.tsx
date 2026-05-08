@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * GC-S-SCO-W50-002 - renders scoring factor breakdown for selected task rows.
  *

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import type { ReactNode } from 'react';
 import { Bot, Inbox, PlayCircle, Reply, Sigma } from 'lucide-react';
 import { useGlanceMetrics } from '@/features/agent-monitor/hooks/useGlanceMetrics';

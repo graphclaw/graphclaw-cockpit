@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useEffect, useMemo, useState } from 'react';
 import { formatTickerEvent, type SupportedTickerEventType, type TickerEventRecord } from '../lib/formatEvent';
 

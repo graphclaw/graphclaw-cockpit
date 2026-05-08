@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * teardown-all.ts — Deletes every entity created by seed-all.ts.
  *

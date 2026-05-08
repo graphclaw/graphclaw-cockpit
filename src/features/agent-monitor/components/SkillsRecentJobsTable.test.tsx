@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * GC-S-SKL-W50-001 - renders recent skill jobs with friendly failure copy.
  *

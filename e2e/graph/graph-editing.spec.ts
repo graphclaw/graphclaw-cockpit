@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * GC-E-GRA-W19-002 — Graph Editing (Goals and Tasks CRUD)
  *

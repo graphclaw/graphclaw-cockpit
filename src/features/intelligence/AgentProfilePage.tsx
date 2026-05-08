@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, RotateCcw, Eye, Pencil } from 'lucide-react';

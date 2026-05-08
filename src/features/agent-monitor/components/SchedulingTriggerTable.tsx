@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { Fragment, useMemo, useState } from 'react';
 import { CalendarClock } from 'lucide-react';
 import { toast } from 'sonner';

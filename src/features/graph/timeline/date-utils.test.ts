@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // Unit tests for timeline date-utils (Wave 4b)
 import { describe, expect, it } from 'vitest';
 import { addDays } from 'date-fns';

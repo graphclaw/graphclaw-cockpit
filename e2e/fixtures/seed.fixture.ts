@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { test as base } from '@playwright/test';
 import { loadManifest, seedAll } from '../seed/seed-all.js';
 import type { SeedManifest } from '../seed/manifest.types.js';

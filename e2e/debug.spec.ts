@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { test } from './fixtures/auth.fixture';
 
 test('debug: waitForResponse with real 500 from proxy', async ({ page }) => {

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { Activity, AlertTriangle, CalendarClock, Clock3 } from 'lucide-react';
 import { KpiCard } from '@/components/common/KpiCard';
 import { useAgentStatus, useAgentTriggers, type AgentTrigger } from '@/lib/api-hooks';

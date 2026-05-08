@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { KpiCard } from '@/components/common/KpiCard';
 import { Activity, CheckCircle, Clock, AlertTriangle, Target } from 'lucide-react';

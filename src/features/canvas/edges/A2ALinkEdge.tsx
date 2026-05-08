@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * A2ALinkEdge — Purple dotted animated edge from Orchestrator → External Agent (F28).
  *

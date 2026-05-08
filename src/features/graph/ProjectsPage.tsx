@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { Badge } from '@/components/ui/badge';
 import { FolderKanban } from 'lucide-react';
 import { useGoals } from './hooks/useGraphData';

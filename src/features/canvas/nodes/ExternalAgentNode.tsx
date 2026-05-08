@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * ExternalAgentNode — Canvas node for A2A-registered external agents (F27).
  *

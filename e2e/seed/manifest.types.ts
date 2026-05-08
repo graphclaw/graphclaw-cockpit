@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // ── Seed Manifest ─────────────────────────────────────────────────────────────
 /**
  * Shape of the JSON written by seed-all.ts and read by teardown-all.ts

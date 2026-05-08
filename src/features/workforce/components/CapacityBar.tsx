@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 interface CapacityBarProps {
   /** 0 – 1.5+ representing utilisation. >1 = over capacity. */
   loadFactor: number;

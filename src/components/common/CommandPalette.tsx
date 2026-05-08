@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Search } from 'lucide-react';

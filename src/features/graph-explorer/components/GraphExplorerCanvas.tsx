@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Graph Explorer — Cytoscape.js canvas with multi-type node shapes,
  * edge styling by type, client-side filtering, layouts, and minimap.

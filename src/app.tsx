@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { Route, Routes } from 'react-router';
 import { LoginPage, CallbackPage } from '@/features/auth';
 import { AppRoutes } from '@/routes';

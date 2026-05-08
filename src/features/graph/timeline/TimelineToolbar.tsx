@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // Timeline Hierarchical Gantt — Toolbar (Wave 4b)
 import { ChevronDown, ChevronRight, Maximize2 } from 'lucide-react';
 

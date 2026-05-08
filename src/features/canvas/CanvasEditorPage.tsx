@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 /**
  * CanvasEditorPage — Agent Configuration Hub (F3 rewrite).
  *
@@ -50,7 +52,7 @@ import {
   useA2AAgents,
   type AgentConfig,
 } from './hooks/useCanvasApi';
-import { useIntelligenceAgents } from '@/lib/api-hooks';
+import { useIntelligenceAgents, useAgents } from '@/lib/api-hooks';
 import { useAuthStore } from '@/stores/auth';
 
 // ---------------------------------------------------------------------------
@@ -105,6 +107,7 @@ function CanvasEditorInner() {
   // ---------------------------------------------------------------------------
 
   const { data: agentsData } = useIntelligenceAgents();
+  const { data: subAgentsData } = useAgents();
   const { data: layoutData } = useCanvasLayout();
   const { data: a2aAgents } = useA2AAgents();
   const saveLayout = useSaveCanvasLayout();
@@ -125,8 +128,6 @@ function CanvasEditorInner() {
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    if (!agentsData || !userId) return;
-
     const existingPositions: Record<string, { x: number; y: number }> = {};
     if (layoutData?.nodes) {
       for (const n of layoutData.nodes) {
@@ -137,49 +138,54 @@ function CanvasEditorInner() {
     const newNodes: Node[] = [];
     let subAgentY = 300;
 
-    for (const agent of agentsData) {
-      const isOrchestrator = agent.agent_id === userId || agent.source === 'system' && agent.agent_id === userId;
-      const isSystem = agent.source === 'system' && agent.agent_id !== userId;
+    if (userId) {
+      const orchestratorName =
+        agentsData?.find((a) => a.agent_id === userId)?.name ??
+        'Orchestrator';
 
-      if (isOrchestrator || agent.agent_id === userId) {
-        // Orchestrator node
-        newNodes.push({
-          id: agent.agent_id,
-          type: 'orchestrator',
-          position: existingPositions[agent.agent_id] ?? { x: 400, y: 80 },
-          data: {
-            label: agent.name,
-            agentId: agent.agent_id,
-            llmModel: orchestratorConfig?.llm_model,
-            skillsCount: orchestratorConfig?.skills?.length ?? 0,
-            mcpCount: orchestratorConfig?.mcp_servers?.length ?? 0,
-            toolSetsCount: orchestratorConfig?.tool_sets?.length ?? 0,
-            subAgentsCount: orchestratorConfig?.sub_agents?.length ?? 0,
-          },
-          deletable: false,
-        });
-      } else if (isSystem) {
-        // System agent node (read-only)
-        newNodes.push({
-          id: agent.agent_id,
-          type: 'system_agent',
-          position: existingPositions[agent.agent_id] ?? { x: 700, y: 80 },
-          data: { label: agent.name, agentId: agent.agent_id },
-          deletable: false,
-        });
-      } else {
-        // Sub-agent node
-        newNodes.push({
-          id: agent.agent_id,
-          type: 'sub_agent',
-          position: existingPositions[agent.agent_id] ?? { x: 100 + (subAgentY % 600), y: subAgentY },
-          data: {
-            label: agent.name,
-            agentId: agent.agent_id,
-          },
-        });
-        subAgentY += 180;
-      }
+      // Orchestrator node is present when the authenticated user id is known.
+      newNodes.push({
+        id: userId,
+        type: 'orchestrator',
+        position: existingPositions[userId] ?? { x: 400, y: 80 },
+        data: {
+          label: orchestratorName,
+          agentId: userId,
+          llmModel: orchestratorConfig?.llm_model,
+          skillsCount: orchestratorConfig?.skills?.length ?? 0,
+          mcpCount: orchestratorConfig?.mcp_servers?.length ?? 0,
+          toolSetsCount: orchestratorConfig?.tool_sets?.length ?? 0,
+          subAgentsCount: orchestratorConfig?.sub_agents?.length ?? 0,
+        },
+        deletable: false,
+      });
+    }
+
+    // System agent nodes (read-only)
+    for (const agent of agentsData ?? []) {
+      if (agent.source !== 'system') continue;
+      newNodes.push({
+        id: agent.agent_id,
+        type: 'system_agent',
+        position: existingPositions[agent.agent_id] ?? { x: 700, y: 80 },
+        data: { label: agent.name, agentId: agent.agent_id },
+        deletable: false,
+      });
+    }
+
+    // User sub-agent nodes from /app/v1/agents
+    for (const agent of subAgentsData ?? []) {
+      if (userId && agent.agent_id === userId) continue;
+      newNodes.push({
+        id: agent.agent_id,
+        type: 'sub_agent',
+        position: existingPositions[agent.agent_id] ?? { x: 100 + (subAgentY % 600), y: subAgentY },
+        data: {
+          label: agent.name,
+          agentId: agent.agent_id,
+        },
+      });
+      subAgentY += 180;
     }
 
     // A2A external agents
@@ -203,7 +209,7 @@ function CanvasEditorInner() {
     }
 
     setNodes(newNodes);
-  }, [agentsData, a2aAgents, layoutData, orchestratorConfig, userId, setNodes]);
+  }, [agentsData, subAgentsData, a2aAgents, layoutData, orchestratorConfig, userId, setNodes]);
 
   // Build delegation edges from orchestrator sub_agents config
   useEffect(() => {
@@ -225,20 +231,40 @@ function CanvasEditorInner() {
   // ---------------------------------------------------------------------------
 
   const paletteAgents = useMemo<PaletteAgent[]>(() => {
-    const internal: PaletteAgent[] = (agentsData ?? [])
-      .filter((a) => a.source !== 'system')
+    const internal: PaletteAgent[] = [];
+
+    if (userId) {
+      internal.push({
+        agent_id: userId,
+        name: agentsData?.find((a) => a.agent_id === userId)?.name ?? 'Orchestrator',
+        type: 'orchestrator',
+      });
+    }
+
+    for (const agent of subAgentsData ?? []) {
+      if (agent.agent_id === userId) continue;
+      internal.push({
+        agent_id: agent.agent_id,
+        name: agent.name,
+        type: 'sub_agent',
+      });
+    }
+
+    const system: PaletteAgent[] = (agentsData ?? [])
+      .filter((a) => a.source === 'system')
       .map((a) => ({
         agent_id: a.agent_id,
         name: a.name,
-        type: a.agent_id === userId ? ('orchestrator' as const) : ('sub_agent' as const),
+        type: 'system' as const,
       }));
+
     const external: PaletteAgent[] = (a2aAgents ?? []).map((a) => ({
       agent_id: a.agent_id,
       name: a.name,
       type: 'a2a' as const,
     }));
-    return [...internal, ...external];
-  }, [agentsData, a2aAgents, userId]);
+    return [...internal, ...external, ...system];
+  }, [agentsData, subAgentsData, a2aAgents, userId]);
 
   // Build A2A link edges from orchestrator to external agents
   useEffect(() => {
@@ -495,7 +521,9 @@ function CanvasEditorInner() {
   // Render
   // ---------------------------------------------------------------------------
 
-  const selectedAgent = agentsData?.find((a) => a.agent_id === selectedAgentId);
+  const selectedAgent =
+    (subAgentsData ?? []).find((a) => a.agent_id === selectedAgentId) ??
+    agentsData?.find((a) => a.agent_id === selectedAgentId);
 
   return (
     <div className="flex h-full gap-0" data-testid="canvas-page">

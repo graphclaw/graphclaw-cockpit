@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 import { Client, type QueryResult } from 'pg';
 
 // ── Connection config ─────────────────────────────────────────────────────────

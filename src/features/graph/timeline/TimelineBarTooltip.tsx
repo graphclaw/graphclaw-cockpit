@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Abhishek Gupta
+// SPDX-License-Identifier: Apache-2.0
 // Timeline Hierarchical Gantt — Bar Tooltip (Wave 4b)
 import { useState, useRef, type ReactNode } from 'react';
 import { format } from 'date-fns';
