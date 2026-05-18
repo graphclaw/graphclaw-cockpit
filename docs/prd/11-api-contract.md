@@ -329,6 +329,13 @@
 
 ## 11.19 A2A API (Existing)
 
+Status note (current release): advanced A2A cockpit configuration is deferred from Settings to keep the current release simple.
+
+Future implementation details, including API-plane alignment and real-agent end-to-end testing, are tracked in:
+`docs/planning/a2a-future-release-design-plan.md`
+
+Contract note (pending): final canonical A2A endpoint strategy for cockpit-facing flows remains a future-release decision.
+
 | # | Method | Path | Request | Response | Auth | Status |
 |---|--------|------|---------|----------|------|--------|
 | 138 | POST | `/api/v1/a2a/agents` | Agent card registration | `AgentCard` | API Key | Exists |

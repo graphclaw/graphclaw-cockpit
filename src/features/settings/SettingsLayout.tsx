@@ -7,7 +7,6 @@ import {
   BarChart2,
   Newspaper,
   Zap,
-  Share2,
   AlertTriangle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -25,7 +24,6 @@ const SETTINGS_NAV: SettingsNavItem[] = [
   { label: 'Scoring', icon: BarChart2, path: '/settings/scoring' },
   { label: 'Briefing', icon: Newspaper, path: '/settings/briefing' },
   { label: 'Triggers', icon: Zap, path: '/settings/triggers' },
-  { label: 'Agent-to-Agent', icon: Share2, path: '/settings/a2a' },
   { label: 'Danger Zone', icon: AlertTriangle, path: '/settings/danger', danger: true },
 ];
 

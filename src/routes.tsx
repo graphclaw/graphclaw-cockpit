@@ -46,9 +46,6 @@ const BriefingPage = lazy(() =>
 const TriggersPage = lazy(() =>
   import('@/features/settings/TriggersPage').then((m) => ({ default: m.TriggersPage })),
 );
-const A2aPage = lazy(() =>
-  import('@/features/settings/A2aPage').then((m) => ({ default: m.A2aPage })),
-);
 const DangerZonePage = lazy(() =>
   import('@/features/settings/DangerZonePage').then((m) => ({ default: m.DangerZonePage })),
 );
@@ -191,7 +188,7 @@ export function AppRoutes() {
                           <Route path="scoring" element={<ScoringPage />} />
                           <Route path="briefing" element={<BriefingPage />} />
                           <Route path="triggers" element={<TriggersPage />} />
-                          <Route path="a2a" element={<A2aPage />} />
+                          <Route path="a2a" element={<Navigate to="/settings/channels" replace />} />
                           <Route path="danger" element={<DangerZonePage />} />
                         </Route>
 

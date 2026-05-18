@@ -7,6 +7,12 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { logoutAndRedirectToLogin, recoverAuthSession } from '@/lib/auth-session';
+import {
+  getA2aAgentPath,
+  getA2aAgentsPath,
+  normalizeA2aAgentsResponse,
+  normalizeA2aCreateResponse,
+} from '@/lib/a2a-api-plane';
 
 // ---------------------------------------------------------------------------
 // helpers
@@ -1205,7 +1211,7 @@ export interface A2aAgent {
 export function useA2aAgents() {
   return useQuery({
     queryKey: ['a2a', 'agents'],
-    queryFn: () => apiFetch<A2aAgent[]>('/app/v1/a2a/agents'),
+    queryFn: () => apiFetch<unknown>(getA2aAgentsPath()).then(normalizeA2aAgentsResponse),
   });
 }
 
@@ -1213,9 +1219,7 @@ export function useCreateA2aAgent() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (label: string) =>
-      apiPost<{ key_id: string; agent_name: string; api_key: string }>('/app/v1/a2a/agents', {
-        agent_name: label,
-      }),
+      apiPost<unknown>(getA2aAgentsPath(), { agent_name: label }).then(normalizeA2aCreateResponse),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['a2a', 'agents'] });
     },
@@ -1225,7 +1229,7 @@ export function useCreateA2aAgent() {
 export function useRevokeA2aAgent() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (keyId: string) => apiDelete(`/app/v1/a2a/agents/${keyId}`),
+    mutationFn: (keyId: string) => apiDelete(getA2aAgentPath(keyId)),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['a2a', 'agents'] });
     },
@@ -1918,6 +1922,17 @@ export interface SemanticMemoryContent {
   content: string;
 }
 
+export interface SemanticTopicEntry {
+  name: string;
+  description: string;
+  updated_at: string;
+}
+
+export interface SemanticMemoryIndex {
+  updated_at: string;
+  topics: SemanticTopicEntry[];
+}
+
 export function useSemanticMemory(agentId: string) {
   return useQuery({
     queryKey: ['intelligence', agentId, 'memory', 'semantic'],
@@ -1940,11 +1955,22 @@ export function useSemanticTopic(agentId: string, topic: string) {
   });
 }
 
+export function useSemanticIndex(agentId: string) {
+  return useQuery({
+    queryKey: ['intelligence', agentId, 'memory', 'semantic', '_index'],
+    queryFn: () =>
+      apiFetch<SemanticMemoryIndex>(
+        `/app/v1/intelligence/agents/${agentId}/memory/semantic/_index`,
+      ),
+    enabled: !!agentId,
+  });
+}
+
 export function useUpdateSemanticMemory() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ agentId, topic, content }: { agentId: string; topic: string; content: string }) =>
-      apiPut<SemanticMemoryContent>(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${topic}`, { content }),
+    mutationFn: ({ agentId, topic, content, description }: { agentId: string; topic: string; content: string; description?: string }) =>
+      apiPut<SemanticMemoryContent>(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${topic}`, { content, description }),
     onSuccess: (_data, { agentId }) => {
       void qc.invalidateQueries({ queryKey: ['intelligence', agentId, 'memory', 'semantic'] });
     },
@@ -1956,6 +1982,20 @@ export function useDeleteSemanticMemory() {
   return useMutation({
     mutationFn: ({ agentId, topic }: { agentId: string; topic: string }) =>
       apiDelete(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${topic}`),
+    onSuccess: (_data, { agentId }) => {
+      void qc.invalidateQueries({ queryKey: ['intelligence', agentId, 'memory', 'semantic'] });
+    },
+  });
+}
+
+export function useRenameSemanticTopic() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ agentId, topic, newName }: { agentId: string; topic: string; newName: string }) =>
+      apiPost<SemanticMemoryContent>(
+        `/app/v1/intelligence/agents/${agentId}/memory/semantic/${topic}/rename`,
+        { new_name: newName },
+      ),
     onSuccess: (_data, { agentId }) => {
       void qc.invalidateQueries({ queryKey: ['intelligence', agentId, 'memory', 'semantic'] });
     },
@@ -2109,6 +2149,22 @@ export interface ChatResponse {
   agent_message: ChatMessage;
 }
 
+export interface ChatRuntime {
+  provider: string;
+  model: string;
+  connected: boolean;
+}
+
+export function useChatRuntime() {
+  return useQuery({
+    queryKey: ['chat', 'runtime'],
+    queryFn: () => apiFetchOptional<ChatRuntime>('/app/v1/chat/runtime'),
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    retry: false,
+  });
+}
+
 export function useChatMessages() {
   return useQuery({
     queryKey: ['chat', 'messages'],
@@ -2128,6 +2184,38 @@ export function useSendChatMessage() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['chat', 'messages'] });
     },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Pending Plans
+// ---------------------------------------------------------------------------
+
+export interface PendingPlanTask {
+  draft_task_id: string;
+  title: string;
+  description: string;
+  priority: string;
+  estimated_effort: string;
+}
+
+export interface PendingPlan {
+  plan_id: string;
+  goal_title: string;
+  goal_description: string;
+  status: string;
+  revision: number;
+  created_at: string;
+  updated_at: string;
+  deadline: string | null;
+  tasks: PendingPlanTask[];
+}
+
+export function useAgentPlans(agentId = 'main') {
+  return useQuery({
+    queryKey: ['agents', agentId, 'plans'],
+    queryFn: () => apiFetch<PendingPlan[]>(`/app/v1/agents/${agentId}/plans`),
+    refetchInterval: 15_000,
   });
 }
 
@@ -2271,5 +2359,51 @@ export function useUserOrgs() {
     queryKey: ['user', 'orgs'],
     queryFn: () => apiFetch<OrgSummary[]>('/app/v1/user/orgs'),
     staleTime: 5 * 60_000,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Settings — Profile (includes agent_name)
+// ---------------------------------------------------------------------------
+
+export interface UserProfile {
+  user_id: string;
+  name: string;
+  email: string;
+  role: string | null;
+  timezone: string;
+  agent_name: string;
+}
+
+export function useProfile() {
+  return useQuery({
+    queryKey: ['profile'],
+    queryFn: () => apiFetch<UserProfile>('/app/v1/settings/profile'),
+    staleTime: 60_000,
+  });
+}
+
+export function useUpdateProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: Partial<Pick<UserProfile, 'name' | 'timezone' | 'role' | 'agent_name'>>) =>
+      apiPatch<UserProfile>('/app/v1/settings/profile', patch),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Settings — Channel deactivate
+// ---------------------------------------------------------------------------
+
+export function useDeactivateChannel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ch: string) => apiDelete(`/app/v1/settings/channels/${ch}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['settings', 'channels'] });
+    },
   });
 }

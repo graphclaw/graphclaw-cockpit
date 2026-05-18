@@ -10,7 +10,7 @@
  * Build wave: W18
  * Layer: L5 E2E
  * Owner: frontend-team
- * Last reviewed: 2026-05-06
+ * Last reviewed: 2026-05-18
  *
  * Cases covered:
  *  - List A2A agents from API
@@ -18,7 +18,7 @@
  *  - Rotate key (same key_id, new secret)
  *  - Generate multiple keys
  *  - Delete key and verify removal
- *  - UI generate button fires POST
+ *  - Legacy /settings/a2a route redirects to channels
  */
 
 import { test, expect } from '../fixtures/test';
@@ -96,33 +96,9 @@ test.describe('A2A — Agent Keys', () => {
     expect(stillActive).toBeUndefined();
   });
 
-  test('UI — A2A page loads and shows agent keys', async ({ page }) => {
-    const [res] = await Promise.all([
-      page.waitForResponse('**/app/v1/a2a/agents'),
-      page.goto('/settings/a2a'),
-    ]);
-    expect(res.status()).toBe(200);
-    await expect(page.locator('main')).toBeVisible({ timeout: 10000 });
-  });
-
-  test('UI — generate button fires POST to /a2a/agents', async ({ page }) => {
+  test('UI — legacy /settings/a2a route redirects to channels', async ({ page }) => {
     await page.goto('/settings/a2a');
+    await expect(page).toHaveURL(/\/settings\/channels$/);
     await expect(page.locator('main')).toBeVisible({ timeout: 10000 });
-
-    const generateBtn = page.locator(
-      '[data-testid="generate-a2a-key"], button:has-text("Generate")',
-    );
-    if (!(await generateBtn.count())) return;
-
-    const [postRes] = await Promise.all([
-      page.waitForResponse(
-        (r) => r.url().includes('/app/v1/a2a/agents') && r.request().method() === 'POST',
-      ),
-      generateBtn.first().click(),
-    ]);
-    expect([200, 201]).toContain(postRes.status());
-
-    const body = await postRes.json();
-    if (body.key_id) createdKeyIds.push(body.key_id);
   });
 });

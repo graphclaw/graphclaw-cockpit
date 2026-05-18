@@ -22,6 +22,27 @@ The GraphClaw Cockpit has a complete backend API (with route and test totals tra
 - `docs/archive/build-timeline.md`
 - `docs/redirects.md`
 
+## Active Implementation Task (2026-05-17) 🔄 IN PROGRESS
+
+**Task:** P0 real-time notification and observability alignment with backend.
+
+**Scope started:**
+- Wire cockpit SSE lifecycle into authenticated app runtime.
+- Align SSE event parsing with backend stream contract.
+- Restore live notification invalidation flow for `notification.new` and related event types.
+- Add unit regression coverage for SSE token auth, event invalidation, and onboarding listener behavior.
+
+**Execution order:**
+1. Update `src/lib/sse.ts` to consume named SSE events and invalidate matching query keys.
+2. Connect/disconnect SSE from auth lifecycle.
+3. Validate notification bell/panel updates without route refresh.
+4. Lock in SSE behavior with targeted unit tests under `src/lib/`.
+
+**Planned sub-task (2026-05-18): Chat LLM Runtime Visibility**
+- Add runtime chat metadata endpoint for active LLM provider/model.
+- Show provider/model badge in chat header next to online status.
+- Document current BYOK storage vs runtime wiring behavior to avoid user ambiguity.
+
 ---
 
 ## Software Stack
@@ -715,32 +736,34 @@ New files:
 ---
 
 ### Wave 6 — Settings Panel + Config + Secrets
-**Goal:** All 6 settings sub-pages wired to backend.
+**Goal:** Core settings sub-pages wired to backend (A2A advanced configuration deferred).
 
 **Kickoff notes (2026-05-06):**
 - Wave 6 is now active for planning-first execution.
 - Immediate focus for this pass: clear Wave M follow-up blockers so Wave 6 implementation can proceed on a green baseline.
 - First Wave 6 implementation slice remains pending after build/contract stabilization.
+- A2A simplification decision: advanced A2A configuration is deferred out of current Settings scope.
+- Deferred A2A work is tracked in `docs/planning/a2a-future-release-design-plan.md`.
 
 **Scope:**
-- Settings layout with sub-navigation (6 items + Danger Zone)
+- Settings layout with sub-navigation (5 items + Danger Zone)
 - Channels: activation wizard for WhatsApp/Telegram/Email with status badges
 - LLM Providers: provider/model selection, BYOK key management (masked inputs)
 - Scoring Weights: 7 sliders with auto-normalization + live preview
 - Briefing Schedule: per-org time/channel/style configuration
 - Triggers: follow-up days, interrupt threshold configuration
-- A2A Keys: generate (shown once), rotate, revoke
+- A2A advanced configuration: deferred to future release design plan
 - Config JSON viewer (read/write via PATCH)
 - Secrets management: masked input, test/validate, status indicators
 - React Hook Form + Zod for all forms
 
 **Key files:**
-- `src/features/settings/` (ChannelsPage, LlmPage, ScoringPage, BriefingPage, TriggersPage, A2aPage)
+- `src/features/settings/` (ChannelsPage, LlmPage, ScoringPage, BriefingPage, TriggersPage)
 - `src/features/settings/components/` (WeightSlider, MaskedInput, ChannelWizard)
 
 **API integrations:** ~21 endpoints (settings, config, secrets)
 **Tests:** Form validation, slider normalization, masked input behavior, secret test flow
-**Deliverable:** All settings pages functional — user can configure channels, LLM keys, scoring weights, triggers.
+**Deliverable:** Current-release settings pages functional — user can configure channels, LLM keys, scoring weights, and triggers.
 
 **Checklist:**
 - [x] W6-0: Kickoff notes + tracker activation
@@ -750,7 +773,7 @@ New files:
 - ☐ Scoring Weights page (7 sliders, auto-normalize to 1.0, live task preview)
 - ☐ Briefing Schedule page (time picker, channel select, style dropdown)
 - ☐ Triggers page (follow-up config, threshold sliders)
-- ☐ A2A Keys page (generate/rotate/revoke, one-time display)
+- ☐ A2A Keys page (DEFERRED - tracked in `docs/planning/a2a-future-release-design-plan.md`)
 - ☐ Config JSON viewer/editor
 - ☐ Secrets status page (category list, test buttons)
 - ☐ Form validation with Zod schemas
@@ -828,6 +851,7 @@ New files:
 - ☐ React Flow canvas with dot-grid background
 - ☐ 9 custom node components
 - ☐ Draggable node palette (left sidebar)
+- ☑ W8-HF1: Canvas palette lists authored skills from Intelligence Hub alongside installed skills (de-duplicate by skill_id)
 - ☐ Property inspector panel (right sidebar)
 - ☐ Monaco Editor for system prompts / task templates
 - ☐ Custom DataFlowEdge component
@@ -1558,6 +1582,8 @@ export default defineConfig({
 | 10.3 | Reset defaults | Click "Reset Defaults" | All 7 sliders return to original |
 
 #### TS-11: Settings — A2A Keys
+Status: DEFERRED for current release. Future implementation and test coverage are tracked in `docs/planning/a2a-future-release-design-plan.md`.
+
 | # | Scenario | Steps | Expected |
 |---|----------|-------|----------|
 | 11.1 | Generate key | Click "Generate API Key" | Key shown once, copy button works |

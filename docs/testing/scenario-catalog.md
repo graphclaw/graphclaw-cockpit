@@ -103,7 +103,7 @@
 | TODO | Save channel settings | Fill form → Save | Toast confirms, API PATCH 200 | `e2e/specs/settings/channels.spec.ts` |
 | TODO | Select LLM provider | Choose Anthropic | Model list updates | `e2e/specs/settings/llm-providers.spec.ts` |
 | TODO | Scoring weight normalisation | Drag W1 slider | Other sliders auto-normalize, sum = 1.0 | `e2e/specs/settings/scoring-weights.spec.ts` |
-| TODO | Generate A2A key | Click "Generate API Key" | Key shown once, copy works | `e2e/specs/settings/a2a-keys.spec.ts` |
+| DEFERRED | A2A key management moved out of current Settings scope | See A2A section below | Future implementation only | `docs/planning/a2a-future-release-design-plan.md` |
 
 ---
 
@@ -139,11 +139,17 @@
 
 ## A2A
 
+Status: Deferred for current release.
+
+Design source for future implementation:
+`docs/planning/a2a-future-release-design-plan.md`
+
 | ID | Scenario | Steps | Expected | File |
 |---|---|---|---|---|
-| TODO | A2A key generation | Navigate to A2A, click Generate | Key shown with copy button | `e2e/specs/a2a/a2a-keys.spec.ts` |
-| TODO | A2A key revocation | Click revoke → confirm | Key removed from list, DB deleted | `e2e/specs/a2a/a2a-keys.spec.ts` |
+| DEFERRED-A2A-01 | A2A key lifecycle (future Integrations UX) | Register agent, rotate key, revoke key | Lifecycle operations succeed with audit events | `e2e/a2a/a2a-keys.spec.ts` |
+| DEFERRED-A2A-02 | Orchestrator outbound trigger to external A2A | Delegate from orchestrator to external callback URL | External agent receives callback with correlation metadata | `e2e/a2a/a2a-orchestrator-trigger.spec.ts` |
+| DEFERRED-A2A-03 | Real external-agent roundtrip | Trigger external agent then send task-update back | Inbound update accepted and state pipeline completes | `e2e/a2a/a2a-roundtrip.spec.ts` |
 
 ---
 
-_Last updated: 2026-05-04. IDs prefixed `TODO` need implementation. Run `node scripts/regen-inventory.mjs` to sync from implemented test headers._
+_Last updated: 2026-05-18. IDs prefixed `TODO` need implementation. Deferred entries are future-release scope. Run `node scripts/regen-inventory.mjs` to sync from implemented test headers._

@@ -2,9 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useLocation, Link } from 'react-router';
 import { ThemePicker } from '@/components/common/ThemePicker';
-import { Bell, ChevronRight } from 'lucide-react';
+import { Bell, ChevronRight, X } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth';
 import { OrgSwitcher } from '@/features/auth/OrgSwitcher';
+import { useState, useRef, useEffect } from 'react';
+import {
+  useNotifications,
+  useMarkAllNotificationsRead,
+  useDismissNotification,
+} from '@/features/notifications/hooks/useNotifications';
 
 const ROUTE_LABELS: Record<string, string> = {
   '/': 'Dashboard',
@@ -26,7 +32,6 @@ const ROUTE_LABELS: Record<string, string> = {
   '/settings/scoring': 'Scoring',
   '/settings/briefing': 'Briefing',
   '/settings/triggers': 'Triggers',
-  '/settings/a2a': 'Agent-to-Agent',
 };
 
 function getBreadcrumbs(pathname: string): Array<{ label: string; path?: string }> {
@@ -54,6 +59,30 @@ export function Topbar() {
   const email = useAuthStore((s) => s.email);
   const logout = useAuthStore((s) => s.logout);
   const breadcrumbs = getBreadcrumbs(location.pathname);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const { data: notifData, isLoading: notifLoading } = useNotifications();
+  const markAllRead = useMarkAllNotificationsRead();
+  const dismiss = useDismissNotification();
+  const unreadCount = notifData?.unread_count ?? 0;
+
+  useEffect(() => {
+    if (!notifOpen) return;
+    function onOutsideClick(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    }
+    function onEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') setNotifOpen(false);
+    }
+    document.addEventListener('mousedown', onOutsideClick);
+    document.addEventListener('keydown', onEscape);
+    return () => {
+      document.removeEventListener('mousedown', onOutsideClick);
+      document.removeEventListener('keydown', onEscape);
+    };
+  }, [notifOpen]);
 
   const initials = (() => {
     if (displayName) {
@@ -90,13 +119,102 @@ export function Topbar() {
       <div className="ml-auto flex items-center gap-2">
         <OrgSwitcher />
 
-        <button
-          className="relative flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] text-[var(--text-secondary)] hover:bg-[var(--bg-inset)] hover:text-[var(--text-primary)] transition-colors"
-          aria-label="Notifications"
-        >
-          <Bell size={16} />
-          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[var(--state-blocked)]" />
-        </button>
+        <div ref={notifRef} className="relative">
+          <button
+            data-testid="notification-bell"
+            className="relative flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] text-[var(--text-secondary)] hover:bg-[var(--bg-inset)] hover:text-[var(--text-primary)] transition-colors"
+            aria-label="Notifications"
+            aria-expanded={notifOpen}
+            onClick={() => setNotifOpen((o) => !o)}
+          >
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <span
+                data-testid="notification-badge"
+                className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--state-blocked)] text-[9px] font-bold text-white"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {notifOpen && (
+            <div
+              data-testid="notification-panel"
+              role="dialog"
+              aria-label="Notifications panel"
+              className="absolute right-0 top-full mt-2 w-80 rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg z-50"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-[var(--border-default)] px-4 py-3">
+                <span className="text-sm font-semibold text-[var(--text-primary)]">Notifications</span>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <button
+                      data-testid="notification-mark-all-read"
+                      onClick={() => markAllRead.mutate()}
+                      className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setNotifOpen(false)}
+                    className="flex h-6 w-6 items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
+                    aria-label="Close notifications"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="max-h-80 overflow-y-auto">
+                {notifLoading ? (
+                  <div className="flex flex-col gap-2 px-4 py-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-10 rounded bg-[var(--bg-inset)] animate-pulse" />
+                    ))}
+                  </div>
+                ) : !notifData?.items.length ? (
+                  <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
+                    <Bell size={28} className="text-[var(--text-tertiary)]" />
+                    <p className="text-sm font-medium text-[var(--text-secondary)]">No notifications</p>
+                    <p className="text-xs text-[var(--text-tertiary)]">You're all caught up.</p>
+                  </div>
+                ) : (
+                  notifData.items.map((n) => (
+                    <div
+                      key={n.id}
+                      data-testid="notification-item"
+                      className={`flex items-start gap-3 border-b border-[var(--border-default)] px-4 py-3 last:border-b-0 ${
+                        !n.is_read ? 'bg-[var(--bg-inset)]' : ''
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-[var(--text-primary)]">{n.title}</p>
+                        {n.body && (
+                          <p className="mt-0.5 truncate text-xs text-[var(--text-tertiary)]">{n.body}</p>
+                        )}
+                        <p className="mt-1 text-[10px] text-[var(--text-tertiary)]">
+                          {new Date(n.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                      <button
+                        data-testid="notification-dismiss"
+                        onClick={() => dismiss.mutate(n.id)}
+                        className="shrink-0 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
+                        aria-label="Dismiss notification"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="hidden h-5 w-px bg-[var(--border-default)] md:block" />
 
@@ -105,7 +223,7 @@ export function Topbar() {
         <button
           onClick={logout}
           className="flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-semibold text-white"
-          style={{ background: 'linear-gradient(135deg, #7C3AED, #0EA5E9)' }}
+          style={{ background: 'var(--avatar-gradient-purple)' }}
           title="Sign out"
         >
           {initials}

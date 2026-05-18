@@ -171,7 +171,12 @@ Power users tune the 7-factor scoring weights used by the orchestrating agent:
 
 ---
 
-## 5.7 A2A API Key Management
+## 5.7 A2A API Key Management (Deferred)
+
+Status: Deferred from current Settings scope to simplify current release UX.
+
+Future implementation design, rollout phases, and testing details are tracked in:
+`docs/planning/a2a-future-release-design-plan.md`
 
 For external AI agents registered as ResourceNodes:
 
@@ -182,8 +187,6 @@ For external AI agents registered as ResourceNodes:
 | **Revoke** | Delete key → hash cleared from ResourceNode |
 | **List** | Show all registered agents: key_id, agent_name, registered_at (no plaintext keys) |
 
-**Endpoints:**
-- `GET /app/v1/a2a-keys` — list registered agents
-- `POST /app/v1/a2a-keys` — generate key (201, key shown once)
-- `PUT /app/v1/a2a-keys/{resource_id}/rotate` — rotate
-- `DELETE /app/v1/a2a-keys/{resource_id}` — revoke
+**API alignment note (pending):**
+- Future implementation will align cockpit-facing A2A lifecycle behavior with canonical runtime A2A behavior.
+- Canonical endpoint and auth decisions are pending and documented in the future-release plan.

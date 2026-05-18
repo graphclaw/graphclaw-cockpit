@@ -15,6 +15,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { logoutAndRedirectToLogin, recoverAuthSession } from '@/lib/auth-session';
+import { getA2aAgentsPath, normalizeA2aAgentsResponse } from '@/lib/a2a-api-plane';
 
 // ---------------------------------------------------------------------------
 // Shared fetch helpers (mirrors api-hooks.ts pattern)
@@ -75,6 +76,26 @@ export interface SkillEntry {
 }
 
 type RawSkillEntry = Omit<SkillEntry, 'name'> & { skill_name?: string; name?: string };
+interface RawAuthoredSkillEntry {
+  skill_id: string;
+  name?: string;
+  description?: string;
+  version?: string;
+}
+
+function normalizeInstalledSkill(raw: RawSkillEntry): SkillEntry {
+  return { ...raw, name: raw.skill_name ?? raw.name ?? '' } as SkillEntry;
+}
+
+function normalizeAuthoredSkill(raw: RawAuthoredSkillEntry): SkillEntry {
+  return {
+    skill_id: raw.skill_id,
+    name: raw.name ?? raw.skill_id,
+    description: raw.description,
+    version: raw.version,
+    source: 'authored',
+  };
+}
 
 export interface MCPServerEntry {
   server_id: string;
@@ -92,17 +113,6 @@ export interface MCPTool {
 export interface A2AAgentEntry {
   agent_id: string;
   name: string;
-  endpoint?: string;
-  capabilities?: string[];
-  trust_status?: string;
-}
-
-interface RawA2AAgentEntry {
-  key_id?: string;
-  agent_name?: string;
-  revoked?: boolean;
-  agent_id?: string;
-  name?: string;
   endpoint?: string;
   capabilities?: string[];
   trust_status?: string;
@@ -154,15 +164,28 @@ export interface CreateAgentPayload {
 // Hooks
 // ---------------------------------------------------------------------------
 
-/** List all installed skills from the skill registry. */
+/** List all skills available to canvas (installed + authored, de-duplicated by skill_id). */
 export function useInstalledSkills() {
   return useQuery({
     queryKey: ['canvas', 'skills'],
-    queryFn: () =>
-      apiFetch<RawSkillEntry[]>('/app/v1/skills').then((items) =>
-        items.map((raw) => ({ ...raw, name: raw.skill_name ?? raw.name ?? '' }) as SkillEntry),
-      ),
-    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const [installedRaw, authoredRaw] = await Promise.all([
+        apiFetch<RawSkillEntry[]>('/app/v1/skills').catch(() => []),
+        apiFetch<RawAuthoredSkillEntry[]>('/app/v1/intelligence/skills/authored').catch(() => []),
+      ]);
+
+      const merged = new Map<string, SkillEntry>();
+      for (const skill of installedRaw.map(normalizeInstalledSkill)) {
+        if (skill.skill_id) merged.set(skill.skill_id, skill);
+      }
+      for (const skill of authoredRaw.map(normalizeAuthoredSkill)) {
+        if (skill.skill_id && !merged.has(skill.skill_id)) {
+          merged.set(skill.skill_id, skill);
+        }
+      }
+      return Array.from(merged.values());
+    },
+    staleTime: 0,
   });
 }
 
@@ -171,7 +194,7 @@ export function useMCPServers() {
   return useQuery({
     queryKey: ['mcp-servers'],
     queryFn: () => apiFetch<MCPServerEntry[]>('/app/v1/mcp-servers'),
-    staleTime: 5 * 60_000,
+    staleTime: 0,
   });
 }
 
@@ -190,17 +213,17 @@ export function useA2AAgents() {
   return useQuery({
     queryKey: ['canvas', 'a2a-agents'],
     queryFn: () =>
-      apiFetch<RawA2AAgentEntry[]>('/app/v1/a2a/agents').then((items) =>
-        items
+      apiFetch<unknown>(getA2aAgentsPath()).then((response) =>
+        normalizeA2aAgentsResponse(response)
           .filter((item) => !item.revoked)
           .map(
-            (raw) =>
+            (item) =>
               ({
-                agent_id: raw.agent_id ?? raw.key_id ?? '',
-                name: raw.name ?? raw.agent_name ?? '',
-                endpoint: raw.endpoint,
-                capabilities: raw.capabilities,
-                trust_status: raw.trust_status,
+                agent_id: item.agent_id ?? item.key_id,
+                name: item.agent_name,
+                endpoint: item.endpoint,
+                capabilities: item.capabilities,
+                trust_status: item.trust_status,
               }) as A2AAgentEntry,
           )
           .filter((item) => item.agent_id.length > 0),

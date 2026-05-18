@@ -9,6 +9,8 @@ This index is the entry point for cockpit documentation and follows the same tax
 3. Testing strategy: `docs/testing/test-strategy.md`
 4. Agent monitor implementation docs: `docs/agent/`
 5. Governance policy: `docs/governance/documentation-governance.md`
+6. A2A future-release design plan (pending): `docs/planning/a2a-future-release-design-plan.md`
+7. A2A API-plane alignment spike (in progress): `docs/planning/a2a-api-plane-alignment-spike.md`
 
 ## Taxonomy
 
@@ -22,6 +24,8 @@ This index is the entry point for cockpit documentation and follows the same tax
 
 - Product surfaces and UX contracts: `docs/prd/`
 - Delivery status and wave progression: `docs/planning/build-plan.md`
+- A2A deferred design and rollout plan: `docs/planning/a2a-future-release-design-plan.md`
+- A2A cockpit/backend plane-alignment spike artifacts: `docs/planning/a2a-api-plane-alignment-spike.md`
 - Testing conventions and gates: `docs/testing/test-strategy.md`
 - End-to-end scenario inventory: `e2e/inventory.md`
 - Unit/component test inventory: `src/test/inventory.md`

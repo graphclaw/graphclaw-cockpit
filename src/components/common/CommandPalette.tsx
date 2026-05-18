@@ -30,7 +30,6 @@ const COMMANDS: CommandItem[] = [
   { label: 'Settings — Scoring', path: '/settings/scoring', section: 'Settings' },
   { label: 'Settings — Briefing', path: '/settings/briefing', section: 'Settings' },
   { label: 'Settings — Triggers', path: '/settings/triggers', section: 'Settings' },
-  { label: 'Settings — Agent-to-Agent', path: '/settings/a2a', section: 'Settings' },
 ];
 
 export function CommandPalette() {
@@ -97,7 +96,7 @@ export function CommandPalette() {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[60] bg-black/50"
+        className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
         onClick={() => {
           setOpen(false);
           setQuery('');

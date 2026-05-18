@@ -27,7 +27,7 @@
 | **02** | [Graph Cockpit](02-graph-cockpit.md) | Graph visualization (5 views), visual language, direct node/edge CRUD, agent override, undo/redo |
 | **03** | [Agent Monitor](03-agent-monitor.md) | Agent activity dashboard, action queue, scoring inspector, trigger schedule, skill worker monitor, structured log viewer, session traces, LLM cost monitor |
 | **04** | [Canvas Editor](04-canvas-editor.md) | Agent canvas (drag-and-drop workflow builder), skill form editor, test mode, version control |
-| **05** | [Settings Panel](05-settings-panel.md) | Channel activation, org workspace setup, LLM BYOK, briefing schedule, scoring weights, trigger config, A2A key management |
+| **05** | [Settings Panel](05-settings-panel.md) | Channel activation, org workspace setup, LLM BYOK, briefing schedule, scoring weights, trigger config (A2A advanced config deferred) |
 | **06** | [Skill Marketplace](06-skill-marketplace.md) | Installed skills, remote GitHub registry, install/uninstall, version pinning, quality feedback |
 | **07** | [MCP Registry](07-mcp-registry.md) | MCP server list, pre-built adapters, official registry search, trust tier config, GATED approval workflow, scope visualization |
 | **08** | [Explainability Dashboard](08-explainability.md) | ScoreExplanation panel, score history, decision audit trail, resource reliability, behavioral model transparency |
@@ -51,3 +51,4 @@
 | **Backend PRD** | `graphclaw/docs/graphclaw-requirements.md` | Full backend PRD (v1.3, 8500+ lines) — §23 UX, §25 gaps, §31 security, §32 observability |
 | **Architecture** | `graphclaw/docs/architecture.md` | Backend plugin architecture (DB, Gateway, LLM, Infra layers) |
 | **Build Plan** | `graphclaw/build-plan.md` | 6-phase backend build plan — Phase 4/5 include UI-relevant APIs |
+| **A2A Future Release Design** | `../planning/a2a-future-release-design-plan.md` | Deferred A2A architecture, UX, and testing plan for future implementation |

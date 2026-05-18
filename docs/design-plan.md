@@ -219,6 +219,7 @@ All API work lives in `c:/Users/abhis/Projects/graphclaw/src/graphclaw/api/`.
 ### Phase H: React Implementation 🔲 NOT STARTED
 12-wave React build converting wireframes to production SPA.
 See `build-plan.md` for detailed wave plan and checklists.
+- Deferred A2A implementation plan (pending): `docs/planning/a2a-future-release-design-plan.md`
 - [ ] Wave 1: Scaffold + Design System
 - [ ] Wave 2: API Client + Auth + MSW
 - [ ] Wave 3: App Shell + Navigation
