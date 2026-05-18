@@ -15,7 +15,15 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/app/v1': 'http://localhost:8000',
-      '/auth': 'http://localhost:8000',
+      // Proxy auth API endpoints but NOT /auth/callback — that route belongs to the
+      // React Router SPA. Proxying it would send the OTC redirect to the backend
+      // which expects provider+state params and returns a validation error.
+      '/auth/login': 'http://localhost:8000',
+      '/auth/exchange': 'http://localhost:8000',
+      '/auth/refresh': 'http://localhost:8000',
+      '/auth/logout': 'http://localhost:8000',
+      '/auth/me': 'http://localhost:8000',
+      '/auth/dev-token': 'http://localhost:8000',
       '/openapi.json': 'http://localhost:8000',
     },
   },

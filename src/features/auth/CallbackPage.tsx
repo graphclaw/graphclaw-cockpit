@@ -1,14 +1,20 @@
 ﻿// Copyright 2026 Abhishek Gupta
 // SPDX-License-Identifier: Apache-2.0
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useAuthStore, type UserRole } from '@/stores/auth';
 
 export function CallbackPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const handledRef = useRef(false);
 
   useEffect(() => {
+    // Guard against React StrictMode double-invocation: the OTC is single-use,
+    // so a second exchange call would get 404 and redirect to /login.
+    if (handledRef.current) return;
+    handledRef.current = true;
+
     const code = searchParams.get('code');
 
     // OTC exchange path (normal OAuth flow)
