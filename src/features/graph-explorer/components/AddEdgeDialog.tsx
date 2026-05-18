@@ -109,7 +109,7 @@ export function AddEdgeDialog({ open, nodes, onClose, onEdgeCreated }: Props) {
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/40"
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
         onClick={handleClose}
         data-testid="add-edge-backdrop"
       />

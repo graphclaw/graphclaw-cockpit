@@ -37,7 +37,10 @@ export function LiveTicker() {
         <span className="text-sm font-semibold text-[var(--text-primary)]">Recent Activity</span>
         {isLive && (
           <span className="inline-flex items-center gap-1 rounded-full border border-[var(--state-blocked)] bg-[var(--state-blocked-light)] px-2 py-0.5 text-[11px] font-semibold text-[var(--state-blocked)]" data-testid="agent-monitor-live-badge">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--state-blocked)]" aria-hidden="true" />
+            <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full animate-[pulse-ring_1.4s_ease-out_infinite] rounded-full bg-[var(--state-blocked)] opacity-30" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--state-blocked)]" />
+            </span>
             LIVE
           </span>
         )}

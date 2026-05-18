@@ -41,7 +41,7 @@ export function SkillDetailDrawer({ skill, onClose }: SkillDetailDrawerProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/30"
+        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />

@@ -14,7 +14,8 @@ describe('ChatView', () => {
   it('renders chat interface', () => {
     renderWithProviders(<ChatView />);
     expect(screen.getByTestId('chat-view')).toBeInTheDocument();
-    expect(screen.getByText('GraphClaw Chat')).toBeInTheDocument();
+    // Header shows agent name (defaults to "Main Orchestrator" when no profile agent_name)
+    expect(screen.getByTestId('agent-name-header')).toBeInTheDocument();
   });
 
   it('renders suggestion pills', () => {

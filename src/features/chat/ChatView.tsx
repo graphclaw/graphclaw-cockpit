@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Send, Bot, User, ExternalLink, Zap, ChevronDown, ChevronUp } from 'lucide-react';
-import { useChatMessages, useSendChatMessage } from '@/lib/api-hooks';
+import { useChatMessages, useChatRuntime, useSendChatMessage, useProfile } from '@/lib/api-hooks';
 import { startChatStream } from '@/lib/chat-stream';
 import type { ChatStreamEvent } from '@/lib/chat-stream';
 
@@ -121,7 +121,13 @@ function TimelinePanel({ items }: { items: TimelineItem[] }) {
 
 export function ChatView({ fullpage = false }: ChatViewProps) {
   const { data: remoteMessages = [] } = useChatMessages();
+  const { data: runtimeLlm } = useChatRuntime();
   const sendMessage = useSendChatMessage();
+  const { data: profile } = useProfile();
+  const agentLabel = profile?.agent_name?.trim() || 'Main Orchestrator';
+  const llmLabel = runtimeLlm?.connected
+    ? `${runtimeLlm.provider}/${runtimeLlm.model}`
+    : 'LLM unavailable';
   const messages: ChatMessage[] = remoteMessages.map((m) => ({
     id: m.message_id,
     role: (m.role === 'agent' ? 'assistant' : m.role) as 'user' | 'assistant',
@@ -278,8 +284,16 @@ export function ChatView({ fullpage = false }: ChatViewProps) {
       <div className="flex items-center justify-between border-b border-[var(--border-default)] px-4 py-3">
         <div className="flex items-center gap-2">
           <Bot size={16} className="text-[var(--brand-primary)]" />
-          <span className="text-sm font-semibold text-[var(--text-primary)]">GraphClaw Chat</span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]" data-testid="agent-name-header">{agentLabel}</span>
           <Badge variant="outline">Online</Badge>
+          <Badge
+            variant="outline"
+            className="max-w-[230px] truncate"
+            title={llmLabel}
+            data-testid="chat-llm-runtime"
+          >
+            {llmLabel}
+          </Badge>
         </div>
         <button
           onClick={() => setStreamMode((m) => !m)}
@@ -304,7 +318,10 @@ export function ChatView({ fullpage = false }: ChatViewProps) {
             className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {msg.role === 'assistant' && (
-              <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)] text-white">
+              <div
+                className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white"
+                style={{ background: 'var(--avatar-gradient-brand)' }}
+              >
                 <Bot size={14} />
               </div>
             )}
@@ -335,8 +352,11 @@ export function ChatView({ fullpage = false }: ChatViewProps) {
               </span>
             </div>
             {msg.role === 'user' && (
-              <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--bg-inset)]">
-                <User size={14} className="text-[var(--text-secondary)]" />
+              <div
+                className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white"
+                style={{ background: 'var(--avatar-gradient-purple)' }}
+              >
+                <User size={14} className="text-white" />
               </div>
             )}
           </div>
@@ -345,7 +365,10 @@ export function ChatView({ fullpage = false }: ChatViewProps) {
         {/* Live streaming delta bubble */}
         {isStreaming && streamingDelta && (
           <div className="flex gap-2 justify-start" data-testid="streaming-delta">
-            <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)] text-white">
+            <div
+              className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white"
+              style={{ background: 'var(--avatar-gradient-brand)' }}
+            >
               <Bot size={14} />
             </div>
             <div className="max-w-[80%] rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)]">
@@ -359,14 +382,21 @@ export function ChatView({ fullpage = false }: ChatViewProps) {
 
         {isTyping && !streamingDelta && (
           <div className="flex gap-2" data-testid="typing-indicator">
-            <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)] text-white">
+            <div
+              className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white"
+              style={{ background: 'var(--avatar-gradient-brand)' }}
+            >
               <Bot size={14} />
             </div>
             <div className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-2">
-              <div className="flex gap-1">
-                <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--text-tertiary)]" />
-                <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--text-tertiary)] [animation-delay:0.1s]" />
-                <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--text-tertiary)] [animation-delay:0.2s]" />
+              <div className="flex gap-1 items-center">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="h-1.5 w-1.5 rounded-full bg-[var(--text-tertiary)]"
+                    style={{ animation: `dot-bounce 1.4s ease-in-out ${i * 0.16}s infinite` }}
+                  />
+                ))}
               </div>
             </div>
           </div>

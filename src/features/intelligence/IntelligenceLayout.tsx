@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { NavLink, Outlet, Navigate, useMatch } from 'react-router';
 import { User, Brain, BookOpen, Tags, Wrench, ShieldCheck } from 'lucide-react';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useIntelligenceAgents } from '@/lib/api-hooks';
 import { useAuthStore } from '@/stores/auth';
 
@@ -25,13 +25,23 @@ export function IntelligenceLayout() {
   const isRoot = useMatch('/intelligence');
   const userId = useAuthStore((s) => s.userId) ?? 'test-user';
   const { data: agents = [] } = useIntelligenceAgents();
-  const [selectedId, setSelectedId] = useState<string>(userId);
+  const [selectedId, setSelectedId] = useState<string>('');
 
   // Build agent options from Intelligence Hub MinIO scan
-  const agentOptions =
-    agents.length > 0
-      ? agents.map((a) => ({ id: a.agent_id, name: `${a.name}${a.source === 'system' ? ' (system)' : ''}` }))
-      : [{ id: userId, name: `My Agent (${userId})` }];
+  const agentOptions = useMemo(
+    () =>
+      agents.length > 0
+        ? agents.map((a) => ({ id: a.agent_id, name: `${a.name}${a.source === 'system' ? ' (system)' : ''}` }))
+        : [{ id: userId, name: `My Agent (${userId})` }],
+    [agents, userId],
+  );
+
+  useEffect(() => {
+    const hasSelection = agentOptions.some((a) => a.id === selectedId);
+    if (!hasSelection) {
+      setSelectedId(agentOptions[0]?.id ?? userId);
+    }
+  }, [agentOptions, selectedId, userId]);
 
   if (isRoot) {
     return <Navigate to="profile" replace />;

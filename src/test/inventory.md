@@ -2,6 +2,7 @@
 
 | ID | Scenario (1 line) | File |
 |---|---|---|
+| GC-K-API-W12-001 | Every MSW handler in src/test/handlers. | [contract/handlers.contract.test.ts](contract/handlers.contract.test.ts) |
 | GC-S-SCO-W50-001 | Scoring panel should show ranked action-queue tasks, allow sorting, and expos... | [../features/agent-monitor/components/ScoringTaskTable.test.tsx](../features/agent-monitor/components/ScoringTaskTable.test.tsx) |
 | GC-S-SCO-W50-002 | The scoring side panel should stay empty until a task is selected, then load ... | [../features/agent-monitor/components/ScoreFactorBreakdown.test.tsx](../features/agent-monitor/components/ScoreFactorBreakdown.test.tsx) |
 | GC-S-SCO-W50-003 | The what-if modal should expose all seven controls and send a debounced `/sco... | [../features/agent-monitor/components/WhatIfSimulator.test.tsx](../features/agent-monitor/components/WhatIfSimulator.test.tsx) |
@@ -14,7 +15,8 @@
 | GC-S-TSK-W50-014 | Scheduling panel trigger table should normalize trigger payloads, show active... | [../features/agent-monitor/components/SchedulingTriggerTable.test.tsx](../features/agent-monitor/components/SchedulingTriggerTable.test.tsx) |
 | GC-S-WRK-W50-001 | Agents panel should show pool KPI cards from pool status data and gracefully ... | [../features/agent-monitor/components/AgentsPoolKpis.test.tsx](../features/agent-monitor/components/AgentsPoolKpis.test.tsx) |
 | GC-U-SKL-W50-001 | Failed skill jobs should show concise human-readable error text in the skills... | [../features/agent-monitor/lib/formatSkillError.test.ts](../features/agent-monitor/lib/formatSkillError.test.ts) |
-| GC-K-API-W12-001 | Every MSW handler in src/test/handlers.ts should map to a real path+method in... | [contract/handlers.contract.test.ts](contract/handlers.contract.test.ts) |
+| GC-U-TSK-W09-001 | The notifications hooks should load inbox data and invalidate the shared noti... | [../features/notifications/hooks/useNotifications.test.tsx](../features/notifications/hooks/useNotifications.test.tsx) |
+| GC-U-TSK-W09-002 | The SSE client should append auth token query params, invalidate mapped TanSt... | [../lib/sse.test.ts](../lib/sse.test.ts) |
 | TODO | (no header) ThemePicker.test.tsx | [../components/common/ThemePicker.test.tsx](../components/common/ThemePicker.test.tsx) |
 | TODO | (no header) Sidebar.test.tsx | [../components/layout/Sidebar.test.tsx](../components/layout/Sidebar.test.tsx) |
 | TODO | (no header) Topbar.test.tsx | [../components/layout/Topbar.test.tsx](../components/layout/Topbar.test.tsx) |
@@ -63,4 +65,4 @@
 | TODO | (no header) theme.test.ts | [../stores/theme.test.ts](../stores/theme.test.ts) |
 | TODO | (no header) timeline.test.ts | [../stores/timeline.test.ts](../stores/timeline.test.ts) |
 
-_Last regenerated: 2026-05-05 by `scripts/regen-inventory.mjs`._
+_Last regenerated: 2026-05-17 by `scripts/regen-inventory.mjs`._

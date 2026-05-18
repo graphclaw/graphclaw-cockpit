@@ -11,6 +11,38 @@ type AuthFixtures = {
   api: APIRequestContext;
 };
 
+async function fetchDevTokenWithRetry(maxAttempts = 3): Promise<string> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const ctx = await base.request.newContext({ baseURL: API_BASE_URL });
+    try {
+      const res = await ctx.post('/auth/dev-token', {
+        data: { user_id: TEST_USER_ID },
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok()) {
+        throw new Error(`dev-token failed with status ${res.status()}`);
+      }
+      const body = (await res.json()) as { access_token: string };
+      if (!body.access_token) {
+        throw new Error('dev-token response missing access_token');
+      }
+      return body.access_token;
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxAttempts) {
+        await new Promise<void>((resolve) => setTimeout(resolve, 750));
+      }
+    } finally {
+      await ctx.dispose();
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Failed to obtain dev token');
+}
+
 /**
  * Extended fixtures:
  *  - page: authenticated browser page (localStorage token injected)
@@ -24,14 +56,8 @@ export const test = base.extend<AuthFixtures>({
   // across 76 sequential tests (without this, burst calls after test 45+ hit 429).
   token: async ({}, use) => {
     await new Promise<void>((resolve) => setTimeout(resolve, 1000));
-    const ctx = await base.request.newContext({ baseURL: API_BASE_URL });
-    const res = await ctx.post('/auth/dev-token', {
-      data: { user_id: TEST_USER_ID },
-      headers: { 'Content-Type': 'application/json' },
-    });
-    const body = (await res.json()) as { access_token: string };
-    await ctx.dispose();
-    await use(body.access_token);
+    const token = await fetchDevTokenWithRetry();
+    await use(token);
   },
 
   // APIRequestContext pre-seeded with Bearer token for direct backend calls

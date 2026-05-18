@@ -90,7 +90,7 @@ export function AddNodeDialog({ open, onClose, onNodeCreated }: Props) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/40"
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
         onClick={handleClose}
         data-testid="add-node-backdrop"
       />

@@ -266,7 +266,7 @@ function WiringPanel({
       {/* Skills */}
       <WiringSection title="Skills" count={wiredSkills.length}>
         {(skills ?? []).length === 0 ? (
-          <p className="text-[11px] text-[var(--text-muted)] italic">No skills installed.</p>
+          <p className="text-[11px] text-[var(--text-muted)] italic">No skills available.</p>
         ) : (
           (skills ?? []).map((skill) => (
             <WiringCheckItem

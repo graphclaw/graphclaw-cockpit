@@ -142,6 +142,164 @@ test.describe('Intelligence Hub', () => {
     }
   });
 
+  // GC-E-INT-W10-001
+  test('semantic memory — create topic with description → index entry stored', async ({ page, api }) => {
+    const slug = `e2e-test-${Date.now()}`;
+    const description = 'E2E test topic description';
+    const content = `# ${slug}\n\nTest content for E2E.`;
+
+    await page.goto('/intelligence/semantic-memory');
+    await expect(page.locator('[data-testid="semantic-topics"]').or(page.locator('text=No topics yet.'))).toBeVisible({ timeout: 10000 });
+
+    // Read the agent ID the UI is actually using — avoid TEST_USER_ID mismatch
+    const agentId = await page.locator('[data-testid="agent-selector"]').inputValue();
+
+    // Create new topic via the dedicated + button
+    await page.locator('[data-testid="add-topic-btn"]').click();
+    await page.locator('[data-testid="new-topic-input"]').fill(slug);
+    await page.locator('[data-testid="new-topic-description-input"]').fill(description);
+    await page.keyboard.press('Enter');
+
+    // Fill content and save
+    await expect(page.locator('[data-testid="semantic-editor"]')).toBeVisible({ timeout: 5000 });
+    await page.locator('[data-testid="semantic-editor"]').fill(content);
+    await page.locator('[data-testid="topic-description-editor"]').fill(description);
+
+    const [putRes] = await Promise.all([
+      page.waitForResponse((r) => r.url().includes(`/memory/semantic/${slug}`) && r.request().method() === 'PUT'),
+      page.getByRole('button', { name: /save/i }).click(),
+    ]);
+    expect(putRes.status()).toBe(200);
+
+    // Verify index entry using the same agentId the UI used
+    const indexRes = await api.get(`/app/v1/intelligence/agents/${agentId}/memory/semantic/_index`);
+    expect(indexRes.status()).toBe(200);
+    const indexData = await indexRes.json() as { topics: Array<{ name: string; description: string }> };
+    const entry = indexData.topics.find((t) => t.name === slug);
+    expect(entry).toBeDefined();
+    expect(entry?.description).toBe(description);
+
+    // Cleanup
+    await api.delete(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${slug}`);
+  });
+
+  // GC-E-INT-W10-002
+  test('semantic memory — index descriptions visible in topic list', async ({ page, api }) => {
+    const slug = `e2e-desc-${Date.now()}`;
+    const description = 'Visible description for E2E test';
+
+    // Navigate first to discover which agent the UI defaults to
+    await page.goto('/intelligence/semantic-memory');
+    await expect(page.locator('[data-testid="agent-selector"]')).toBeVisible({ timeout: 10000 });
+    const agentId = await page.locator('[data-testid="agent-selector"]').inputValue();
+
+    // Seed via API for the correct agent
+    await api.put(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${slug}`, {
+      data: { content: `# ${slug}\n\nContent.`, description },
+    });
+
+    // Reload and wait for both the topics list and the index (description comes from index)
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes('/memory/semantic/_index') && r.status() < 400),
+      page.reload(),
+    ]);
+
+    await expect(page.locator('[data-testid="semantic-topics"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator(`[data-testid="topic-description-${slug}"]`)).toBeVisible({ timeout: 10000 });
+    await expect(page.locator(`[data-testid="topic-description-${slug}"]`)).toHaveText(description);
+
+    // Cleanup
+    await api.delete(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${slug}`);
+  });
+
+  // GC-E-INT-W10-003
+  test('semantic memory — rename topic → old file deleted, new file exists', async ({ page, api }) => {
+    const oldSlug = `e2e-rename-src-${Date.now()}`;
+    const newSlug = `e2e-rename-dst-${Date.now()}`;
+
+    // Navigate first to discover which agent the UI defaults to
+    await page.goto('/intelligence/semantic-memory');
+    await expect(page.locator('[data-testid="agent-selector"]')).toBeVisible({ timeout: 10000 });
+    const agentId = await page.locator('[data-testid="agent-selector"]').inputValue();
+
+    // Seed via API for the correct agent
+    await api.put(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${oldSlug}`, {
+      data: { content: `# Original`, description: 'Rename source' },
+    });
+
+    // Reload and wait for the seeded topic to appear
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes('/memory/semantic') && !r.url().includes('_index') && r.status() < 400),
+      page.reload(),
+    ]);
+    await expect(page.locator(`text=${oldSlug}`)).toBeVisible({ timeout: 10000 });
+
+    // Hover the topic item — rename button is hidden until group-hover, use force to click it
+    await page.locator('[data-testid="semantic-topics"]').locator(`text=${oldSlug}`).first().hover();
+    await page.locator(`[data-testid="rename-btn-${oldSlug}"]`).click({ force: true });
+
+    // Type new name and confirm
+    await page.locator(`[data-testid="rename-input-${oldSlug}"]`).fill(newSlug);
+    const [renameRes] = await Promise.all([
+      page.waitForResponse((r) => r.url().includes('/rename') && r.request().method() === 'POST'),
+      page.locator(`[data-testid="rename-confirm-${oldSlug}"]`).click(),
+    ]);
+    expect(renameRes.status()).toBe(200);
+
+    // Old file should 404, new file should 200
+    const oldRes = await api.get(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${oldSlug}`);
+    expect(oldRes.status()).toBe(404);
+    const newRes = await api.get(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${newSlug}`);
+    expect(newRes.status()).toBe(200);
+
+    // Index should show new name
+    const indexRes = await api.get(`/app/v1/intelligence/agents/${agentId}/memory/semantic/_index`);
+    const indexData = await indexRes.json() as { topics: Array<{ name: string }> };
+    const names = indexData.topics.map((t) => t.name);
+    expect(names).not.toContain(oldSlug);
+    expect(names).toContain(newSlug);
+
+    // Cleanup
+    await api.delete(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${newSlug}`);
+  });
+
+  // GC-E-INT-W10-004
+  test('semantic memory — delete topic → removed from index', async ({ page, api }) => {
+    const slug = `e2e-del-${Date.now()}`;
+
+    // Navigate first to discover which agent the UI defaults to
+    await page.goto('/intelligence/semantic-memory');
+    await expect(page.locator('[data-testid="agent-selector"]')).toBeVisible({ timeout: 10000 });
+    const agentId = await page.locator('[data-testid="agent-selector"]').inputValue();
+
+    // Seed via API for the correct agent
+    await api.put(`/app/v1/intelligence/agents/${agentId}/memory/semantic/${slug}`, {
+      data: { content: `# Delete Me`, description: 'Will be deleted' },
+    });
+
+    // Reload and wait for the seeded topic to appear
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes('/memory/semantic') && !r.url().includes('_index') && r.status() < 400),
+      page.reload(),
+    ]);
+    await expect(page.locator(`text=${slug}`)).toBeVisible({ timeout: 10000 });
+
+    // Select and delete
+    await page.locator(`text=${slug}`).click();
+    await page.getByRole('button', { name: /delete file/i }).click();
+    const [deleteRes] = await Promise.all([
+      page.waitForResponse((r) => r.url().includes(`/memory/semantic/${slug}`) && r.request().method() === 'DELETE'),
+      page.getByRole('button', { name: /^delete$/i }).click(),
+    ]);
+    expect(deleteRes.status()).toBe(204);
+
+    // Index should no longer contain the topic
+    const indexRes = await api.get(`/app/v1/intelligence/agents/${agentId}/memory/semantic/_index`);
+    const indexData = await indexRes.json() as { topics: Array<{ name: string }> };
+    const names = indexData.topics.map((t) => t.name);
+    expect(names).not.toContain(slug);
+  });
+
   test('intelligence hub nav tabs navigate correctly', async ({ page }) => {
     await page.goto('/intelligence/profile');
     await expect(page.locator('[data-testid="profile-editor"]')).toBeVisible({ timeout: 10000 });

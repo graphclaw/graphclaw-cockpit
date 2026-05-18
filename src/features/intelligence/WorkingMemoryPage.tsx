@@ -198,7 +198,7 @@ export function WorkingMemoryPage() {
 
       {/* Compact dialog */}
       {showCompact && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 shadow-lg">
             <h3 className="mb-1 text-sm font-semibold text-[var(--text-primary)]">
               Compact Working Memory

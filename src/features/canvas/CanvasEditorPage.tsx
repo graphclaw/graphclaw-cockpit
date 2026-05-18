@@ -21,6 +21,7 @@ import {
   addEdge,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   type Connection,
   type Node,
   type Edge,
@@ -29,7 +30,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import dagre from '@dagrejs/dagre';
-import { NodePalette, type PaletteAgent } from './NodePalette';
+import { NodePalette, TOOL_SETS, type PaletteAgent } from './NodePalette';
 import { CanvasToolbar } from './CanvasToolbar';
 import { AddAgentDialog } from './AddAgentDialog';
 import { PropertyInspector } from './PropertyInspector';
@@ -50,6 +51,10 @@ import {
   useAgentConfig,
   useSaveAgentConfig,
   useA2AAgents,
+  useInstalledSkills,
+  useMCPServers,
+  type SkillEntry,
+  type MCPServerEntry,
   type AgentConfig,
 } from './hooks/useCanvasApi';
 import { useIntelligenceAgents, useAgents } from '@/lib/api-hooks';
@@ -75,11 +80,137 @@ const edgeTypes = {
   a2a_link: A2ALinkEdge,
 };
 
+interface AgentSummaryLike {
+  agent_id: string;
+  name: string;
+  source?: string;
+}
+
+interface SubAgentLike {
+  agent_id: string;
+  name: string;
+}
+
+interface RestoreRefs {
+  agentsData?: AgentSummaryLike[];
+  subAgentsData?: SubAgentLike[];
+  a2aAgents?: Array<{
+    agent_id: string;
+    name: string;
+    endpoint?: string;
+    capabilities?: string[];
+    trust_status?: string;
+  }>;
+  skills?: SkillEntry[];
+  mcpServers?: MCPServerEntry[];
+}
+
+export function restoreNode(
+  id: string,
+  position: { x: number; y: number },
+  refs: RestoreRefs,
+): Node | null {
+  if (id.startsWith('skill-')) {
+    const skillId = id.slice(6);
+    const skill = refs.skills?.find((s) => s.skill_id === skillId);
+    if (!skill) return null;
+    return {
+      id,
+      type: 'skill',
+      position,
+      data: {
+        label: skill.name,
+        skillId: skill.skill_id,
+        description: skill.description,
+      },
+    };
+  }
+
+  if (id.startsWith('mcp-')) {
+    const serverId = id.slice(4);
+    const server = refs.mcpServers?.find((s) => s.server_id === serverId);
+    if (!server) return null;
+    return {
+      id,
+      type: 'mcp_server',
+      position,
+      data: {
+        label: server.name,
+        serverId: server.server_id,
+      },
+    };
+  }
+
+  if (id.startsWith('toolset-')) {
+    const toolSetId = id.slice(8);
+    const toolSet = TOOL_SETS.find((t) => t.id === toolSetId);
+    if (!toolSet) return null;
+    return {
+      id,
+      type: 'tool_set',
+      position,
+      data: {
+        label: toolSet.name,
+        toolSetId: toolSet.id,
+      },
+    };
+  }
+
+  if (id.startsWith('a2a-')) {
+    const agentId = id.slice(4);
+    const a2a = refs.a2aAgents?.find((a) => a.agent_id === agentId);
+    if (!a2a) return null;
+    return {
+      id,
+      type: 'external_agent',
+      position,
+      data: {
+        label: a2a.name,
+        agentId: a2a.agent_id,
+        endpoint: a2a.endpoint,
+        capabilities: a2a.capabilities,
+        trustStatus: a2a.trust_status ?? 'ACTIVE',
+      },
+      deletable: true,
+    };
+  }
+
+  const systemAgent = refs.agentsData?.find((a) => a.agent_id === id && a.source === 'system');
+  if (systemAgent) {
+    return {
+      id,
+      type: 'system_agent',
+      position,
+      data: {
+        label: systemAgent.name,
+        agentId: id,
+      },
+      deletable: false,
+    };
+  }
+
+  const subAgent = refs.subAgentsData?.find((a) => a.agent_id === id);
+  if (subAgent) {
+    return {
+      id,
+      type: 'sub_agent',
+      position,
+      data: {
+        label: subAgent.name,
+        agentId: id,
+      },
+    };
+  }
+
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Inner component (needs ReactFlowProvider)
 // ---------------------------------------------------------------------------
 
 function CanvasEditorInner() {
+  const { screenToFlowPosition, fitView, getViewport, setViewport, zoomTo } = useReactFlow();
   const userId = useAuthStore((s) => s.userId) ?? '';
   const { undoStack, redoStack, undo, redo, isDirty, isSaving, markDirty, markSaved, setSaving, pushSnapshot } =
     useCanvasStore();
@@ -110,6 +241,8 @@ function CanvasEditorInner() {
   const { data: subAgentsData } = useAgents();
   const { data: layoutData } = useCanvasLayout();
   const { data: a2aAgents } = useA2AAgents();
+  const { data: skills, isLoading: skillsLoading } = useInstalledSkills();
+  const { data: mcpServers, isLoading: mcpLoading } = useMCPServers();
   const saveLayout = useSaveCanvasLayout();
 
   // Load orchestrator config for wiring summary
@@ -128,26 +261,21 @@ function CanvasEditorInner() {
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    const existingPositions: Record<string, { x: number; y: number }> = {};
-    if (layoutData?.nodes) {
-      for (const n of layoutData.nodes) {
-        existingPositions[n.id] = n.position;
-      }
+    const savedPositions: Record<string, { x: number; y: number }> = {};
+    for (const node of layoutData?.nodes ?? []) {
+      savedPositions[node.id] = node.position;
     }
 
     const newNodes: Node[] = [];
-    let subAgentY = 300;
 
     if (userId) {
       const orchestratorName =
         agentsData?.find((a) => a.agent_id === userId)?.name ??
         'Orchestrator';
-
-      // Orchestrator node is present when the authenticated user id is known.
       newNodes.push({
         id: userId,
         type: 'orchestrator',
-        position: existingPositions[userId] ?? { x: 400, y: 80 },
+        position: savedPositions[userId] ?? { x: 400, y: 200 },
         data: {
           label: orchestratorName,
           agentId: userId,
@@ -161,70 +289,41 @@ function CanvasEditorInner() {
       });
     }
 
-    // System agent nodes (read-only)
-    for (const agent of agentsData ?? []) {
-      if (agent.source !== 'system') continue;
-      newNodes.push({
-        id: agent.agent_id,
-        type: 'system_agent',
-        position: existingPositions[agent.agent_id] ?? { x: 700, y: 80 },
-        data: { label: agent.name, agentId: agent.agent_id },
-        deletable: false,
+    for (const savedNode of layoutData?.nodes ?? []) {
+      if (savedNode.id === userId) continue;
+      const restored = restoreNode(savedNode.id, savedNode.position, {
+        agentsData,
+        subAgentsData,
+        a2aAgents,
+        skills,
+        mcpServers,
       });
-    }
-
-    // User sub-agent nodes from /app/v1/agents
-    for (const agent of subAgentsData ?? []) {
-      if (userId && agent.agent_id === userId) continue;
-      newNodes.push({
-        id: agent.agent_id,
-        type: 'sub_agent',
-        position: existingPositions[agent.agent_id] ?? { x: 100 + (subAgentY % 600), y: subAgentY },
-        data: {
-          label: agent.name,
-          agentId: agent.agent_id,
-        },
-      });
-      subAgentY += 180;
-    }
-
-    // A2A external agents
-    let a2aX = 800;
-    for (const a2a of a2aAgents ?? []) {
-      const nodeId = `a2a-${a2a.agent_id}`;
-      newNodes.push({
-        id: nodeId,
-        type: 'external_agent',
-        position: existingPositions[nodeId] ?? { x: a2aX, y: 80 },
-        data: {
-          label: a2a.name,
-          agentId: a2a.agent_id,
-          endpoint: a2a.endpoint,
-          capabilities: a2a.capabilities,
-          trustStatus: a2a.trust_status ?? 'ACTIVE',
-        },
-        deletable: true,
-      });
-      a2aX += 260;
+      if (restored) newNodes.push(restored);
     }
 
     setNodes(newNodes);
-  }, [agentsData, subAgentsData, a2aAgents, layoutData, orchestratorConfig, userId, setNodes]);
+  }, [agentsData, subAgentsData, a2aAgents, layoutData, orchestratorConfig, userId, skills, mcpServers, setNodes]);
 
   // Build delegation edges from orchestrator sub_agents config
   useEffect(() => {
     if (!orchestratorConfig?.sub_agents || !userId) return;
-    const delegationEdges: Edge[] = orchestratorConfig.sub_agents.map((subId) => ({
-      id: `delegation-${userId}-${subId}`,
-      source: userId,
-      target: subId,
-      type: 'delegation',
-      sourceHandle: 'bottom-delegation',
-      targetHandle: 'top-delegation',
-      animated: true,
-    }));
-    setEdges(delegationEdges);
-  }, [orchestratorConfig, userId, setEdges]);
+    const canvasIds = new Set(nodes.map((n) => n.id));
+    const delegationEdges: Edge[] = orchestratorConfig.sub_agents
+      .filter((subId) => canvasIds.has(subId))
+      .map((subId) => ({
+        id: `delegation-${userId}-${subId}`,
+        source: userId,
+        target: subId,
+        type: 'delegation',
+        sourceHandle: 'bottom-delegation',
+        targetHandle: 'top-delegation',
+        animated: true,
+      }));
+    setEdges((prev) => [
+      ...prev.filter((edge) => edge.type !== 'delegation'),
+      ...delegationEdges,
+    ]);
+  }, [orchestratorConfig, userId, nodes, setEdges]);
 
   // ---------------------------------------------------------------------------
   // Canvas palette agent list
@@ -269,18 +368,147 @@ function CanvasEditorInner() {
   // Build A2A link edges from orchestrator to external agents
   useEffect(() => {
     if (!a2aAgents || a2aAgents.length === 0) return;
+    const canvasIds = new Set(nodes.map((n) => n.id));
     setEdges((prev) => {
       const nonA2A = prev.filter((e) => e.type !== 'a2a_link');
-      const a2aEdges = a2aAgents.map((a2a) => ({
-        id: `a2a-link-${userId}-${a2a.agent_id}`,
-        source: userId,
-        target: `a2a-${a2a.agent_id}`,
-        type: 'a2a_link' as const,
-        animated: true,
-      }));
+      const a2aEdges = a2aAgents
+        .filter((a2a) => canvasIds.has(`a2a-${a2a.agent_id}`))
+        .map((a2a) => ({
+          id: `a2a-link-${userId}-${a2a.agent_id}`,
+          source: userId,
+          target: `a2a-${a2a.agent_id}`,
+          type: 'a2a_link' as const,
+          animated: true,
+        }));
       return [...nonA2A, ...a2aEdges];
     });
-  }, [a2aAgents, userId, setEdges]);
+  }, [a2aAgents, userId, nodes, setEdges]);
+
+  useEffect(() => {
+    const handle = window.setTimeout(async () => {
+      if (nodes.length > 0) {
+        await fitView({ maxZoom: 0.85, padding: 0.2, duration: 0 });
+      }
+      requestAnimationFrame(() => {
+        void (async () => {
+          const viewport = getViewport();
+          if (viewport.zoom !== 0.85) {
+            await setViewport({ x: viewport.x, y: viewport.y, zoom: 0.85 }, { duration: 0 });
+            await zoomTo(0.85, { duration: 0 });
+          }
+        })();
+      });
+    }, 0);
+    return () => window.clearTimeout(handle);
+  }, [nodes.length, fitView, getViewport, setViewport, zoomTo]);
+
+  const placeAgent = useCallback(
+    (agentId: string) => {
+      const paletteAgent = paletteAgents.find((a) => a.agent_id === agentId);
+      if (!paletteAgent) return;
+
+      const nodeId = paletteAgent.type === 'a2a' ? `a2a-${agentId}` : agentId;
+      const existing = nodes.find((n) => n.id === nodeId);
+      if (existing) {
+        setSelectedAgentId(nodeId);
+        setSelectedNodeType(existing.type ?? null);
+        return;
+      }
+
+      const typeMap = {
+        orchestrator: 'orchestrator',
+        sub_agent: 'sub_agent',
+        system: 'system_agent',
+        a2a: 'external_agent',
+      } as const;
+      const nodeType = typeMap[paletteAgent.type];
+      const a2aEntry = a2aAgents?.find((a) => a.agent_id === agentId);
+      const nodeData =
+        paletteAgent.type === 'a2a' && a2aEntry
+          ? {
+              label: a2aEntry.name,
+              agentId,
+              endpoint: a2aEntry.endpoint,
+              capabilities: a2aEntry.capabilities,
+              trustStatus: a2aEntry.trust_status ?? 'ACTIVE',
+            }
+          : { label: paletteAgent.name, agentId };
+
+      const position = {
+        x: 200 + (nodes.length % 3) * 300,
+        y: 300 + Math.floor(nodes.length / 3) * 200,
+      };
+
+      pushSnapshot({ nodes: [...nodesRef.current], edges: [...edgesRef.current] });
+      setNodes((current) => [
+        ...current,
+        {
+          id: nodeId,
+          type: nodeType,
+          position,
+          data: nodeData,
+          deletable: paletteAgent.type !== 'orchestrator' && paletteAgent.type !== 'system',
+        },
+      ]);
+      setSelectedAgentId(nodeId);
+      setSelectedNodeType(nodeType);
+
+      if (
+        paletteAgent.type === 'sub_agent' &&
+        orchestratorConfig?.sub_agents?.includes(agentId)
+      ) {
+        setEdges((current) => [
+          ...current,
+          {
+            id: `delegation-${userId}-${agentId}`,
+            source: userId,
+            target: agentId,
+            type: 'delegation',
+            sourceHandle: 'bottom-delegation',
+            targetHandle: 'top-delegation',
+            animated: true,
+          },
+        ]);
+      }
+
+      markDirty();
+    },
+    [paletteAgents, nodes, a2aAgents, orchestratorConfig, userId, setNodes, setEdges, markDirty, pushSnapshot],
+  );
+
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      const raw = event.dataTransfer.getData('application/graphclaw-node');
+      if (!raw) return;
+
+      const { type, data } = JSON.parse(raw) as {
+        type: string;
+        data: Record<string, unknown>;
+      };
+
+      const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+
+      let id: string;
+      if (type === 'skill') id = `skill-${data.skillId as string}`;
+      else if (type === 'mcp_server') id = `mcp-${data.serverId as string}`;
+      else if (type === 'tool_set') id = `toolset-${data.toolSetId as string}`;
+      else if (type === 'external_agent') id = `a2a-${data.agentId as string}`;
+      else id = data.agentId as string;
+
+      if (nodes.some((node) => node.id === id)) return;
+
+      pushSnapshot({ nodes: [...nodesRef.current], edges: [...edgesRef.current] });
+      setNodes((current) => [...current, { id, type, position, data }]);
+      markDirty();
+    },
+    [nodes, screenToFlowPosition, setNodes, markDirty, pushSnapshot],
+  );
 
   // ---------------------------------------------------------------------------
   // Undo / Redo handlers (F30)
@@ -534,7 +762,11 @@ function CanvasEditorInner() {
         wiredSkills={paletteConfig?.skills ?? []}
         wiredMcpServers={paletteConfig?.mcp_servers ?? []}
         wiredToolSets={paletteConfig?.tool_sets ?? []}
-        onAgentClick={setSelectedAgentId}
+        skills={skills}
+        skillsLoading={skillsLoading}
+        mcpServers={mcpServers}
+        mcpLoading={mcpLoading}
+        onAgentClick={placeAgent}
         onAddAgent={() => setAddAgentOpen(true)}
       />
 
@@ -561,6 +793,8 @@ function CanvasEditorInner() {
         {/* React Flow Canvas */}
         <div
           className="flex-1 rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-inset)]"
+          onDragOver={onDragOver}
+          onDrop={onDrop}
           data-testid="canvas-editor"
         >
           <ReactFlow
@@ -599,8 +833,9 @@ function CanvasEditorInner() {
             panOnDrag={toolbarMode === 'pan'}
             selectionOnDrag={toolbarMode === 'select'}
             fitView
+            fitViewOptions={{ maxZoom: 0.85 }}
             minZoom={0.3}
-            maxZoom={3}
+            maxZoom={0.85}
           >
             <Background variant={BackgroundVariant.Dots} gap={24} size={1} />
             <Controls />

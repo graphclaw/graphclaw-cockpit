@@ -132,6 +132,8 @@ export function useWorkforceData() {
   return {
     workforce,
     isLoading: membersQuery.isLoading || agentsQuery.isLoading || tasksQuery.isLoading,
-    isError: membersQuery.isError || agentsQuery.isError || tasksQuery.isError,
+    // Only fail hard if the tasks fetch fails. Members/agents return 403 for
+    // non-admin users, which should render as empty lists, not an error banner.
+    isError: tasksQuery.isError,
   };
 }

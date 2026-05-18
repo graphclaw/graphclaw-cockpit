@@ -6,6 +6,7 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
   ListObjectsV2Command,
+  PutObjectCommand,
 } from '@aws-sdk/client-s3';
 
 // ── Connection config ─────────────────────────────────────────────────────────
@@ -19,7 +20,9 @@ const SECRET_KEY =
 // ── Storage paths ─────────────────────────────────────────────────────────────
 // Mirrors StoragePaths class in graphclaw/src/graphclaw/storage/paths.py
 export const StoragePaths = {
-  agentProfile: (userId: string) => `${userId}/profile.md`,
+  agentProfile: (userId: string, agentId = 'main') => `${userId}/agents/${agentId}/profile.md`,
+  userConfig: (userId: string) => `${userId}/config.json`,
+  scoringWeights: (userId: string) => `${userId}/scoring_weights.json`,
   workingMemory: (userId: string) => `${userId}/memory/working.md`,
   episodicEntry: (userId: string, name: string) =>
     `${userId}/memory/episodic/${name}`,
@@ -88,6 +91,18 @@ export class MinioClient {
       chunks.push(chunk);
     }
     return Buffer.concat(chunks).toString('utf-8');
+  }
+
+  /** Write content to an object key. */
+  async writeObject(key: string, content: string, contentType = 'text/plain'): Promise<void> {
+    await this.s3.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: content,
+        ContentType: contentType,
+      }),
+    );
   }
 
   /** Delete an object — used in teardown to restore clean state. */

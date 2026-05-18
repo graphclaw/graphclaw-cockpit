@@ -17,6 +17,13 @@ interface LocalSkill {
   content: string;
 }
 
+function parseFrontmatterName(content: string): string | undefined {
+  const match = content.match(/^---\s*\n([\s\S]*?)\n---/);
+  if (!match?.[1]) return undefined;
+  const nameMatch = match[1].match(/^name:\s*(.+)$/m);
+  return nameMatch?.[1]?.trim();
+}
+
 const BLANK_TEMPLATE = `---
 name: new-skill
 description: New skill definition
@@ -115,9 +122,11 @@ export function SkillAuthoringPage() {
     const skill = allSkills.find((s) => s.skill_id === selectedId);
     if (!skill) return;
 
+    const nameFromContent = parseFrontmatterName(editedContent);
+
     if (isLocal) {
       createSkill.mutate(
-        { name: skill.name, description: skill.description, version: skill.version, content: editedContent },
+        { name: nameFromContent ?? skill.name, description: skill.description, version: skill.version, content: editedContent },
         {
           onSuccess: (created) => {
             setLocalSkills((prev) => prev.filter((s) => s.skill_id !== selectedId));
@@ -129,9 +138,14 @@ export function SkillAuthoringPage() {
       );
     } else {
       updateSkill.mutate(
-        { skillId: selectedId, content: editedContent, name: skill.name, description: skill.description, version: skill.version },
+        { skillId: selectedId, content: editedContent, name: nameFromContent ?? skill.name, description: skill.description, version: skill.version },
         {
-          onSuccess: () => toast.success('Skill saved.'),
+          onSuccess: (updated) => {
+            if (updated.skill_id && updated.skill_id !== selectedId) {
+              setSelectedId(updated.skill_id);
+            }
+            toast.success('Skill saved.');
+          },
           onError: () => toast.error('Save failed.'),
         },
       );
@@ -323,7 +337,7 @@ export function SkillAuthoringPage() {
 
       {/* Delete confirmation */}
       {showDeleteConfirm && selectedId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 shadow-lg">
             <h3 className="mb-2 text-sm font-semibold text-[var(--text-primary)]">Delete Skill?</h3>
             <p className="mb-5 text-xs text-[var(--text-tertiary)]">

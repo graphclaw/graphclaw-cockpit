@@ -58,11 +58,22 @@ function err(filePath, msg) {
 // ── Header parsing ────────────────────────────────────────────────────────────
 
 function extractBlockComment(text) {
-  const stripped = text.trimStart();
-  if (!stripped.startsWith("/**") && !stripped.startsWith("/*")) return null;
-  const end = stripped.indexOf("*/");
+  // Skip leading line comments (e.g., SPDX copyright headers)
+  let pos = 0;
+  while (pos < text.length) {
+    while (pos < text.length && /\s/.test(text[pos])) pos++;
+    if (text.startsWith("//", pos)) {
+      const nl = text.indexOf("\n", pos);
+      pos = nl === -1 ? text.length : nl + 1;
+    } else {
+      break;
+    }
+  }
+  const rest = text.slice(pos);
+  if (!rest.startsWith("/**") && !rest.startsWith("/*")) return null;
+  const end = rest.indexOf("*/");
   if (end === -1) return null;
-  return stripped.slice(0, end + 2);
+  return rest.slice(0, end + 2);
 }
 
 function cleanComment(raw) {

@@ -112,6 +112,107 @@ export const handlers = [
     ]);
   }),
 
+  // Canvas: layout
+  http.get('/app/v1/canvas/layout', () => {
+    return HttpResponse.json({
+      nodes: [],
+      viewport: { x: 0, y: 0, zoom: 1 },
+    });
+  }),
+
+  http.put('/app/v1/canvas/layout', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    return HttpResponse.json({
+      nodes: Array.isArray(body.nodes) ? body.nodes : [],
+      viewport: body.viewport ?? { x: 0, y: 0, zoom: 1 },
+    });
+  }),
+
+  // Agent runtime config
+  http.get('/app/v1/agents/:agent_id/config', () => {
+    return HttpResponse.json({
+      llm_model: 'claude-sonnet-4-6',
+      heartbeat_interval_seconds: 30,
+      execution_timeout_seconds: 300,
+      skills: [],
+      mcp_servers: [],
+      tool_sets: [],
+      sub_agents: [],
+    });
+  }),
+
+  http.put('/app/v1/agents/:agent_id/config', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    return HttpResponse.json({
+      llm_model: body.llm_model ?? 'claude-sonnet-4-6',
+      heartbeat_interval_seconds: body.heartbeat_interval_seconds ?? 30,
+      execution_timeout_seconds: body.execution_timeout_seconds ?? 300,
+      skills: Array.isArray(body.skills) ? body.skills : [],
+      mcp_servers: Array.isArray(body.mcp_servers) ? body.mcp_servers : [],
+      tool_sets: Array.isArray(body.tool_sets) ? body.tool_sets : [],
+      sub_agents: Array.isArray(body.sub_agents) ? body.sub_agents : [],
+    });
+  }),
+
+  // Agent wiring summary
+  http.get('/app/v1/agents/:agent_id/wiring', () => {
+    return HttpResponse.json({
+      skills: [],
+      mcp_servers: [],
+      tool_sets: [],
+      sub_agents: [],
+    });
+  }),
+
+  // Agents: create and delete
+  http.post('/app/v1/agents', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    return HttpResponse.json(
+      {
+        agent_id: String(body.agent_id ?? `new-agent-${Date.now()}`),
+        name: String(body.name ?? 'New Agent'),
+        description: String(body.description ?? ''),
+        version: '1.0',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        config: body.config ?? {},
+        tags: Array.isArray(body.tags) ? body.tags : [],
+      },
+      { status: 201 },
+    );
+  }),
+
+  http.delete('/app/v1/agents/:agent_id', () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // A2A registry
+  http.get('/app/v1/a2a/agents', () => {
+    return HttpResponse.json([]);
+  }),
+
+  http.post('/app/v1/a2a/agents', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    const keyId = `a2a-${Date.now()}`;
+    return HttpResponse.json(
+      {
+        key_id: keyId,
+        agent_id: keyId,
+        agent_name: String(body.agent_name ?? 'External Agent'),
+        name: String(body.agent_name ?? 'External Agent'),
+        endpoint: String(body.endpoint ?? 'https://example.com/a2a'),
+        capabilities: Array.isArray(body.capabilities) ? body.capabilities : [],
+        trust_status: String(body.trust_status ?? 'ACTIVE'),
+        revoked: false,
+      },
+      { status: 201 },
+    );
+  }),
+
+  http.delete('/app/v1/a2a/agents/:key_id', () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   // Graph: resources list
   http.get('/app/v1/graph/resources', () => {
     return HttpResponse.json({
@@ -498,5 +599,40 @@ export const handlers = [
   // Chat: message history
   http.get('/app/v1/chat/messages', () => {
     return HttpResponse.json({ messages: [], next_cursor: null });
+  }),
+
+  // Chat: runtime LLM metadata
+  http.get('/app/v1/chat/runtime', () => {
+    return HttpResponse.json({
+      provider: 'anthropic',
+      model: 'claude-sonnet-4-6',
+      connected: true,
+    });
+  }),
+
+  // User: organizations for topbar org switcher
+  http.get('/app/v1/user/orgs', () => {
+    return HttpResponse.json([
+      {
+        org_id: 'ORG-dev-001',
+        name: 'GraphClaw Dev Org',
+        role: 'OWNER',
+        domain: 'graphclaw.local',
+      },
+    ]);
+  }),
+
+  // Notifications
+  http.get('/app/v1/notifications', () => {
+    return HttpResponse.json({ items: [], unread_count: 0, next_cursor: null });
+  }),
+  http.patch('/app/v1/notifications/:notification_id/read', ({ params }) => {
+    return HttpResponse.json({ id: params['notification_id'], ok: true });
+  }),
+  http.post('/app/v1/notifications/read-all', () => {
+    return HttpResponse.json({ updated: 0, ok: true });
+  }),
+  http.delete('/app/v1/notifications/:notification_id', ({ params }) => {
+    return HttpResponse.json({ id: params['notification_id'], ok: true });
   }),
 ];

@@ -59,3 +59,16 @@ export function useTasks(cursor?: string) {
     },
   });
 }
+
+export function useMyTaskCount(assigneeId: string | null) {
+  return useQuery({
+    queryKey: ['graph', 'tasks', 'count', { assigneeId }],
+    queryFn: async () => {
+      const params = new URLSearchParams({ assignee_id: assigneeId!, limit: '1' });
+      const res = await fetch(`/app/v1/graph/tasks?${params}`, { headers: authHeaders() });
+      if (!res.ok) throw new Error(`Failed to fetch my task count: ${res.status}`);
+      return ((await res.json()) as TaskListResponse).total;
+    },
+    enabled: !!assigneeId,
+  });
+}

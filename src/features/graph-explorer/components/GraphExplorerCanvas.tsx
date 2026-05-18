@@ -50,11 +50,11 @@ function getTaskColor(state: string): string {
 
 function getPrioritySize(priority: string): number {
   switch (priority) {
-    case 'CRITICAL': return 64;
-    case 'HIGH': return 54;
-    case 'MEDIUM': return 44;
-    case 'LOW': return 38;
-    default: return 44;
+    case 'CRITICAL': return 32;
+    case 'HIGH': return 26;
+    case 'MEDIUM': return 22;
+    case 'LOW': return 18;
+    default: return 22;
   }
 }
 
@@ -64,10 +64,12 @@ function nodeToElement(node: ExplorerNode): ElementDefinition {
   switch (node.kind) {
     case 'task': {
       const color = getTaskColor(node.state);
+      const full = node.title;
       return {
         data: {
           id: node.id,
-          label: node.title.length > 22 ? node.title.slice(0, 20) + '…' : node.title,
+          label: full.length > 20 ? full.slice(0, 18) + '…' : full,
+          fullLabel: full,
           kind: 'task',
           state: node.state,
           priority: node.priority,
@@ -80,43 +82,49 @@ function nodeToElement(node: ExplorerNode): ElementDefinition {
     }
     case 'goal': {
       const color = resolveCssVar('--state-progress', '#10b981');
+      const full = node.title;
       return {
         data: {
           id: node.id,
-          label: node.title.length > 18 ? node.title.slice(0, 16) + '…' : node.title,
+          label: full.length > 20 ? full.slice(0, 18) + '…' : full,
+          fullLabel: full,
           kind: 'goal',
           state: node.state,
           shape: 'diamond',
           bgColor: color,
           borderColor: color,
-          size: 58,
+          size: 28,
         },
       };
     }
     case 'resource': {
+      const full = node.name;
       return {
         data: {
           id: node.id,
-          label: node.name.length > 18 ? node.name.slice(0, 16) + '…' : node.name,
+          label: full.length > 20 ? full.slice(0, 18) + '…' : full,
+          fullLabel: full,
           kind: 'resource',
           shape: 'ellipse',
           bgColor: '#06b6d4',
           borderColor: '#0891b2',
-          size: 48,
+          size: 24,
         },
       };
     }
     case 'constraint': {
       const color = resolveCssVar('--state-delayed', '#f59e0b');
+      const full = node.title;
       return {
         data: {
           id: node.id,
-          label: node.title.length > 18 ? node.title.slice(0, 16) + '…' : node.title,
+          label: full.length > 20 ? full.slice(0, 18) + '…' : full,
+          fullLabel: full,
           kind: 'constraint',
           shape: 'hexagon',
           bgColor: color,
           borderColor: color,
-          size: 48,
+          size: 24,
         },
       };
     }
@@ -149,14 +157,7 @@ function buildStylesheet(): cytoscape.StylesheetStyle[] {
     {
       selector: 'node',
       style: {
-        label: 'data(label)',
-        'text-valign': 'center',
-        'text-halign': 'center',
-        'font-size': '10px',
-        'font-family': 'Inter, system-ui, sans-serif',
-        color: '#fff',
-        'text-wrap': 'ellipsis',
-        'text-max-width': '90px',
+        label: '',
         width: 'data(size)',
         height: 'data(size)',
         'background-color': 'data(bgColor)',
@@ -164,15 +165,30 @@ function buildStylesheet(): cytoscape.StylesheetStyle[] {
         'border-color': 'data(borderColor)',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         shape: 'data(shape)' as any,
+        'font-size': '10px',
+        'font-family': 'Inter, system-ui, sans-serif',
+        'text-wrap': 'ellipsis',
+        'text-max-width': '80px',
       },
     },
     {
       selector: 'node:selected',
       style: {
-        'border-width': 4,
+        'border-width': 3,
         'border-color': resolveCssVar('--brand-primary', '#0ea5e9'),
         'overlay-opacity': 0.12,
         'overlay-color': resolveCssVar('--brand-primary', '#0ea5e9'),
+        label: 'data(label)',
+        'text-valign': 'bottom',
+        'text-halign': 'center',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        'text-margin-y': 5 as any,
+        color: resolveCssVar('--text-primary', '#f1f5f9'),
+        'text-background-color': resolveCssVar('--bg-surface', '#1e293b'),
+        'text-background-opacity': 0.9,
+        'text-background-padding': '3px',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        'text-background-shape': 'roundrectangle' as any,
       },
     },
     {
@@ -319,6 +335,7 @@ export const GraphExplorerCanvas = forwardRef<GraphExplorerCanvasHandle, Props>(
     ref,
   ) {
     const containerRef = useRef<HTMLDivElement>(null);
+    const tooltipRef = useRef<HTMLDivElement>(null);
     const cyRef = useRef<Core | null>(null);
 
     // ── Stable callbacks ─────────────────────────────────────────────────────
@@ -391,9 +408,42 @@ export const GraphExplorerCanvas = forwardRef<GraphExplorerCanvasHandle, Props>(
         onZoomChange?.(Math.round(cy.zoom() * 100));
       });
 
+      // Hover tooltip — show full label on mouseover, hide on mouseout
+      cy.on('mouseover', 'node', (e) => {
+        const label = (e.target.data('fullLabel') as string) || (e.target.data('label') as string);
+        const tip = tooltipRef.current;
+        if (tip && label) {
+          tip.textContent = label;
+          tip.style.display = 'block';
+        }
+      });
+      cy.on('mousemove', (e) => {
+        const tip = tooltipRef.current;
+        if (tip && tip.style.display !== 'none') {
+          tip.style.left = `${(e.originalEvent as MouseEvent).offsetX + 14}px`;
+          tip.style.top = `${(e.originalEvent as MouseEvent).offsetY - 12}px`;
+        }
+      });
+      cy.on('mouseout', 'node', () => {
+        const tip = tooltipRef.current;
+        if (tip) tip.style.display = 'none';
+      });
+
+      // Cap initial zoom so a single node doesn't fill the entire viewport
+      cy.ready(() => {
+        cy.fit(undefined, 40);
+        if (cy.zoom() > 1.0) {
+          cy.zoom(1.0);
+          cy.center();
+        }
+        onZoomChange?.(Math.round(cy.zoom() * 100));
+      });
+
       cyRef.current = cy;
+      const tip = tooltipRef.current;
 
       return () => {
+        if (tip) tip.style.display = 'none';
         cy.destroy();
         cyRef.current = null;
       };
@@ -415,21 +465,41 @@ export const GraphExplorerCanvas = forwardRef<GraphExplorerCanvasHandle, Props>(
       if (!cy) return;
       cy.style()
         .selector('node')
-        .style('label', showLabels ? 'data(label)' : '')
+        .style({
+          label: showLabels ? 'data(label)' : '',
+          'text-valign': 'bottom',
+          'text-halign': 'center',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          'text-margin-y': (showLabels ? 5 : 0) as any,
+          color: resolveCssVar('--text-primary', '#f1f5f9'),
+          'text-background-color': resolveCssVar('--bg-surface', '#1e293b'),
+          'text-background-opacity': showLabels ? 0.85 : 0,
+          'text-background-padding': '3px',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          'text-background-shape': 'roundrectangle' as any,
+        })
         .update();
     }, [showLabels]);
 
     return (
-      <div
-        ref={containerRef}
-        data-testid="graph-explorer-canvas"
-        className="h-full w-full"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle, var(--border-subtle) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }}
-      />
+      <div className="relative h-full w-full">
+        <div
+          ref={containerRef}
+          data-testid="graph-explorer-canvas"
+          className="h-full w-full"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle, var(--border-subtle) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+        {/* Hover tooltip — positioned by mousemove events */}
+        <div
+          ref={tooltipRef}
+          style={{ display: 'none' }}
+          className="pointer-events-none absolute z-20 max-w-[220px] truncate rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--bg-surface)] px-2 py-1 text-xs text-[var(--text-primary)] shadow-[var(--shadow-2)]"
+        />
+      </div>
     );
   },
 );

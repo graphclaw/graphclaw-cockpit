@@ -3,6 +3,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 
 import { recoverAuthSession } from '@/lib/auth-session';
+import { connectSSE, disconnectSSE } from '@/lib/sse';
 import { useAuthStore } from '@/stores/auth';
 
 const REFRESH_INTERVAL = 14 * 60 * 1000; // 14 minutes (tokens expire in 15 min)
@@ -13,8 +14,21 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const accessToken = useAuthStore((state) => state.accessToken);
   const hasRefreshToken = useAuthStore((state) => !!state.refreshToken);
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
+
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken) {
+      disconnectSSE();
+      return;
+    }
+
+    connectSSE();
+    return () => {
+      disconnectSSE();
+    };
+  }, [isAuthenticated, accessToken]);
 
   useEffect(() => {
     if (!isAuthenticated || !hasRefreshToken) return;
