@@ -54,7 +54,11 @@
       "Bash(python -m pytest tests/ -x -q --tb=short -k \"task\")",
       "Bash(python -m pytest tests/ -x -q --tb=short --ignore=tests/test_a2a -k \"task or graph or node\")",
       "Read(//c/Users/abhis/Projects/**)",
-      "PowerShell(c:\\\\Users\\\\abhis\\\\Projects\\\\graphclaw\\\\.venv\\\\Scripts\\\\pip install isort)"
+      "PowerShell(c:\\\\Users\\\\abhis\\\\Projects\\\\graphclaw\\\\.venv\\\\Scripts\\\\pip install isort)",
+      "Bash(Start-Sleep -Seconds 15)",
+      "Bash(python -m ruff check src/graphclaw/state/cascade.py src/graphclaw/api/approvals.py src/graphclaw/auth/provisioning.py src/graphclaw/auth/routes.py src/graphclaw/agent/main_orchestrator.py)",
+      "Bash(Get-ChildItem -Path . -Directory -Exclude .venv)",
+      "Bash(Select-Object Name)"
     ],
     "additionalDirectories": [
       "c:\\Users\\abhis\\Projects",
