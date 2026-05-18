@@ -25,6 +25,22 @@ export default defineConfig({
           args: ['--disable-cache', '--disable-application-cache'],
         },
       },
+      // Exclude the real OAuth test from the default run
+      testIgnore: ['**/google-oauth-onboarding.spec.ts'],
+    },
+    {
+      // Headed project for real Google OAuth onboarding.
+      // Run with: npx playwright test --project=onboarding-live
+      name: 'onboarding-live',
+      testMatch: '**/google-oauth-onboarding.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        headless: false,        // Browser visible so the user can approve OAuth
+        storageState: undefined, // No pre-auth state — start from the login page
+        launchOptions: {
+          args: ['--disable-cache', '--disable-application-cache'],
+        },
+      },
     },
   ],
 });

@@ -1162,8 +1162,19 @@ export function useChannels() {
 export function useActivateChannel() {
   const qc = useQueryClient();
   return useMutation({
+    // Backend expects: { "config": { "user_email": "..." } }
     mutationFn: ({ ch, config }: { ch: string; config?: Record<string, string> }) =>
-      apiPost(`/app/v1/settings/channels/${ch}/activate`, config ?? {}),
+      apiPost(`/app/v1/settings/channels/${ch}/activate`, { config: config ?? {} }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['settings', 'channels'] });
+    },
+  });
+}
+
+export function useDeactivateChannel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ch: string) => apiRequest<void>(`/app/v1/settings/channels/${ch}`, 'DELETE'),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['settings', 'channels'] });
     },
@@ -2394,16 +2405,3 @@ export function useUpdateProfile() {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Settings — Channel deactivate
-// ---------------------------------------------------------------------------
-
-export function useDeactivateChannel() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (ch: string) => apiDelete(`/app/v1/settings/channels/${ch}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['settings', 'channels'] });
-    },
-  });
-}
