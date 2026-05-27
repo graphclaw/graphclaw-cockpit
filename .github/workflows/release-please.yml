@@ -1,0 +1,24 @@
+# Release Please — opens / updates a release PR based on Conventional Commits.
+# When merged, tags a release (e.g. v0.1.0) which triggers .github/workflows/release.yml.
+name: release-please
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run release-please
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
