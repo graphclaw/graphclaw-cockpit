@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.2](https://github.com/graphclaw/graphclaw-cockpit/compare/v0.1.1...v0.1.2) (2026-05-27)
+
+
+### Documentation
+
+* add fallback issue template ([499ce91](https://github.com/graphclaw/graphclaw-cockpit/commit/499ce912f34f0f86d70e8912b0c7be49f4f14f2f))
+* add root issue template for community profile ([dc51085](https://github.com/graphclaw/graphclaw-cockpit/commit/dc51085900d2e28141220fc63be4ae90b915f677))
+* adopt contributor covenant 2.1 ([3cea7a0](https://github.com/graphclaw/graphclaw-cockpit/commit/3cea7a0e67f154adffcfbb1384f66046f3f5765d))
+
 ## [0.1.1](https://github.com/graphclaw/graphclaw-cockpit/compare/v0.1.0...v0.1.1) (2026-05-27)
 
 
