@@ -2,7 +2,7 @@
 # that creates a vX.Y.Z tag.
 #
 # Stages:
-#   1. Build linux/amd64 Docker image and push to GHCR
+#   1. Build linux/amd64 + linux/arm64 Docker image and push to GHCR
 #   2. Sign image with cosign (keyless via GitHub OIDC)
 #   3. Generate CycloneDX SBOM and attest to image
 #   4. SLSA build provenance attestation
@@ -30,6 +30,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -56,7 +59,7 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
