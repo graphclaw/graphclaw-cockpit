@@ -2,6 +2,25 @@
   "name": "graphclaw-cockpit",
   "private": true,
   "version": "0.1.0",
+  "description": "GraphClaw Cockpit — React 19 + TypeScript SPA for the GraphClaw task graph management system",
+  "license": "Apache-2.0",
+  "author": "GraphClaw Contributors",
+  "homepage": "https://graphclaw.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graphclaw/graphclaw-cockpit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/graphclaw/graphclaw-cockpit/issues"
+  },
+  "keywords": [
+    "graphclaw",
+    "task-management",
+    "graph",
+    "ai-agents",
+    "react",
+    "typescript"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",

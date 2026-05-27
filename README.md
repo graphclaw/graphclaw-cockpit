@@ -8,7 +8,7 @@
 
 GraphClaw Cockpit is a **React / TypeScript** single-page application that provides a visual interface for managing the GraphClaw property graph, monitoring the orchestrating agent, designing agents and skills, and administering organizations.
 
-It is a **separate project** from the [GraphClaw backend](https://github.com/abhishekgupta-myrepo/graphclaw). All data flows through the backend's `/app/v1/` REST API and real-time event streams.
+It is a **separate project** from the [GraphClaw backend](https://github.com/graphclaw/graphclaw). All data flows through the backend's `/app/v1/` REST API and real-time event streams.
 
 ## Product Requirements
 

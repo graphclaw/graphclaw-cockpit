@@ -1,10 +1,12 @@
 node_modules
 dist
 
-# Local environment overrides — never commit secrets
-.env
-.env.local
-.env.*.local
+# Local environment overrides — never commit secrets.
+# Ignore all .env* by default; explicitly allow the safe, committed ones.
+.env*
+!.env.example
+!.env.development
+!.env.production
 
 # Test artifacts — never commit these
 playwright-report/
