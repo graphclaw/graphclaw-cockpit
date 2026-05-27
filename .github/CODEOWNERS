@@ -1,0 +1,8 @@
+# Default owner for all files
+* @abhishekgupta-myrepo
+
+# Cockpit subsystems
+/src/ @abhishekgupta-myrepo
+/e2e/ @abhishekgupta-myrepo
+/docs/ @abhishekgupta-myrepo
+/scripts/ @abhishekgupta-myrepo
