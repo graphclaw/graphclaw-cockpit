@@ -4,6 +4,8 @@
 
 > Web-based command center for the GraphClaw task graph management system.
 
+**Public Roadmap (Now/Next/Later):** [graphclaw/docs/planning/public-roadmap.md](https://github.com/graphclaw/graphclaw/blob/main/docs/planning/public-roadmap.md)
+
 ## Overview
 
 GraphClaw Cockpit is a **React / TypeScript** single-page application that provides a visual interface for managing the GraphClaw property graph, monitoring the orchestrating agent, designing agents and skills, and administering organizations.
