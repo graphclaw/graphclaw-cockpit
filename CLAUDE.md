@@ -29,8 +29,7 @@ Consumes the FastAPI backend at ../graphclaw via /app/v1/ REST + SSE + WebSocket
 - Client state: Zustand stores in `src/stores/`
 - Tests co-located: `Component.test.tsx` next to `Component.tsx`
 - E2E tests: `e2e/{feature}/*.spec.ts`
-- Commit format: `feat(wave-N): description`
-- Before commit: `npm run typecheck && npm run lint && npm run test`
+- Commit and quality-gate requirements are defined in Phase 5 and `.github/copilot-instructions.md`.
 
 ## Key Files
 - `docs/planning/build-plan.md` — wave progress tracker (source of truth)
