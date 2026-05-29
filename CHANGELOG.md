@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.3](https://github.com/graphclaw/graphclaw-cockpit/compare/v0.1.2...v0.1.3) (2026-05-29)
+
+
+### Documentation
+
+* **launch:** link public roadmap from cockpit README ([#12](https://github.com/graphclaw/graphclaw-cockpit/issues/12)) ([5b5b9c2](https://github.com/graphclaw/graphclaw-cockpit/commit/5b5b9c2e331907f51329989eeed1c44caae1f9c5))
+* **process:** add lifecycle guardrails for future waves ([#13](https://github.com/graphclaw/graphclaw-cockpit/issues/13)) ([401b3cc](https://github.com/graphclaw/graphclaw-cockpit/commit/401b3cccd5922802d3f04d8e07c4f4d981476aaf))
+* **security:** refresh policy metadata for profile sync ([#6](https://github.com/graphclaw/graphclaw-cockpit/issues/6)) ([acd6f12](https://github.com/graphclaw/graphclaw-cockpit/commit/acd6f12ab7927d30f116267425579636569f89e6))
+
 ## [0.1.2](https://github.com/graphclaw/graphclaw-cockpit/compare/v0.1.1...v0.1.2) (2026-05-28)
 
 
