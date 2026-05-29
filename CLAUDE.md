@@ -87,3 +87,14 @@ Follow these phases in order for every development task, without skipping steps.
 19. Run the full quality gate: `npm run typecheck && npm run lint && npm run test` — all must pass.
 20. Update docs/planning/build-plan.md and relevant docs to mark the wave/requirement complete.
 21. Git commit per requirement and per wave using the format: `feat(wave-N): description`.
+
+## Lifecycle Guardrails (Mandatory)
+
+For all subsequent development waves and releases, enforce:
+
+- `.github/copilot-instructions.md` as the operational Do/Do Not policy.
+- PR-first delivery only (no direct development commits to `main`).
+- Issue-linked PRs with evidence-backed closeout notes.
+- Required quality gates and release automation discipline.
+
+When instructions conflict, apply the stricter rule that preserves branch protection intent, CI quality gates, and release traceability.
