@@ -1,8 +1,8 @@
 # Default owner for all files
-* @abhishekgupta-myrepo
+* @graphclaw/core-maintainers
 
 # Cockpit subsystems
-/src/ @abhishekgupta-myrepo
-/e2e/ @abhishekgupta-myrepo
-/docs/ @abhishekgupta-myrepo
-/scripts/ @abhishekgupta-myrepo
+/src/ @graphclaw/cockpit-maintainers
+/e2e/ @graphclaw/cockpit-maintainers
+/docs/ @graphclaw/core-maintainers
+/scripts/ @graphclaw/cockpit-maintainers
