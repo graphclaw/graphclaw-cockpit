@@ -1174,7 +1174,7 @@ export function useActivateChannel() {
 export function useDeactivateChannel() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (ch: string) => apiRequest<void>(`/app/v1/settings/channels/${ch}`, 'DELETE'),
+    mutationFn: (ch: string) => apiDelete(`/app/v1/settings/channels/${ch}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['settings', 'channels'] });
     },

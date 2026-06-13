@@ -1,0 +1,58 @@
+
+### FILE: README.md
+
+
+FILE: README.md
+  [Γ£ô] LICENSE
+  [Γ£ô] docs/README.md
+  [Γ£ô] docs/how-to/self-host.md
+  [Γ£ô] https://github.com/graphclaw/graphclaw
+  [Γ£ô] docs/prd/00-index.md
+  [Γ£ô] docs/prd/01-overview.md
+  [Γ£ô] docs/prd/02-graph-cockpit.md
+  [Γ£ô] docs/prd/03-agent-monitor.md
+  [Γ£ô] docs/prd/04-canvas-editor.md
+  [Γ£ô] docs/prd/05-settings-panel.md
+  [Γ£ô] docs/prd/06-skill-marketplace.md
+  [Γ£ô] docs/prd/07-mcp-registry.md
+  [Γ£ô] docs/prd/08-explainability.md
+  [Γ£ô] docs/prd/09-admin-panel.md
+  [Γ£ô] docs/prd/10-technical-spec.md
+  [Γ£ô] docs/prd/11-api-contract.md
+  [Γ£ô] docs/prd/12-task-views.md
+  [Γ£ô] docs/prd/13-chat-interface.md
+  [Γ£ô] docs/prd/14-config-and-secrets.md
+  [Γ£ô] https://github.com/graphclaw/graphclaw/blob/main/docs/cockpit-backend-api-prd.md
+  [Γ£ô] https://img.shields.io/badge/License-Apache_2.0-blue.svg
+
+  21 links checked.
+
+
+### FILE: docs/README.md
+
+
+FILE: docs/README.md
+  No hyperlinks found!
+
+  0 links checked.
+
+
+### FILE: docs/redirects.md
+
+
+FILE: docs/redirects.md
+  No hyperlinks found!
+
+  0 links checked.
+
+
+### FILE: docs/how-to/self-host.md
+
+
+FILE: docs/how-to/self-host.md
+  [/] http://localhost:3000
+  [/] http://localhost:8080/docs
+
+  2 links checked.
+
+

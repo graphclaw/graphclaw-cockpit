@@ -7,6 +7,8 @@ This file tracks old-to-new paths for moved or renamed documentation files.
 | `build-plan.md` | `docs/planning/build-plan.md` | moved | Root wave tracker moved under docs/planning for docs-only layout. |
 | `docs/overview/README.md` | `README.md` | reverted | Root README restored for GitHub repository landing page rendering. |
 | `TESTING.md` | `docs/testing/TESTING.md` | moved | Root testing entrypoint moved under docs/testing. |
+| `README.md` PRD links via `../prd/*.md` | `README.md` PRD links via `docs/prd/*.md` | normalized | Root README now uses stable workspace-relative links. |
+| `docs/planning/build-plan.md#docker-deployment` | `docs/how-to/self-host.md` | alias | Operator onboarding for full-stack deployment is centralized in how-to docs. |
 | `graphclaw/docs/task-graph-requirements.md` | `graphclaw/docs/graphclaw-requirements.md` | applied | Path reference corrected in `docs/prd/00-index.md`. |
 | `wireframes-v2/reviews/admin-panel-review.md` | `docs/archive/wireframe-reviews-v2-baseline-2026-04-10/admin-panel-review.md` | moved | Archived baseline review cohort (2026-04-10). |
 | `wireframes-v2/reviews/agent-monitor-review.md` | `docs/archive/wireframe-reviews-v2-baseline-2026-04-10/agent-monitor-review.md` | moved | Archived baseline review cohort (2026-04-10). |
