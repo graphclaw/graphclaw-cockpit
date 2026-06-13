@@ -6,11 +6,18 @@ This index is the entry point for cockpit documentation and follows the same tax
 
 1. Product requirements index: `docs/prd/00-index.md`
 2. Execution tracker: `docs/planning/build-plan.md`
-3. Testing strategy: `docs/testing/test-strategy.md`
-4. Agent monitor implementation docs: `docs/agent/`
-5. Governance policy: `docs/governance/documentation-governance.md`
-6. A2A future-release design plan (pending): `docs/planning/a2a-future-release-design-plan.md`
-7. A2A API-plane alignment spike (in progress): `docs/planning/a2a-api-plane-alignment-spike.md`
+3. Self-host guide: `docs/how-to/self-host.md`
+4. Testing strategy: `docs/testing/test-strategy.md`
+5. Agent monitor implementation docs: `docs/agent/`
+6. Governance policy: `docs/governance/documentation-governance.md`
+7. A2A future-release design plan (pending): `docs/planning/a2a-future-release-design-plan.md`
+8. A2A API-plane alignment spike (in progress): `docs/planning/a2a-api-plane-alignment-spike.md`
+
+## Maintainer Guides
+
+- Release process: `docs/how-to/release.md`
+- Versioning policy: `docs/explanation/versioning.md`
+- Deprecation policy: `docs/explanation/deprecations.md`
 
 ## Taxonomy
 
