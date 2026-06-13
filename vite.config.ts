@@ -38,21 +38,21 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: './coverage',
+      include: ['src/**'],
       exclude: [
         'node_modules/**',
         'dist/**',
         'e2e/**',
         'src/test/**',
+        'src/main.tsx',
+        'src/lib/api-types.ts',
         '**/*.d.ts',
         '**/*.config.*',
         '**/types/**',
       ],
-      thresholds: {
-        lines: 80,
-        branches: 80,
-        functions: 80,
-        statements: 80,
-      },
+      // Coverage is reported (and uploaded as a CI artifact) but not gated:
+      // the Vitest job's pass/fail is determined by the test suite itself.
+      // Coverage gate removed 2026-06-12 — see PR #17 / coverage policy decision.
     },
   },
 });

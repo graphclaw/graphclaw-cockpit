@@ -35,7 +35,8 @@
 | TODO | (no header) timeline-view.spec.ts | [graph/timeline-view.spec.ts](graph/timeline-view.spec.ts) |
 | TODO | (no header) intelligence-hub.spec.ts | [intelligence/intelligence-hub.spec.ts](intelligence/intelligence-hub.spec.ts) |
 | TODO | (no header) mcp-registry.spec.ts | [marketplace/mcp-registry.spec.ts](marketplace/mcp-registry.spec.ts) |
+| TODO | (no header) google-oauth-onboarding.spec.ts | [onboarding/google-oauth-onboarding.spec.ts](onboarding/google-oauth-onboarding.spec.ts) |
 | TODO | (no header) settings.spec.ts | [settings/settings.spec.ts](settings/settings.spec.ts) |
 | TODO | (no header) aesthetic-baseline.spec.ts | [visual-audit/aesthetic-baseline.spec.ts](visual-audit/aesthetic-baseline.spec.ts) |
 
-_Last regenerated: 2026-05-18 by `scripts/regen-inventory.mjs`._
+_Last regenerated: 2026-06-13 by `scripts/regen-inventory.mjs`._
