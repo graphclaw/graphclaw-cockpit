@@ -34,6 +34,11 @@ export default defineConfig({
     css: true,
     testTimeout: 15000,
     exclude: ['node_modules', 'dist', 'e2e'],
+    // Make dev-auth-gated UI (e.g. the Dev Token button on LoginPage) render
+    // deterministically in tests regardless of the host/CI environment.
+    env: {
+      VITE_ENABLE_DEV_AUTH: 'true',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
