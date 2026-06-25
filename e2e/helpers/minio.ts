@@ -23,11 +23,14 @@ export const StoragePaths = {
   agentProfile: (userId: string, agentId = 'main') => `${userId}/agents/${agentId}/profile.md`,
   userConfig: (userId: string) => `${userId}/config.json`,
   scoringWeights: (userId: string) => `${userId}/scoring_weights.json`,
-  workingMemory: (userId: string) => `${userId}/memory/working.md`,
-  episodicEntry: (userId: string, name: string) =>
-    `${userId}/memory/episodic/${name}`,
-  semanticTopic: (userId: string, topic: string) =>
-    `${userId}/memory/semantic/${topic}.md`,
+  workingMemory: (userId: string, agentId = 'main') =>
+    `${userId}/agents/${agentId}/memory/working/context.md`,
+  episodicEntry: (userId: string, name: string, agentId = 'main') =>
+    `${userId}/agents/${agentId}/memory/episodic/${name}`,
+  semanticTopic: (userId: string, topic: string, agentId = 'main') =>
+    `${userId}/agents/${agentId}/memory/semantic/${topic}.md`,
+  semanticIndex: (userId: string, agentId = 'main') =>
+    `${userId}/agents/${agentId}/memory/semantic/_index.json`,
   authoredSkill: (userId: string, skillId: string) =>
     `${userId}/skills/authored/${skillId}/SKILL.md`,
 };

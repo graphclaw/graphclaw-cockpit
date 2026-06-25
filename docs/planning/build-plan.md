@@ -43,6 +43,22 @@ The GraphClaw Cockpit has a complete backend API (with route and test totals tra
 - Show provider/model badge in chat header next to online status.
 - Document current BYOK storage vs runtime wiring behavior to avoid user ambiguity.
 
+## Tiered Memory — E2E Slice (2026-06-24) 🔄 IN PROGRESS
+
+**Context:** Cockpit slice of the backend `Wave Tiered-Memory` effort (full plan tracked in
+`../../../graphclaw/docs/planning/build-plan.md`). The backend wires three-tier agent memory
+(working/episodic/semantic) into the orchestrator; the cockpit's only code change is fixing the E2E
+`StoragePaths` mirror, plus a new lifecycle E2E spec.
+
+**Scope:**
+- Fix `e2e/helpers/minio.ts` `StoragePaths` to match backend canonical paths — the working/episodic/
+  semantic helpers were missing the `/agents/{agentId}/` segment and used the wrong working-memory
+  filename (`working.md` → `working/context.md`). Add a `semanticIndex` helper.
+- Add `e2e/memory/memory-lifecycle.spec.ts` — 4 Playwright scenarios: chat→distillation→working memory→
+  compact→episodic archive; semantic memory create→agent load; episodic recall; full lifecycle.
+- No new cockpit UI: memory tools are internal to the agent; existing memory pages + `useContextUsage`
+  hook already cover the surfaced state.
+
 ---
 
 ## Software Stack
