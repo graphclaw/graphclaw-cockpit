@@ -7,6 +7,7 @@
 | GC-E-GRA-W19-001 | User navigates to /tasks, clicks a task row, sees the detail panel with title... | [graph/task-detail.spec.ts](graph/task-detail.spec.ts) |
 | GC-E-GRA-W19-002 | User creates, edits, and deletes goals and tasks through the UI. | [graph/graph-editing.spec.ts](graph/graph-editing.spec.ts) |
 | GC-E-MCP-W18-001 | Tests MCP server lifecycle: register, list, patch trust tier, disable, search... | [mcp/mcp-servers.spec.ts](mcp/mcp-servers.spec.ts) |
+| GC-E-MEM-W17-001 | Proves the three-tier agent memory loop end-to-end through the cockpit and ba... | [memory/memory-lifecycle.spec.ts](memory/memory-lifecycle.spec.ts) |
 | GC-E-NOT-W09-001 | User receives persistent notifications for domain events (task state changes,... | [notifications/notifications.spec.ts](notifications/notifications.spec.ts) |
 | GC-E-OB-W11-001 | The test user's profile. | [onboarding/live-onboarding.spec.ts](onboarding/live-onboarding.spec.ts) |
 | GC-E-OB-W11-007 | Verifies the OnboardingBanner shows only when needed, reflects the correct st... | [onboarding/onboarding-detection.spec.ts](onboarding/onboarding-detection.spec.ts) |
@@ -39,4 +40,4 @@
 | TODO | (no header) settings.spec.ts | [settings/settings.spec.ts](settings/settings.spec.ts) |
 | TODO | (no header) aesthetic-baseline.spec.ts | [visual-audit/aesthetic-baseline.spec.ts](visual-audit/aesthetic-baseline.spec.ts) |
 
-_Last regenerated: 2026-06-13 by `scripts/regen-inventory.mjs`._
+_Last regenerated: 2026-06-24 by `scripts/regen-inventory.mjs`._
