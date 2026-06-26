@@ -6,11 +6,13 @@ This guide defines the cockpit release flow for graphclaw-cockpit.
 
 - You have maintainer write access to graphclaw/graphclaw-cockpit.
 - Branch protection checks on main are green.
-- PR title and commits follow Conventional Commits + DCO.
+- PR title and commits follow Conventional Commits (DCO optional in solo mode).
 - Local quality gate passes:
   - npm run typecheck
   - npm run lint
   - npm run test
+- Release hardening checks pass (manual or PR-label-triggered):
+  - Playwright E2E (`.github/workflows/e2e.yml`)
 
 ## Standard Release Flow
 
