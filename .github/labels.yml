@@ -49,3 +49,6 @@
 - name: dependencies
   color: "0366d6"
   description: Dependency updates.
+- name: run-e2e
+  color: "1d76db"
+  description: Run Playwright E2E tests on this pull request.

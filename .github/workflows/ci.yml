@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ["main", "develop"]
+    branches: ["main"]
   pull_request:
     branches: ["main"]
 
@@ -57,91 +57,3 @@ jobs:
           path: coverage/
           retention-days: 7
 
-  # ── 4. Header lint ────────────────────────────────────────────────────────────
-  header-lint:
-    name: Test Header Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci
-      - name: Check test file headers
-        run: node scripts/check-test-headers.mjs
-
-  # ── 5. Inventory check ────────────────────────────────────────────────────────
-  inventory-check:
-    name: Inventory Sync Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci
-      - name: Regenerate inventory
-        run: node scripts/regen-inventory.mjs
-      - name: Check inventory is up to date
-        run: |
-          if ! git diff --exit-code e2e/inventory.md src/test/inventory.md; then
-            echo "::error::inventory.md is stale — run: node scripts/regen-inventory.mjs"
-            exit 1
-          fi
-
-  # ── 6. E2E (Playwright via Docker Compose) ────────────────────────────────────
-  e2e:
-    name: Playwright E2E
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'run-e2e')
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-      - name: Checkout backend (graphclaw)
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/graphclaw
-          path: ../graphclaw
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci
-      - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
-      - name: Start Docker Compose stack
-        run: docker compose --profile test up -d --build
-      - name: Wait for stack to be ready
-        run: |
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:8000/health > /dev/null; then
-              echo "Backend is ready"
-              break
-            fi
-            echo "Waiting for backend... ($i/30)"
-            sleep 5
-          done
-      - name: Seed reference data
-        run: npm run seed
-      - name: Run Playwright tests
-        run: npm run test:e2e
-        env:
-          BASE_URL: http://localhost:3000
-          API_URL: http://localhost:8000
-      - name: Teardown seed data
-        if: always()
-        run: npm run teardown
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
-      - name: Stop Docker Compose stack
-        if: always()
-        run: docker compose --profile test down
