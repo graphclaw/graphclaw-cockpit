@@ -49,17 +49,18 @@ export function WorkingMemoryPage() {
   }
 
   function handleCompact() {
-    if (!compactSummary.trim()) return;
+    // summary is optional: when blank, the server distils one from the working
+    // context plus recent chat history. The working-memory query is invalidated
+    // on success, so the editor refreshes with the resulting context.
     compact.mutate(
-      { agentId, summary: compactSummary.trim(), session_label: compactLabel.trim() || undefined },
+      { agentId, summary: compactSummary.trim() || undefined, session_label: compactLabel.trim() || undefined },
       {
         onSuccess: (data) => {
-          setSavedContent(compactSummary.trim());
-          setContent(compactSummary.trim());
           setShowCompact(false);
           setCompactSummary('');
           setCompactLabel('');
-          toast.success(`Archived. Context reduced from ${data.context_before_chars.toLocaleString()} → ${data.context_after_chars.toLocaleString()} chars (${data.reduction_pct}% freed).`);
+          const how = data.summary_generated ? ' (auto-summarised)' : '';
+          toast.success(`Archived${how}. Context reduced from ${data.context_before_chars.toLocaleString()} → ${data.context_after_chars.toLocaleString()} chars (${data.reduction_pct}% freed).`);
         },
         onError: () => toast.error('Compact failed.'),
       },
@@ -204,13 +205,15 @@ export function WorkingMemoryPage() {
               Compact Working Memory
             </h3>
             <p className="mb-4 text-xs text-[var(--text-tertiary)]">
-              The current context will be archived to episodic memory and replaced with your summary.
+              The raw context is archived to working/archive and a distilled summary to episodic
+              memory, then the working context is replaced with the summary. Leave the summary blank
+              to have the agent generate one from the context and recent chat.
             </p>
             <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)]">
-              Summary <span className="text-[var(--state-error)]">*</span>
+              Summary <span className="text-[var(--text-tertiary)]">(optional — auto-generated if blank)</span>
             </label>
             <textarea
-              placeholder="Concise summary of what was in the working context…"
+              placeholder="Leave blank to auto-summarise, or write a concise summary…"
               value={compactSummary}
               onChange={(e) => setCompactSummary(e.target.value)}
               rows={4}
@@ -235,7 +238,7 @@ export function WorkingMemoryPage() {
               <Button
                 size="sm"
                 onClick={handleCompact}
-                disabled={!compactSummary.trim() || compact.isPending}
+                disabled={compact.isPending}
               >
                 {compact.isPending ? 'Archiving…' : 'Archive & Clear'}
               </Button>

@@ -5003,12 +5003,14 @@ export interface components {
          * CompactRequest
          * @description Request body for POST .../memory/compact.
          *
-         *     The caller supplies the compacted summary.  The original working context
-         *     is archived to episodic memory before being replaced.
+         *     summary is optional. When omitted (or blank), the server generates a
+         *     distilled summary from the working context plus recent chat history. The
+         *     raw working context is archived to working/archive and the distilled
+         *     summary to episodic before the working context is replaced.
          */
         CompactRequest: {
             /** Summary */
-            summary: string;
+            summary?: string | null;
             /** Session Label */
             session_label?: string | null;
         };
@@ -5041,6 +5043,11 @@ export interface components {
              * @default 0
              */
             reduction_pct: number;
+            /**
+             * Summary Generated
+             * @default false
+             */
+            summary_generated: boolean;
         };
         /**
          * ConfigPatchRequest

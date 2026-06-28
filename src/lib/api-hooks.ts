@@ -1817,12 +1817,15 @@ export interface CompactResponse {
   context_before_chars: number;
   context_after_chars: number;
   reduction_pct: number;
+  summary_generated: boolean;
 }
 
 export function useCompactWorkingMemory() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ agentId, summary, session_label }: { agentId: string; summary: string; session_label?: string }) =>
+    // summary is optional — when omitted the server distils one from the working
+    // context plus recent chat history.
+    mutationFn: ({ agentId, summary, session_label }: { agentId: string; summary?: string; session_label?: string }) =>
       apiPost<CompactResponse>(`/app/v1/intelligence/agents/${agentId}/memory/compact`, { summary, session_label }),
     onSuccess: (_data, { agentId }) => {
       void qc.invalidateQueries({ queryKey: ['intelligence', agentId, 'memory'] });
