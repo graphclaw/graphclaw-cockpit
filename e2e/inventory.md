@@ -14,6 +14,7 @@
 | GC-E-OB-W11-010 | Before onboarding the chat header shows the default "Main Orchestrator" label. | [onboarding/agent-naming.spec.ts](onboarding/agent-naming.spec.ts) |
 | GC-E-OB-W11-012 | Backend-focused validation that the profile. | [onboarding/onboarding-minio-audit.spec.ts](onboarding/onboarding-minio-audit.spec.ts) |
 | GC-E-PRF-W11-001 | The Settings profile page (or profile API) reflects the user's current name a... | [settings/profile.spec.ts](settings/profile.spec.ts) |
+| GC-E-SCO-W50-001 | This suite creates deterministic scoring tasks, triggers live scoring cycles,... | [agent/scoring-reconciliation.spec.ts](agent/scoring-reconciliation.spec.ts) |
 | GC-E-SKL-W18-001 | Tests skill lifecycle via /app/v1/skills: list, search, install, manage sourc... | [skills/skill-registry.spec.ts](skills/skill-registry.spec.ts) |
 | GC-E-SKL-W18-002 | Tests the full Skills Marketplace UI: installed tab, browse remote, skill con... | [skills/skill-marketplace.spec.ts](skills/skill-marketplace.spec.ts) |
 | GC-E-SKL-W50-001 | The Agent Monitor route shell resolves to the right section panel, and the sk... | [agent/agent-monitor.spec.ts](agent/agent-monitor.spec.ts) |
@@ -40,4 +41,4 @@
 | TODO | (no header) settings.spec.ts | [settings/settings.spec.ts](settings/settings.spec.ts) |
 | TODO | (no header) aesthetic-baseline.spec.ts | [visual-audit/aesthetic-baseline.spec.ts](visual-audit/aesthetic-baseline.spec.ts) |
 
-_Last regenerated: 2026-06-24 by `scripts/regen-inventory.mjs`._
+_Last regenerated: 2026-06-28 by `scripts/regen-inventory.mjs`._
