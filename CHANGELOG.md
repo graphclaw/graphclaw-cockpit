@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.3](https://github.com/graphclaw/graphclaw-cockpit/compare/v0.1.2...v0.1.3) (2026-06-29)
+
+
+### Bug Fixes
+
+* **e2e:** harden scoring reconciliation container log capture ([9206f04](https://github.com/graphclaw/graphclaw-cockpit/commit/9206f04a7db75ba6aa5748c2985c62dfe7409419))
+* **intelligence:** support optional/auto-generated compaction summary ([cf2c638](https://github.com/graphclaw/graphclaw-cockpit/commit/cf2c6385cf94abbbf7db43409c3b4d461b371de9))
+
+
+### Documentation
+
+* **launch:** link public roadmap from cockpit README ([#12](https://github.com/graphclaw/graphclaw-cockpit/issues/12)) ([5b5b9c2](https://github.com/graphclaw/graphclaw-cockpit/commit/5b5b9c2e331907f51329989eeed1c44caae1f9c5))
+* **policy:** adopt solo fast-lane commit workflow ([c583c5c](https://github.com/graphclaw/graphclaw-cockpit/commit/c583c5c5a35c289777c9f2782eafbcf4d5477854))
+* **process:** add lifecycle guardrails for future waves ([#13](https://github.com/graphclaw/graphclaw-cockpit/issues/13)) ([401b3cc](https://github.com/graphclaw/graphclaw-cockpit/commit/401b3cccd5922802d3f04d8e07c4f4d981476aaf))
+* **process:** adopt PR-first, issue-optional delivery guardrails ([#22](https://github.com/graphclaw/graphclaw-cockpit/issues/22)) ([1375fe3](https://github.com/graphclaw/graphclaw-cockpit/commit/1375fe3acb84555efeb2231add498d59fbafe1fe))
+* **security:** refresh policy metadata for profile sync ([#6](https://github.com/graphclaw/graphclaw-cockpit/issues/6)) ([acd6f12](https://github.com/graphclaw/graphclaw-cockpit/commit/acd6f12ab7927d30f116267425579636569f89e6))
+
 ## [0.1.2](https://github.com/graphclaw/graphclaw-cockpit/compare/v0.1.1...v0.1.2) (2026-05-28)
 
 
