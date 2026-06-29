@@ -15,14 +15,15 @@
  * Last reviewed: 2026-06-28
  *
  * Cases covered:
- *  - 10 baseline scenarios reconcile expected score vs graph-persisted score
- *  - Chat submit path is exercised and reconciled with scoring persistence
+ *  - 10 baseline scenarios are created via multi-turn chat and reconciled via DB
+ *  - Chat plan/confirm flow is validated before task creation execution
  *  - Existing task and new tasks reflect updated scoring weights after settings patch
  *  - 4 post-update scenarios reconcile with updated weights and MinIO weight artifact
- *  - Scoring event sequence is asserted from MinIO object-storage logs per task
+ *  - Scoring event sequence is asserted from backend container logs and MinIO per task
  */
 
 import type { APIRequestContext, Page } from '@playwright/test';
+import { spawnSync } from 'node:child_process';
 import { test, expect, TEST_USER_ID } from '../fixtures/test';
 import type { DbClient } from '../helpers/db.js';
 import { StoragePaths, type MinioClient } from '../helpers/minio.js';
@@ -45,7 +46,12 @@ type Scenario = {
   directDependents: number;
   onCriticalPath: boolean;
   blockerType: BlockerType;
-  useChat?: boolean;
+};
+
+type ChatHistoryMessage = {
+  message_id?: string;
+  role?: string;
+  content?: string;
 };
 
 type ScoreBlock = {
@@ -70,6 +76,8 @@ type ScoreBlock = {
 type TaskEvent = {
   timestamp: number;
   eventType: string;
+  finalScore: number | null;
+  source: 'minio' | 'container';
 };
 
 const DAY_MS = 86_400_000;
@@ -108,6 +116,10 @@ const SCORING_SEQUENCE = [
   'scoring.persist.success',
   'scoring.queue.rank_assigned',
 ];
+
+const BACKEND_LOG_CONTAINER =
+  process.env.BACKEND_LOG_CONTAINER ?? process.env.GATEWAY_CONTAINER ?? '';
+const RECON_ONLY_SCENARIO = process.env.RECON_ONLY_SCENARIO?.trim() ?? '';
 
 const BASELINE_SCENARIOS: Scenario[] = [
   { id: 'baseline-01', deadlineDays: 20, directDependents: 0, onCriticalPath: false, blockerType: 'NONE' },
@@ -158,6 +170,10 @@ function normalizeWeights(weights: Weights): Weights {
     W6_resource_risk: weights.W6_resource_risk / total,
     W7_constraint: weights.W7_constraint / total,
   };
+}
+
+function shouldRunScenario(scenarioId: string): boolean {
+  return !RECON_ONLY_SCENARIO || RECON_ONLY_SCENARIO === scenarioId;
 }
 
 function timelineUrgency(daysRemaining: number, estimatedEffortDays = 0): number {
@@ -261,33 +277,32 @@ async function createTaskViaApi(
   return body.id;
 }
 
-async function ensureBatchMode(page: Page): Promise<void> {
+async function ensureLiveMode(page: Page): Promise<void> {
   const toggle = page.locator('[data-testid="stream-toggle"]');
   if (!(await toggle.isVisible().catch(() => false))) {
     return;
   }
   const text = await toggle.textContent();
-  if (text?.includes('Live')) {
+  if (text?.includes('Batch')) {
     await toggle.click();
   }
 }
 
-async function createTaskViaChat(
-  page: Page,
-  api: APIRequestContext,
-  title: string,
-  deadlineDays: number,
-): Promise<string> {
-  const deadlineIso = new Date(Date.now() + deadlineDays * DAY_MS).toISOString();
+async function listChatMessages(api: APIRequestContext): Promise<ChatHistoryMessage[]> {
+  const res = await api.get('/app/v1/chat/messages');
+  expect(res.status()).toBe(200);
+  const body = (await res.json()) as { messages?: ChatHistoryMessage[] };
+  return body.messages ?? [];
+}
 
-  await page.goto('/chat');
-  await expect(page.locator('[data-testid="chat-view"]')).toBeVisible({ timeout: 15000 });
-  await ensureBatchMode(page);
+function isAssistantRole(role: string | undefined): boolean {
+  return role === 'assistant' || role === 'agent';
+}
 
-  const prompt = `Create one atomic task with exact title "${title}" and deadline "${deadlineIso}". Do not create any other tasks.`;
+async function submitChatTurn(page: Page, prompt: string): Promise<void> {
   const input = page.locator('[data-testid="chat-input"]');
+  await expect(input).toBeVisible({ timeout: 15000 });
   await input.fill(prompt);
-
   await Promise.all([
     page
       .waitForResponse(
@@ -300,6 +315,89 @@ async function createTaskViaChat(
       .catch(() => null),
     input.press('Enter'),
   ]);
+}
+
+async function waitForAssistantReply(
+  api: APIRequestContext,
+  baselineIds: Set<string>,
+  timeoutMs: number,
+): Promise<string> {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    const messages = await listChatMessages(api);
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const msg = messages[i];
+      const id = msg.message_id ?? '';
+      if (id && baselineIds.has(id)) {
+        continue;
+      }
+      if (!isAssistantRole(msg.role)) {
+        continue;
+      }
+      const content = (msg.content ?? '').trim();
+      if (content) {
+        return content;
+      }
+    }
+    await sleep(1500);
+  }
+  throw new Error('Timed out waiting for assistant response after chat turn.');
+}
+
+async function createTaskViaChatPlanConfirm(
+  page: Page,
+  api: APIRequestContext,
+  title: string,
+  deadlineDays: number,
+): Promise<string> {
+  const deadlineIso = new Date(Date.now() + deadlineDays * DAY_MS).toISOString();
+
+  await page.goto('/chat');
+  await expect(page.locator('[data-testid="chat-view"]')).toBeVisible({ timeout: 15000 });
+  await ensureLiveMode(page);
+  await api.delete('/app/v1/chat/messages').catch(() => {});
+
+  const planPrompt = [
+    'Planning turn only. Do not create anything yet.',
+    'Return exactly two numbered steps prefixed with PLAN_OK.',
+    `Task title must be exactly "${title}".`,
+    `Task deadline must be exactly "${deadlineIso}".`,
+  ].join(' ');
+  const beforePlan = await listChatMessages(api);
+  await submitChatTurn(page, planPrompt);
+  const planReply = await waitForAssistantReply(
+    api,
+    new Set(beforePlan.map((m) => m.message_id ?? '').filter(Boolean)),
+    90_000,
+  );
+  const planLower = planReply.toLowerCase();
+  if (planLower.includes('not yet connected') || planLower.includes('fully initialised')) {
+    throw new Error(
+      `Agent did not produce a planning response (agent unavailable). Reply: ${planReply}`,
+    );
+  }
+  expect(planReply.trim().length).toBeGreaterThan(0);
+
+  const confirmPrompt = [
+    'Plan accepted. Execute now.',
+    'Create exactly one ATOMIC task and no other tasks.',
+    `Use title "${title}" and deadline "${deadlineIso}" exactly.`,
+    'Reply with CREATED_OK when done.',
+  ].join(' ');
+  const beforeConfirm = await listChatMessages(api);
+  await submitChatTurn(page, confirmPrompt);
+  const confirmReply = await waitForAssistantReply(
+    api,
+    new Set(beforeConfirm.map((m) => m.message_id ?? '').filter(Boolean)),
+    120_000,
+  );
+  const confirmLower = confirmReply.toLowerCase();
+  if (confirmLower.includes('not yet connected') || confirmLower.includes('fully initialised')) {
+    throw new Error(
+      `Agent did not execute the confirmed plan (agent unavailable). Reply: ${confirmReply}`,
+    );
+  }
+  expect(confirmReply.trim().length).toBeGreaterThan(0);
 
   for (let i = 0; i < 30; i += 1) {
     const taskId = await findTaskIdByTitle(api, title);
@@ -309,8 +407,7 @@ async function createTaskViaChat(
     await sleep(2000);
   }
 
-  // Fallback keeps the reconciliation matrix deterministic if the model decides not to create.
-  return createTaskViaApi(api, title, deadlineDays);
+  throw new Error(`Chat confirmed task creation but task id was not found for title ${title}.`);
 }
 
 async function createDependencyEdges(
@@ -376,29 +473,31 @@ function parseScoreBlock(raw: unknown): ScoreBlock | null {
   return raw as ScoreBlock;
 }
 
-async function loadTaskScore(api: APIRequestContext, taskId: string): Promise<ScoreBlock | null> {
-  const res = await api.get(`/app/v1/graph/tasks/${taskId}`);
-  if (res.status() !== 200) {
+async function loadTaskScoreFromDb(db: DbClient, taskId: string): Promise<ScoreBlock | null> {
+  const node = await db.getNodeById(taskId);
+  if (!node) {
     return null;
   }
-  const body = (await res.json()) as {
-    task?: { scoring?: unknown };
-    score?: unknown;
-  };
-  const directScore = parseScoreBlock(body.score);
-  if (directScore) {
-    return directScore;
+  const parsed = parseScoreBlock(node.scoring);
+  if (!parsed) {
+    return null;
   }
-  return parseScoreBlock(body.task?.scoring);
+  if (!parsed.last_scored_at && typeof node.last_scored_at === 'string') {
+    return {
+      ...parsed,
+      last_scored_at: node.last_scored_at,
+    };
+  }
+  return parsed;
 }
 
-async function waitForTaskScore(
-  api: APIRequestContext,
+async function waitForTaskScoreInDb(
+  db: DbClient,
   taskId: string,
   minTimestampMs: number,
 ): Promise<ScoreBlock> {
   for (let attempt = 0; attempt < 40; attempt += 1) {
-    const score = await loadTaskScore(api, taskId);
+    const score = await loadTaskScoreFromDb(db, taskId);
     if (score?.last_scored_at) {
       const scoredAt = Date.parse(score.last_scored_at);
       if (!Number.isNaN(scoredAt) && scoredAt >= minTimestampMs - 5000) {
@@ -407,7 +506,11 @@ async function waitForTaskScore(
     }
     await sleep(1500);
   }
-  throw new Error(`Timed out waiting for scoring persistence for task ${taskId}`);
+  throw new Error(`Timed out waiting for DB scoring persistence for task ${taskId}`);
+}
+
+function parseFinalScore(raw: unknown): number | null {
+  return typeof raw === 'number' && Number.isFinite(raw) ? raw : null;
 }
 
 async function loadTaskEventsFromMinio(
@@ -443,8 +546,80 @@ async function loadTaskEventsFromMinio(
       if (typeof eventType !== 'string' || typeof timestamp !== 'string') continue;
       const tsMs = Date.parse(timestamp);
       if (Number.isNaN(tsMs) || tsMs < minTimestampMs - 5000) continue;
-      events.push({ timestamp: tsMs, eventType });
+      events.push({
+        timestamp: tsMs,
+        eventType,
+        finalScore: parseFinalScore(parsed.final_score),
+        source: 'minio',
+      });
     }
+  }
+
+  events.sort((a, b) => a.timestamp - b.timestamp);
+  return events;
+}
+
+function resolveBackendContainerName(): string {
+  if (BACKEND_LOG_CONTAINER.trim()) {
+    return BACKEND_LOG_CONTAINER.trim();
+  }
+  const ps = spawnSync('docker', ['ps', '--format', '{{.Names}}'], {
+    encoding: 'utf8',
+  });
+  if (ps.status !== 0) {
+    throw new Error(`Unable to list docker containers: ${ps.stderr || ps.stdout}`);
+  }
+  const names = (ps.stdout ?? '')
+    .split(/\r?\n/)
+    .map((name) => name.trim())
+    .filter(Boolean);
+  const match = names.find((name) => name.includes('gateway'));
+  if (!match) {
+    throw new Error(
+      'Could not resolve gateway container. Set BACKEND_LOG_CONTAINER env var for this suite.',
+    );
+  }
+  return match;
+}
+
+async function loadTaskEventsFromContainer(
+  taskId: string,
+  minTimestampMs: number,
+): Promise<TaskEvent[]> {
+  const container = resolveBackendContainerName();
+  const sinceIso = new Date(minTimestampMs - 5000).toISOString();
+  const logs = spawnSync('docker', ['logs', '--since', sinceIso, container], {
+    encoding: 'utf8',
+    maxBuffer: 20 * 1024 * 1024,
+  });
+  if (logs.status !== 0) {
+    throw new Error(
+      `Failed to read backend container logs (${container}): ${logs.stderr || logs.stdout}`,
+    );
+  }
+
+  const events: TaskEvent[] = [];
+  const merged = `${logs.stdout || ''}\n${logs.stderr || ''}`;
+  for (const line of merged.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(line) as Record<string, unknown>;
+    } catch {
+      continue;
+    }
+    if (parsed.task_id !== taskId) continue;
+    const eventType = parsed.event_type;
+    const timestamp = parsed.timestamp;
+    if (typeof eventType !== 'string' || typeof timestamp !== 'string') continue;
+    const tsMs = Date.parse(timestamp);
+    if (Number.isNaN(tsMs) || tsMs < minTimestampMs - 5000) continue;
+    events.push({
+      timestamp: tsMs,
+      eventType,
+      finalScore: parseFinalScore(parsed.final_score),
+      source: 'container',
+    });
   }
 
   events.sort((a, b) => a.timestamp - b.timestamp);
@@ -464,23 +639,50 @@ function hasOrderedSequence(events: string[], expected: string[]): boolean {
   return false;
 }
 
-async function waitForEventSequence(
+function latestFinalScore(events: TaskEvent[]): number | null {
+  for (let i = events.length - 1; i >= 0; i -= 1) {
+    const event = events[i];
+    if (event.eventType === 'scoring.final.computed' && event.finalScore !== null) {
+      return event.finalScore;
+    }
+  }
+  return null;
+}
+
+async function waitForMinioEventSequence(
   minio: MinioClient,
   taskId: string,
   minTimestampMs: number,
-): Promise<string[]> {
+): Promise<TaskEvent[]> {
   for (let attempt = 0; attempt < 30; attempt += 1) {
     const events = await loadTaskEventsFromMinio(minio, taskId, minTimestampMs);
     const names = events.map((event) => event.eventType);
     if (hasOrderedSequence(names, SCORING_SEQUENCE)) {
-      return names;
+      return events;
     }
     await sleep(2000);
   }
   const finalEvents = await loadTaskEventsFromMinio(minio, taskId, minTimestampMs);
-  const names = finalEvents.map((event) => event.eventType);
   throw new Error(
-    `Missing scoring sequence for task ${taskId}. Seen events: ${Array.from(new Set(names)).join(', ')}`,
+    `Missing MinIO scoring sequence for task ${taskId}. Seen events: ${Array.from(new Set(finalEvents.map((event) => event.eventType))).join(', ')}`,
+  );
+}
+
+async function waitForContainerEventSequence(
+  taskId: string,
+  minTimestampMs: number,
+): Promise<TaskEvent[]> {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const events = await loadTaskEventsFromContainer(taskId, minTimestampMs);
+    const names = events.map((event) => event.eventType);
+    if (hasOrderedSequence(names, SCORING_SEQUENCE)) {
+      return events;
+    }
+    await sleep(2000);
+  }
+  const finalEvents = await loadTaskEventsFromContainer(taskId, minTimestampMs);
+  throw new Error(
+    `Missing container scoring sequence for task ${taskId}. Seen events: ${Array.from(new Set(finalEvents.map((event) => event.eventType))).join(', ')}`,
   );
 }
 
@@ -499,9 +701,7 @@ async function runScenarioAndReconcile(
   const title = `${titlePrefix}-${scenario.id}-${Date.now()}`;
   const cycleStart = Date.now();
 
-  const taskId = scenario.useChat
-    ? await createTaskViaChat(page, api, title, scenario.deadlineDays)
-    : await createTaskViaApi(api, title, scenario.deadlineDays);
+  const taskId = await createTaskViaChatPlanConfirm(page, api, title, scenario.deadlineDays);
 
   if (scenario.directDependents > 0) {
     await createDependencyEdges(api, taskId, scenario.id, scenario.directDependents);
@@ -515,12 +715,15 @@ async function runScenarioAndReconcile(
 
   await triggerScoringCycle(api);
 
-  const score = await waitForTaskScore(api, taskId, cycleStart);
-  await waitForEventSequence(minio, taskId, cycleStart);
+  const score = await waitForTaskScoreInDb(db, taskId, cycleStart);
+  const minioEvents = await waitForMinioEventSequence(minio, taskId, cycleStart);
+  const containerEvents = await waitForContainerEventSequence(taskId, cycleStart);
 
   const expectedRaw = expectedRawFactors(scenario);
   const expectedScore = expectedFinalScore(scenario, weights);
   const normalized = normalizeWeights(weights);
+  const minioFinal = latestFinalScore(minioEvents);
+  const containerFinal = latestFinalScore(containerEvents);
 
   expect(score.timeline_urgency).toBeCloseTo(expectedRaw.timeline_urgency, 2);
   expect(score.dependency_weight).toBeCloseTo(expectedRaw.dependency_weight, 2);
@@ -530,6 +733,12 @@ async function runScenarioAndReconcile(
   expect(score.resource_risk).toBeCloseTo(expectedRaw.resource_risk, 2);
   expect(score.constraint_pressure).toBeCloseTo(expectedRaw.constraint_pressure, 2);
   expect(score.computed_priority).toBeCloseTo(expectedScore, 2);
+  expect(minioFinal).not.toBeNull();
+  expect(containerFinal).not.toBeNull();
+  expect(minioFinal!).toBeCloseTo(expectedScore, 2);
+  expect(containerFinal!).toBeCloseTo(expectedScore, 2);
+  expect(score.computed_priority).toBeCloseTo(minioFinal!, 2);
+  expect(score.computed_priority).toBeCloseTo(containerFinal!, 2);
 
   expect(score.W1_timeline_weight).toBeCloseTo(normalized.W1_timeline, 6);
   expect(score.W2_dependencies_weight).toBeCloseTo(normalized.W2_dependencies, 6);
@@ -552,8 +761,21 @@ async function readWeightsObject(minio: MinioClient): Promise<Weights | null> {
   return JSON.parse(content) as Weights;
 }
 
+async function applyWeights(api: APIRequestContext, weights: Weights): Promise<void> {
+  const patchRes = await api.patch('/app/v1/settings/scoring-weights', {
+    data: weights,
+  });
+  expect(patchRes.status()).toBe(200);
+
+  const settingsRes = await api.get('/app/v1/settings/scoring-weights');
+  expect(settingsRes.status()).toBe(200);
+  const settingsBody = (await settingsRes.json()) as Weights;
+  expect(settingsBody.W1_timeline).toBeCloseTo(weights.W1_timeline, 6);
+  expect(settingsBody.W7_constraint).toBeCloseTo(weights.W7_constraint, 6);
+}
+
 test.describe('Scoring reconciliation', () => {
-  test.describe.configure({ timeout: 12 * 60 * 1000 });
+  test.describe.configure({ timeout: 25 * 60 * 1000 });
 
   test('reconciles 10 baseline scenarios (expected vs persisted) with log sequence checks', async ({
     api,
@@ -561,7 +783,15 @@ test.describe('Scoring reconciliation', () => {
     db,
     minio,
   }) => {
-    for (const scenario of BASELINE_SCENARIOS) {
+    const scenarios = BASELINE_SCENARIOS.filter((scenario) => shouldRunScenario(scenario.id));
+    test.skip(
+      Boolean(RECON_ONLY_SCENARIO) && scenarios.length === 0,
+      `Scenario filter ${RECON_ONLY_SCENARIO} does not target baseline cases.`,
+    );
+
+    await applyWeights(api, DEFAULT_WEIGHTS);
+
+    for (const scenario of scenarios) {
       await runScenarioAndReconcile({
         api,
         page,
@@ -575,13 +805,19 @@ test.describe('Scoring reconciliation', () => {
   });
 
   test('executes chat submit path and reconciles persisted score', async ({ api, page, db, minio }) => {
+    test.skip(
+      Boolean(RECON_ONLY_SCENARIO) && RECON_ONLY_SCENARIO !== 'chat-submit',
+      `Scenario filter ${RECON_ONLY_SCENARIO} excludes chat-submit.`,
+    );
+
+    await applyWeights(api, DEFAULT_WEIGHTS);
+
     const scenario: Scenario = {
       id: 'chat-submit',
       deadlineDays: 5,
       directDependents: 1,
       onCriticalPath: false,
       blockerType: 'NONE',
-      useChat: true,
     };
 
     await runScenarioAndReconcile({
@@ -601,6 +837,13 @@ test.describe('Scoring reconciliation', () => {
     db,
     minio,
   }) => {
+    const wantsExisting = shouldRunScenario('existing-before-update');
+    const updatedTargets = UPDATED_SCENARIOS.filter((scenario) => shouldRunScenario(scenario.id));
+    test.skip(
+      Boolean(RECON_ONLY_SCENARIO) && !wantsExisting && updatedTargets.length === 0,
+      `Scenario filter ${RECON_ONLY_SCENARIO} excludes weight-update cases.`,
+    );
+
     const existingScenario: Scenario = {
       id: 'existing-before-update',
       deadlineDays: 2,
@@ -609,35 +852,40 @@ test.describe('Scoring reconciliation', () => {
       blockerType: 'SOFT',
     };
 
-    const existing = await runScenarioAndReconcile({
-      api,
-      page,
-      db,
-      minio,
-      scenario: existingScenario,
-      weights: DEFAULT_WEIGHTS,
-      titlePrefix: 'recon-existing',
-    });
+    await applyWeights(api, DEFAULT_WEIGHTS);
+    const existing = wantsExisting
+      ? await runScenarioAndReconcile({
+          api,
+          page,
+          db,
+          minio,
+          scenario: existingScenario,
+          weights: DEFAULT_WEIGHTS,
+          titlePrefix: 'recon-existing',
+        })
+      : null;
 
     const beforeWeights = await readWeightsObject(minio);
 
-    const patchRes = await api.patch('/app/v1/settings/scoring-weights', {
-      data: UPDATED_WEIGHTS,
-    });
-    expect(patchRes.status()).toBe(200);
+    await applyWeights(api, UPDATED_WEIGHTS);
 
-    const settingsRes = await api.get('/app/v1/settings/scoring-weights');
-    expect(settingsRes.status()).toBe(200);
-    const settingsBody = (await settingsRes.json()) as Weights;
-    expect(settingsBody.W1_timeline).toBeCloseTo(UPDATED_WEIGHTS.W1_timeline, 6);
-    expect(settingsBody.W7_constraint).toBeCloseTo(UPDATED_WEIGHTS.W7_constraint, 6);
+    if (existing) {
+      const rescoreStart = Date.now();
+      await triggerScoringCycle(api);
 
-    await triggerScoringCycle(api);
-
-    const rescored = await waitForTaskScore(api, existing.taskId, Date.now() - 5000);
-    const expectedRescored = expectedFinalScore(existingScenario, UPDATED_WEIGHTS);
-    expect(rescored.computed_priority).toBeCloseTo(expectedRescored, 2);
-    expect(rescored.computed_priority).not.toBeCloseTo(existing.score.computed_priority, 3);
+      const rescored = await waitForTaskScoreInDb(db, existing.taskId, rescoreStart);
+      const minioRescoredEvents = await waitForMinioEventSequence(minio, existing.taskId, rescoreStart);
+      const containerRescoredEvents = await waitForContainerEventSequence(existing.taskId, rescoreStart);
+      const minioRescoreFinal = latestFinalScore(minioRescoredEvents);
+      const containerRescoreFinal = latestFinalScore(containerRescoredEvents);
+      const expectedRescored = expectedFinalScore(existingScenario, UPDATED_WEIGHTS);
+      expect(rescored.computed_priority).toBeCloseTo(expectedRescored, 2);
+      expect(rescored.computed_priority).not.toBeCloseTo(existing.score.computed_priority, 3);
+      expect(minioRescoreFinal).not.toBeNull();
+      expect(containerRescoreFinal).not.toBeNull();
+      expect(minioRescoreFinal!).toBeCloseTo(expectedRescored, 2);
+      expect(containerRescoreFinal!).toBeCloseTo(expectedRescored, 2);
+    }
 
     const afterWeights = await readWeightsObject(minio);
     expect(afterWeights).not.toBeNull();
@@ -647,7 +895,7 @@ test.describe('Scoring reconciliation', () => {
       expect(afterWeights?.W1_timeline).not.toBeCloseTo(beforeWeights.W1_timeline, 6);
     }
 
-    for (const scenario of UPDATED_SCENARIOS) {
+    for (const scenario of updatedTargets) {
       await runScenarioAndReconcile({
         api,
         page,
