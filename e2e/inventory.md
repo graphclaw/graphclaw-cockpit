@@ -15,6 +15,7 @@
 | GC-E-OB-W11-012 | Backend-focused validation that the profile. | [onboarding/onboarding-minio-audit.spec.ts](onboarding/onboarding-minio-audit.spec.ts) |
 | GC-E-PRF-W11-001 | The Settings profile page (or profile API) reflects the user's current name a... | [settings/profile.spec.ts](settings/profile.spec.ts) |
 | GC-E-SCO-W50-001 | This suite creates deterministic scoring tasks, triggers live scoring cycles,... | [agent/scoring-reconciliation.spec.ts](agent/scoring-reconciliation.spec.ts) |
+| GCLAW-E2E-AGENT-DELEGATION-001 | End-to-end test for sub-agent delegation: orchestrator → email draft agent → result return, with Docker logs and MinIO artifact validation. | [agent/sub-agent-delegation.spec.ts](agent/sub-agent-delegation.spec.ts) |
 | GC-E-SKL-W18-001 | Tests skill lifecycle via /app/v1/skills: list, search, install, manage sourc... | [skills/skill-registry.spec.ts](skills/skill-registry.spec.ts) |
 | GC-E-SKL-W18-002 | Tests the full Skills Marketplace UI: installed tab, browse remote, skill con... | [skills/skill-marketplace.spec.ts](skills/skill-marketplace.spec.ts) |
 | GC-E-SKL-W50-001 | The Agent Monitor route shell resolves to the right section panel, and the sk... | [agent/agent-monitor.spec.ts](agent/agent-monitor.spec.ts) |
