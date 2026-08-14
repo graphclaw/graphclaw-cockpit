@@ -1,7 +1,7 @@
 {
   "name": "graphclaw-cockpit",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "GraphClaw Cockpit — React 19 + TypeScript SPA for the GraphClaw task graph management system",
   "license": "Apache-2.0",
   "author": "GraphClaw Contributors",
