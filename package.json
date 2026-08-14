@@ -36,7 +36,7 @@
     "test:coverage": "vitest run --coverage",
     "seed": "npx tsx e2e/seed/seed-all.ts",
     "teardown": "npx tsx e2e/seed/teardown-all.ts",
-    "sync-openapi": "curl -sf http://localhost:8000/openapi.json -o src/test/openapi.json && echo 'openapi.json updated'",
+    "sync-openapi": "curl -sf http://localhost:8010/openapi.json -o src/test/openapi.json && echo 'openapi.json updated'",
     "gen:api": "openapi-typescript src/test/openapi.json -o src/lib/api-types.ts",
     "test:contract": "vitest run src/test/contract/"
   },
