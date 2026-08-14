@@ -99,10 +99,10 @@ function TimelinePanel({ items }: { items: TimelineItem[] }) {
               >
                 {item.status === 'ok' ? '✓' : item.status === 'error' ? '✗' : '·'}
               </span>
-              <div>
+              <div className="flex-1 min-w-0">
                 <span className="text-[var(--text-primary)]">{item.label}</span>
                 {item.detail && (
-                  <span className="ml-1 text-[var(--text-tertiary)] truncate max-w-xs inline-block align-bottom">
+                  <span className="ml-1 text-[var(--text-tertiary)] truncate inline-block align-bottom max-w-full">
                     {item.detail}
                   </span>
                 )}
